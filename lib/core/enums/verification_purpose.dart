@@ -1,0 +1,4 @@
+enum VerificationPurpose {
+  auth,
+  resetPassword,
+}

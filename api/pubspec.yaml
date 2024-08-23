@@ -1,0 +1,29 @@
+name: api
+description: An new Dart Frog application
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  crypto: ^3.0.3
+  dart_frog: ^1.0.0
+  dart_frog_auth: ^1.1.0
+  dart_frog_web_socket: ^1.0.0
+  dotenv: ^4.2.0
+  encrypt: ^5.0.3
+  equatable: ^2.0.5
+  http: ^1.2.1
+  image: ^4.2.0
+  mailer: ^6.1.0
+  postgres: ^3.2.1
+  qr: ^3.0.2
+  path_provider: ^2.1.4
+  broadcast_bloc: ^0.1.0-dev.2
+  excel: ^4.0.2
+
+dev_dependencies:
+  mocktail: ^1.0.0
+  test: ^1.19.2
+  very_good_analysis: ^5.1.0
