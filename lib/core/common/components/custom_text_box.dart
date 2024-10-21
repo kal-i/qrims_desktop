@@ -57,26 +57,34 @@ class CustomTextBox extends StatelessWidget {
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
-              color: currentTheme == AppTheme.light
-                  ? AppColor.lightOutlineBorder
-                  : AppColor.darkOutlineBorder,
-              width: 1.5,
+              color: Theme.of(context).dividerColor,
+              // currentTheme == AppTheme.light
+              //     ? AppColor.lightOutlineBorder
+              //     : AppColor.darkOutlineBorder,
+              width: 2.0,
             ),
-            borderRadius: BorderRadius.circular(5.0),
+            borderRadius: BorderRadius.circular(10.0),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: AppColor.error,
               width: 2.0,
             ),
-            borderRadius: BorderRadius.circular(5.0),
+            borderRadius: BorderRadius.circular(10.0),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: AppColor.accent,
               width: 2.0,
             ),
-            borderRadius: BorderRadius.circular(5.0),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: AppColor.error,
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(10.0),
           ),
           filled: true,
           fillColor: currentTheme == AppTheme.light
@@ -89,14 +97,14 @@ class CustomTextBox extends StatelessWidget {
           prefixIcon: prefixIcon != null
               ? Icon(
                   prefixIcon,
-                  size: 20.0,
+                  size: 18.0,
                 )
               : prefixImagePath != null
                   ? Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Image.asset(
                         prefixImagePath!,
-                        height: 10.0,
+                        height: 20.0,
                       ),
                     )
                   : null,

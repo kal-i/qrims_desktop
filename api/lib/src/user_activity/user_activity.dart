@@ -15,7 +15,7 @@ class UserActivity {
   });
 
   final int id;
-  final int userId;
+  final String userId;
   final String description;
   final Action actionType;
   final int? targetId;
@@ -31,7 +31,7 @@ class UserActivity {
 
     return UserActivity(
       id: json['user_act_id'] as int,
-      userId: json['user_id'] as int,
+      userId: json['user_id'] as String,
       description: json['description'] as String,
       actionType: actionType,
       targetId: json['target_id'] != null ? json['target_id'] as int : null,

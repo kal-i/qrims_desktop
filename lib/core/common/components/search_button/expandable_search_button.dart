@@ -1,10 +1,13 @@
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../constants/assets_path.dart';
 import '../custom_icon_button.dart';
 import 'bloc/search_button_bloc.dart';
 
@@ -26,14 +29,14 @@ class ExpandableSearchButton extends StatelessWidget {
           duration: const Duration(
             milliseconds: 300,
           ),
-          width: isExpanded ? 300.0 : 44.0,
+          width: isExpanded ? 300.0 : 40.0,
           height: 40.0,
           decoration: BoxDecoration(
             border: Border.all(
               color: context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightOutline
-                  : AppColor.darkOutlineCardBorder,
-              width: 2,
+                  ? AppColor.lightOutlineBorder
+                  : AppColor.darkOutlineBorder,
+              width: 1.5,
             ),
             borderRadius: BorderRadius.circular(
               10.0,
@@ -47,10 +50,12 @@ class ExpandableSearchButton extends StatelessWidget {
                   child: TextField(
                     controller: controller,
                     decoration: InputDecoration(
-                      hintText: 'Search...',
+                      hintText: 'Search',
                       hintStyle:
                           Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColor.darkPlaceHolderText,
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.w400,
                               ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.only(
@@ -61,12 +66,11 @@ class ExpandableSearchButton extends StatelessWidget {
                   ),
                 ),
               ],
-              IconButton(
-                iconSize: 20,
-                onPressed: () =>
+              CustomIconButton(
+                onTap: () =>
                     context.read<SearchButtonBloc>().add(ToggleExpand()),
                 tooltip: 'Search',
-                icon: const Icon(CupertinoIcons.search, ),
+                icon: HugeIcons.strokeRoundedSearch01,
               ),
             ],
           ),

@@ -7,11 +7,13 @@ import '../../../../core/enums/unit.dart';
 class ItemEntity extends Equatable {
   const ItemEntity({
     required this.id,
-    required this.specification,
-    required this.brand,
-    required this.model,
+    required this.productNameId,
+    required this.productDescriptionId,
+    required this.manufacturerId,
+    required this.brandId,
+    required this.modelId,
     this.serialNo,
-    required this.manufacturer,
+    required this.specification,
     this.assetClassification,
     this.assetSubClass,
     required this.unit,
@@ -21,15 +23,16 @@ class ItemEntity extends Equatable {
     this.acquiredDate,
     required this.encryptedId,
     required this.qrCodeImageData,
-    this.stockId,
   });
 
-  final int id;
-  final String specification;
-  final String brand;
-  final String model;
+  final String id;
+  final String productNameId;
+  final String productDescriptionId;
+  final String manufacturerId;
+  final String brandId;
+  final String modelId;
   final String? serialNo;
-  final String manufacturer;
+  final String specification;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final Unit unit;
@@ -39,15 +42,17 @@ class ItemEntity extends Equatable {
   final DateTime? acquiredDate;
   final String encryptedId;
   final String qrCodeImageData;
-  final int? stockId;
 
   @override
   List<Object?> get props => [
         id,
-        specification,
-        brand,
+        productNameId,
+        productDescriptionId,
+        manufacturerId,
+        brandId,
+        modelId,
         serialNo,
-        manufacturer,
+        specification,
         assetClassification,
         assetSubClass,
         unit,
@@ -57,6 +62,5 @@ class ItemEntity extends Equatable {
         acquiredDate,
         encryptedId,
         qrCodeImageData,
-        stockId,
       ];
 }

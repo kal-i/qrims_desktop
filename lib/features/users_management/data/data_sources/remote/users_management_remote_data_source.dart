@@ -1,5 +1,5 @@
 import '../../../../../core/enums/auth_status.dart';
-import '../../models/paginated_user_result.dart';
+import '../../../../../core/models/paginated_user_result.dart';
 
 abstract class UsersManagementRemoteDataSource {
   
@@ -9,11 +9,18 @@ abstract class UsersManagementRemoteDataSource {
     String? searchQuery,
     String? sortBy,
     bool? sortAscending,
-    String? filter,
+    String? role,
+    AuthStatus? status,
+    bool? isArchived,
   });
 
   Future<bool> updateUserAuthenticationStatus({
-    required int id,
+    required String id,
     required AuthStatus authStatus,
+  });
+
+  Future<bool> updateUserArchiveStatus({
+    required String id,
+    required bool isArchived,
   });
 }

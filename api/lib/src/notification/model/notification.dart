@@ -1,8 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+/// when pr is registered, we will send a notif to user
+///
 enum NotificationType {
-  itemRegistration, // temp fn
-  itemIssuance,
+  prCreated,           // When a purchase request is created
+  prApproved,          // When a purchase request is approved
+  prPartiallyFulfilled, // When part of the requested items are issued
+  prFulfilled,         // When the PR is fully fulfilled
+  prCancelled,         // When a PR is cancelled
+  issuanceCreated,     // When a new issuance is created for a PR
+  generalAlert,
 }
 
 class Notification extends Equatable {
@@ -17,23 +24,23 @@ class Notification extends Equatable {
     this.createdAt,
   });
 
-  final int id;
-  final int recipientId;
-  final int senderId;
+  final String id;
+  final String recipientId;
+  final String senderId;
   final String message;
   final NotificationType? type;
-  final int? referenceId;
+  final String? referenceId;
   final bool read;
   final DateTime? createdAt;
 
   factory Notification.fromJson(Map<String, dynamic> json) {
     return Notification(
-      id: json['notification_id'] as int,
-      recipientId: json['recipient_id'] as int,
-      senderId: json['sender_id'] as int,
+      id: json['notification_id'] as String,
+      recipientId: json['recipient_id'] as String,
+      senderId: json['sender_id'] as String,
       message: json['message'] as String,
       type: json['type'] as NotificationType?,
-      referenceId: json['reference_id'] as int?,
+      referenceId: json['reference_id'] as String?,
       read: json['read'] as bool,
       createdAt: json['created_at'] is String
           ? DateTime.parse(json['created_at'] as String)

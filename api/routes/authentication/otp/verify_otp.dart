@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
@@ -21,11 +21,21 @@ Future<Response> _verifyOtp(RequestContext context, UserRepository repository) a
     final email = json['email'] as String;
     final otp = json['otp'] as String;
 
-    if (email.isEmpty || otp.isEmpty) {
+    String message = '';
+
+    if (email.isEmpty && otp.isEmpty) {
+      message = 'Email and OTP are required.';
+    } else if (email.isEmpty) {
+      message = 'Email is required.';
+    } else if (otp.isEmpty) {
+      message = 'OTP is required.';
+    }
+
+    if (message.isNotEmpty) {
       return Response.json(
         statusCode: HttpStatus.badRequest,
         body: {
-          'message': 'Email and OTP are required.'
+          'message': message,
         },
       );
     }

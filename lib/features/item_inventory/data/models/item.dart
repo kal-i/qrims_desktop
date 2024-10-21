@@ -8,11 +8,13 @@ import '../../domain/entities/item.dart';
 class ItemModel extends ItemEntity {
   const ItemModel({
     required super.id,
-    required super.specification,
-    required super.brand,
-    required super.model,
+    required super.productNameId,
+    required super.productDescriptionId,
+    required super.manufacturerId,
+    required super.brandId,
+    required super.modelId,
     super.serialNo,
-    required super.manufacturer,
+    required super.specification,
     super.assetClassification,
     super.assetSubClass,
     required super.unit,
@@ -22,7 +24,6 @@ class ItemModel extends ItemEntity {
     super.acquiredDate,
     required super.encryptedId,
     required super.qrCodeImageData,
-    super.stockId,
   });
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
@@ -49,12 +50,14 @@ class ItemModel extends ItemEntity {
     );
 
     return ItemModel(
-      id: json['item_id'] as int? ?? 0,
-      specification: json['specification'] as String? ?? '',
-      brand: json['brand'] as String? ?? '',
-      model: json['model'] as String? ?? '',
+      id: json['item_id'] as String? ?? '',
+      productNameId: json['product_name_id'] as String? ?? '',
+      productDescriptionId: json['product_description_id'] as String? ?? '',
+      manufacturerId: json['manufacturer_id'] as String? ?? '',
+      brandId: json['brand_id'] as String? ?? '',
+      modelId: json['model_id'] as String? ?? '',
       serialNo: json['serial_no'] as String? ?? '',
-      manufacturer: json['manufacturer'] as String? ?? '',
+      specification: json['specification'] as String? ?? '',
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
       unit: unit,
@@ -70,7 +73,6 @@ class ItemModel extends ItemEntity {
           : null,
       encryptedId: json['encrypted_id'] as String? ?? '',
       qrCodeImageData: json['qr_code_image_data'] as String? ?? '',
-      stockId: json['stock_id'] as int?,
     );
   }
 
@@ -78,11 +80,13 @@ class ItemModel extends ItemEntity {
   Map<String, dynamic> toJson() {
     return {
       'item_id': id,
-      'specification': specification,
-      'brand': brand,
-      'model': model,
+      'product_name_id': productNameId,
+      'product_description_id': productDescriptionId,
+      'manufacturer_id': manufacturerId,
+      'brand_id': brandId,
+      'model_id': modelId,
       'serial_no': serialNo,
-      'manufacturer': manufacturer,
+      'specification': specification,
       'asset_classification': assetClassification.toString().split('.').last,
       'asset_sub_class': assetSubClass.toString().split('.').last,
       'unit': unit.toString().split('.').last,
@@ -92,7 +96,6 @@ class ItemModel extends ItemEntity {
       'acquired_date': acquiredDate?.toIso8601String(),
       'encrypted_id': encryptedId,
       'qr_code_image_data': qrCodeImageData,
-      'stock_id': stockId,
     };
   }
 

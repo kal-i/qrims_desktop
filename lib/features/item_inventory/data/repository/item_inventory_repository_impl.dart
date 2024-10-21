@@ -24,8 +24,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? filter,
     String? sortBy,
     bool? sortAscending,
+    String? manufacturerName,
+    String? brandName,
     AssetClassification? classificationFilter,
     AssetSubClass? subClassFilter,
   }) async {
@@ -34,8 +37,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
         page: page,
         pageSize: pageSize,
         searchQuery: searchQuery,
+        filter: filter,
         sortBy: sortBy,
         sortAscending: sortAscending,
+        manufacturerName: manufacturerName,
+        brandName: brandName,
         classificationFilter: classificationFilter,
         subClassFilter: subClassFilter,
       );
@@ -52,11 +58,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
   Future<Either<Failure, ItemWithStockEntity>> registerItem({
     required String itemName,
     required String description,
-    required String specification,
-    required String brand,
-    required String model,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
     String? serialNo,
-    required String manufacturer,
+    required String specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required unit.Unit unit,
@@ -69,11 +75,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
       final response = await itemInventoryRemoteDateSource.registerItem(
         itemName: itemName,
         description: description,
-        specification: specification,
-        brand: brand,
-        model: model,
+        manufacturerName: manufacturerName,
+        brandName: brandName,
+        modelName: modelName,
         serialNo: serialNo,
-        manufacturer: manufacturer,
+        specification: specification,
         assetClassification: assetClassification,
         assetSubClass: assetSubClass,
         unit: unit,
@@ -92,7 +98,7 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
 
   @override
   Future<Either<Failure, ItemWithStockEntity?>> getItemById({
-    required int id,
+    required String id,
   }) async {
     try {
       final response = await itemInventoryRemoteDateSource.getItemById(
@@ -108,27 +114,15 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
   }
 
   @override
-  Future<Either<Failure, List<StockEntity>?>> getStocks() async {
-    try {
-      final response = await itemInventoryRemoteDateSource.getStocks();
-
-      print('get stock repo res: $response');
-      return right(response);
-    } on ServerException catch (e) {
-      return left(Failure(e.message));
-    }
-  }
-
-  @override
   Future<Either<Failure, bool>> updateItem({
-    required int id,
+    required String id,
     String? itemName,
     String? description,
     String? specification,
-    String? brand,
-    String? model,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
     String? serialNo,
-    String? manufacturer,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     unit.Unit? unit,
@@ -142,11 +136,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
         id: id,
         itemName: itemName,
         description: description,
-        specification: specification,
-        brand: brand,
-        model: model,
+        manufacturerName: manufacturerName,
+        brandName: brandName,
+        modelName: modelName,
         serialNo: serialNo,
-        manufacturer: manufacturer,
+        specification: specification,
         assetClassification: assetClassification,
         assetSubClass: assetSubClass,
         quantity: quantity,
@@ -154,63 +148,6 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
         unitCost: unitCost,
         estimatedUsefulLife: estimatedUsefulLife,
         acquiredDate: acquiredDate,
-      );
-
-      return right(response);
-    } on ServerException catch (e) {
-      return left(Failure(e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, StockEntity?>> getStockById({
-    required int id,
-  }) {
-    // TODO: implement getStockById
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<Either<Failure, List<String>?>> getStocksProductName({
-    String? productName,
-  }) async {
-    try {
-      final response = await itemInventoryRemoteDateSource.getStocksProductName(
-        productName: productName,
-      );
-
-      return right(response);
-    } on ServerException catch (e) {
-      return left(Failure(e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PaginatedItemNameEntity>> getPaginatedProductNames({
-    int? page,
-    int? pageSize,
-    String? productName,
-  }) async {
-    try {
-      final response = await itemInventoryRemoteDateSource.getPaginatedProductNames(
-        page: page,
-        pageSize: pageSize,
-        productName: productName,
-      );
-
-      return right(response);
-    } on ServerException catch (e) {
-      return left(Failure(e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<String>?>> getStocksDescription({
-    required String productName,
-  }) async {
-    try {
-      final response = await itemInventoryRemoteDateSource.getStocksDescription(
-        productName: productName,
       );
 
       return right(response);

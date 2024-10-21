@@ -10,6 +10,7 @@ class SupplyDepartmentEmployeeEntity extends UserEntity {
     required super.createdAt,
     super.updatedAt,
     super.authStatus,
+    super.isArchived,
     super.otp,
     super.otpExpiry,
     super.profileImage,
@@ -17,7 +18,7 @@ class SupplyDepartmentEmployeeEntity extends UserEntity {
     required this.role,
   });
 
-  final int employeeId;
+  final String employeeId;
   final Role role;
 
   @override
@@ -29,6 +30,7 @@ class SupplyDepartmentEmployeeEntity extends UserEntity {
         createdAt,
         updatedAt,
         authStatus,
+        isArchived,
         otp,
         otpExpiry,
         profileImage,

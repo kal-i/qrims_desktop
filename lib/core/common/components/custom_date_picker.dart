@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_validator/form_validator.dart';
+import 'package:hugeicons/hugeicons.dart';
 
+import 'custom_form_text_field.dart';
 import '../../utils/date_formatter.dart';
-import 'custom_labeled_text_box.dart';
 
 class CustomDatePicker extends StatefulWidget {
   const CustomDatePicker({
@@ -45,10 +45,10 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomLabeledTextBox(
+    return CustomFormTextField(
       controller: widget.dateController,
       label: widget.label,
-      suffixIcon: CupertinoIcons.calendar,
+      suffixIcon: HugeIcons.strokeRoundedCalendar03,
       onTap: () => _selectDate(context),
       validator: ValidationBuilder()
           .regExp(RegExp(r'^\d{4}-\d{2}-\d{2}$'), 'Invalid date format')

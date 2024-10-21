@@ -8,3 +8,5 @@ sealed class CustomAuthPasswordTextBoxEvent extends Equatable {
 }
 
 final class ToggleVisibility extends CustomAuthPasswordTextBoxEvent {}
+
+final class ResetVisibility extends CustomAuthPasswordTextBoxEvent {}

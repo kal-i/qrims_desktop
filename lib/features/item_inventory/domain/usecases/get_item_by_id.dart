@@ -5,7 +5,7 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/item_with_stock.dart';
 import '../repository/item_inventory_repository.dart';
 
-class GetItemById implements UseCase<ItemWithStockEntity?, int> {
+class GetItemById implements UseCase<ItemWithStockEntity?, String> {
   const GetItemById({
     required this.itemInventoryRepository,
   });
@@ -13,7 +13,7 @@ class GetItemById implements UseCase<ItemWithStockEntity?, int> {
   final ItemInventoryRepository itemInventoryRepository;
 
   @override
-  Future<Either<Failure, ItemWithStockEntity?>> call(int params) async {
+  Future<Either<Failure, ItemWithStockEntity?>> call(String params) async {
     return await itemInventoryRepository.getItemById(
       id: params,
     );

@@ -21,8 +21,11 @@ class GetItems implements UseCase<PaginatedItemResultEntity, GetItemsParams> {
       page: params.page,
       pageSize: params.pageSize,
       searchQuery: params.searchQuery,
+      filter: params.filter,
       sortBy: params.sortBy,
       sortAscending: params.sortAscending,
+      manufacturerName: params.manufacturerName,
+      brandName: params.brandName,
       classificationFilter: params.classificationFilter,
       subClassFilter: params.subClassFilter,
     );
@@ -34,8 +37,11 @@ class GetItemsParams {
     required this.page,
     required this.pageSize,
     this.searchQuery,
+    this.filter,
     this.sortBy,
     this.sortAscending,
+    this.manufacturerName,
+    this.brandName,
     this.classificationFilter,
     this.subClassFilter,
   });
@@ -43,8 +49,11 @@ class GetItemsParams {
   final int page;
   final int pageSize;
   final String? searchQuery;
+  final String? filter;
   final String? sortBy;
   final bool? sortAscending;
+  final String? manufacturerName;
+  final String? brandName;
   final AssetClassification? classificationFilter;
   final AssetSubClass? subClassFilter;
 }

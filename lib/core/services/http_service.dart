@@ -18,14 +18,7 @@ class HttpService {
           if (bearerToken != null) {
             options.headers['Authorization'] = 'Bearer $bearerToken';
           }
-          print('Request [${options.method}] => PATH: ${options.path}, HEADERS: ${options.headers}');
-          return handler.next(options);
-          if (options.path == basicAuthEP) {
-            options.headers['Authorization'] = 'Basic ${base64Encode(utf8.encode('email:password'))}';
-          } else if (options.path == bearerUsersEP && bearerToken != null) {
-            options.headers['Authorization'] = 'Bearer $bearerToken';
-          }
-          print('Req. h: ${options.headers}');
+          print('Request [${options.method}] => PATH: ${options.baseUrl}${options.path}, BODY: ${options.data}, HEADERS: ${options.headers}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -34,6 +27,9 @@ class HttpService {
         },
         onError: (DioException e, handler) {
           print('Request error: ${e.message}');
+          print('Error type: ${e.type}');
+          print('Error response: ${e.response?.data}');
+          print('Error status code: ${e.response?.statusCode}');
           if (e.response != null) {
             print('Error Data: ${e.response?.data}');
           }
@@ -72,7 +68,7 @@ class HttpService {
 
   Future<Response> patch({
     required String endpoint,
-    required Map<String, dynamic> queryParams,
+    Map<String, dynamic>? queryParams,
     required Map<String, dynamic> params,
   }) async {
     print('patch triggered');

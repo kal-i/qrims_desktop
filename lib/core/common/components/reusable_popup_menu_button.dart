@@ -25,6 +25,7 @@ class ReusablePopupMenuButton extends StatelessWidget {
       tooltip: tooltip,
       position: PopupMenuPosition.under,
       itemBuilder: (context) => popupMenuItems,
+      style: ButtonStyle(padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 20.0))),
     );
   }
 

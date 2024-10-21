@@ -1,7 +1,6 @@
 import '../../../../../core/enums/role.dart';
 import '../../../../../core/models/user.dart';
 
-
 /// A contract
 /// This interface is only concerned with the calls made to the external db
 abstract interface class AuthRemoteDataSource {
@@ -46,6 +45,12 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> bearerLogin({
     required String email,
     required String password,
+  });
+
+  Future<UserModel> updateUserInformation({
+    required String id,
+    String? profileImage,
+    String? password,
   });
 }
 

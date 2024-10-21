@@ -8,10 +8,10 @@ class UserActivityRepository {
 
   /// Logs user act to db and broadcast it to ws clients
   Future<UserActivity> logUserActivity({
-    required int userId,
+    required String userId,
     required String description,
     required Action actionType,
-    int? targetUserId,
+    String? targetUserId,
   }) async {
     try {
       Map<String, dynamic> parameters = {

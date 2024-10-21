@@ -1,28 +1,34 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../config/routes/app_routing_constants.dart';
 import '../../../../../config/themes/app_color.dart';
+import '../../../../../config/themes/app_theme.dart';
+import '../../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../../../core/common/components/custom_icon_button.dart';
+import '../../../../../core/common/components/custom_popup_menu.dart';
 import '../../../../../core/common/components/reusable_popup_menu_button.dart';
 import '../../../../../core/constants/assets_path.dart';
-import '../../../../../core/entities/supply_department_employee.dart';
+import '../../../../../core/models/supply_department_employee.dart';
 import '../../../../../core/utils/capitalizer.dart';
 import '../../../../../core/utils/readable_enum_converter.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import 'bloc/side_navigation_drawer_bloc.dart';
 
-/// If I want to further customize the appearance, I could change the border radius and margin later on
+// todo: fix the rebuilt every time we switch tab
 class SideNavigationDrawer extends StatelessWidget {
   const SideNavigationDrawer({
     super.key,
     //required this.onTap,
     required this.isAdmin,
-    this.sideBarColor = const Color(0xff1D1D1D),
-    this.sideBarAnimationDuration = const Duration(milliseconds: 700),
+    this.sideBarColor, // = const Color(0xff1D1D1D),
+    this.sideBarAnimationDuration = const Duration(milliseconds: 500),
     this.floatingAnimationDuration = const Duration(milliseconds: 500),
     this.animatedContainerColor = const Color(0xff323232),
     this.selectedIconColor = Colors.white,
@@ -31,7 +37,7 @@ class SideNavigationDrawer extends StatelessWidget {
     this.hoverColor = Colors.black38,
     this.splashColor = Colors.black87,
     this.highlightColor = Colors.black,
-    this.unSelectedTextColor = const Color(0xffA0A5A9),
+    this.unSelectedTextColor = const Color(0xFF6C7990), // Color(0xffA0A5A9),
     required this.widthSwitch,
     this.borderRadius = 10.0, // 0.0
     this.sideBarWidth = 260.0,
@@ -42,14 +48,15 @@ class SideNavigationDrawer extends StatelessWidget {
     this.curve = Curves.easeOut,
     this.textStyle = const TextStyle(
       fontFamily: 'Inter',
-      fontSize: 16.0,
-      color: Colors.white,
+      fontSize: 15.0,
+      color: Colors.white, // 5E6D85
+      fontWeight: FontWeight.w400,
     ),
   });
 
   //final Function() onTap;
   final bool isAdmin;
-  final Color sideBarColor;
+  final Color? sideBarColor;
   final Duration sideBarAnimationDuration;
   final Duration floatingAnimationDuration;
   final Color animatedContainerColor;
@@ -72,16 +79,9 @@ class SideNavigationDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height;
-    final width = MediaQuery.sizeOf(context).width;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     const sideBarItemHeight = 48.0;
-
-    // final filteredItems = sidebarItems.where((item) {
-    //   if (item.text == 'User Management' && !isAdmin) {
-    //     return false;
-    //   }
-    //   return true;
-    // });
 
     return BlocBuilder<SideNavigationDrawerBloc, SideNavigationDrawerState>(
       builder: (context, sideNavState) {
@@ -93,162 +93,180 @@ class SideNavigationDrawer extends StatelessWidget {
               ? sideBarWidth
               : sideBarSmallWidth,
           decoration: BoxDecoration(
-            color: sideBarColor,
+            color: sideBarColor ??
+                (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightPrimary
+                    : AppColor.darkSecondary),
             borderRadius: BorderRadius.circular(borderRadius),
           ),
           duration: sideBarAnimationDuration,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Profile Section
-              BlocBuilder<AuthBloc, AuthState>(builder: (context, authState) {
-                String name = 'Unknown';
-                String role = 'Unknown';
-                Uint8List? profile;
 
-                if (authState is AuthSuccess) {
-                  final userData = authState.data;
+              // Profile Section
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, authState) {
+                  String name = 'Unknown';
+                  String role = 'Unknown';
+                  String? profile;
 
-                  if (userData is SupplyDepartmentEmployeeEntity) {
+                  if (authState is AuthSuccess) {
+                    final userData = SupplyDepartmentEmployeeModel.fromEntity(
+                      authState.data,
+                    );
+
                     name = capitalizeWord(userData.name);
                     role = readableEnumConverter(userData.role);
                     profile = userData.profileImage;
                   }
-                }
 
-                return Padding(
-                  padding: EdgeInsets.only(
-                    top: 40,
-                    left: width >= widthSwitch && !sideNavState.isMinimized
-                        ? 20
-                        : 18,
-                    right: width >= widthSwitch && !sideNavState.isMinimized
-                        ? 20
-                        : 18,
-                    bottom: 24,
-                  ),
-                  child: Row(
-                    children: [
-                      // Profile Image
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
+                  if (authState is UserInfoUpdated) {
+                    final userData = SupplyDepartmentEmployeeModel.fromEntity(
+                        authState.updatedUser);
+
+                    name = capitalizeWord(userData.name);
+                    role = readableEnumConverter(userData.role);
+                    profile = userData.profileImage;
+                  }
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      top: 40,
+                      left: width >= widthSwitch && !sideNavState.isMinimized
+                          ? 20
+                          : 18,
+                      right: width >= widthSwitch && !sideNavState.isMinimized
+                          ? 20
+                          : 18,
+                      bottom: 24,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Container(
                             width: width >= widthSwitch &&
                                     !sideNavState.isMinimized
-                                ? 48.0
-                                : 32.0, // Adjust size as needed
+                                ? 28.0
+                                : 28.0, // Adjust size as needed
                             height: width >= widthSwitch &&
                                     !sideNavState.isMinimized
-                                ? 48.0
-                                : 32.0, // Adjust size as needed
+                                ? 28.0
+                                : 28.0, // Adjust size as needed
                             decoration: BoxDecoration(
-                              shape: BoxShape
-                                  .rectangle, // Use rectangle for custom container
-                              borderRadius:
-                                  BorderRadius.circular(10.0), // Border radius
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(10.0),
                               image: DecorationImage(
                                 image: profile != null
-                                    ? MemoryImage(profile)
+                                    ? MemoryImage(base64Decode(profile))
                                     : const AssetImage(ImagePath.profile)
                                         as ImageProvider,
-                                fit: BoxFit.cover, // Adjust as needed
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
-                        ),
-                      ),
-
-                      // Profile Name and Role
-                      if (width >= widthSwitch && !sideNavState.isMinimized)
-                        Expanded(
-                          flex: 2,
-                          child: AnimatedAlign(
-                            alignment: Alignment.centerLeft,
-                            curve: curve,
-                            duration: sideBarAnimationDuration,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 0.0),
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          if (width >= widthSwitch &&
+                              !sideNavState.isMinimized) ...[
+                            // Space between image and text
+                            Flexible(
+                              // Use Flexible to manage overflow
+                              child: Row(
                                 children: [
-                                  Text(
-                                    capitalizeWord(name),
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(
-                                          color: AppColor.lightPrimary,
-                                        ),
+                                  Expanded(
+                                    flex: 8,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 12.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(name,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.copyWith(
+                                                    fontSize: 13.0,
+                                                    fontWeight: FontWeight.w500,
+                                                  )),
+                                          Text(
+                                            role,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: textStyle.copyWith(
+                                              fontSize: 9.0,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  Text(
-                                    readableEnumConverter(role),
-                                    overflow: TextOverflow.ellipsis,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                  Expanded(
+                                    child: CustomMenuButton(
+                                      items: const [
+                                        {
+                                          'text': 'View Account Profile',
+                                          'icon': HugeIcons
+                                              .strokeRoundedUserSettings01,
+                                        },
+                                        {
+                                          'text': 'Logout',
+                                          'icon':
+                                              HugeIcons.strokeRoundedLogin02,
+                                        }
+                                      ],
+                                      onItemSelected: (selectedItem) async {
+                                        if (selectedItem ==
+                                            'View Account Profile') {
+                                          // Set the selected index to the settings index
+                                          int settingsIndex =
+                                              sidebarItems.indexWhere((item) =>
+                                                  item.text == 'Settings' ||
+                                                  item.text
+                                                      .contains('Setting'));
+
+                                          if (settingsIndex != -1) {
+                                            context
+                                                .read<
+                                                    SideNavigationDrawerBloc>()
+                                                .add(SideNavigationItemTapped(
+                                                    index: settingsIndex));
+                                            _onItemTapped(context, isAdmin,
+                                                settingsIndex);
+                                          }
+                                          context.go(
+                                            RoutingConstants
+                                                .accountProfileViewRoutePath,
+                                          );
+                                        }
+
+                                        if (selectedItem == 'Logout') {
+                                          final prefs = await SharedPreferences
+                                              .getInstance();
+                                          String? token =
+                                              prefs.getString('authToken');
+                                          context
+                                              .read<AuthBloc>()
+                                              .add(AuthLogout(token: token!));
+                                        }
+                                      },
+                                      child: const Icon(
+                                        HugeIcons.strokeRoundedUnfoldMore,
+                                        size: 18.0,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-
-                      // chevron icon
-                      if (width >= widthSwitch && !sideNavState.isMinimized)
-                        ReusablePopupMenuButton(
-                          tooltip: 'Manage Account',
-                          icon: const Icon(
-                            CupertinoIcons.chevron_up_chevron_down,
-                            size: 16.0,
-                          ),
-                          onSelected: (String? value) async {
-                            if (value == 'Logout') {
-                              print(value);
-                              final prefs = await SharedPreferences.getInstance();
-                              final token = prefs.getString('authToken');
-                              print(token);
-                              context.read<AuthBloc>().add(
-                                AuthLogout(
-                                  token: token!,
-                                ),
-                              );
-                              print(token);
-                            } else if (value == 'Profile') {
-                              print('profile');
-                            }
-                          },
-                          popupMenuItems: [
-                            ReusablePopupMenuButton
-                                .reusableListTilePopupMenuItem(
-                              context: context,
-                              value: 'View Profile',
-                              title: 'View Profile',
-                              icon: Icons.manage_accounts_outlined,
-                            ),
-                            ReusablePopupMenuButton
-                                .reusableListTilePopupMenuItem(
-                              context: context,
-                              value: 'Account Settings',
-                              title: 'Account Settings',
-                              icon: Icons.settings_outlined,
-                            ),
-                            ReusablePopupMenuButton
-                                .reusableListTilePopupMenuItem(
-                              context: context,
-                              value: 'Logout',
-                              title: 'Logout',
-                              icon: Icons.logout_outlined,
-                            ),
                           ],
-                        ),
-                    ],
-                  ),
-                );
-              }),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
 
               /// Side Navigation Items
               Expanded(
@@ -286,12 +304,16 @@ class SideNavigationDrawer extends StatelessWidget {
                                   unselectedIconColor: unselectedIconColor,
                                   splashColor: splashColor,
                                   highlightColor: highlightColor,
-                                  unselectedTextColor: unSelectedTextColor,
+                                  unselectedTextColor: Theme.of(context)
+                                      .dividerColor, // unSelectedTextColor,
                                   onTap: () {
                                     context
                                         .read<SideNavigationDrawerBloc>()
-                                        .add(SideNavigationItemTapped(
-                                            index: index));
+                                        .add(
+                                          SideNavigationItemTapped(
+                                            index: index,
+                                          ),
+                                        );
                                     _onItemTapped(context, isAdmin, index);
                                   },
                                   textStyle: textStyle,
@@ -325,31 +347,44 @@ class SideNavigationDrawer extends StatelessWidget {
                                 height: sideBarItemHeight,
                                 padding: const EdgeInsets.all(12.0),
                                 decoration: BoxDecoration(
-                                  color: animatedContainerColor,
+                                  color: context.watch<ThemeBloc>().state ==
+                                          AppTheme.light
+                                      ? AppColor.darkPrimary
+                                      : Theme.of(context)
+                                          .dividerColor, // Theme.of(context).dividerColor, // animatedContainerColor,
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),
                                 child: ListView(
                                   clipBehavior: Clip.antiAliasWithSaveLayer,
                                   scrollDirection: Axis.horizontal,
                                   children: [
-                                    Icon(
-                                      sidebarItems[sideNavState.selectedIndex]
-                                          .iconSelected,
-                                      color: Colors.white,
-                                    ),
-                                    if (width >= widthSwitch &&
-                                        !sideNavState.isMinimized)
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 12.0),
-                                        child: Text(
-                                          sidebarItems[
+                                    /// Side Menu Item Info
+                                    Row(
+                                      // mainAxisAlignment:
+                                      //     MainAxisAlignment.center,
+                                      children: [
+                                        HugeIcon(
+                                          icon: sidebarItems[
                                                   sideNavState.selectedIndex]
-                                              .text,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: textStyle,
+                                              .iconSelected,
+                                          color: AppColor.lightPrimary,
+                                          size: 20.0,
                                         ),
-                                      ),
+                                        if (width >= widthSwitch &&
+                                            !sideNavState.isMinimized)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 12.0),
+                                            child: Text(
+                                              sidebarItems[sideNavState
+                                                      .selectedIndex]
+                                                  .text,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: textStyle,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
@@ -361,6 +396,8 @@ class SideNavigationDrawer extends StatelessWidget {
                   ),
                 ),
               ),
+
+              /// Toggle Switch
               if (width >= widthSwitch)
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -376,7 +413,7 @@ class SideNavigationDrawer extends StatelessWidget {
                       width >= widthSwitch && sideNavState.isMinimized
                           ? Icons.arrow_forward_ios_outlined
                           : Icons.space_dashboard_outlined,
-                      color: selectedIconColor,
+                      color: unselectedIconColor,
                     ),
                   ),
                 ),
@@ -387,14 +424,20 @@ class SideNavigationDrawer extends StatelessWidget {
     );
   }
 
-  void _onItemTapped(BuildContext context, bool isAdmin, int index,) {
+  void _onItemTapped(
+    BuildContext context,
+    bool isAdmin,
+    int index,
+  ) {
     List<String> routes = [
       RoutingConstants.dashboardViewRoutePath,
       RoutingConstants.itemInventoryViewRoutePath,
+      RoutingConstants.purchaseRequestViewRoutePath,
       RoutingConstants.itemIssuanceViewRoutePath,
-      if (isAdmin)
-        RoutingConstants.usersManagementViewRoutePath,
-      RoutingConstants.settingsViewRoutePath,
+      RoutingConstants.officersManagementViewRoutePath,
+      if (isAdmin) RoutingConstants.usersManagementViewRoutePath,
+      if (isAdmin) RoutingConstants.archiveUserViewRoutePath,
+      RoutingConstants.generalSettingViewRoutePath,
     ];
 
     if (index < 0 || index >= routes.length) {
@@ -406,7 +449,7 @@ class SideNavigationDrawer extends StatelessWidget {
   }
 }
 
-/// Helper method to create a side bar item
+/// Helper method to create a side bar item menu
 Widget sideBarItem({
   required IconData icon,
   required String text,
@@ -422,6 +465,7 @@ Widget sideBarItem({
   required Function() onTap,
   required TextStyle textStyle,
 }) {
+  /// Side Menu Item's Container
   return Material(
     color: Colors.transparent,
     borderRadius: BorderRadius.circular(12.0),
@@ -439,22 +483,34 @@ Widget sideBarItem({
           clipBehavior: Clip.antiAliasWithSaveLayer,
           scrollDirection: Axis.horizontal,
           children: [
-            Icon(
-              icon,
-              color: unselectedIconColor,
-            ),
-            if (width >= widthSwitch && !minimize)
-              Padding(
-                padding: const EdgeInsets.only(left: 12.0),
-                child: Text(
-                  text,
-                  overflow: TextOverflow.clip,
-                  style: textStyle.copyWith(
-                    color: unselectedIconColor,
-                  ),
-                  textAlign: TextAlign.left,
+            /// Side Menu Item Info
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                HugeIcon(
+                  icon: icon,
+                  color: unselectedIconColor,
+                  size: 20.0,
                 ),
-              ),
+                // Icon(
+                //   icon,
+                //   color: unselectedIconColor,
+                //   size: 20.0,
+                // ),
+                if (width >= widthSwitch && !minimize)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12.0),
+                    child: Text(
+                      text,
+                      overflow: TextOverflow.clip,
+                      style: textStyle.copyWith(
+                        color: unselectedIconColor,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),

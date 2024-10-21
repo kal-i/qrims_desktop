@@ -50,7 +50,10 @@ class KPICard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: currentTheme.textTheme.titleSmall?.copyWith(fontSize: 14.0,),
+                style: currentTheme.textTheme.titleMedium?.copyWith(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Text(
                 data,

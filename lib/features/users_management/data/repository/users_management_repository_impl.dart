@@ -3,7 +3,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/entities/paginated_user_result.dart';
+import '../../../../core/entities/paginated_user_result.dart';
 import '../../domain/repository/users_management_repository.dart';
 import '../data_sources/remote/users_management_remote_data_source.dart';
 
@@ -21,7 +21,9 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
     String? searchQuery,
     String? sortBy,
     bool? sortAscending,
-    String? filter,
+    String? role,
+    AuthStatus? status,
+    bool? isArchived,
   }) async {
     try {
       final paginatedUserModel =
@@ -31,7 +33,9 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
         searchQuery: searchQuery,
         sortBy: sortBy,
         sortAscending: sortAscending,
-        filter: filter,
+        role: role,
+        status: status,
+        isArchived: isArchived,
       );
 
       print(paginatedUserModel.totalUserCount);
@@ -46,7 +50,7 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
 
   @override
   Future<Either<Failure, bool>> updateUserAuthenticationStatus({
-    required int id,
+    required String id,
     required AuthStatus authStatus,
   }) async {
     try {
@@ -54,6 +58,24 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
           await usersManagementRemoteDataSource.updateUserAuthenticationStatus(
         id: id,
         authStatus: authStatus,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateUserArchiveStatus({
+    required String id,
+    required bool isArchived,
+  }) async {
+    try {
+      final response =
+      await usersManagementRemoteDataSource.updateUserArchiveStatus(
+        id: id,
+        isArchived: isArchived,
       );
 
       return right(response);

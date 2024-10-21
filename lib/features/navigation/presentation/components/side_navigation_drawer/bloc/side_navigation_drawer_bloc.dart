@@ -8,6 +8,7 @@ class SideNavigationDrawerBloc extends Bloc<SideNavigationDrawerEvent, SideNavig
   SideNavigationDrawerBloc() : super(const SideNavigationDrawerState()) {
     on<SideNavigationItemTapped>(_onItemTapped);
     on<SideNavigationToggleMinimize>(_onToggleMinimize);
+    on<ResetSideNavigationState>(_onResetSideNavigationState);
   }
 
   void _onItemTapped(SideNavigationItemTapped event, Emitter<SideNavigationDrawerState> emit) {
@@ -17,5 +18,9 @@ class SideNavigationDrawerBloc extends Bloc<SideNavigationDrawerEvent, SideNavig
 
   void _onToggleMinimize(SideNavigationToggleMinimize event, Emitter<SideNavigationDrawerState> emit) {
     emit(state.copyWith(isMinimized: !state.isMinimized));
+  }
+
+  void _onResetSideNavigationState(ResetSideNavigationState event, Emitter<SideNavigationDrawerState> emit) {
+    emit(state.copyWith(isMinimized: true, selectedIndex: 0));
   }
 }

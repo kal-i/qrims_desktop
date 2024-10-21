@@ -5,8 +5,8 @@ class RoutingConstants {
   static const registerViewRouteName = 'registerView';
   static const registerViewRoutePath = '/register';
 
-  static const forgotPasswordViewRouteName = 'forgotPasswordView';
-  static const forgotPasswordViewRoutePath = '/forgotPassword';
+  static const changeEmailViewRouteName = 'changeEmailView';
+  static const changeEmailViewRoutePath = '/changeEmail';
 
   static const otpVerificationViewRouteName = 'otpVerificationView';
   static const otpVerificationViewRoutePath = '/otpVerification';
@@ -32,12 +32,30 @@ class RoutingConstants {
   static const updateItemViewRouteName = 'updateItemView';
   static const updateItemViewRoutePath = 'updateItem';
 
+  static const purchaseRequestViewRouteName = 'purchaseRequestView';
+  static const purchaseRequestViewRoutePath = '/purchaseRequest';
+
+  static const registerPurchaseRequestViewRouteName = 'registerPurchaseRequestView';
+  static const registerPurchaseRequestViewRoutePath = 'registerPurchaseRequest';
+
   static const itemIssuanceViewRouteName = 'itemIssuanceView';
   static const itemIssuanceViewRoutePath = '/itemIssuance';
 
   static const usersManagementViewRouteName = 'usersManagementView';
   static const usersManagementViewRoutePath = '/usersManagement';
 
+  static const officersManagementViewRouteName = 'officersManagementView';
+  static const officersManagementViewRoutePath = '/officersManagement';
+
+  static const archiveUserViewRouteName = 'archiveUserViewRouteName';
+  static const archiveUserViewRoutePath = '/archiveUserView';
+
   static const settingsViewRouteName = 'settingsView';
   static const settingsViewRoutePath = '/settings';
+
+  static const generalSettingViewRouteName = 'generalSettingView';
+  static const generalSettingViewRoutePath = '/general';
+
+  static const accountProfileViewRouteName = 'accountProfileView';
+  static const accountProfileViewRoutePath = '/accountProfile';
 }

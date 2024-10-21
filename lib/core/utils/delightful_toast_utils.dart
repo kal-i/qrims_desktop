@@ -30,7 +30,8 @@ class DelightfulToastUtils {
                       .textTheme
                       .titleMedium
                       ?.copyWith(
-                    fontSize: 18.0,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600
                   ),
                 ),
                 subtitle: Text(
@@ -38,8 +39,9 @@ class DelightfulToastUtils {
                   style: Theme
                       .of(context)
                       .textTheme
-                      .bodySmall?.copyWith(
+                      .titleMedium?.copyWith(
                     fontSize: 14.0,
+                    fontWeight: FontWeight.w400
                   ),
                 ),
               );

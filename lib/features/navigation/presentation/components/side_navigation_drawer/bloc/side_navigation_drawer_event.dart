@@ -21,3 +21,5 @@ final class SideNavigationItemTapped extends SideNavigationDrawerEvent {
 }
 
 final class SideNavigationToggleMinimize extends SideNavigationDrawerEvent {}
+
+final class ResetSideNavigationState extends SideNavigationDrawerEvent {}

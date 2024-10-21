@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/enums/auth_status.dart';
@@ -12,21 +11,23 @@ abstract class UserEntity extends Equatable {
     required this.createdAt,
     this.updatedAt,
     this.authStatus = AuthStatus.unauthenticated,
+    this.isArchived = false,
     this.otp,
     this.otpExpiry,
     this.profileImage,
   });
 
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String password;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final AuthStatus authStatus;
+  final bool isArchived;
   final String? otp;
   final DateTime? otpExpiry;
-  final Uint8List? profileImage;
+  final String? profileImage;
 
   @override
   List<Object?> get props => [
@@ -37,6 +38,7 @@ abstract class UserEntity extends Equatable {
         createdAt,
         updatedAt,
         authStatus,
+        isArchived,
         otp,
         otpExpiry,
         profileImage,

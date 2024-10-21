@@ -5,6 +5,9 @@ class PaginatedItemResultModel extends PaginatedItemResultEntity {
   const PaginatedItemResultModel({
     required super.items,
     required super.totalItemCount,
+    required super.inStockCount,
+    required super.lowStockCount,
+    required super.outOfStockCount,
   });
 
   factory PaginatedItemResultModel.fromJson(Map<String, dynamic> json) {
@@ -15,6 +18,9 @@ class PaginatedItemResultModel extends PaginatedItemResultEntity {
           )
           .toList(),
       totalItemCount: json['totalItemCount'],
+      inStockCount: json['inStockCount'],
+      lowStockCount: json['lowStockCount'],
+      outOfStockCount: json['outOfStockCount'],
     );
   }
 }

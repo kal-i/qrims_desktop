@@ -14,7 +14,9 @@ final class FetchUsers extends UsersManagementEvent {
     this.searchQuery,
     this.sortBy,
     this.sortAscending,
-    this.filter,
+    this.role,
+    this.status,
+    this.isArchived,
   });
 
   final int page;
@@ -22,7 +24,9 @@ final class FetchUsers extends UsersManagementEvent {
   final String? searchQuery;
   final String? sortBy;
   final bool? sortAscending;
-  final String? filter;
+  final String? role;
+  final AuthStatus? status;
+  final bool? isArchived;
 }
 
 final class UpdateUserAuthenticationStatus extends UsersManagementEvent {
@@ -31,6 +35,16 @@ final class UpdateUserAuthenticationStatus extends UsersManagementEvent {
     required this.authStatus,
   });
 
-  final int userId;
+  final String userId;
   final AuthStatus authStatus;
+}
+
+final class UpdateArchiveStatus extends UsersManagementEvent {
+  const UpdateArchiveStatus({
+    required this.userId,
+    required this.isArchived,
+  });
+
+  final String userId;
+  final bool isArchived;
 }

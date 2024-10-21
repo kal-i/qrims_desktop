@@ -15,6 +15,7 @@ class SupplyDepartmentEmployeeModel extends SupplyDepartmentEmployeeEntity
     required super.createdAt,
     super.updatedAt,
     super.authStatus,
+    super.isArchived,
     super.otp,
     super.otpExpiry,
     super.profileImage,
@@ -30,16 +31,22 @@ class SupplyDepartmentEmployeeModel extends SupplyDepartmentEmployeeEntity
     print('Role string from JSON: $roleString');
 
     // remove the prefix value in enums if present
-    final authStatusValue = authStatusString.startsWith('AuthStatus.') ? authStatusString.substring(10) : authStatusString;
-    final roleValue = roleString.startsWith('Role.') ? roleString.substring(5) : roleString;
+    final authStatusValue = authStatusString.startsWith('AuthStatus.')
+        ? authStatusString.substring(10)
+        : authStatusString;
+    final roleValue =
+        roleString.startsWith('Role.') ? roleString.substring(5) : roleString;
 
     print('processed AuthStatus String: $authStatusValue');
     print('processed role string: $roleValue');
 
     // extract the last part of the role then compare to the retrieved role String
-    final authStatus = AuthStatus.values.firstWhere((e) => e.toString().split('.').last == authStatusValue, orElse: () => AuthStatus.unauthenticated,);
+    final authStatus = AuthStatus.values.firstWhere(
+      (e) => e.toString().split('.').last == authStatusValue,
+      orElse: () => AuthStatus.unauthenticated,
+    );
     final role = Role.values.firstWhere(
-          (e) => e.toString().split('.').last == roleValue,
+      (e) => e.toString().split('.').last == roleValue,
       orElse: () => Role.supplyCustodian,
     );
 
@@ -60,15 +67,32 @@ class SupplyDepartmentEmployeeModel extends SupplyDepartmentEmployeeEntity
               : json['updated_at'] as DateTime
           : null,
       authStatus: authStatus,
+      isArchived: json['is_archived'],
       otp: json['otp'],
       otpExpiry: json['otp_expiry'] != null
           ? json['otp_expiry'] is String
               ? DateTime.parse(json['otp_expiry'] as String)
               : json['otp_expiry'] as DateTime
           : null,
-      profileImage: json['profile_image'] != null ? base64Decode(json['profile_image'] as String) : null,
+      profileImage: json['profile_image'] != null
+          ? json['profile_image'] as String
+          : null,
       employeeId: json['supp_dept_emp_id'],
       role: role,
+    );
+  }
+
+  factory SupplyDepartmentEmployeeModel.fromEntity(
+      SupplyDepartmentEmployeeEntity supplyDepartmentEntity) {
+    return SupplyDepartmentEmployeeModel(
+      id: supplyDepartmentEntity.id,
+      name: supplyDepartmentEntity.name,
+      email: supplyDepartmentEntity.email,
+      password: supplyDepartmentEntity.password,
+      createdAt: supplyDepartmentEntity.createdAt,
+      employeeId: supplyDepartmentEntity.employeeId,
+      role: supplyDepartmentEntity.role,
+      profileImage: supplyDepartmentEntity.profileImage,
     );
   }
 
@@ -82,9 +106,11 @@ class SupplyDepartmentEmployeeModel extends SupplyDepartmentEmployeeEntity
       'created_at': createdAt,
       'updated_at': updatedAt,
       'auth_status': authStatus,
+      'is_archived': isArchived,
       'otp': otp,
       'otp_expiry': otpExpiry,
-      'profile_image': profileImage != null ? base64Encode(profileImage!) : null,
+      'profile_image':
+          profileImage,
       'employee_id': employeeId,
       'role': role.toString().split('.').last,
     };

@@ -12,8 +12,8 @@ class SizingConfig {
   static late double widthMultiplier;
 
   void init(BoxConstraints constraints) {
-    _screenWidth = constraints.maxWidth;
-    _screenHeight = constraints.maxHeight;
+    _screenWidth = constraints.maxHeight;
+    _screenHeight = constraints.maxWidth;
 
     /// Divide the screen into blocks
     _blockSizeHorizontal = _screenWidth / 100;

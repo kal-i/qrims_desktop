@@ -12,8 +12,11 @@ final class FetchItems extends ItemInventoryEvent {
     required this.page,
     required this.pageSize,
     this.searchQuery,
+    this.filter,
     this.sortBy,
     this.sortAscending,
+    this.manufacturerName,
+    this.brandName,
     this.classificationFilter,
     this.subClassFilter,
   });
@@ -21,8 +24,11 @@ final class FetchItems extends ItemInventoryEvent {
   final int page;
   final int pageSize;
   final String? searchQuery;
+  final String? filter;
   final String? sortBy;
   final bool? sortAscending;
+  final String? manufacturerName;
+  final String? brandName;
   final AssetClassification? classificationFilter;
   final AssetSubClass? subClassFilter;
 
@@ -33,6 +39,8 @@ final class FetchItems extends ItemInventoryEvent {
         searchQuery,
         sortBy,
         sortAscending,
+        manufacturerName,
+        brandName,
         classificationFilter,
         subClassFilter,
       ];
@@ -42,11 +50,11 @@ final class ItemRegister extends ItemInventoryEvent {
   const ItemRegister({
     required this.itemName,
     required this.description,
-    required this.specification,
-    required this.brand,
-    required this.model,
+    required this.manufacturerName,
+    required this.brandName,
+    required this.modelName,
     this.serialNo,
-    required this.manufacturer,
+    required this.specification,
     this.assetClassification,
     this.assetSubClass,
     required this.unit,
@@ -58,11 +66,11 @@ final class ItemRegister extends ItemInventoryEvent {
 
   final String itemName;
   final String description;
-  final String specification;
-  final String brand;
-  final String model;
+  final String manufacturerName;
+  final String brandName;
+  final String modelName;
   final String? serialNo;
-  final String manufacturer;
+  final String specification;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final Unit unit;
@@ -73,11 +81,13 @@ final class ItemRegister extends ItemInventoryEvent {
 
   @override
   List<Object?> get props => [
-        specification,
-        brand,
-        model,
+        itemName,
+        description,
+        manufacturerName,
+        brandName,
+        modelName,
         serialNo,
-        manufacturer,
+        specification,
         assetClassification,
         assetSubClass,
         unit,
@@ -93,7 +103,7 @@ final class FetchItemById extends ItemInventoryEvent {
     required this.id,
   });
 
-  final int id;
+  final String id;
 
   @override
   List<Object?> get props => [
@@ -106,11 +116,11 @@ final class ItemUpdate extends ItemInventoryEvent {
     required this.id,
     this.itemName,
     this.description,
-    this.specification,
-    this.brand,
-    this.model,
+    this.manufacturerName,
+    this.brandName,
+    this.modelName,
     this.serialNo,
-    this.manufacturer,
+    this.specification,
     this.assetClassification,
     this.assetSubClass,
     this.unit,
@@ -120,14 +130,14 @@ final class ItemUpdate extends ItemInventoryEvent {
     this.acquiredDate,
   });
 
-  final int id;
+  final String id;
   final String? itemName;
   final String? description;
-  final String? specification;
-  final String? brand;
-  final String? model;
+  final String? manufacturerName;
+  final String? brandName;
+  final String? modelName;
   final String? serialNo;
-  final String? manufacturer;
+  final String? specification;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final Unit? unit;

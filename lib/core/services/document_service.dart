@@ -47,6 +47,7 @@ class DocumentService {
   Future<pw.Document> generateICS(
     PdfPageFormat pageFormat,
     pw.PageOrientation orientation,
+    // Data - either map or object
   ) async {
     final pdf = pw.Document();
 
@@ -154,15 +155,15 @@ class DocumentService {
             /// Table
 
             pw.Table(
-              border: pw.TableBorder.all(width: 1), // Adds borders to all cells
+              //border: pw.TableBorder.all(width: 1), // Adds borders to all cells
               columnWidths: {
-                0: const pw.FixedColumnWidth(50), // Quantity column width
+                0: const pw.FixedColumnWidth(75), // Quantity column width
                 1: const pw.FixedColumnWidth(50), // Unit column width
                 2: const pw.FixedColumnWidth(
                     150), // Amount column width (including sub-columns)
                 3: const pw.FixedColumnWidth(200), // Description column width
                 4: const pw.FixedColumnWidth(
-                    100), // Inventory Item No. column width
+                    150), // Inventory Item No. column width
                 5: const pw.FixedColumnWidth(
                     100), // Estimated Useful column width
               },
@@ -171,8 +172,8 @@ class DocumentService {
                 pw.TableRow(
                   children: [
                     pw.Container(
-                      padding: const pw.EdgeInsets.all(4),
-                      child: pw.Text(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 20),
+                      child: pw.Center(child:  pw.Text(
                         'Quantity',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
@@ -180,10 +181,13 @@ class DocumentService {
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
+                      ),),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(),
                       ),
                     ),
                     pw.Container(
-                      padding: const pw.EdgeInsets.all(4),
+                      padding: const pw.EdgeInsets.symmetric(vertical: 20.0,),
                       child: pw.Text(
                         'Unit',
                         style: pw.TextStyle(
@@ -193,11 +197,15 @@ class DocumentService {
                         ),
                         textAlign: pw.TextAlign.center,
                       ),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(),
+                      ),
                     ),
                     pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                       children: [
                         pw.Container(
-                          padding: const pw.EdgeInsets.all(4),
+                          padding: const pw.EdgeInsets.all(5),
                           child: pw.Text(
                             'Amount',
                             style: pw.TextStyle(
@@ -207,6 +215,9 @@ class DocumentService {
                             ),
                             textAlign: pw.TextAlign.center,
                           ),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(),
+                          ),
                         ),
                         pw.Row(
                           children: [
@@ -214,7 +225,7 @@ class DocumentService {
                               child: pw.Container(
                                 padding: const pw.EdgeInsets.all(4),
                                 child: pw.Text(
-                                  'Unit Cost',
+                                  'Unit  Cost',
                                   style: pw.TextStyle(
                                     font: timesNewRomanRegular,
                                     fontSize: 12.0,
@@ -275,7 +286,7 @@ class DocumentService {
                     pw.Container(
                       padding: const pw.EdgeInsets.all(4),
                       child: pw.Text(
-                        'Estimated Useful',
+                        'Estimated Useful Life',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
                           fontSize: 12.0,
@@ -287,92 +298,210 @@ class DocumentService {
                   ],
                 ),
                 // Add more rows for your table data here...
-              ],
-            ),
 
-            pw.Table(
-              border: pw.TableBorder.all(),
-              children: [
-                /// Header part
                 pw.TableRow(
                   children: [
-                    pw.Text(
-                      'Quantity',
-                      style: pw.TextStyle(
-                        font: timesNewRomanRegular,
-                        fontSize: 12.0,
-                        fontWeight: pw.FontWeight.bold,
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        '1',
+                        style: pw.TextStyle(
+                          font: timesNewRomanRegular,
+                          fontSize: 9.0,
+                          //fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                      decoration: pw.BoxDecoration(
+                          border: pw.Border(bottom: pw.BorderSide(color: PdfColors.black, style: pw.BorderStyle.dashed, width: 1))
                       ),
                     ),
-                    pw.Text(
-                      'Unit',
-                      style: pw.TextStyle(
-                        font: timesNewRomanRegular,
-                        fontSize: 12.0,
-                        fontWeight: pw.FontWeight.bold,
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        'unit',
+                        style: pw.TextStyle(
+                          font: timesNewRomanRegular,
+                          fontSize: 9.0,
+                          //fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                      decoration: pw.BoxDecoration(
+                          border: pw.Border(bottom: pw.BorderSide(color: PdfColors.black, style: pw.BorderStyle.dashed, width: 1))
                       ),
                     ),
-                    pw.Column(
+
+                    pw.Row(
                       children: [
-                        pw.Text(
-                          'Amount',
-                          style: pw.TextStyle(
-                            font: timesNewRomanRegular,
-                            fontSize: 12.0,
-                            fontWeight: pw.FontWeight.bold,
+                        pw.Expanded(
+                          child: pw.Container(
+                            padding: const pw.EdgeInsets.all(4),
+                            child: pw.Text(
+                              '#####',
+                              style: pw.TextStyle(
+                                font: timesNewRomanRegular,
+                                fontSize: 9.0,
+                                //fontWeight: pw.FontWeight.bold,
+                              ),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                            decoration: pw.BoxDecoration(
+                              border: pw.Border(bottom: pw.BorderSide(width: 1, style: pw.BorderStyle.dashed, color: PdfColors.black)),
+                            ),
                           ),
                         ),
-                        pw.Row(
-                            mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text(
-                                'Unit Cost',
-                                style: pw.TextStyle(
-                                  font: timesNewRomanRegular,
-                                  fontSize: 12.0,
-                                  fontWeight: pw.FontWeight.bold,
+                        pw.Expanded(
+                          child: pw.Container(
+                            padding: const pw.EdgeInsets.all(4),
+                            child: pw.Text(
+                              '#####',
+                              style: pw.TextStyle(
+                                font: timesNewRomanRegular,
+                                fontSize: 9.0,
+                                //fontWeight: pw.FontWeight.bold,
+                              ),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                            decoration: pw.BoxDecoration(
+                              border: pw.Border(
+                                bottom: pw.BorderSide(
+                                  width: 1,
+                                  style: pw.BorderStyle.dashed,
+                                  color: PdfColors.black,
                                 ),
                               ),
-                              pw.Text(
-                                'Quantity',
-                                style: pw.TextStyle(
-                                  font: timesNewRomanRegular,
-                                  fontSize: 12.0,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
-                              ),
-                            ]),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    pw.Text(
-                      'Description',
-                      style: pw.TextStyle(
-                        font: timesNewRomanRegular,
-                        fontSize: 12.0,
-                        fontWeight: pw.FontWeight.bold,
+
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        'Description',
+                        style: pw.TextStyle(
+                          font: timesNewRomanRegular,
+                          fontSize: 9.0,
+                          //fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
                       ),
                     ),
-                    pw.Text(
-                      'Inventory Item No.',
-                      style: pw.TextStyle(
-                        font: timesNewRomanRegular,
-                        fontSize: 12.0,
-                        fontWeight: pw.FontWeight.bold,
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        'TV-2024-03-005(1)',
+                        style: pw.TextStyle(
+                          font: timesNewRomanRegular,
+                          fontSize: 9.0,
+                          //fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
                       ),
                     ),
-                    pw.Text(
-                      'Estimated Useful ',
-                      style: pw.TextStyle(
-                        font: timesNewRomanRegular,
-                        fontSize: 12.0,
-                        fontWeight: pw.FontWeight.bold,
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        '3 years',
+                        style: pw.TextStyle(
+                          font: timesNewRomanRegular,
+                          fontSize: 9.0,
+                          //fontWeight: pw.FontWeight.bold,
+                        ),
+                        textAlign: pw.TextAlign.center,
                       ),
                     ),
                   ],
                 ),
+
               ],
             ),
+
+            // pw.Table(
+            //   border: pw.TableBorder.all(),
+            //   children: [
+            //     /// Header part
+            //     pw.TableRow(
+            //       children: [
+            //         pw.Text(
+            //           'Quantity',
+            //           style: pw.TextStyle(
+            //             font: timesNewRomanRegular,
+            //             fontSize: 12.0,
+            //             fontWeight: pw.FontWeight.bold,
+            //           ),
+            //         ),
+            //         pw.Text(
+            //           'Unit',
+            //           style: pw.TextStyle(
+            //             font: timesNewRomanRegular,
+            //             fontSize: 12.0,
+            //             fontWeight: pw.FontWeight.bold,
+            //           ),
+            //         ),
+            //         pw.Column(
+            //           children: [
+            //             pw.Text(
+            //               'Amount',
+            //               style: pw.TextStyle(
+            //                 font: timesNewRomanRegular,
+            //                 fontSize: 12.0,
+            //                 fontWeight: pw.FontWeight.bold,
+            //               ),
+            //             ),
+            //             pw.Row(
+            //                 mainAxisAlignment:
+            //                     pw.MainAxisAlignment.spaceBetween,
+            //                 children: [
+            //                   pw.Text(
+            //                     'Unit Cost',
+            //                     style: pw.TextStyle(
+            //                       font: timesNewRomanRegular,
+            //                       fontSize: 12.0,
+            //                       fontWeight: pw.FontWeight.bold,
+            //                     ),
+            //                   ),
+            //                   pw.Text(
+            //                     'Quantity',
+            //                     style: pw.TextStyle(
+            //                       font: timesNewRomanRegular,
+            //                       fontSize: 12.0,
+            //                       fontWeight: pw.FontWeight.bold,
+            //                     ),
+            //                   ),
+            //                 ]),
+            //           ],
+            //         ),
+            //         pw.Text(
+            //           'Description',
+            //           style: pw.TextStyle(
+            //             font: timesNewRomanRegular,
+            //             fontSize: 12.0,
+            //             fontWeight: pw.FontWeight.bold,
+            //           ),
+            //         ),
+            //         pw.Text(
+            //           'Inventory Item No.',
+            //           style: pw.TextStyle(
+            //             font: timesNewRomanRegular,
+            //             fontSize: 12.0,
+            //             fontWeight: pw.FontWeight.bold,
+            //           ),
+            //         ),
+            //         pw.Text(
+            //           'Estimated Useful ',
+            //           style: pw.TextStyle(
+            //             font: timesNewRomanRegular,
+            //             fontSize: 12.0,
+            //             fontWeight: pw.FontWeight.bold,
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
@@ -385,10 +514,11 @@ class DocumentService {
     return pw.Column(
       children: [
         pw.Container(
-          height: 37.79,
-          width: 37.79,
+          height: 60.0,
+          width: 60.0,
           child: depedSeal,
         ),
+        pw.SizedBox(height: 5.0),
         pw.Text(
           'Republic of the Philippines',
           style: pw.TextStyle(
@@ -397,21 +527,21 @@ class DocumentService {
             fontWeight: pw.FontWeight.bold,
           ),
         ),
-        pw.SizedBox(height: 10),
+        pw.SizedBox(height: 5.0),
         pw.Text('Department of Education',
             style: pw.TextStyle(
               font: oldEnglish,
               fontSize: 18,
               // fontWeight: pw.FontWeight.bold,
             )),
-        pw.SizedBox(height: 10),
+        pw.SizedBox(height: 5.0),
         pw.Text('Region V - Bicol',
             style: pw.TextStyle(
-              font: trajanProBold,
+              font: trajanProRegular,
               fontSize: 10,
               //fontWeight: pw.FontWeight.bold,
             )),
-        pw.SizedBox(height: 10),
+        pw.SizedBox(height: 5.0),
         pw.Text('SCHOOLS DIVISION OF LEGAZPI CITY',
             style: pw.TextStyle(
               font: tahomaBold,

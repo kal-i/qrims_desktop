@@ -2,17 +2,18 @@ import '../../../../../core/enums/asset_classification.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
 import '../../../../../core/enums/unit.dart';
 import '../../models/item_with_stock.dart';
-import '../../models/paginated_item_name.dart';
 import '../../models/paginated_item_result.dart';
-import '../../models/stock.dart';
 
 abstract interface class ItemInventoryRemoteDateSource {
   Future<PaginatedItemResultModel> getItems({
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? filter,
     String? sortBy,
     bool? sortAscending,
+    String? manufacturerName,
+    String? brandName,
     AssetClassification? classificationFilter,
     AssetSubClass? subClassFilter,
   });
@@ -20,11 +21,11 @@ abstract interface class ItemInventoryRemoteDateSource {
   Future<ItemWithStockModel> registerItem({
     required String itemName,
     required String description,
-    required String specification,
-    required String brand,
-    required String model,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
     String? serialNo,
-    required String manufacturer,
+    required String specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required Unit unit,
@@ -35,18 +36,18 @@ abstract interface class ItemInventoryRemoteDateSource {
   });
 
   Future<ItemWithStockModel?> getItemById({
-    required int id,
+    required String id,
   });
 
   Future<bool> updateItem({
-    required int id,
+    required String id,
     String? itemName,
     String? description,
-    String? specification,
-    String? brand,
-    String? model,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
     String? serialNo,
-    String? manufacturer,
+    String? specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     Unit? unit,
@@ -54,25 +55,5 @@ abstract interface class ItemInventoryRemoteDateSource {
     double? unitCost,
     int? estimatedUsefulLife,
     DateTime? acquiredDate,
-  });
-
-  Future<List<StockModel>?> getStocks();
-
-  Future<List<String>?> getStocksProductName({
-    String? productName,
-  });
-
-  Future<PaginatedItemNameModel> getPaginatedProductNames({
-    int? page,
-    int? pageSize,
-    String? productName,
-  });
-
-  Future<List<String>?> getStocksDescription({
-    required String productName,
-  });
-
-  Future<StockModel?> getStockById({
-    required int id,
   });
 }

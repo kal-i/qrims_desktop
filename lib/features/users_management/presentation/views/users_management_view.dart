@@ -1,29 +1,28 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:data_table_2/data_table_2.dart';
-import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
-import '../../../../core/common/components/base_container.dart';
+import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
-import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/common/components/error_message_container.dart';
+import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/custom_popup_menu.dart';
+import '../../../../core/common/components/filter_table_row.dart';
+import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
-import '../../../../core/common/components/reusable_data_table.dart';
-import '../../../../core/common/components/reusable_popup_menu_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
-import '../../../../core/constants/assets_path.dart';
+import '../../../../core/common/components/test_popup.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../../core/utils/readable_enum_converter.dart';
 import '../bloc/users_management_bloc.dart';
-import '../components/auth_status_cell_renderer.dart';
 
-// View to manage users with sorting, searching, and pagination features
 class UsersManagementView extends StatefulWidget {
   const UsersManagementView({super.key});
 
@@ -32,14 +31,10 @@ class UsersManagementView extends StatefulWidget {
 }
 
 class _UsersManagementViewState extends State<UsersManagementView> {
-  final List<DataColumn2> _columns = [];
-  final List<DataRow2> _rows = [];
   late UsersManagementBloc _usersManagementBloc;
-
-  // Sorting and filtering options
-  late String _selectedSortValue = 'Account Creation';
+  late final String _selectedSortValue = 'Account Creation';
   late String _selectedSortOrder = 'Descending';
-  late String _filterValue = '';
+  late AuthStatus? _selectedStatus = null;
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -47,45 +42,48 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
   int _currentPage = 1;
   int _pageSize = 10;
-  int _totalRecords = 0;
+
+  final ValueNotifier<int> _totalRecords = ValueNotifier(0);
+  final ValueNotifier<String> _selectedFilterRole = ValueNotifier('');
+  final ValueNotifier<bool> _trackFilterSelection = ValueNotifier(false);
 
   bool _isLoading = false;
   String? _errorMessage;
+
+  late TableConfig _tableConfig;
+  final List<String> _tableHeaders = [
+    'User Id',
+    'Name',
+    'Email Address',
+    'Created At',
+    'Authentication Status',
+  ];
+  late List<TableData> _tableRows = [];
 
   @override
   void initState() {
     super.initState();
     _usersManagementBloc = context.read<UsersManagementBloc>();
-    _initializeColumns();
     _searchController.addListener(_onSearchChanged);
+    _selectedFilterRole.addListener(_onRoleFilterChanged);
+    _initializeTableConfig();
     _fetchUsers();
   }
 
-  void _initializeColumns() {
-    _columns.addAll(
-      [
-        const DataColumn2(
-          label: Text('User Id'),
-          size: ColumnSize.S,
-        ),
-        const DataColumn2(
-          label: Text('Name'),
-          size: ColumnSize.L,
-        ),
-        const DataColumn2(
-          label: Text('Email Address'),
-        ),
-        const DataColumn2(
-          label: Text('Created At'),
-        ),
-        const DataColumn2(
-          label: Text('Authentication Status'),
-        ),
+  void _initializeTableConfig() {
+    _tableConfig = TableConfig(
+      headers: _tableHeaders,
+      rows: _tableRows,
+      columnFlex: [
+        2,
+        2,
+        2,
+        2,
+        2,
       ],
     );
   }
 
-  // Fetch users with async pagination
   void _fetchUsers() {
     _usersManagementBloc.add(
       FetchUsers(
@@ -94,15 +92,26 @@ class _UsersManagementViewState extends State<UsersManagementView> {
         searchQuery: _searchController.text,
         sortBy: _selectedSortValue,
         sortAscending: _selectedSortOrder == 'Ascending',
-        filter: _filterValue,
+        role: _selectedFilterRole.value,
+        status: _selectedStatus,
       ),
     );
   }
 
   void _refreshUserList() {
     _searchController.clear();
-    _filterValue = '';
+    _selectedFilterRole.value = '';
+    _selectedStatus = null;
     _currentPage = 1;
+    _trackFilterSelection.value = false;
+    _fetchUsers();
+  }
+
+  void _onRoleFilterChanged() {
+    _searchController.clear();
+    _selectedStatus = null;
+    _currentPage = 1;
+    _trackFilterSelection.value = false;
     _fetchUsers();
   }
 
@@ -118,83 +127,111 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   void dispose() {
     _searchController.dispose();
     _debounce?.cancel();
+    _selectedFilterRole.dispose();
+    _trackFilterSelection.dispose();
+    _totalRecords.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Management of user\'s access within the desktop and mobile systems.',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w400,
-              ),
-        ),
-        const SizedBox(
-          height: 50.0,
-        ),
-        Expanded(
-          flex: 6,
-          child: Column(
+    return Scaffold(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(),
+          const SizedBox(
+            height: 50.0,
+          ),
+          _buildDisplayUsersCount(),
+          const SizedBox(
+            height: 20.0,
+          ),
+          _buildActionsRow(),
+          const SizedBox(
+            height: 20.0,
+          ),
+          Expanded(
+            child: _buildDataTable(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Text(
+      'Management of user\'s access within the desktop and mobile systems.',
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontSize: 14.0,
+            fontWeight: FontWeight.w400,
+          ),
+    );
+  }
+
+  Widget _buildDisplayUsersCount() {
+    return ValueListenableBuilder(
+      valueListenable: _totalRecords,
+      builder: (context, totalRecords, child) {
+        return RichText(
+          text: TextSpan(
+            text: 'All Users ',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 18.0,
+                ),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'All Users ',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 18.0,
-                          ),
-                      children: [
-                        TextSpan(
-                          text: '17',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 18.0,
-                                  ),
-                        ),
-                      ],
+              TextSpan(
+                text: totalRecords.toString(),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 18.0,
                     ),
-                  ),
-                  _buildActionsRow(),
-                ],
-              ),
-              const SizedBox(
-                height: 20.0,
-              ),
-              Expanded(
-                child: _buildDataTable(),
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildActionsRow() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ExpandableSearchButton(
-          controller: _searchController,
+        _buildFilterTableRow(),
+        Row(
+          children: [
+            ExpandableSearchButton(
+              controller: _searchController,
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            _buildRefreshButton(),
+            const SizedBox(
+              width: 10,
+            ),
+            //_buildFilterButton(),
+            _buildFilterStatusButton(),
+            const SizedBox(
+              width: 10,
+            ),
+            _buildSortOrderButton(),
+          ],
         ),
-        const SizedBox(
-          width: 10,
-        ),
-        _buildRefreshButton(),
-        const SizedBox(
-          width: 10,
-        ),
-        _buildFilterButton(),
-        const SizedBox(
-          width: 10,
-        ),
-        _buildSortButton(),
       ],
+    );
+  }
+
+  Widget _buildFilterTableRow() {
+    final Map<String, String> filterMapping = {
+      'View All': '',
+      'Supply': 'supply',
+      'Mobile': 'mobile',
+    };
+
+    return FilterTableRow(
+      selectedFilterNotifier: _selectedFilterRole,
+      filterMapping: filterMapping,
     );
   }
 
@@ -202,164 +239,89 @@ class _UsersManagementViewState extends State<UsersManagementView> {
     return CustomIconButton(
       onTap: _refreshUserList,
       tooltip: 'Refresh',
-      icon: CupertinoIcons.arrow_2_circlepath,
+      icon: FluentIcons.arrow_clockwise_dashes_20_regular,
+      isOutlined: true,
     );
   }
 
   Widget _buildFilterButton() {
-    return ReusablePopupMenuButton(
-      onSelected: _onFilterSelected,
-      popupMenuItems: _buildFilterMenuItems(),
+    return ValueListenableBuilder(
+        valueListenable: _trackFilterSelection,
+        builder: (context, trackFilterSelection, child) {
+          return TestPopup(
+            tooltip: 'Filter',
+            items: const [
+              {
+                'text': 'Unauthenticated',
+              },
+              {
+                'text': 'Authenticated',
+              },
+              {
+                'text': 'Revoked',
+              }
+            ],
+            onItemSelected: (selectedItem) {
+              _trackFilterSelection.value = true;
+              print('selected status: $selectedItem');
+              _selectedStatus = AuthStatus.values.firstWhere((authStatus) =>
+                  authStatus.toString().split('.').last.toLowerCase() ==
+                  selectedItem.toLowerCase());
+              _searchController.clear();
+              _currentPage = 1;
+              _fetchUsers();
+            },
+            initialItemSelected: _selectedStatus.toString(),
+            icon: FluentIcons.filter_add_20_regular,
+            isIconOutlined: true,
+            trackSelection: trackFilterSelection,
+          );
+        });
+  }
+
+  Widget _buildFilterStatusButton() {
+    return CustomMenuButton(
       tooltip: 'Filter',
-      icon: const CustomIconButton(
-        icon: Icons.tune,
-      ),
+      items: const [
+        {
+          'text': 'Unauthenticated',
+          'icon': FluentIcons.lock_closed_key_16_regular
+        },
+        {'text': 'Authenticated', 'icon': FluentIcons.key_16_regular},
+        {'text': 'Revoked', 'icon': FluentIcons.shield_keyhole_16_regular},
+      ],
+      onItemSelected: (selectedItem) {
+        _selectedStatus = AuthStatus.values.firstWhere((authStatus) =>
+            authStatus.toString().split('.').last.toLowerCase() ==
+            selectedItem.toLowerCase());
+        _searchController.clear();
+        _currentPage = 1;
+        _fetchUsers();
+      },
+      icon: FluentIcons.filter_add_20_regular,
     );
   }
 
-  List<PopupMenuEntry<String>> _buildFilterMenuItems() {
-    return [
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: '',
-        title: 'Filter by:',
-      ),
-      const PopupMenuDivider(
-        height: .3,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: '',
-        title: 'User Type:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'supply',
-        title: 'Supply Department Employee',
-        icon: CupertinoIcons.cube_box,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'mobile',
-        title: 'Mobile User',
-        icon: CupertinoIcons.device_phone_portrait,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: '',
-        title: 'Authentication Status:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'unauthenticated',
-        title: 'Unauthenticated',
-        icon: Icons.lock_outline,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'authenticated',
-        title: 'Authenticated',
-        icon: Icons.vpn_key_outlined,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'revoked',
-        title: 'Revoked',
-        icon: Icons.vpn_key_off_outlined,
-      ),
-    ];
-  }
-
-  void _onFilterSelected(String? value) {
-    print(value);
-    if (value != null && value.isNotEmpty) {
-      _searchController.clear();
-      _currentPage = 1;
-      _filterValue = value;
-      _fetchUsers();
-    }
-  }
-
-  Widget _buildSortButton() {
-    return ReusablePopupMenuButton(
-      onSelected: _onSortSelected,
+  Widget _buildSortOrderButton() {
+    return CustomMenuButton(
       tooltip: 'Sort',
-      icon: const CustomIconButton(icon: CupertinoIcons.arrow_up_arrow_down),
-      popupMenuItems: _buildSortMenuItems(),
+      items: const [
+        {
+          'text': 'Ascending',
+          'icon': FluentIcons.text_sort_ascending_16_regular
+        },
+        {
+          'text': 'Descending',
+          'icon': FluentIcons.text_sort_descending_16_regular
+        }
+      ],
+      onItemSelected: (selectedItem) {
+        print('selected order: $selectedItem');
+        _selectedSortOrder = selectedItem;
+        _fetchUsers();
+      },
+      icon: FluentIcons.text_sort_ascending_20_regular,
     );
-  }
-
-  List<PopupMenuEntry<String>> _buildSortMenuItems() {
-    return [
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: '',
-        title: 'Sort by:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'User Id',
-        title: 'User Id',
-        icon: Icons.person_2_outlined,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'Account Creation',
-        title: 'Account Creation',
-        icon: CupertinoIcons.calendar, // CupertinoIcons.chart_bar_alt_fill
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: '',
-        title: 'Sort order:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        leading: RadioMenuButton<String>(
-          value: 'Ascending',
-          groupValue: _selectedSortOrder,
-          onChanged: (value) {
-            if (value != null) {
-              _selectedSortOrder = value;
-              _fetchUsers();
-              // todo: temp sol is to close after picking a sort order val since ui changes do not reflect
-              context.pop();
-            }
-          },
-          child: Text(
-            'Ascending',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ), // widget instead
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        leading: RadioMenuButton(
-          value: 'Descending',
-          groupValue: _selectedSortOrder,
-          onChanged: (value) {
-            if (value != null) {
-              _selectedSortOrder = value;
-              _fetchUsers();
-              context.pop();
-            }
-          },
-          child: Text(
-            'Descending',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ),
-    ];
-  }
-
-  void _onSortSelected(String? value) {
-    if (value != null && value.isNotEmpty) {
-      // _searchController.clear();
-      // _currentPage = 1;
-      _selectedSortValue = value;
-      _fetchUsers();
-    }
   }
 
   Widget _buildDataTable() {
@@ -372,58 +334,82 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
         if (state is UsersLoaded) {
           _isLoading = false;
-          _totalRecords = state.totalUserCount;
-          _rows.clear();
-          _rows.addAll(
-            state.users.map(
-              (user) => DataRow2(
-                cells: [
-                  DataCell(Text(user.id.toString())),
-                  DataCell(Text(capitalizeWord(user.name))),
-                  DataCell(Text(user.email)),
-                  DataCell(Text(dateFormatter(user.createdAt))),
-                  DataCell(
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(5.0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            color: user.authStatus == AuthStatus.unauthenticated
-                                ? AppColor.pastelOrange
-                                : user.authStatus == AuthStatus.authenticated
-                                    ? AppColor.pastelGreen
-                                    : user.authStatus == AuthStatus.revoked
-                                        ? AppColor.pastelRed
-                                        : AppColor.pastelViolet,
-                          ),
-                          child: Text(
-                            user.authStatus.toString().split('.').last,
-                            style: const TextStyle(
-                              color: AppColor.darkPrimary,
-                              fontSize: 12.0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 5.0,
-                        ),
-                        AuthStatusCellRenderer(onStatusChanged: (newStatus) {
-                          _usersManagementBloc.add(
-                            UpdateUserAuthenticationStatus(
-                              userId: user.id,
-                              authStatus: newStatus,
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
+          _totalRecords.value = state.totalUserCount;
+          _tableRows.clear();
+          print('table rows b4 loaded: $_tableRows}');
+          print('users after loaded: ${state.users}');
+          _tableRows = state.users.map((user) {
+            final List<Map<String, dynamic>> allMenuItems = [
+              {
+                'text': 'Unauthenticated',
+                'icon': HugeIcons.strokeRoundedSecurityBlock,
+                'status': AuthStatus.unauthenticated,
+              },
+              {
+                'text': 'Authenticated',
+                'icon': HugeIcons.strokeRoundedSecurityCheck,
+                'status': AuthStatus.authenticated,
+              },
+              {
+                'text': 'Revoked',
+                'icon': HugeIcons.strokeRoundedSecurityLock,
+                'status': AuthStatus.revoked,
+              },
+              {
+                'text': 'Archive',
+                'icon': HugeIcons.strokeRoundedArchive,
+              },
+            ];
+
+            final filteredMenuItems = allMenuItems.where((item) {
+              return item['status'] != user.authStatus;
+            }).toList();
+
+            return TableData(
+              id: user.id,
+              columns: [
+                Text(
+                  user.id,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w400,
+                      ),
+                ),
+                Text(
+                  capitalizeWord(user.name),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w400,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  user.email,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w400,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  dateFormatter(user.createdAt),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w400,
+                      ),
+                ),
+                SizedBox(
+                  width: 50.0,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStatusHighlighter(user.authStatus),
                   ),
-                ],
-              ),
-            ),
-          );
+                ),
+              ],
+              menuItems: filteredMenuItems,
+            );
+          }).toList();
+          print('table rows after loaded: ${_tableRows}');
         }
 
         if (state is UserAuthenticationStatusUpdated) {
@@ -445,6 +431,25 @@ class _UsersManagementViewState extends State<UsersManagementView> {
           }
         }
 
+        if (state is UserArchiveStatusUpdated) {
+          if (state.isSuccessful == true) {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.check_circle_outline,
+              title: 'Success',
+              subtitle: 'User archive status updated successfully.',
+            );
+            _refreshUserList();
+          } else {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.error_outline,
+              title: 'Failed',
+              subtitle: 'Failed to update user archive status.',
+            );
+          }
+        }
+
         if (state is UsersError) {
           _isLoading = false;
           _errorMessage = state.message;
@@ -454,28 +459,27 @@ class _UsersManagementViewState extends State<UsersManagementView> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // DataTable2
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: ReusableDataTable(
-                        columns: _columns,
-                        rows: _rows,
+                    child: CustomDataTable(
+                      config: _tableConfig.copyWith(
+                        rows: _tableRows,
                       ),
+                      onActionSelected: _onActionSelected,
                     ),
                   ),
                   if (_isLoading)
-                    Container(
-                      height: 2.0,
-                      color: AppColor.accent, // Use your theme color
+                    LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).dividerColor,
+                      color: AppColor.accent,
                     ),
                   if (_errorMessage != null)
                     Center(
-                      child: ErrorMessageContainer(
-                        errorMessage: _errorMessage!,
+                      child: CustomMessageBox.error(
+                        message: _errorMessage!,
                       ),
                     ),
                 ],
@@ -489,7 +493,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
             // Pagination Controls
             PaginationControls(
               currentPage: _currentPage,
-              totalRecords: _totalRecords,
+              totalRecords: _totalRecords.value,
               pageSize: _pageSize,
               onPageChanged: (page) {
                 _currentPage = page;
@@ -503,6 +507,55 @@ class _UsersManagementViewState extends State<UsersManagementView> {
           ],
         );
       },
+    );
+  }
+
+  void _onActionSelected(int index, String action) {
+    final userId = _tableRows[index].id;
+
+    if (action == 'Unauthenticated' ||
+        action == 'Authenticated' ||
+        action == 'Revoked') {
+      final authStatus = AuthStatus.values.firstWhere((authStatus) =>
+          authStatus.toString().split('.').last.toLowerCase() ==
+          action.toLowerCase());
+
+      print('user id: $userId');
+      _usersManagementBloc.add(
+        UpdateUserAuthenticationStatus(
+          userId: userId,
+          authStatus: authStatus,
+        ),
+      );
+    }
+
+    if (action == 'Archive') {
+      print('Archiving user id: $userId');
+      _usersManagementBloc.add(
+        UpdateArchiveStatus(
+          userId: userId,
+          isArchived: true,
+        ),
+      );
+    }
+  }
+
+  StatusStyle _authStatusStyler(AuthStatus authStatus) {
+    switch (authStatus) {
+      case AuthStatus.authenticated:
+        return StatusStyle.green(label: 'Authenticated');
+      case AuthStatus.unauthenticated:
+        return StatusStyle.yellow(label: 'Unauthenticated');
+      case AuthStatus.revoked:
+        return StatusStyle.red(label: 'Archived');
+      default:
+        return StatusStyle.red(label: 'Error');
+    }
+  }
+
+  Widget _buildStatusHighlighter(AuthStatus authStatus) {
+    return HighlightStatusContainer(
+      statusStyle: _authStatusStyler(authStatus),
     );
   }
 }

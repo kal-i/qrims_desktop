@@ -95,3 +95,15 @@ final class AuthLogout extends AuthEvent {
 
   final String token;
 }
+
+final class UpdateUserInfo extends AuthEvent {
+  const UpdateUserInfo({
+    required this.id,
+    this.profileImage,
+    this.password,
+  });
+
+  final String id;
+  final String? profileImage;
+  final String? password;
+}

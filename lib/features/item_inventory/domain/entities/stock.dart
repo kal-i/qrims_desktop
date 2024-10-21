@@ -7,7 +7,7 @@ class StockEntity extends Equatable {
     required this.description,
   });
 
-  final int id;
+  final String id;
   final String productName;
   final String description;
 

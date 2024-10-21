@@ -51,7 +51,9 @@ final class AuthFailure extends AuthState {
 final class Unauthenticated extends AuthState {}
 
 final class OtpRequired extends AuthState {
-  const OtpRequired({required this.email,});
+  const OtpRequired({
+    required this.email,
+  });
 
   final String email;
 
@@ -60,10 +62,25 @@ final class OtpRequired extends AuthState {
 }
 
 final class OtpSent extends AuthState {
-  const OtpSent({required this.email,});
+  const OtpSent({
+    required this.email,
+  });
 
   final String email;
 
   @override
   List<Object?> get props => [email];
+}
+
+final class UserInfoUpdated<T> extends AuthState {
+  const UserInfoUpdated({
+    required this.updatedUser,
+  });
+
+  final T updatedUser;
+
+  @override
+  List<Object?> get props => [
+        updatedUser,
+      ];
 }

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:api/src/user/user.dart';
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/models/user.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 

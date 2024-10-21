@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart' as flutter_acrylic;
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'config/routes/app_router.dart';
-import 'config/routes/app_routing_constants.dart';
 import 'config/sizing/sizing_config.dart';
 import 'config/themes/bloc/theme_bloc.dart';
 import 'package:system_theme/system_theme.dart';
@@ -11,23 +11,26 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/common/components/custom_filled_button/bloc/button_bloc.dart';
 import 'core/common/components/search_button/bloc/search_button_bloc.dart';
+
+import 'features/archive/presentation/bloc/archive_user_bloc/archive_users_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/components/custom_auth_password_text_box/bloc/custom_auth_password_text_box_bloc.dart';
-
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
-import 'features/item_inventory/presentation/bloc/stock/stock_bloc.dart';
+import 'features/item_inventory/presentation/bloc/item_suggestions/item_suggestions_bloc.dart';
 import 'features/navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
+import 'features/officer/presentation/bloc/officers_bloc.dart';
+import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
 import 'features/users_management/presentation/bloc/users_management_bloc.dart';
+
 import 'injection_container.dart';
 
-// TODO: fix the setWindowResizableProperties or just opt for the 1st opt
-// TODO: adjust the layout of views in the auth views
+// TODO: consider opting for persistent base auth view - done
+// pros: perf and reduce codes rebuilt
+// cons: tight coupled and complex state management;
+// tight coupled - one changes in base auth view will affect the associated views
 
 // TODO: check if the code is still valid even after its expiration // ongoing
-// TODO: add email validation, password validation // ongoing
-
-// TODO: TOMORROW
 // TODO: validate if otp is expired b4 sending a new one
 
 bool get isDesktop {
@@ -39,19 +42,8 @@ bool get isDesktop {
   ].contains(defaultTargetPlatform);
 }
 
-// Future<void> setWindowResizableProperties(String location) async {
-//   print('Current route: $location');
-//   if (location.contains(RoutingConstants.registerViewRouteName)) {
-//     await windowManager.setResizable(true);
-//     await windowManager.setMaximizable(true);
-//     print('true');
-//   } else {
-//     await windowManager.setResizable(false);
-//     await windowManager.setMaximizable(false);
-//   }
-// }
-
 void main() async {
+  //debugPaintSizeEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDependencies();
 
@@ -121,8 +113,21 @@ class MyApp extends StatelessWidget {
           BlocProvider(
             create: (_) => ButtonBloc(),
           ),
-          BlocProvider(create: (_) => serviceLocator<ItemInventoryBloc>(),),
-          BlocProvider(create: (_) => serviceLocator<StocksBloc>(),),
+          BlocProvider(
+            create: (_) => serviceLocator<ItemInventoryBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<PurchaseRequestsBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<ItemSuggestionsBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<ArchiveUsersBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<OfficersBloc>(),
+          ),
         ],
         child: BlocBuilder<ThemeBloc, ThemeData>(
           builder: (context, state) {

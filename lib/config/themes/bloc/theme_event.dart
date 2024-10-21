@@ -9,4 +9,8 @@ sealed class ThemeEvent extends Equatable {
 
 final class SetInitialTheme extends ThemeEvent {}
 
+final class SetLightTheme extends ThemeEvent {}
+
+final class SetDarkTheme extends ThemeEvent {}
+
 final class ToggleTheme extends ThemeEvent {}

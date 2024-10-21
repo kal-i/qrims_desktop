@@ -27,8 +27,11 @@ class ItemInventoryRemoteDataSourceImpl
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? filter,
     String? sortBy,
     bool? sortAscending,
+    String? manufacturerName,
+    String? brandName,
     AssetClassification? classificationFilter,
     AssetSubClass? subClassFilter,
   }) async {
@@ -38,8 +41,14 @@ class ItemInventoryRemoteDataSourceImpl
         'page_size': pageSize,
         if (searchQuery != null && searchQuery.isNotEmpty)
           'search_query': searchQuery,
+        if (filter != null && filter.isNotEmpty)
+          'filter': filter,
         if (sortBy != null && sortBy.isNotEmpty) 'sort_by': sortBy,
         if (sortAscending != null) 'sort_ascending': sortAscending,
+        if (manufacturerName != null && manufacturerName.isNotEmpty)
+          'manufacturer_name': manufacturerName,
+        if (brandName != null && brandName.isNotEmpty)
+          'brand_name': brandName,
         if (classificationFilter != null)
           'asset_classification':
               classificationFilter.toString().split('.').last,
@@ -69,11 +78,11 @@ class ItemInventoryRemoteDataSourceImpl
   Future<ItemWithStockModel> registerItem({
     required String itemName,
     required String description,
-    required String specification,
-    required String brand,
-    required String model,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
     String? serialNo,
-    required String manufacturer,
+    required String specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required Unit unit,
@@ -86,11 +95,11 @@ class ItemInventoryRemoteDataSourceImpl
       final Map<String, dynamic> params = {
         'product_name': itemName,
         'description': description,
-        'specification': specification,
-        'brand': brand,
-        'model': model,
+        'manufacturer_name': manufacturerName,
+        'brand_name': brandName,
+        'model_name': modelName,
         'serial_no': serialNo,
-        'manufacturer': manufacturer,
+        'specification': specification,
         'asset_classification': assetClassification.toString().split('.').last,
         'asset_sub_class': assetSubClass.toString().split('.').last,
         'unit': unit.toString().split('.').last,
@@ -103,7 +112,7 @@ class ItemInventoryRemoteDataSourceImpl
       print('ds impl: $params');
 
       final response = await httpService.post(
-        endpoint: registerItemsEP,
+        endpoint: itemsEP,
         params: params,
       );
 
@@ -111,7 +120,7 @@ class ItemInventoryRemoteDataSourceImpl
 
       if (response.statusCode == 200) {
         print(response.data);
-        return ItemWithStockModel.fromJson(response.data);
+        return ItemWithStockModel.fromJson(response.data['item']);
       } else {
         throw const ServerException('Item registration failed.');
       }
@@ -139,16 +148,16 @@ class ItemInventoryRemoteDataSourceImpl
 
   @override
   Future<ItemWithStockModel?> getItemById({
-    required int id,
+    required String id,
   }) async {
     try {
-      final Map<String, dynamic> queryParam = {
-        'item_id': id,
-      };
+      // final Map<String, dynamic> queryParam = {
+      //   'item_id': id,
+      // };
 
       final response = await httpService.get(
-        endpoint: getItemEP,
-        queryParams: queryParam,
+        endpoint: '$itemsIdEP/$id', // itemsEP
+        //queryParams: queryParam,
       );
 
       if (response.statusCode != 200) {
@@ -183,14 +192,14 @@ class ItemInventoryRemoteDataSourceImpl
 
   @override
   Future<bool> updateItem({
-    required int id,
+    required String id,
     String? itemName,
     String? description,
-    String? specification,
-    String? brand,
-    String? model,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
     String? serialNo,
-    String? manufacturer,
+    String? specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     Unit? unit,
@@ -200,22 +209,22 @@ class ItemInventoryRemoteDataSourceImpl
     DateTime? acquiredDate,
   }) async {
     try {
-      final Map<String, dynamic> queryParam = {
-        'item_id': id,
-      };
+      // final Map<String, dynamic> queryParam = {
+      //   'item_id': id,
+      // };
 
       final Map<String, dynamic> params = {
         if (itemName != null && itemName.isNotEmpty)
           'product_name': itemName,
         if (description != null && description.isNotEmpty)
           'description': description,
+        if (manufacturerName != null && manufacturerName.isNotEmpty)
+          'manufacturer_name': manufacturerName,
+        if (brandName != null && brandName.isNotEmpty) 'brand_name': brandName,
+        if (modelName != null && modelName.isNotEmpty) 'model_name': modelName,
+        if (serialNo != null && serialNo.isNotEmpty) 'serial_no': serialNo,
         if (specification != null && specification.isNotEmpty)
           'specification': specification,
-        if (brand != null && brand.isNotEmpty) 'brand': brand,
-        if (model != null && model.isNotEmpty) 'model': model,
-        if (serialNo != null && serialNo.isNotEmpty) 'serial_no': serialNo,
-        if (manufacturer != null && manufacturer.isNotEmpty)
-          'manufacturer': manufacturer,
         if (assetClassification != null)
           'asset_classification':
               assetClassification.toString().split('.').last,
@@ -234,8 +243,8 @@ class ItemInventoryRemoteDataSourceImpl
       print('ds impl: $params');
 
       final response = await httpService.patch(
-        endpoint: updateItemEP,
-        queryParams: queryParam,
+        endpoint: '$itemsIdEP/$id',
+        //queryParams: queryParam,
         params: params,
       );
 
@@ -245,6 +254,10 @@ class ItemInventoryRemoteDataSourceImpl
       return false;
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(e.response?.data);
+        }
+
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
@@ -260,118 +273,6 @@ class ItemInventoryRemoteDataSourceImpl
           'DioException: ${e.message}',
         );
       }
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<List<StockModel>?> getStocks() async {
-    try {
-      final response = await httpService.get(
-        endpoint: stocksEP,
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(response.statusMessage.toString());
-      }
-
-      final List<dynamic> json = response.data;
-      print('get stock ds res: $json');
-      return json.map((stock) => StockModel.fromJson(stock)).toList();
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<StockModel?> getStockById({
-    required int id,
-  }) async {
-    try {
-      final response = await httpService.get(
-        endpoint: getStockByIdEP,
-        params: {
-          'id': id,
-        },
-      );
-      
-      if (response.statusCode != 200) {
-        throw ServerException(response.statusMessage.toString());
-      }
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<List<String>?> getStocksProductName({
-    String? productName,
-  }) async {
-    try {
-      final response = await httpService.get(
-        endpoint: getStocksProductNameEP,
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(response.statusMessage.toString());
-      }
-
-      final List<String> productNames = List<String>.from(response.data);
-      print('get pname ds res: ${response.data}');
-      return productNames;
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<PaginatedItemNameModel> getPaginatedProductNames({
-    int? page,
-    int? pageSize,
-    String? productName,
-  }) async {
-    try {
-      final Map<String, dynamic> params = {
-        'page': page,
-        'page_size': pageSize,
-        if (productName != null && productName.isNotEmpty)
-          'product_name': productName,
-      };
-
-      print('ds impl: $params');
-
-      final response = await httpService.get(
-        endpoint: getStocksProductNameEP,
-        queryParams: params,
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(response.statusMessage.toString());
-      }
-
-      print(response.data);
-      return PaginatedItemNameModel.fromJson(response.data);
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<List<String>?> getStocksDescription({
-    required String productName,
-  }) async {
-    try {
-      final response = await httpService.get(
-        endpoint: getStocksDescriptionEP,
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(response.statusMessage.toString());
-      }
-
-      print('get desc ds res: ${response.data}');
-      return response.data;
     } catch (e) {
       throw ServerException(e.toString());
     }

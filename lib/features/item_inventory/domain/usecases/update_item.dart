@@ -20,11 +20,11 @@ class UpdateItem implements UseCase<bool, UpdateItemParams> {
       id: params.id,
       itemName: params.itemName,
       description: params.description,
-      specification: params.specification,
-      brand: params.brand,
-      model: params.model,
+      manufacturerName: params.manufacturerName,
+      brandName: params.brandName,
+      modelName: params.modelName,
       serialNo: params.serialNo,
-      manufacturer: params.manufacturer,
+      specification: params.specification,
       assetClassification:  params.assetClassification,
       assetSubClass: params.assetSubClass,
       unit: params.unit,
@@ -41,11 +41,11 @@ class UpdateItemParams {
     required this.id,
     this.itemName,
     this.description,
-    this.specification,
-    this.brand,
-    this.model,
+    this.manufacturerName,
+    this.brandName,
+    this.modelName,
     this.serialNo,
-    this.manufacturer,
+    this.specification,
     this.assetClassification,
     this.assetSubClass,
     this.unit,
@@ -55,14 +55,14 @@ class UpdateItemParams {
     this.acquiredDate,
   });
 
-  final int id;
+  final String id;
   final String? itemName;
   final String? description;
-  final String? specification;
-  final String? brand;
-  final String? model;
+  final String? manufacturerName;
+  final String? brandName;
+  final String? modelName;
   final String? serialNo;
-  final String? manufacturer;
+  final String? specification;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final Unit? unit;

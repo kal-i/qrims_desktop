@@ -1,4 +1,4 @@
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:api/src/utils/hash_extension.dart';
 import 'package:equatable/equatable.dart';
 import 'package:postgres/postgres.dart';
@@ -12,14 +12,14 @@ class Session extends Equatable {
   });
 
   final String token;
-  final int userId;
+  final String userId;
   final DateTime createdAt;
   final DateTime expiresAt;
 
   factory Session.fromMap(Map<String, dynamic> json) {
     return Session(
       token: json['token'] as String,
-      userId: json['user_id'] as int,
+      userId: json['user_id'] as String,
       createdAt: json['created_at'] is String
           ? DateTime.parse(json['created_at'] as String)
           : json['created_at'] as DateTime,
@@ -52,7 +52,7 @@ class SessionRepository {
 
   final Connection _conn;
 
-  Future<Session> createSession(int userId) async {
+  Future<Session> createSession(String userId) async {
     final user = await UserRepository(_conn).getUserInformation(id: userId);
 
     if (user == null) {
@@ -107,7 +107,7 @@ class SessionRepository {
     return session;
   }
 
-  String generateToken(int userId) {
+  String generateToken(String userId) {
     return '${userId}_${DateTime.now().toIso8601String()}'.hashValue;
   }
 

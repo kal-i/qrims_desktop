@@ -28,6 +28,6 @@ class UpdateUserAuthStatusParams {
     required this.authStatus,
   });
 
-  final int id;
+  final String id;
   final AuthStatus authStatus;
 }

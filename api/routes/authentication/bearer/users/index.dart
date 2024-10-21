@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
-import 'package:api/src/user/user.dart';
+import 'package:api/src/user/models/user.dart';
 import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(RequestContext context) async {
@@ -27,7 +27,16 @@ Future<Response> _getUsers(
     final sortBy = queryParams['sort_by']?.trim() ?? 'created_at';
     final sortAscending =
         bool.tryParse(queryParams['sort_ascending'] ?? 'false') ?? false;
-    final filter = queryParams['filter']?.trim() ?? '';
+    final role = queryParams['role']?.trim() ?? '';
+    final statusString = queryParams['status'];
+
+    final status = statusString != null
+        ? AuthStatus.values.firstWhere(
+            (authStatus) =>
+                authStatus.toString().split('.').last == statusString,
+          )
+        : null;
+    final isArchived = bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
 
     // if search query is not empty or user type, use the userJson.lenght otherwise, totalusercount
     // done for search but I'll need a way to count of the thing that matches the query without the intervention of limit
@@ -39,14 +48,17 @@ Future<Response> _getUsers(
       searchQuery: searchQuery,
       sortBy: sortBy,
       sortAscending: sortAscending,
-      filter: filter,
+      role: role,
+      status: status,
+      isArchived: isArchived,
     );
 
     final filteredUserCount = await repository.getUsersFilteredCount(
       searchQuery: searchQuery,
-      filter: filter,
+      role: role,
+      status: status,
+      isArchived: isArchived,
     );
-    final totalUserCount = await repository.getUsersCount();
 
     if (userList == null) {
       print('no users');
@@ -67,13 +79,8 @@ Future<Response> _getUsers(
     print('fetch users: $userJsonList');
 
     return Response.json(
-      //body: userJsonList,
       body: {
-        'totalUserCount': searchQuery.isNotEmpty
-            ? filteredUserCount
-            : filter.isNotEmpty
-                ? filteredUserCount
-                : totalUserCount,
+        'totalUserCount': filteredUserCount,
         'users': userJsonList,
       },
     );
@@ -91,7 +98,7 @@ Future<Response> _getUsers(
 // import 'dart:io';
 //
 // import 'package:api/src/user/user.dart';
-// import 'package:api/src/user/user_repository.dart';
+// import 'package:api/src/user/archive_user_repository.dart';
 // import 'package:dart_frog/dart_frog.dart';
 // import 'package:postgres/postgres.dart';
 //

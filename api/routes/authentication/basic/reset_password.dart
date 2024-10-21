@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:api/src/user_activity/user_activity.dart';
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:api/src/user_activity/user_activity_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -26,11 +26,11 @@ Future<Response> _resetPassword(
   final password = json['password'] as String;
 
 
-  final user = await userRepository.getUserInformation(
+  final userExist = await userRepository.checkUserIfExist(
     email: email,
   );
 
-  if (user == null) {
+  if (!userExist) {
     return Response.json(
       statusCode: HttpStatus.notFound,
       body: {
@@ -46,11 +46,11 @@ Future<Response> _resetPassword(
 
   if (result == true) {
     // log user act
-    await userActivityRepository.logUserActivity(
-      userId: user.id,
-      description: 'User ${user.id} updated their password.',
-      actionType: Action.update,
-    );
+    // await userActivityRepository.logUserActivity(
+    //   userId: user.id,
+    //   description: 'User ${user.id} updated their password.',
+    //   actionType: Action.update,
+    // );
 
     return Response.json(
       statusCode: 200,

@@ -1,8 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/enums/auth_status.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../entities/paginated_user_result.dart';
+import '../../../../core/entities/paginated_user_result.dart';
 import '../repository/users_management_repository.dart';
 
 class GetUsers implements UseCase<PaginatedUserResultEntity, GetUsersParams> {
@@ -20,7 +21,9 @@ class GetUsers implements UseCase<PaginatedUserResultEntity, GetUsersParams> {
       searchQuery: params.searchQuery,
       sortBy: params.sortBy,
       sortAscending: params.sortAscending,
-      filter: params.filter,
+      role: params.role,
+      status: params.status,
+      isArchived: params.isArchived,
     );
   }
 }
@@ -32,7 +35,9 @@ class GetUsersParams {
     this.searchQuery,
     this.sortBy,
     this.sortAscending,
-    this.filter,
+    this.role,
+    this.status,
+    this.isArchived,
   });
 
   final int page;
@@ -40,5 +45,7 @@ class GetUsersParams {
   final String? searchQuery;
   final String? sortBy;
   final bool? sortAscending;
-  final String? filter;
+  final String? role;
+  final AuthStatus? status;
+  final bool? isArchived;
 }

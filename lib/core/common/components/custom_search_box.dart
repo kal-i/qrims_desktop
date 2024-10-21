@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:form_validator/form_validator.dart';
 
 import '../../../config/themes/app_color.dart';
 import '../../../config/themes/app_theme.dart';
@@ -14,22 +15,26 @@ class CustomSearchBox extends StatelessWidget {
     required this.suggestionsCallback,
     required this.onSelected,
     required this.controller,
-    required this.label,
+    this.label,
     this.enabled,
   });
 
   final FutureOr<List<String>?> Function(String) suggestionsCallback;
   final void Function(String)? onSelected;
   final TextEditingController controller;
-  final String label;
+  final String? label;
   final bool? enabled;
 
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<String>(
       controller: controller,
+      constraints: const BoxConstraints(
+        maxHeight: 300.0,
+      ),
+      //hideOnEmpty: true,
       builder: (context, controller, focusNode) {
-        return TextField(
+        return TextFormField(
           enabled: enabled,
           controller: controller,
           focusNode: focusNode,
@@ -68,13 +73,21 @@ class CustomSearchBox extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(5.0),
             ),
-            label: Text(label),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: const BorderSide(
+                color: AppColor.error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+            label: label != null ? Text(label!) : null,
             labelStyle: Theme.of(context).textTheme.bodySmall,
           ),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 12.0,
                 fontWeight: FontWeight.w500,
               ),
+          validator: ValidationBuilder(requiredMessage: '$label is required').build(),
         );
       },
       itemBuilder: (context, itemName) {
@@ -113,7 +126,7 @@ class CustomSearchBox extends StatelessWidget {
       emptyBuilder: (context) {
         return Center(
           child: Text(
-            'No items found!',
+            'No data found.',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: 12.0,
                   fontWeight: FontWeight.w500,

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:window_manager/window_manager.dart';
 
-import '../../../../config/themes/bloc/theme_bloc.dart';
-import '../../../../core/common/components/custom_drag_to_move_area.dart';
+import '../../../../config/themes/app_color.dart';
 import '../bloc/auth_bloc.dart';
 import '../components/custom_container.dart';
-import 'package:window_manager/window_manager.dart';
-import '../../../../config/themes/app_color.dart';
-import '../../../../config/themes/app_theme.dart';
+import '../components/custom_theme_switch_button.dart';
 import '../components/window_close_button.dart';
 
 class BaseAuthView extends StatelessWidget {
@@ -22,16 +20,13 @@ class BaseAuthView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
-        return ModalProgressHUD(
-          inAsyncCall: state is AuthLoading,
-          opacity: 0.5,
-          blur: 0.5,
-          child: _BaseAuthViewContent(
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          return _BaseAuthViewContent(
             content: child,
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 }
@@ -41,7 +36,8 @@ class _BaseAuthViewHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomDragToMoveArea(
+    return DragToMoveArea(
+      //CustomDragToMoveArea(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -70,49 +66,53 @@ class _BaseAuthViewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: 10.0,
-        left: 20.0,
-        bottom: 20.0,
-        right: 20.0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _BaseAuthViewHeader(),
-          const SizedBox(
-            height: 60.0,
-          ),
-          Expanded(
-            child: Center(
-              child: content,
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      return Padding(
+        padding: const EdgeInsets.only(
+          top: 10.0,
+          left: 20.0,
+          bottom: 20.0,
+          right: 20.0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _BaseAuthViewHeader(),
+            const SizedBox(
+              height: 20.0, // 60.0,
             ),
-          ),
-          const SizedBox(
-            height: 10.0,
-          ),
-          CustomContainer(
-            child: IconButton(
-              onPressed: () {
-                context.read<ThemeBloc>().add(ToggleTheme());
-              },
-              icon: context.watch<ThemeBloc>().state == AppTheme.light
-                  ? const Icon(
-                      Icons.light_mode_outlined,
-                      color: AppColor.darkPrimary,
-                      size: 20.0,
-                    )
-                  : const Icon(
-                      Icons.dark_mode_outlined,
-                      color: AppColor.lightPrimary,
-                      size: 20.0,
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  width: 500.0,
+                  height: 520.0,
+                  child: CustomContainer(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
+                      child: ModalProgressHUD(
+                        inAsyncCall: state is AuthLoading,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            top: 50.0,
+                            left: 50.0,
+                            bottom: 20.0,
+                            right: 50.0,
+                          ),
+                          child: content,
+                        ),
+                      ),
                     ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(
+              height: 10.0,
+            ),
+            const CustomThemeSwitchButton(),
+          ],
+        ),
+      );
+    });
   }
 }

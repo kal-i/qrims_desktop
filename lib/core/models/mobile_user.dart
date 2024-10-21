@@ -13,6 +13,7 @@ class MobileUserModel extends MobileUserEntity implements UserModel {
     required super.createdAt,
     super.updatedAt,
     super.authStatus,
+    super.isArchived,
     super.otp,
     super.otpExpiry,
     super.profileImage,
@@ -42,9 +43,10 @@ class MobileUserModel extends MobileUserEntity implements UserModel {
       createdAt: json['created_at'] is String ? DateTime.parse(json['created_at'] as String) : json['created_at'] as DateTime,
       updatedAt: json['updated_at'] is String ? DateTime.parse(json['updated_at'] as String) : json['updated_at'],
       authStatus: authStatus,
+      isArchived: json['is_archived'],
       otp: json['otp'],
       otpExpiry: json['otp_expiry'] is String ? DateTime.parse(json['otp_expiry'] as String) : json['otp_expiry'],
-      profileImage: json['profile_image'] != null ? base64Decode(json['profile_image'] as String) : null,
+      profileImage: json['profile_image'] != null ? json['profile_image'] as String : null,
       mobileUserId: json['mobile_user_id'],
     );
   }
@@ -59,6 +61,7 @@ class MobileUserModel extends MobileUserEntity implements UserModel {
       'created_at': createdAt,
       'updated_at': updatedAt,
       'auth_status': authStatus,
+      'is_archived': isArchived,
       'otp': otp,
       'otp_expiry': otpExpiry,
       'profile_image': profileImage,

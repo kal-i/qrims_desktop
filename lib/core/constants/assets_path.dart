@@ -11,15 +11,21 @@ class FontPath {
   static const String timesNewRomanBold = '$_folder/Times-New-Roman-Bold.ttf';
 }
 
+class IconPath {
+  static const String _folder = '$_rootFolder/icons';
+  static const String email = '$_folder/email.png';
+  static const String password = '$_folder/password.png';
+  static const String user = '$_folder/user.png';
+  static const String search = '$_folder/search.png';
+  static const String search2 = '$_folder/search2.png';
+  static const String refresh = '$_folder/refresh.png';
+  static const String filter = '$_folder/filter.png';
+  static const String sort = '$_folder/sort.png';
+  static const String sort2 = '$_folder/sort2.png';
+}
+
 class ImagePath {
   static const String _folder = '$_rootFolder/images';
   static const String depedSeal = '$_folder/deped_seal.png';
-  static const String userIcon = '$_folder/user.png';
-  static const String emailIcon = '$_folder/email.png';
-  static const String passwordIcon = '$_folder/password.png';
-  static const String profile = '$_folder/profile.png';
-  static const String searchIcon = '$_folder/search_icon.png';
-  static const String reload = '$_folder/reload.png';
-  static const String sort = '$_folder/sort.png';
-  static const String filter = '$_folder/filter.png';
+  static const String profile = '$_folder/profile.jpg';
 }

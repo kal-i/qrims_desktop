@@ -59,6 +59,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return userModel;
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(
+              e.response?.data
+          );
+        }
+
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
@@ -116,6 +122,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(
+              e.response?.data
+          );
+        }
+
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
@@ -157,6 +169,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return false;
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(
+              e.response?.data
+          );
+        }
+
         print(e.response);
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
@@ -201,8 +219,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return false;
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(
+              e.response?.data
+          );
+        }
+
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
+
+        if (e.response?.statusCode == HttpStatus.badRequest &&
+            errorMessage == 'Email and OTP are required.') {
+          throw const ServerException('Email and OTP are required.');
+        }
+
+        if (e.response?.statusCode == HttpStatus.badRequest &&
+            errorMessage == 'Email is required.') {
+          throw const ServerException('Email is required.');
+        }
+
+        if (e.response?.statusCode == HttpStatus.badRequest &&
+            errorMessage == 'OTP is required.') {
+          throw const ServerException('OTP is required.');
+        }
 
         if (e.response?.statusCode == 400 &&
             errorMessage == 'Invalid OTP or OTP expired.') {
@@ -327,6 +366,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final userModel = UserModel.fromJson(responseData['user']);
         print(userModel);
 
+        if (userModel.isArchived) {
+          throw const ServerException('User account is archived.');
+        }
+
         if (userModel.authStatus == AuthStatus.unauthenticated) {
           throw const ServerException('User is not authenticated.');
         }
@@ -344,6 +387,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response?.data is String) {
+          throw ServerException(
+            e.response?.data
+          );
+        }
+
+        print('err: ${e.response?.data}');
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
@@ -354,10 +404,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           );
         }
         throw ServerException(
-          'DioException: ${e.response?.statusCode} - ${e.response?.statusMessage}',
+          '${e.response?.statusCode} - ${e.response?.statusMessage}',
         );
       } else {
-        throw ServerException('DioException: ${e.message}');
+        throw ServerException('${e.message}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<UserModel> updateUserInformation({
+    required String id,
+    String? profileImage,
+    String? password,
+  }) async {
+    try {
+      Map<String, dynamic> queryParam = {
+        'user_id': id,
+      };
+
+      Map<String, dynamic> param = {
+        if (profileImage != null && profileImage.isNotEmpty)
+          'profile_image': profileImage,
+        if (password != null && password.isNotEmpty) 'password': password,
+      };
+
+      final response = await httpService.patch(
+        endpoint: updateUserInfoEP,
+        queryParams: queryParam,
+        params: param,
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = response.data as Map<String, dynamic>;
+        final userModel = UserModel.fromJson(responseData['user']);
+
+        return userModel;
+      } else {
+        throw ServerException(response.statusMessage.toString());
       }
     } catch (e) {
       throw ServerException(e.toString());

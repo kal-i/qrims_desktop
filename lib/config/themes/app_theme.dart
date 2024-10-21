@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/rendering.dart';
 import 'app_color.dart';
 
 class AppTheme {
@@ -13,10 +10,14 @@ class AppTheme {
       backgroundColor: AppColor.lightBackground
     ),
     brightness: Brightness.light,
-    dividerColor: AppColor.lightOutline,
+    dividerColor: AppColor.lightOutlineBorder,
     cardColor: AppColor.lightCardColor,
     canvasColor: AppColor.lightCanvasColor,
     fontFamily: 'Inter',
+    iconTheme: const IconThemeData(
+      color: AppColor.icon,
+      size: 20.0,
+    ),
     scaffoldBackgroundColor: AppColor.lightBackground,
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -78,8 +79,12 @@ class AppTheme {
     canvasColor: AppColor.darkCanvasColor,
     cardColor: AppColor.darkCardColor,
     //cardColor: AppColor.darkSecondary,
-    dividerColor: AppColor.darkOutline,
+    dividerColor: AppColor.darkOutlineBorder,
     fontFamily: 'Inter',
+    iconTheme: const IconThemeData(
+      color: AppColor.icon,
+      size: 20.0,
+    ),
     scaffoldBackgroundColor: AppColor.darkBackground,
     textTheme: const TextTheme(
       displayLarge: TextStyle(

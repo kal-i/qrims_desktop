@@ -12,6 +12,7 @@ abstract class UserModel extends UserEntity {
     required super.createdAt,
     super.updatedAt,
     super.authStatus,
+    super.isArchived,
     super.otp,
     super.otpExpiry,
     super.profileImage,

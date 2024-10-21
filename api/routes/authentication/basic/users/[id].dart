@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:api/src/user/user.dart';
-import 'package:api/src/user/user_repository.dart';
+import 'package:api/src/user/models/user.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
@@ -25,7 +25,7 @@ Future<Response> _getUserInformation(
   String id,
   UserRepository repository,
 ) async {
-  final user = await repository.getUserInformation(id: int.parse(id));
+  final user = await repository.getUserInformation(id: id);
 
   if (user != null) {
     return Response.json(
@@ -59,7 +59,7 @@ Future<Response> _updateUserInformation(
       : null;
 
   final result = await repository.updateUserInformation(
-    id: int.parse(id),
+    id: id,
     name: name,
     email: email,
     password: password,

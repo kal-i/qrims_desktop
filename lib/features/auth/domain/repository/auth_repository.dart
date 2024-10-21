@@ -39,6 +39,12 @@ abstract interface class AuthRepository {
     required String email,
     required String password,
   });
+
+  Future<Either<Failure, UserEntity>> updateUserInformation({
+    required String id,
+    String? profileImage,
+    String? password,
+  });
 }
 
 // only mobile user should be able to login, so probably add authorization

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/entities/user.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/enums/verification_purpose.dart';
 import '../../../navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
@@ -9,6 +10,7 @@ import '../../domain/usecases/user_logout.dart';
 import '../../domain/usecases/user_register.dart';
 import '../../domain/usecases/user_reset_password.dart';
 import '../../domain/usecases/user_send_otp.dart';
+import '../../domain/usecases/user_update_info.dart';
 import '../../domain/usecases/user_verify_otp.dart';
 
 part 'auth_event.dart';
@@ -24,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required UserVerifyOtp userVerifyOtp,
     required UserResetPassword userResetPassword,
     required UserLogout userLogout,
+    required UserUpdateInfo userUpdateInfo,
     required SideNavigationDrawerBloc sideNavigationDrawerBloc,
   })  : _userRegister = userRegister,
         _userLogin = userLogin,
@@ -31,6 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _userVerifyOtp = userVerifyOtp,
         _userResetPassword = userResetPassword,
         _userLogout = userLogout,
+        _userUpdateInfo = userUpdateInfo,
         _sideNavigationDrawerBloc = sideNavigationDrawerBloc,
         super(AuthInitial()) {
     /// Event Handler - register the event via on<Event> API
@@ -40,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthVerifyOtp>(_onVerifyOtp);
     on<AuthResetPassword>(_onResetPassword);
     on<AuthLogout>(_onLogout);
+    on<UpdateUserInfo>(_onUpdateUserInfo);
   }
 
   /// UserRegister UseCase
@@ -59,6 +64,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// UserLogout UseCase
   final UserLogout _userLogout;
+
+  final UserUpdateInfo _userUpdateInfo;
 
   final SideNavigationDrawerBloc _sideNavigationDrawerBloc;
 
@@ -167,6 +174,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     //   (l) => emit(AuthFailure(message: l.message)),
     //   (r) => emit(Unauthenticated()),
     // );
+  }
+
+  void _onUpdateUserInfo(UpdateUserInfo event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+
+    final response = await _userUpdateInfo(
+      UserUpdateInfoParams(
+        id: event.id,
+        profileImage: event.profileImage,
+        password: event.password,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(AuthFailure(message: l.message)),
+      (r) => emit(
+        UserInfoUpdated(updatedUser: r),
+      ),
+    );
   }
 }
 // Difference between Cubit and Bloc:

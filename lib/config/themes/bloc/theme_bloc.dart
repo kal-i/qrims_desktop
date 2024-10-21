@@ -10,12 +10,24 @@ part 'theme_event.dart';
 class ThemeBloc extends Bloc<ThemeEvent, ThemeData> {
   ThemeBloc() : super(AppTheme.light) {
     on<SetInitialTheme>(_onSetInitialTheme);
+    on<SetLightTheme>(_onSetLightTheme);
+    on<SetDarkTheme>(_onSetDarkTheme);
     on<ToggleTheme>(_onToggleTheme);
   }
 
   void _onSetInitialTheme(SetInitialTheme event, Emitter<ThemeData> emit) async {
     bool hasDarkTheme = await isDark();
     emit(hasDarkTheme ? AppTheme.dark : AppTheme.light);
+  }
+
+  void _onSetLightTheme(SetLightTheme event, Emitter<ThemeData> emit) async {
+    emit(AppTheme.light);
+    setTheme(false);
+  }
+
+  void _onSetDarkTheme(SetDarkTheme event, Emitter<ThemeData> emit) async {
+    emit(AppTheme.dark);
+    setTheme(true);
   }
 
   void _onToggleTheme(ToggleTheme event, Emitter<ThemeData> emit) async {

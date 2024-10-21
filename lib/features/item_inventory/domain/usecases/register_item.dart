@@ -20,11 +20,11 @@ class RegisterItem implements UseCase<ItemWithStockEntity, RegisterItemParams> {
     return await itemInventoryRepository.registerItem(
       specification: params.specification,
       itemName: params.itemName,
-      description: params.description,
-      brand: params.brand,
-      model: params.model,
+      manufacturerName: params.manufacturerName,
+      brandName: params.brandName,
+      modelName: params.modelName,
       serialNo: params.serialNo,
-      manufacturer: params.manufacturer,
+      description: params.description,
       assetClassification: params.assetClassification,
       assetSubClass: params.assetSubClass,
       unit: params.unit,
@@ -40,11 +40,11 @@ class RegisterItemParams {
   const RegisterItemParams({
     required this.itemName,
     required this.description,
-    required this.specification,
-    required this.brand,
-    required this.model,
+    required this.manufacturerName,
+    required this.brandName,
+    required this.modelName,
     this.serialNo,
-    required this.manufacturer,
+    required this.specification,
     this.assetClassification,
     this.assetSubClass,
     required this.unit,
@@ -56,11 +56,11 @@ class RegisterItemParams {
 
   final String itemName;
   final String description;
-  final String specification;
-  final String brand;
-  final String model;
+  final String manufacturerName;
+  final String brandName;
+  final String modelName;
   final String? serialNo;
-  final String manufacturer;
+  final String specification;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final Unit unit;

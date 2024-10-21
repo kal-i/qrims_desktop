@@ -9,13 +9,14 @@ class MobileUserEntity extends UserEntity {
     required super.createdAt,
     super.updatedAt,
     super.authStatus,
+    super.isArchived,
     super.otp,
     super.otpExpiry,
     super.profileImage,
     required this.mobileUserId,
   });
 
-  final int mobileUserId;
+  final String mobileUserId;
 
   @override
   List<Object?> get props => [
@@ -26,6 +27,7 @@ class MobileUserEntity extends UserEntity {
         createdAt,
         updatedAt,
         authStatus,
+        isArchived,
         otp,
         otpExpiry,
         profileImage,

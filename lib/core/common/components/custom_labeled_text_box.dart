@@ -66,67 +66,73 @@ class _CustomLabeledTextBoxState extends State<CustomLabeledTextBox> {
       keyboardType = TextInputType.text;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextFormField(
-          controller: widget.controller,
-          enabled: widget.enabled,
-          focusNode: _focusNode,
-          onEditingComplete: () => FocusScope.of(context).nextFocus(), // grab the next focus
-          maxLines: widget.maxLines,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          decoration: InputDecoration(
-            filled: false,
-            fillColor: context.watch<ThemeBloc>().state == AppTheme.light
-                ? AppColor.lightBackground
-                : AppColor.darkBackground,
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightOutlineBorder
-                    : AppColor.darkOutlineBorder,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(5.0),
+    return SizedBox(
+      height: widget.height,
+      child: TextFormField(
+        controller: widget.controller,
+        enabled: widget.enabled,
+        focusNode: _focusNode,
+        onEditingComplete: () => FocusScope.of(context).nextFocus(), // grab the next focus
+        maxLines: widget.maxLines,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        decoration: InputDecoration(
+          filled: false,
+          fillColor: context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightBackground
+              : AppColor.darkBackground,
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: context.watch<ThemeBloc>().state == AppTheme.light
+                  ? AppColor.lightOutlineBorder
+                  : AppColor.darkOutlineBorder,
+              width: 1.5,
             ),
-            disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: const BorderSide(
-                color: AppColor.error,
-                width: 2.0,
-              ),
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(
-                color: AppColor.accent,
-                width: 2.0,
-              ),
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            label: Text(widget.label),
-            labelStyle: Theme.of(context).textTheme.bodySmall,
-            suffixIcon: widget.suffixIcon != null ? Icon(
-              widget.suffixIcon,
-              size: 20.0,
-            ) : widget.suffixWidget != null ? SizedBox(width: 20.0, child: widget.suffixWidget) : null,
+            borderRadius: BorderRadius.circular(5.0),
           ),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 12.0,
-            fontWeight: FontWeight.w500,
+          disabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Theme.of(context).dividerColor,
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
           ),
-          onTap: widget.onTap,
-          validator: widget.validator ?? ValidationBuilder(requiredMessage: '${widget.label} is required').build(),
+          errorBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: AppColor.error,
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: AppColor.accent,
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: AppColor.error,
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+          //hintText: 'Enter your ${widget.label}',
+          label: Text(widget.label),
+          labelStyle: Theme.of(context).textTheme.bodySmall,
+          suffixIcon: widget.suffixIcon != null ? Icon(
+            widget.suffixIcon,
+            size: 20.0,
+          ) : widget.suffixWidget != null ? SizedBox(width: 20.0, child: widget.suffixWidget) : null,
         ),
-      ],
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontSize: 12.0,
+          fontWeight: FontWeight.w500,
+        ),
+        onTap: widget.onTap,
+        validator: widget.validator ?? ValidationBuilder(requiredMessage: '${widget.label} is required').build(),
+      ),
     );
   }
 }

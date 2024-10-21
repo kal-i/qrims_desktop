@@ -9,7 +9,7 @@ class StockModel extends StockEntity {
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
     return StockModel(
-      id: json['stock_id'] as int? ?? 0,
+      id: json['stock_id'] as String? ?? '',
       productName: json['product_name'] as String? ?? '',
       description: json['description'] as String? ?? '',
     );

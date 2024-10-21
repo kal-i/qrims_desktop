@@ -1,6 +1,8 @@
 import 'package:postgres/postgres.dart';
 
+import '../../utils/generate_id.dart';
 import '../model/notification.dart' as notif;
+import '../model/notification.dart';
 
 class NotificationRepository {
   const NotificationRepository(
@@ -9,48 +11,65 @@ class NotificationRepository {
 
   final Connection _conn;
 
-  Future<notif.Notification> sendNotification({
-    required Map<String, dynamic> params,
+  Future<String> _generateUniqueNotifId() async {
+    while (true) {
+      final notifId = generatedId('NOTIF');
+
+      final result = await _conn.execute(
+        Sql.named(
+          '''SELECT COUNT(id) FROM Notifications WHERE id = @id;''',
+        ),
+        parameters: {
+          'id': notifId,
+        },
+      );
+
+      final count = result.first[0] as int;
+
+      if (count == 0) {
+        return notifId;
+      }
+    }
+  }
+
+  Future<String?> sendNotification({
+    required String recipientId,
+    required String senderId,
+    required String message,
+    required NotificationType type,
+    required String referenceId,
   }) async {
-    final recipientId = params['recipient_id'] as int;
-    final senderId = params['sender_id'] as int;
-    final message = params['message'] as String;
-    final type = params['type'] as notif.NotificationType?;
-    final referenceId = params['reference_id'] as int?;
+    try {
+      final notifId = await _generateUniqueNotifId();
+      print('notif id: $notifId');
+      print(recipientId);
+      print(senderId);
+      print(message);
+      print(type);
+      print(referenceId);
+      await _conn.execute(
+        Sql.named(
+          '''
+          INSERT INTO Notifications (id, recipient_id, sender_id, message, type, reference_id, created_at)
+          VALUES (@id, @recipient_id, @sender_id, @message, @type, @reference_id, @created_at);
+          ''',
+        ),
+        parameters: {
+          'id': notifId,
+          'recipient_id': recipientId,
+          'sender_id': senderId,
+          'message': message,
+          'type': type.toString().split('.').last,
+          'reference_id': referenceId,
+          'created_at': DateTime.now().toIso8601String(),
+        },
+      );
+      print('notif send');
 
-    print(recipientId);
-    print(senderId);
-
-
-    final result = await _conn.execute(
-      Sql.named(
-        '''
-      INSERT INTO Notifications (recipient_id, sender_id, message, type, reference_id)
-      VALUES (@recipient_id, @sender_id, @message, @type, @reference_id)
-      RETURNING id;
-      ''',
-      ),
-      parameters: {
-        'recipient_id': recipientId,
-        'sender_id': senderId,
-        'message': message,
-        'type': type.toString().split('.').last,
-        'reference_id': referenceId,
-      },
-    );
-
-    final notificationId = result.first[0] as int;
-
-    return notif.Notification(
-      id: notificationId,
-      recipientId: recipientId,
-      senderId: senderId,
-      message: message,
-      type: type,
-      referenceId: referenceId,
-      read: false,
-      //createdAt: DateTime.now(),
-    );
+      return notifId;
+    } catch (e) {
+      throw Exception('Error sending notif: $e');
+    }
   }
 
   Future<List<notif.Notification>?> getNotifications({

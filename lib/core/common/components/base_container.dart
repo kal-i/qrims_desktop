@@ -35,7 +35,8 @@ class BaseContainer extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         border: Border.all(
-          color: context.watch<ThemeBloc>().state == AppTheme.light ? AppColor.lightOutline : AppColor.darkOutlineCardBorder,
+          color: currentTheme.dividerColor,
+          width: .4,
         ),
         borderRadius: BorderRadius.circular(borderRadius ?? 10.0),
         boxShadow: hasBoxShadow

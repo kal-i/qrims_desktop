@@ -4,9 +4,7 @@ import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/error/failure.dart';
 import '../entities/item_with_stock.dart';
-import '../entities/paginated_item_name.dart';
 import '../entities/paginated_item_result.dart';
-import '../entities/stock.dart';
 import '../../../../core/enums/unit.dart' as unit;
 
 abstract interface class ItemInventoryRepository {
@@ -14,8 +12,11 @@ abstract interface class ItemInventoryRepository {
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? filter,
     String? sortBy,
     bool? sortAscending,
+    String? manufacturerName,
+    String? brandName,
     AssetClassification? classificationFilter,
     AssetSubClass? subClassFilter,
   });
@@ -23,11 +24,11 @@ abstract interface class ItemInventoryRepository {
   Future<Either<Failure, ItemWithStockEntity>> registerItem({
     required String itemName,
     required String description,
-    required String specification,
-    required String brand,
-    required String model,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
     String? serialNo,
-    required String manufacturer,
+    required String specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required unit.Unit unit,
@@ -38,18 +39,18 @@ abstract interface class ItemInventoryRepository {
   });
 
   Future<Either<Failure, ItemWithStockEntity?>> getItemById({
-    required int id,
+    required String id,
   });
 
   Future<Either<Failure, bool>> updateItem({
-    required int id,
+    required String id,
     String? itemName,
     String? description,
-    String? specification,
-    String? brand,
-    String? model,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
     String? serialNo,
-    String? manufacturer,
+    String? specification,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     unit.Unit? unit,
@@ -57,25 +58,5 @@ abstract interface class ItemInventoryRepository {
     double? unitCost,
     int? estimatedUsefulLife,
     DateTime? acquiredDate,
-  });
-
-  Future<Either<Failure, List<StockEntity>?>> getStocks();
-
-  Future<Either<Failure, List<String>?>> getStocksProductName({
-    String? productName,
-  });
-
-  Future<Either<Failure, PaginatedItemNameEntity>> getPaginatedProductNames({
-    int? page,
-    int? pageSize,
-    String? productName,
-  });
-
-  Future<Either<Failure, List<String>?>> getStocksDescription({
-    required String productName,
-  });
-
-  Future<Either<Failure, StockEntity?>> getStockById({
-    required int id,
   });
 }

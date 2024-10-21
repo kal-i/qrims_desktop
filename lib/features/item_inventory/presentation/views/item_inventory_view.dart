@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:fluid_dialog/fluid_dialog.dart';
 import 'package:data_table_2/data_table_2.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -14,19 +17,36 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 
+import '../../../../config/themes/app_theme.dart';
+import '../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../../core/common/components/custom_data_table.dart';
+import '../../../../core/common/components/custom_dropdown_button.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
+import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
+import '../../../../core/common/components/custom_popup_menu.dart';
+import '../../../../core/common/components/custom_search_box.dart';
 import '../../../../core/common/components/error_message_container.dart';
+import '../../../../core/common/components/filter_table_row.dart';
+import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/kpi_card.dart';
 import '../../../../core/common/components/pagination_controls.dart';
+import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/reusable_data_table.dart';
+import '../../../../core/common/components/reusable_dynamic_filter_menu.dart';
+import '../../../../core/common/components/reusable_filter_custom_outline_button.dart';
 import '../../../../core/common/components/reusable_popup_menu_button.dart';
+import '../../../../core/common/components/reusable_popup_menu_container.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 
+import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/services/item_suggestions_service.dart';
+import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
+import '../../../../injection_container.dart';
 import '../bloc/item_inventory_bloc.dart';
 
 class ItemInventoryView extends StatefulWidget {
@@ -37,18 +57,27 @@ class ItemInventoryView extends StatefulWidget {
 }
 
 class _ItemInventoryViewState extends State<ItemInventoryView> {
-  final List<DataColumn2> _columns = [];
-  final List<DataRow2> _rows = [];
   late ItemInventoryBloc _itemInventoryBloc;
-
-  final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
-  final ValueNotifier<Set<int>> _selectedRowIndices =
-      ValueNotifier<Set<int>>(<int>{});
-
-  late String _selectedSortValue = 'id';
-
+  late ItemSuggestionsService _itemSuggestionsService;
+  late String _selectedSortValue = 'acquired_date';
   late AssetClassification? _selectedClassificationFilter;
   late AssetSubClass? _selectedSubClassFilter;
+
+  final _manufacturerController = TextEditingController();
+  final _brandController = TextEditingController();
+  final _assetClassificationController = TextEditingController();
+  final _assetSubClassController = TextEditingController();
+
+  final ValueNotifier<String?> _selectedManufacturer = ValueNotifier(null);
+
+  final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
+  final ValueNotifier<String> _selectedFilterNotifier =
+      ValueNotifier('in_stock');
+
+  final ValueNotifier<int> _totalItemsCount = ValueNotifier(0);
+  final ValueNotifier<int> _inStockCount = ValueNotifier(0);
+  final ValueNotifier<int> _lowStockCount = ValueNotifier(0);
+  final ValueNotifier<int> _outOfStockCount = ValueNotifier(0);
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -61,72 +90,40 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  bool _isScrollable = false;
+  late TableConfig _tableConfig;
+  final List<String> _tableHeaders = [
+    'Item Name',
+    'Description',
+    'Brand',
+    'Model',
+    'Quantity',
+    'Unit Cost',
+    'Status',
+  ];
+  late List<TableData> _tableRows = [];
+
+  final ValueNotifier<bool> _isFilterModalVisible = ValueNotifier(false);
+  final ValueNotifier<bool> _isSortModalVisible = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
     _itemInventoryBloc = context.read<ItemInventoryBloc>();
+    _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
+
     _selectedClassificationFilter = null;
     _selectedSubClassFilter = null;
-    _initializeColumns();
     _searchController.addListener(_onSearchChanged);
+    _selectedFilterNotifier.addListener(_onFilterChanged);
+    _initializeTableConfig();
     _fetchItems();
   }
 
-  void _initializeColumns() {
-    _columns.addAll(
-      [
-        // const DataColumn2(
-        //   label: Text('Item Id'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Specification'),
-        // ),
-        const DataColumn2(label: Text('Item Name'),),
-        const DataColumn2(label: Text('Description'),),
-        const DataColumn2(
-          label: Text('Brand'),
-        ),
-        const DataColumn2(
-          label: Text('Model'),
-        ),
-
-        // const DataColumn2(
-        //   label: Text('Serial No'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Manufacturer'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Asset Classification'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Asset Sub Class'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Unit'),
-        // ),
-
-        const DataColumn2(
-          label: Text('Quantity'),
-        ),
-        const DataColumn2(
-          label: Text('Unit Cost'),
-        ),
-        // const DataColumn2(
-        //   label: Text('Estimated Useful Life'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('Acquired Date'),
-        // ),
-        // const DataColumn2(
-        //   label: Text('QR Code'),
-        // ),
-        const DataColumn2(
-          label: Text('Actions'),
-        ),
-      ],
+  void _initializeTableConfig() {
+    _tableConfig = TableConfig(
+      headers: _tableHeaders,
+      rows: _tableRows,
+      columnFlex: [2, 3, 2, 2, 2, 2, 2],
     );
   }
 
@@ -136,8 +133,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         page: _currentPage,
         pageSize: _pageSize,
         searchQuery: _searchController.text,
+        filter: _selectedFilterNotifier.value,
         sortBy: _selectedSortValue,
         sortAscending: _selectedSortOrder.value == 'Ascending',
+        manufacturerName: _manufacturerController.text,
+        brandName: _brandController.text,
         classificationFilter: _selectedClassificationFilter,
         subClassFilter: _selectedSubClassFilter,
       ),
@@ -149,6 +149,22 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _currentPage = 1;
     _selectedClassificationFilter = null;
     _selectedSubClassFilter = null;
+
+    _selectedManufacturer.value = null;
+    _manufacturerController.clear();
+    _brandController.clear();
+    _assetClassificationController.clear();
+    _assetSubClassController.clear();
+
+    _selectedFilterNotifier.value = 'in_stock';
+    _selectedSortValue = '';
+    _selectedSortOrder.value = 'Descending';
+    _fetchItems();
+  }
+
+  void _onFilterChanged() {
+    _searchController.clear();
+    _currentPage = 1;
     _fetchItems();
   }
 
@@ -160,91 +176,51 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     });
   }
 
-  Future<Uint8List> generatePdfWithQrCode(Uint8List qrCodeImageBytes) async {
-    final pdf = pw.Document();
+  List<String> _assetClassificationSuggestionCallback(
+      String? assetClassification) {
+    final assetClassifications = AssetClassification.values
+        .map((classification) => readableEnumConverter(classification))
+        .toList();
 
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Center(
-            child: pw.Image(
-              pw.MemoryImage(qrCodeImageBytes),
-              width: 200, // Adjust width as needed
-              height: 200, // Adjust height as needed
-            ),
-          );
-        },
-      ),
-    );
+    if (assetClassification != null && assetClassification.isNotEmpty) {
+      final filteredClassifications =
+          assetClassifications.where((classification) {
+        return classification
+            .toLowerCase()
+            .contains(assetClassification.toLowerCase());
+      }).toList();
 
-    return pdf.save();
+      return filteredClassifications;
+    }
+    return assetClassifications;
   }
 
-  void printQrCode(Uint8List qrCodeImageBytes) async {
-    final pdfData = await generatePdfWithQrCode(qrCodeImageBytes);
+  List<String> _assetSubClassSuggestionCallback(String? assetSubClass) {
+    final assetSubClasses = AssetSubClass.values
+        .map((subClass) => readableEnumConverter(subClass))
+        .toList();
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdfData,
-    );
+    if (assetSubClass != null && assetSubClass.isNotEmpty) {
+      final filteredSubClass = assetSubClasses.where((subClass) {
+        return subClass.toLowerCase().contains(assetSubClass.toLowerCase());
+      }).toList();
+
+      return filteredSubClass;
+    }
+    return assetSubClasses;
   }
 
-  void _showQrCodeDialog(String qrCodeImageData) {
-    final qrCodeImageBytes = base64Decode(qrCodeImageData);
+  void _onAssetClassificationSelected(String value) {
+    _assetClassificationController.text = value;
+    _selectedClassificationFilter = AssetClassification.values.firstWhere(
+        (assetClassification) =>
+            readableEnumConverter(assetClassification) == value);
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        content: Container(
-          padding: const EdgeInsets.all(10.0),
-          width: 300.0,
-          height: 300.0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Scan the QR Code to view item\'s information',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-              Container(
-                width: 240.0,
-                height: 240.0,
-                padding: const EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                    width: 1.0,
-                  ),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Image.memory(
-                  base64Decode(qrCodeImageData),
-                  fit: BoxFit.scaleDown,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          CustomOutlineButton(
-            onTap: () => context.pop(),
-            text: 'Close',
-          ),
-          CustomOutlineButton(
-            onTap: () async {
-              printQrCode(qrCodeImageBytes);
-            },
-            icon: CupertinoIcons.printer,
-            text: 'Print',
-          ),
-        ],
-      ),
-    );
+  void _onAssetSubClassSelected(String value) {
+    _assetSubClassController.text = value;
+    _selectedSubClassFilter = AssetSubClass.values.firstWhere(
+        (assetSubClass) => readableEnumConverter(assetSubClass) == value);
   }
 
   @override
@@ -252,94 +228,138 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _searchController.dispose();
     _denounce?.cancel();
     _selectedSortOrder.dispose();
-    _selectedRowIndices.dispose();
+    _selectedFilterNotifier.dispose();
+    _totalItemsCount.dispose();
+
+    _isFilterModalVisible.dispose();
+    _isSortModalVisible.dispose();
     super.dispose();
   }
 
-  /// Note: for items with serial no, register separately
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        Expanded(
-          child: _buildSummaryRow(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(
+              height: 20.0,
+            ),
+            _buildHeaderRow(),
+            const SizedBox(
+              height: 20.0,
+            ),
+            _buildSummaryRow(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildTableRelatedActionsRow(),
+            const SizedBox(
+              height: 20.0,
+            ),
+            Expanded(
+              child: _buildDataTable(),
+            ),
+          ],
         ),
-        const SizedBox(
-          height: 50.0,
-        ),
-        Expanded(
-          flex: 6,
-          child: Column(
-            children: [
-              _buildActionsRow(),
-              const SizedBox(
-                height: 20.0,
-              ),
-              Expanded(
-                child: _buildDataTable(),
-              ),
-            ],
-          ),
-        ),
+        _buildFilterModal(),
       ],
     );
   }
 
-  Widget _buildSummaryRow() {
-    return const Row(
-      children: [
-        Expanded(
-          child: KPICard(
-            icon: Icons.inventory_2_outlined,
-            title: 'Total Items',
-            data: '20',
-            baseColor: Colors.transparent,
-          ),
-        ),
-        SizedBox(
-          width: 10.0,
-        ),
-        Expanded(
-          child: KPICard(
-            icon: CupertinoIcons.cube,
-            title: 'In stock',
-            data: '10',
-            baseColor: Colors.transparent,
-          ),
-        ),
-        SizedBox(
-          width: 10.0,
-        ),
-        Expanded(
-          child: KPICard(
-            icon: CupertinoIcons.cube_box,
-            title: 'Low stock',
-            data: '5',
-            baseColor: Colors.transparent,
-          ),
-        ),
-        SizedBox(
-          width: 10.0,
-        ),
-        Expanded(
-          child: KPICard(
-            icon: CupertinoIcons.nosign,
-            title: 'Out of stock',
-            data: '5',
-            baseColor: Colors.transparent,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionsRow() {
+  Widget _buildHeaderRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildRegisterButton(),
+        Text(
+          'Overview',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 24.0,
+              ),
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            _buildRegisterButton(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// add status based on the quantity: in stock, low, and out
+  Widget _buildSummaryRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: _totalItemsCount,
+              builder: (context, totalItemsCount, child) {
+                return KPICard(
+                  icon: HugeIcons.strokeRoundedPackageAdd,
+                  title: 'Total Items',
+                  data: totalItemsCount.toString(),
+                  baseColor: Colors.transparent,
+                );
+              }),
+        ),
+        const SizedBox(
+          width: 10.0,
+        ),
+        Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: _inStockCount,
+              builder: (context, inStockCount, child) {
+                return KPICard(
+                  icon: HugeIcons.strokeRoundedPackageDelivered,
+                  title: 'In stock',
+                  data: inStockCount.toString(),
+                  baseColor: Colors.transparent,
+                );
+              }),
+        ),
+        const SizedBox(
+          width: 10.0,
+        ),
+        Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: _lowStockCount,
+              builder: (context, lowStockCount, child) {
+                return KPICard(
+                  icon: HugeIcons.strokeRoundedPackageProcess,
+                  title: 'Low stock',
+                  data: lowStockCount.toString(),
+                  baseColor: Colors.transparent,
+                );
+              }),
+        ),
+        const SizedBox(
+          width: 10.0,
+        ),
+        Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: _outOfStockCount,
+              builder: (context, outOfStockCount, child) {
+                return KPICard(
+                  icon: HugeIcons.strokeRoundedPackageRemove,
+                  title: 'Out of stock',
+                  data: outOfStockCount.toString(),
+                  baseColor: Colors.transparent,
+                );
+              }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableRelatedActionsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildFilterTableRow(),
         Row(
           children: [
             ExpandableSearchButton(
@@ -352,18 +372,26 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
             const SizedBox(
               width: 10.0,
             ),
-            _buildFilterButton(),
+            _buildSortButton(),
             const SizedBox(
               width: 10.0,
             ),
-            _buildSortButton(),
-            // const SizedBox(
-            //   width: 10.0,
-            // ),
-            //_buildFilterColumnButton(),
+            _buildFilterButton(),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildFilterTableRow() {
+    final Map<String, String> filterMapping = {
+      'In Stock': 'in_stock',
+      'Low': 'low',
+      'Out': 'out',
+    };
+    return FilterTableRow(
+      selectedFilterNotifier: _selectedFilterNotifier,
+      filterMapping: filterMapping,
     );
   }
 
@@ -373,183 +401,54 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     };
 
     return CustomFilledButton(
+      height: 40.0,
       onTap: () => context.go(
         '${RoutingConstants.itemInventoryViewRoutePath}/${RoutingConstants.registerItemViewRoutePath}',
         extra: extra,
       ),
-      text: 'Register item',
+      text: 'Register Item',
     );
   }
 
   Widget _buildRefreshButton() {
-    return CustomIconButton(
-      onTap: () => _refreshItemList(),
-      tooltip: 'Refresh',
-      icon: CupertinoIcons.arrow_2_circlepath,
+    return ReusableCustomRefreshOutlineButton(
+      onTap: _refreshItemList,
     );
   }
 
   Widget _buildFilterButton() {
-    return ReusablePopupMenuButton(
-      onSelected: _onFilterSelected,
+    return CustomIconButton(
       tooltip: 'Filter',
-      icon: const CustomIconButton(
-        icon: Icons.tune_outlined,
-      ),
-      popupMenuItems: _buildFilterMenuItems(),
+      onTap: () => _isFilterModalVisible.value = true,
+      isOutlined: true,
+      icon: FluentIcons.filter_add_20_regular,
     );
   }
 
-  List<PopupMenuEntry<String>> _buildFilterMenuItems() {
-    return [
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        title: 'Filter by:',
-      ),
-      const PopupMenuDivider(
-        height: .3,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        title: 'Asset Classification:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetClassification.buildingsAndStructure.toString(),
-        title: 'Buildings and Structure',
-        icon: CupertinoIcons.building_2_fill,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetClassification.machineryAndEquipment.toString(),
-        title: 'Machinery and Equipment',
-        icon: CupertinoIcons.cube_box,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetClassification.transportation.toString(),
-        title: 'Transportation',
-        icon: Icons.fire_truck_outlined,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetClassification.furnitureFixturesAndBooks.toString(),
-        title: 'Furniture Fixtures and Books',
-        icon: CupertinoIcons.book,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetClassification.unknown.toString(),
-        title: 'Unknown',
-        icon: CupertinoIcons.question_square,
-      ),
-      const PopupMenuDivider(
-        height: .3,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        title: 'Asset Sub Class:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.schoolBuildings.toString(),
-        title: 'School Buildings',
-        icon: CupertinoIcons.building_2_fill,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.machinery.toString(),
-        title: 'Machinery',
-        icon: CupertinoIcons.cube_box,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.office.toString(),
-        title: 'Office',
-        icon: Icons.fire_truck_outlined,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.informationAndCommunicationTechnologyEquipment
-            .toString(),
-        title: 'Information And Communication Technology Equipment',
-        icon: CupertinoIcons.book,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.medical.toString(),
-        title: 'Medical',
-        icon: CupertinoIcons.question_square,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.dental.toString(),
-        title: 'Dental',
-        icon: CupertinoIcons.book,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.sports.toString(),
-        title: 'Sports',
-        icon: CupertinoIcons.question_square,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.motorVehicles.toString(),
-        title: 'Motor Vehicles',
-        icon: CupertinoIcons.book,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.furnitureAndBooks.toString(),
-        title: 'Furniture and Books',
-        icon: CupertinoIcons.question_square,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: AssetSubClass.unknown.toString(),
-        title: 'Unknown',
-        icon: CupertinoIcons.question_square,
-      ),
-    ];
-  }
-
-  void _onFilterSelected(String? value) {
-    print(value);
-    if (value != null && value.isNotEmpty) {
-      if (value.startsWith('AssetClassification')) {
-        _selectedSubClassFilter = null;
-        _selectedClassificationFilter = AssetClassification.values.firstWhere(
-          (e) => e.toString().split('.').last == value.split('.').last,
-        );
-      } else if (value.startsWith('AssetSubClass')) {
-        _selectedSubClassFilter = AssetSubClass.values.firstWhere(
-          (e) => e.toString().split('.').last == value.split('.').last,
-        );
-      }
-
-      print(_selectedClassificationFilter);
-      print(_selectedSubClassFilter);
-      _searchController.clear();
-      _currentPage = 1;
-      _fetchItems();
-    }
-  }
-
   Widget _buildSortButton() {
-    return ValueListenableBuilder(
-        valueListenable: _selectedSortOrder,
-        builder: (BuildContext context, String value, Widget? child) {
-          return ReusablePopupMenuButton(
-            onSelected: _onSortSelected,
-            tooltip: 'Sort',
-            icon: const CustomIconButton(
-              icon: CupertinoIcons.arrow_up_arrow_down,
-            ),
-            popupMenuItems: _buildSortMenuItems(),
-          );
-        });
+    return CustomIconButton(
+      tooltip: 'Sort',
+      onTap: () => _isSortModalVisible.value = true,
+      isOutlined: true,
+      icon: FluentIcons.text_sort_ascending_20_regular,
+    );
   }
+
+  // Widget _buildSortButton() {
+  //   return ValueListenableBuilder(
+  //       valueListenable: _selectedSortOrder,
+  //       builder: (BuildContext context, String value, Widget? child) {
+  //         return ReusablePopupMenuButton(
+  //           onSelected: _onSortSelected,
+  //           tooltip: 'Sort',
+  //           icon: const CustomIconButton(
+  //             icon: FluentIcons.text_sort_ascending_20_regular,
+  //             isOutlined: true,
+  //           ),
+  //           popupMenuItems: _buildSortMenuItems(),
+  //         );
+  //       });
+  // }
 
   List<PopupMenuEntry<String>> _buildSortMenuItems() {
     return [
@@ -637,340 +536,431 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     }
   }
 
-  // Widget _buildUpdateButton() {
-  //   return CustomIconButton(
-  //     onTap: _onSelectUpdate,
-  //     icon: CupertinoIcons.pencil,
-  //   );
-  // }
-
-  void _onSelectUpdate() {
-    print(_rows);
-    final selectedRowIndex = _selectedRowIndices.value.isNotEmpty
-        ? _selectedRowIndices.value.first
-        : -1;
-
-    if (selectedRowIndex == -1) {
-      return;
-    }
-
-    final selectedRow = _rows[selectedRowIndex];
-
-    print('selected row index: $selectedRowIndex');
-    print('selected row: $selectedRow');
-
-    final firstCell =
-        selectedRow.cells.isNotEmpty ? selectedRow.cells.first : null;
-
-    if (firstCell != null) {
-      // Extract the data from DataCell
-      final firstCellValueWidget = firstCell.child as Text?;
-      final firstCellValue = firstCellValueWidget?.data ?? '';
-      print('first cell value: $firstCellValue');
-
-      // Safely parse the value to an integer
-      final itemId = int.tryParse(firstCellValue) ?? -1;
-
-      if (itemId != -1) {
-        final Map<String, dynamic> extras = {
-          'is_update': true,
-          'item_id': itemId,
-        };
-        context.go(
-          '${RoutingConstants.itemInventoryViewRoutePath}/${RoutingConstants.updateItemViewRoutePath}',
-          extra: extras,
-        );
-      } else {
-        print('Invalid item_id: $firstCellValue');
-      }
-    } else {
-      print('No cells available in the selected row.');
-    }
-  }
-
-  List<PopupMenuEntry<String>> _buildActionMenuItems() {
-    return [
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'view',
-        icon: Icons.file_copy_outlined,
-        title: 'View',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'edit',
-        icon: Icons.edit,
-        title: 'Edit',
-      ),
-    ];
-  }
-
-  void _onActionView(int id) {
-    final Map<String, dynamic> extras = {
-      'is_update': false,
-      'item_id': id,
-    };
-
-    context.go(
-      '${RoutingConstants.itemInventoryViewRoutePath}/${RoutingConstants.updateItemViewRoutePath}',
-      extra: extras,
-    );
-  }
-
-  void _onActionUpdate(int id) {
-    final Map<String, dynamic> extras = {
-      'is_update': true,
-      'item_id': id,
-    };
-
-    context.go(
-      '${RoutingConstants.itemInventoryViewRoutePath}/${RoutingConstants.updateItemViewRoutePath}',
-      extra: extras,
-    );
-  }
-
-  // Widget _buildFilterColumnButton() {
-  //   return ReusablePopupMenuButton(
-  //     icon: const CustomIconButton(
-  //       icon: Icons.view_week_outlined, // Icons.view_in_ar_outlined,
-  //     ),
-  //     onSelected: (String? value) {},
-  //     popupMenuItems: [],
-  //   );
-  // }
-
   Widget _buildDataTable() {
     return BlocConsumer<ItemInventoryBloc, ItemInventoryState>(
-        listener: (context, state) {
-      if (state is ItemsLoading) {
-        _isLoading = true;
-        _errorMessage = null;
-      }
+      listener: (context, state) {
+        if (state is ItemsLoading) {
+          _isLoading = true;
+          _errorMessage = null;
+        }
 
-      // no need to trigger refresh when just fetching data
-      if (state is ItemFetched) {
-        _isLoading = false;
-      }
+        // no need to trigger refresh when just fetching data
+        if (state is ItemFetched) {
+          _isLoading = false;
+        }
 
-      // just to reset the loading state
-      if (state is ItemRegistered || state is ItemUpdated) {
-        _isLoading = false;
-        _refreshItemList();
-      }
+        // just to reset the loading state
+        if (state is ItemRegistered || state is ItemUpdated) {
+          _isLoading = false;
+          _refreshItemList();
+        }
 
-      // if (state is ItemRegistered) {
-      //   _refreshItemList();
-      // }
-      //
-      // if (state is ItemUpdated) {
-      //   _refreshItemList();
-      // }
-
-      if (state is ItemsLoaded) {
-        _isLoading = false;
-        _totalRecords = state.totalItemCount;
-        _rows.clear();
-        _rows.addAll(
-          state.items
-              .map(
-                (item) => DataRow2(
-                  cells: [
-                    //DataCell(Text(item.id.toString())),
-                    // DataCell(Text(
-                    //   item.specification,
-                    //   overflow: TextOverflow.ellipsis,
-                    // )),
-                    DataCell(Text(item.stockEntity!.productName),),
-                    DataCell(Text(item.stockEntity!.description),),
-                    DataCell(Text(item.itemEntity.brand,)),
-                    DataCell(Text(item.itemEntity.model,)),
-
-                    // DataCell(Text(item.itemEntity.serialNo!)),
-                    // DataCell(Text(item.itemEntity.manufacturer)),
-                    // DataCell(Text(readableEnumConverter(item.itemEntity.assetClassification!))),
-                    // DataCell(Text(readableEnumConverter(item.itemEntity.assetSubClass!))),
-                    // DataCell(Text(readableEnumConverter(item.itemEntity.unit))),
-
-                    DataCell(Text(item.itemEntity.quantity.toString(),)),
-                    DataCell(Text(item.itemEntity.unitCost.toString(),)),
-                    //DataCell(Text(item.estimatedUsefulLife.toString())),
-                    //DataCell(Text(dateFormatter(item.acquiredDate!))),
-                    // DataCell(
-                    //   Padding(
-                    //     padding: const EdgeInsets.all(5.0),
-                    //     child: GestureDetector(
-                    //       onTap: () => _showQrCodeDialog(item.qrCodeImageData),
-                    //       child: Image.memory(
-                    //         base64Decode(item.qrCodeImageData),
-                    //         fit: BoxFit.cover,
-                    //         height: 50.0,
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                    DataCell(
-                      ReusablePopupMenuButton(
-                        onSelected: (String? value) {
-                          String basePath =
-                              '${RoutingConstants.itemInventoryViewRoutePath}/';
-                          final Map<String, dynamic> extras = {
-                            'item_id': item.itemEntity.id,
-                          };
-
-                          print(item.itemEntity.id);
-
-                          if (value != null && value.isNotEmpty) {
-                            if (value.contains('view')) {
-                              extras['is_update'] = false;
-                              basePath += RoutingConstants.viewItemRoutePath;
-                            }
-
-                            if (value.contains('edit')) {
-                              extras['is_update'] = true;
-                              basePath +=
-                                  RoutingConstants.updateItemViewRoutePath;
-                            }
-
-                            context.go(
-                              basePath,
-                              extra: extras,
-                            );
-                          }
-                        },
-                        popupMenuItems: _buildActionMenuItems(),
+        if (state is ItemsLoaded) {
+          _isLoading = false;
+          _totalRecords = state.totalItemCount;
+          print(_totalRecords);
+          _inStockCount.value = state.inStockCount;
+          _lowStockCount.value = state.lowStockCount;
+          _outOfStockCount.value = state.outOfStockCount;
+          _totalItemsCount.value = _inStockCount.value +
+              _lowStockCount.value +
+              _outOfStockCount.value;
+          _tableRows.clear();
+          _tableRows.addAll(
+            state.items
+                .map(
+                  (item) => TableData(
+                    id: item.itemEntity.id,
+                    columns: [
+                      Text(
+                        capitalizeWord(
+                            item.productStockEntity.productName.name),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
                       ),
-                      // Row(
-                      //   children: [
-                      //     CustomIconButton(
-                      //       tooltip: 'View',
-                      //       icon: Icons.file_copy_outlined,
-                      //       onTap: () => _onActionUpdate(item.id),
-                      //     ),
-                      //     const SizedBox(
-                      //       width: 5.0,
-                      //     ),
-                      //     CustomIconButton(
-                      //       tooltip: 'Edit',
-                      //       icon: Icons.edit,
-                      //       onTap: () => _onActionUpdate(item.id),
-                      //     ),
-                      //   ],
-                      // ),
-                    ),
-                  ],
-                ),
-              )
-              .toList(),
-        );
-      }
+                      Text(
+                        item.productStockEntity.productDescription
+                                ?.description ??
+                            '',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.manufacturerBrandEntity.manufacturer.name,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.manufacturerBrandEntity.brand.name,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.itemEntity.quantity.toString(),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                      ),
+                      Text(
+                        item.itemEntity.unitCost.toString(),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                      ),
+                      SizedBox(
+                        width: 50.0,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _buildStatusHighlighter(
+                            item.itemEntity.quantity,
+                          ),
+                        ),
+                      ),
+                    ],
+                    menuItems: [
+                      {'text': 'View', 'icon': FluentIcons.eye_12_regular},
+                      {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
+                    ],
+                  ),
+                )
+                .toList(),
+          );
+        }
 
-      if (state is ItemsError) {
-        _isLoading = false;
-        _errorMessage = state.message;
-      }
-    }, builder: (context, state) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
+        if (state is ItemsError) {
+          _isLoading = false;
+          _errorMessage = state.message;
+        }
+      },
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: CustomDataTable(
+                      config: _tableConfig.copyWith(
+                        rows: _tableRows,
+                      ),
+                      onActionSelected: (index, action) {
+                        final itemId = _tableRows[index].id;
+                        String basePath =
+                            '${RoutingConstants.itemInventoryViewRoutePath}/';
+                        final Map<String, dynamic> extras = {
+                          'item_id': itemId,
+                        };
+
+                        if (action.isNotEmpty) {
+                          if (action.contains('View')) {
+                            extras['is_update'] = false;
+                            basePath += RoutingConstants.viewItemRoutePath;
+                          }
+
+                          if (action.contains('Edit')) {
+                            extras['is_update'] = true;
+                            basePath +=
+                                RoutingConstants.updateItemViewRoutePath;
+                          }
+
+                          context.go(
+                            basePath,
+                            extra: extras,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  if (_isLoading)
+                    LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).dividerColor,
+                      color: AppColor.accent,
+                    ),
+                  if (_errorMessage != null)
+                    Center(
+                      child: CustomMessageBox.error(
+                        message: _errorMessage!,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 10.0,
+            ),
+            PaginationControls(
+              currentPage: _currentPage,
+              totalRecords: _totalRecords,
+              pageSize: _pageSize,
+              onPageChanged: (page) {
+                _currentPage = page;
+                _fetchItems();
+              },
+              onPageSizeChanged: (size) {
+                _pageSize = size;
+                _fetchItems();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  StatusStyle _quantityStatusStyler({required int quantity}) {
+    if (quantity > 5) {
+      return StatusStyle.green(label: 'In Stock');
+    } else if (quantity > 0) {
+      return StatusStyle.yellow(label: 'Low');
+    } else {
+      return StatusStyle.red(label: 'Out');
+    }
+  }
+
+  Widget _buildStatusHighlighter(int quantity) {
+    return HighlightStatusContainer(
+      statusStyle: _quantityStatusStyler(quantity: quantity),
+    );
+  }
+
+  Widget _buildItemManufacturersSuggestionField() {
+    return CustomSearchBox(
+      suggestionsCallback: (manufacturerName) async {
+        final manufacturerNames = await _itemSuggestionsService
+            .fetchManufacturers(manufacturerName: manufacturerName);
+
+        if (manufacturerNames == []) {
+          _brandController.clear();
+          _selectedManufacturer.value = '';
+        }
+
+        return manufacturerNames;
+      },
+      onSelected: (value) {
+        _manufacturerController.text = value;
+        _brandController.clear();
+        _selectedManufacturer.value = value;
+      },
+      controller: _manufacturerController,
+      label: 'Manufacturer',
+    );
+  }
+
+  Widget _buildItemBrandsSuggestionField() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedManufacturer,
+      builder: (context, selectedManufacturer, child) {
+        return CustomSearchBox(
+          key: ValueKey(selectedManufacturer),
+          suggestionsCallback: (brandName) async {
+            if (selectedManufacturer != null &&
+                selectedManufacturer.isNotEmpty) {
+              final brandNames = await _itemSuggestionsService.fetchBrands(
+                  manufacturerName: selectedManufacturer, brandName: brandName);
+
+              return brandNames;
+            } else {
+              return Future.value([]);
+            }
+          },
+          onSelected: (value) {
+            _brandController.text = value;
+          },
+          controller: _brandController,
+          label: 'Brand',
+        );
+      },
+    );
+  }
+
+  Widget _buildAssetClassificationsSuggestionField() {
+    return CustomSearchBox(
+      suggestionsCallback: _assetClassificationSuggestionCallback,
+      onSelected: _onAssetClassificationSelected,
+      controller: _assetClassificationController,
+      label: 'Asset Classification',
+    );
+  }
+
+  Widget _buildAssetSubClassesSuggestionField() {
+    return CustomSearchBox(
+      suggestionsCallback: _assetSubClassSuggestionCallback,
+      onSelected: _onAssetSubClassSelected,
+      controller: _assetSubClassController,
+      label: 'Asset Sub Class',
+    );
+  }
+
+  Widget _buildFilterModal() {
+    return ValueListenableBuilder(
+      valueListenable: _isFilterModalVisible,
+      builder: (context, isModalVisible, child) {
+        return SlideableContainer(
+          width: 400.0,
+          content: isModalVisible
+              ? _buildFilterModalContent()
+              : const SizedBox.shrink(),
+          isVisible: isModalVisible,
+          onClose: () {
+            _isFilterModalVisible.value = false;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterModalContent() {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.0),
+            color: (context.watch<ThemeBloc>().state == AppTheme.light
+                ? AppColor.lightSecondary
+                : AppColor.darkSecondary),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Filter Items',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Icon(
+                HugeIcons.strokeRoundedCancel01,
+                size: 16.0,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(15.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: ValueListenableBuilder(
-                    valueListenable: _selectedRowIndices,
-                    builder: (BuildContext context, Set<int> selectedRowIndices,
-                        Widget? child) {
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minWidth: constraints.maxWidth,
-                                    ),
-                                    child: ReusableDataTable(
-                                      columns: _columns, // _columns,
-                                      rows: _rows.map((row) {
-                                        final index = _rows.indexOf(row);
-
-                                        return DataRow2(
-                                          cells: row.cells,
-                                          selected: selectedRowIndices.contains(index),
-                                          onSelectChanged: (selected) {
-                                            if (selected != null) {
-                                              final updatedSelected =
-                                                  Set<int>.from(selectedRowIndices);
-                                              if (selected) {
-                                                updatedSelected.add(index);
-                                              } else {
-                                                updatedSelected.remove(index);
-                                              }
-                                              _selectedRowIndices.value = updatedSelected;
-                                            }
-                                          },
-                                          color: WidgetStateProperty.resolveWith<Color?>(
-                                              (Set<WidgetState> states) {
-                                            if (states.contains(WidgetState.hovered)) {
-                                              return Theme.of(context)
-                                                  .dividerColor
-                                                  .withOpacity(0.3);
-                                            } else if (states
-                                                .contains(WidgetState.selected)) {
-                                              return Theme.of(context)
-                                                  .dividerColor
-                                                  .withOpacity(0.3);
-                                            }
-                                            return null;
-                                            // return context.watch<ThemeBloc>().state == AppTheme.light
-                                            //     ? AppColor.lightTableRow
-                                            //     : AppColor.darkTableRow;
-                                          }),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-
-                            ),
-                          );
-                        }
-                      );
-                    },
+                // const Text(
+                //   'Manufacturer',
+                //   style: TextStyle(
+                //     fontFamily: 'Inter',
+                //     fontSize: 12.0,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
+                // const SizedBox(
+                //   height: 5.0,
+                // ),
+                _buildItemManufacturersSuggestionField(),
+                // const SizedBox(
+                //   height: 20.0,
+                // ),
+                // const Text(
+                //   'Brand',
+                //   style: TextStyle(
+                //     fontFamily: 'Inter',
+                //     fontSize: 12.0,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
+                const SizedBox(
+                  height: 5.0,
+                ),
+                _buildItemBrandsSuggestionField(),
+                const SizedBox(
+                  height: 20.0,
+                ),
+                const Text(
+                  'Asset Classification',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (_isLoading)
-                  Container(
-                    height: 2.0,
-                    color: AppColor.accent,
+                const SizedBox(
+                  height: 5.0,
+                ),
+                _buildAssetClassificationsSuggestionField(),
+                const SizedBox(
+                  height: 20.0,
+                ),
+                const Text(
+                  'Asset Sub Class',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w600,
                   ),
-                if (_errorMessage != null)
-                  Center(
-                    child: ErrorMessageContainer(
-                      errorMessage: _errorMessage!,
-                    ),
-                  ),
+                ),
+                const SizedBox(
+                  height: 5.0,
+                ),
+                _buildAssetSubClassesSuggestionField(),
               ],
             ),
           ),
-          const SizedBox(
-            height: 10.0,
+        ),
+        _modalActionsRow(),
+      ],
+    );
+  }
+
+  Widget _modalActionsRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Expanded(
+            child: CustomOutlineButton(
+              onTap: () {
+                _isFilterModalVisible.value = false;
+              },
+              height: 40.0,
+              text: 'Cancel',
+            ),
           ),
-          PaginationControls(
-            currentPage: _currentPage,
-            totalRecords: _totalRecords,
-            pageSize: _pageSize,
-            onPageChanged: (page) {
-              _currentPage = page;
-              _fetchItems();
-            },
-            onPageSizeChanged: (size) {
-              _pageSize = size;
-              _fetchItems();
-            },
+          const SizedBox(
+            width: 15.0,
+          ),
+          Expanded(
+            child: CustomFilledButton(
+              onTap: () {
+                _fetchItems();
+                _isFilterModalVisible.value = false;
+              },
+              height: 40.0,
+              text: 'Apply',
+            ),
           ),
         ],
-      );
-    });
+      ),
+    );
   }
 }

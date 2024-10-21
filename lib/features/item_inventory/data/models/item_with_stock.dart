@@ -1,26 +1,36 @@
 import '../../domain/entities/item_with_stock.dart';
+import '../../domain/entities/product_stock.dart';
 import 'item.dart';
+import 'manufacturer_brand.dart';
+import 'model.dart';
+import 'product_stock.dart';
 import 'stock.dart';
 
 class ItemWithStockModel extends ItemWithStockEntity {
-  ItemWithStockModel({
+  const ItemWithStockModel({
+    required super.productStockEntity,
     required super.itemEntity,
-    super.stockEntity,
+    required super.manufacturerBrandEntity,
+    required super.modelEntity,
   });
 
   factory ItemWithStockModel.fromJson(Map<String, dynamic> json) {
     return ItemWithStockModel(
+      productStockEntity: ProductStockModel.fromJson(json['product_stock']),
       itemEntity: ItemModel.fromJson(json['item']),
-      stockEntity: json['stock'] != null ? StockModel.fromJson(json['stock']) : null,
+      manufacturerBrandEntity:
+          ManufacturerBrandModel.fromJson(json['manufacturer_brand']),
+      modelEntity: Model.fromJson(json['model']),
     );
   }
 
   Map<String, dynamic> toJson() {
-    final stockJson = stockEntity != null ? (stockEntity as StockModel).toJson() : {};
-
     return {
+      'product_stock': (productStockEntity as ProductStockModel).toJson(),
       'item': (itemEntity as ItemModel).toJson(),
-      'stock': stockJson,
+      'manufacturer_brand':
+          (manufacturerBrandEntity as ManufacturerBrandModel).toJson(),
+      'model': (modelEntity as Model).toJson(),
     };
   }
 }
