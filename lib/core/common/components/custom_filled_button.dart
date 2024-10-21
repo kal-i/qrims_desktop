@@ -14,6 +14,7 @@ class CustomFilledButton extends StatelessWidget {
     this.onTap,
     required this.text,
     this.color,
+    this.prefixWidget,
   });
 
   final double? width;
@@ -25,6 +26,7 @@ class CustomFilledButton extends StatelessWidget {
   final VoidCallback? onTap;
   final String text;
   final Color? color;
+  final Widget? prefixWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +66,19 @@ class CustomFilledButton extends StatelessWidget {
               bottomRight: Radius.circular(borderRadiusBottomRight ?? 10.0),
             ),
           ),
-          child: Center(
-            child: Text(
-              text,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColor.lightPrimary,
-                fontSize: 12.0,
-                fontWeight: FontWeight.w400,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (prefixWidget != null) prefixWidget!, const SizedBox(width: 10.0,),
+              Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColor.lightPrimary,
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

@@ -56,33 +56,31 @@ class CustomTextBox extends StatelessWidget {
         cursorColor: AppColor.accent,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Theme.of(context).dividerColor,
-              // currentTheme == AppTheme.light
-              //     ? AppColor.lightOutlineBorder
-              //     : AppColor.darkOutlineBorder,
-              width: 2.0,
-            ),
+            borderSide: BorderSide.none,
+            // borderSide: BorderSide(
+            //   color: Theme.of(context).dividerColor,
+            //   width: 1.5,
+            // ),
             borderRadius: BorderRadius.circular(10.0),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: AppColor.error,
-              width: 2.0,
+              width: 1.5,
             ),
             borderRadius: BorderRadius.circular(10.0),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: AppColor.accent,
-              width: 2.0,
+              width: 1.5,
             ),
             borderRadius: BorderRadius.circular(10.0),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: AppColor.error,
-              width: 2.0,
+              width: 1.5,
             ),
             borderRadius: BorderRadius.circular(10.0),
           ),
@@ -97,7 +95,7 @@ class CustomTextBox extends StatelessWidget {
           prefixIcon: prefixIcon != null
               ? Icon(
                   prefixIcon,
-                  size: 18.0,
+                  size: 20.0,
                 )
               : prefixImagePath != null
                   ? Padding(
@@ -127,7 +125,6 @@ class CustomTextBox extends StatelessWidget {
               color: currentTheme == AppTheme.light
                   ? AppColor.darkPrimary
                   : AppColor.lightPrimary,
-              fontSize: fontSize,
             ),
         textAlign: textAlign,
         keyboardType: textInputType,

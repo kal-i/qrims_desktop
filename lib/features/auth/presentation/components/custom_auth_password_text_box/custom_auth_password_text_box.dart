@@ -26,7 +26,7 @@ class CustomAuthPasswordTextBox extends StatelessWidget {
 
     return CustomTextBox(
       controller: controller,
-      height: 50.0,
+      height: 80.0,
       placeHolderText: placeHolderText ?? 'password',
       isObscured: visibilityState == true ? false : true,
       prefixIcon: HugeIcons.strokeRoundedLockPassword,

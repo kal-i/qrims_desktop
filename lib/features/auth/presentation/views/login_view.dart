@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_validator/form_validator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/sizing/sizing_config.dart';
+import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/enums/verification_purpose.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../components/custom_auth_password_text_box/bloc/custom_auth_password_text_box_bloc.dart';
@@ -22,14 +24,17 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _isLoading.dispose();
     super.dispose();
   }
 
@@ -48,7 +53,12 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
+        if (state is AuthLoading) {
+          _isLoading.value = true;
+        }
+
         if (state is AuthFailure) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.error_outline,
@@ -59,6 +69,7 @@ class _LoginViewState extends State<LoginView> {
 
         // we need to change the redirection of user to otp ver if we
         if (state is OtpRequired) {
+          _isLoading.value = false;
           context.read<AuthBloc>().add(
                 AuthSendOtp(
                   email: _emailController.text,
@@ -67,6 +78,7 @@ class _LoginViewState extends State<LoginView> {
         }
 
         if (state is OtpSent) {
+          _isLoading.value = false;
           context.go(
             RoutingConstants.otpVerificationViewRoutePath,
             extra: {
@@ -77,6 +89,7 @@ class _LoginViewState extends State<LoginView> {
         }
 
         if (state is AuthSuccess) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.check_circle_outline,
@@ -89,25 +102,29 @@ class _LoginViewState extends State<LoginView> {
         }
       },
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildFormHeader(),
+          // const SizedBox(
+          //   height: 20.0,
+          // ),
           const SizedBox(
-            height: 40.0,
+            height: 10.0,
           ),
           Expanded(
             child: _buildForm(),
           ),
           const SizedBox(
-            height: 10.0, //30
+            height: 30.0, //30
           ),
-          CustomFilledButtonWithBloc(
+          CustomLoadingFilledButton(
             onTap: () => _login(),
             text: 'Sign in',
-            textColor: AppColor.lightPrimary,
+            isLoadingNotifier: _isLoading,
             height: 50.0,
           ),
           const SizedBox(
-            height: 15.0,
+            height: 10.0,
           ),
           _buildNavigationButtonRow(),
         ],
@@ -123,13 +140,13 @@ class _LoginViewState extends State<LoginView> {
           'Sign in.',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(
-          height: 10.0,
-        ),
-        Text(
-          'QR Code Inventory Management and Item Tracking System',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        // const SizedBox(
+        //   height: 10.0,
+        // ),
+        // Text(
+        //   'QR Code Inventory Management and Item Tracking System',
+        //   style: Theme.of(context).textTheme.bodySmall,
+        // ),
       ],
     );
   }
@@ -138,26 +155,21 @@ class _LoginViewState extends State<LoginView> {
     return Form(
       key: _formKey,
       child: Column(
+        //mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 70.0,
-            child: CustomEmailTextBox(
-              controller: _emailController,
-            ),
+          CustomEmailTextBox(
+            controller: _emailController,
           ),
           const SizedBox(
-            height: 10.0,
+            height: 5.0,
           ),
-          SizedBox(
-            height: 70.0,
-            child: CustomAuthPasswordTextBox(
-              placeHolderText: 'password',
-              controller: _passwordController,
-              validator:
-                  ValidationBuilder(requiredMessage: 'password is required')
-                      .build(),
-            ),
+          CustomAuthPasswordTextBox(
+            placeHolderText: 'password',
+            controller: _passwordController,
+            validator:
+                ValidationBuilder(requiredMessage: 'password is required')
+                    .build(),
           ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
@@ -168,10 +180,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               child: Text(
                 'Forgot Password?',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColor.darkHighlightedText,
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
           ),
@@ -192,10 +201,7 @@ class _LoginViewState extends State<LoginView> {
           onPressed: () => context.go(RoutingConstants.registerViewRoutePath),
           child: Text(
             'Sign up',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColor.darkHighlightedText,
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
       ],

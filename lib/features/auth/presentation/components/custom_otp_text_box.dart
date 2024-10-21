@@ -14,8 +14,8 @@ class CustomOtpTextBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomTextBox(
-      height: 64.0,
-      width: 68.0,
+      height: 84.0,
+      width: 88.0,
       controller: controller,
       onChanged: (value) {
         if (value.length == 1) {

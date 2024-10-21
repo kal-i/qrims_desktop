@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/enums/verification_purpose.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../bloc/auth_bloc.dart';
@@ -26,8 +27,17 @@ class ChangeEmailView extends StatefulWidget {
 }
 
 class _ChangeEmailViewState extends State<ChangeEmailView> {
-  final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _isLoading.dispose();
+    super.dispose();
+  }
 
   void _sendCode() {
     if (_formKey.currentState!.validate()) {
@@ -43,7 +53,12 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
+        if (state is AuthLoading) {
+          _isLoading.value = true;
+        }
+
         if (state is AuthFailure) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.error_outline,
@@ -53,6 +68,7 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
         }
 
         if (state is OtpSent) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.check_circle_outline,
@@ -70,22 +86,23 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
         }
       },
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildFormHeader(),
           const SizedBox(
-            height: 40.0,
+            height: 20.0,
           ),
           Expanded(
             child: _buildForm(),
           ),
-          CustomFilledButtonWithBloc(
+          CustomLoadingFilledButton(
             onTap: () => _sendCode(),
             text: 'Send Code',
+            isLoadingNotifier: _isLoading,
             height: 50.0,
-            textColor: AppColor.lightPrimary,
           ),
           const SizedBox(
-            height: 15.0,
+            height: 10.0,
           ),
           _buildNavigationActionRow(),
         ],
@@ -106,9 +123,7 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
         ),
         Text(
           'Please enter your email address, and we will send you an email OTP.',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                height: 2.0,
-              ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
@@ -120,11 +135,8 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 70.0,
-            child: CustomEmailTextBox(
-              controller: _emailController,
-            ),
+          CustomEmailTextBox(
+            controller: _emailController,
           ),
         ],
       ),
@@ -143,10 +155,7 @@ class _ChangeEmailViewState extends State<ChangeEmailView> {
           onPressed: () => context.go(RoutingConstants.loginViewRoutePath),
           child: Text(
             'Click here',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColor.darkHighlightedText,
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
       ],

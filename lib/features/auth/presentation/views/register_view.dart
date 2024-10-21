@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
+import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../components/custom_auth_password_text_box/custom_auth_password_text_box.dart';
 import '../../../../core/common/components/custom_text_box.dart';
@@ -22,16 +23,19 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _isLoading.dispose();
     super.dispose();
   }
 
@@ -52,7 +56,12 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
+        if (state is AuthLoading) {
+          _isLoading.value = true;
+        }
+
         if (state is AuthFailure) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.error_outline,
@@ -62,6 +71,7 @@ class _RegisterViewState extends State<RegisterView> {
         }
 
         if (state is AuthSuccess) {
+          _isLoading.value = false;
           DelightfulToastUtils.showDelightfulToast(
             context: context,
             icon: Icons.check_circle_outline,
@@ -74,10 +84,14 @@ class _RegisterViewState extends State<RegisterView> {
         }
       },
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildFormHeader(),
+          // const SizedBox(
+          //   height: 20.0,
+          // ),
           const SizedBox(
-            height: 40.0,
+            height: 10.0,
           ),
           Expanded(
             child: _buildForm(),
@@ -85,14 +99,14 @@ class _RegisterViewState extends State<RegisterView> {
           const SizedBox(
             height: 30.0,
           ),
-          CustomFilledButtonWithBloc(
+          CustomLoadingFilledButton(
             onTap: () => _register(),
             text: 'Sign up',
-            textColor: AppColor.lightPrimary,
+            isLoadingNotifier: _isLoading,
             height: 50.0,
           ),
           const SizedBox(
-            height: 15.0,
+            height: 10.0,
           ),
           _buildNavigationActionRow(),
         ],
@@ -108,13 +122,13 @@ class _RegisterViewState extends State<RegisterView> {
           'Sign up.',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(
-          height: 10.0,
-        ),
-        Text(
-          'QR Code Inventory Management and Item Tracking System',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        // const SizedBox(
+        //   height: 10.0,
+        // ),
+        // Text(
+        //   'QR Code Inventory Management and Item Tracking System',
+        //   style: Theme.of(context).textTheme.bodySmall,
+        // ),
       ],
     );
   }
@@ -123,31 +137,28 @@ class _RegisterViewState extends State<RegisterView> {
     return Form(
       key: _formKey,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           /// Wrapped to another SizedBox despite having to define the size to avoid from shrinking when validator is triggered
-          SizedBox(
-            height: 70.0,
-            child: CustomTextBox(
-              controller: _nameController,
-              height: 50.0,
-              placeHolderText: 'name',
-              prefixIcon: HugeIcons.strokeRoundedUser,
-            ),
+          CustomTextBox(
+            controller: _nameController,
+            height: 80.0,
+            placeHolderText: 'name',
+            prefixIcon: HugeIcons.strokeRoundedUser,
           ),
-          SizedBox(
-            height: 70.0,
-            child: CustomEmailTextBox(
-              controller: _emailController,
-            ),
+          const SizedBox(
+            height: 5.0,
           ),
-          SizedBox(
-            height: 70.0,
-            child: CustomAuthPasswordTextBox(
-              placeHolderText: 'password',
-              controller: _passwordController,
-            ),
+          CustomEmailTextBox(
+            controller: _emailController,
+          ),
+          const SizedBox(
+            height: 5.0,
+          ),
+          CustomAuthPasswordTextBox(
+            placeHolderText: 'password',
+            controller: _passwordController,
           ),
         ],
       ),
@@ -166,10 +177,7 @@ class _RegisterViewState extends State<RegisterView> {
           onPressed: () => context.go(RoutingConstants.loginViewRoutePath),
           child: Text(
             'Sign in',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColor.darkHighlightedText,
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
       ],

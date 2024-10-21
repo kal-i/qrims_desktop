@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../config/themes/app_color.dart';
+
 class CustomContainer extends StatelessWidget {
   const CustomContainer({
     super.key,
@@ -34,19 +36,19 @@ class CustomContainer extends StatelessWidget {
         right: paddingRight,
       ),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 1.5,
-        ),
+        // border: Border.all(
+        //   color: Theme.of(context).dividerColor,
+        //   width: 1.0,
+        // ),
         borderRadius: BorderRadius.circular(10.0),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: AppColor.darkPrimary.withOpacity(0.25),
-        //     blurRadius: 4.0,
-        //     spreadRadius: 0.0,
-        //     offset: const Offset(0.0, 4.0),
-        //   ),
-        // ],
+        boxShadow: [
+          BoxShadow(
+            color: AppColor.darkPrimary.withOpacity(0.25),
+            blurRadius: 4.0,
+            spreadRadius: 0.0,
+            offset: const Offset(0.0, 4.0),
+          ),
+        ],
         color: Theme.of(context).cardColor,
       ),
       child: child,

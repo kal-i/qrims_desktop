@@ -13,7 +13,7 @@ class CustomEmailTextBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomTextBox(
       controller: controller,
-      height: 50.0,
+      height: 80.0,
       placeHolderText: 'email',
       prefixIcon: HugeIcons.strokeRoundedMail02,
       validator: ValidationBuilder(requiredMessage: 'email is required').email('not a valid email address').maxLength(50, 'email must be at most 50 characters long').build(),

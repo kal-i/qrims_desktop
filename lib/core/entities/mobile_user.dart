@@ -1,3 +1,5 @@
+import '../../features/officer/domain/entities/officer.dart';
+import '../enums/admin_approval_status.dart';
 import 'user.dart';
 
 class MobileUserEntity extends UserEntity {
@@ -14,9 +16,13 @@ class MobileUserEntity extends UserEntity {
     super.otpExpiry,
     super.profileImage,
     required this.mobileUserId,
+    required this.officerEntity,
+    this.adminApprovalStatus = AdminApprovalStatus.pending,
   });
 
   final String mobileUserId;
+  final OfficerEntity officerEntity;
+  final AdminApprovalStatus adminApprovalStatus;
 
   @override
   List<Object?> get props => [
@@ -32,5 +38,7 @@ class MobileUserEntity extends UserEntity {
         otpExpiry,
         profileImage,
         mobileUserId,
+        officerEntity,
+        adminApprovalStatus,
       ];
 }

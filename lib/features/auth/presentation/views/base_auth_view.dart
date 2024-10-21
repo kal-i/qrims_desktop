@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../../../config/themes/app_color.dart';
+import '../../../../core/common/components/custom_drag_to_move_area.dart';
 import '../bloc/auth_bloc.dart';
 import '../components/custom_container.dart';
 import '../components/custom_theme_switch_button.dart';
@@ -20,12 +19,8 @@ class BaseAuthView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          return _BaseAuthViewContent(
-            content: child,
-          );
-        },
+      body: _BaseAuthViewContent(
+        content: child,
       ),
     );
   }
@@ -36,8 +31,8 @@ class _BaseAuthViewHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DragToMoveArea(
-      //CustomDragToMoveArea(
+    return //DragToMoveArea(
+      CustomDragToMoveArea(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -89,17 +84,14 @@ class _BaseAuthViewContent extends StatelessWidget {
                   child: CustomContainer(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10.0),
-                      child: ModalProgressHUD(
-                        inAsyncCall: state is AuthLoading,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            top: 50.0,
-                            left: 50.0,
-                            bottom: 20.0,
-                            right: 50.0,
-                          ),
-                          child: content,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 50.0,
+                          left: 50.0,
+                          bottom: 20.0,
+                          right: 50.0,
                         ),
+                        child: content,
                       ),
                     ),
                   ),

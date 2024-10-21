@@ -42,18 +42,18 @@ class AppTheme {
       ),
       bodyLarge: TextStyle(
         color: AppColor.lightTableColumnText,
-        fontSize: 11.0,
-        fontWeight: FontWeight.w600,
+        fontSize: 14.0,
+        fontWeight: FontWeight.w500,
       ),
       bodyMedium: TextStyle(
-        color: AppColor.lightTableRowText,
-        fontSize: 11.0,
-        fontWeight: FontWeight.w600,
+        color: AppColor.accent,
+        fontSize: 13.0,
+        fontWeight: FontWeight.w500,
       ),
       bodySmall: TextStyle(
         color: AppColor.lightDescriptionText,
-        fontSize: 12.0,
-        fontWeight: FontWeight.w600,
+        fontSize: 13.0,
+        fontWeight: FontWeight.w500,
       ),
     ),
     radioTheme: RadioThemeData(
@@ -109,18 +109,18 @@ class AppTheme {
       ),
       bodyLarge: TextStyle(
         color: AppColor.darkTableColumnText,
-        fontSize: 11.0,
+        fontSize: 14.0,
         fontWeight: FontWeight.w600,
       ),
       bodyMedium: TextStyle(
-        color: AppColor.darkTableRowText,
-        fontSize: 11.0,
-        fontWeight: FontWeight.w600,
+        color: AppColor.darkHighlightedText,
+        fontSize: 13.0,
+        fontWeight: FontWeight.w500,
       ),
       bodySmall: TextStyle(
         color: AppColor.darkDescriptionText,
-        fontSize: 12.0,
-        fontWeight: FontWeight.w600,
+        fontSize: 13.0,
+        fontWeight: FontWeight.w500,
       ),
     ),
     radioTheme: RadioThemeData(
