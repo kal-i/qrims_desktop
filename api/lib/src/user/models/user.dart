@@ -274,6 +274,7 @@ class MobileUser extends User {
     final authStatusString = json['auth_status'] as String;
     final adminApprovalStatusString = json['admin_approval_status'] as String;
 
+    print(json);
     // remove the prefix value in enums if present
     final authStatusValue = authStatusString.startsWith('AuthStatus.')
         ? authStatusString.substring(10)

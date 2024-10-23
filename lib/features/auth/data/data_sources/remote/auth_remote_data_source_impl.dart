@@ -36,7 +36,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('RemoteDataSource register params: $params');
 
       final response = await httpService.post(
-        endpoint: registerEP,
+        endpoint: bearerAuthEP,
         params: params,
       );
 

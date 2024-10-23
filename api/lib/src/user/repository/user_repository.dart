@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:api/src/organization_management/models/officer.dart';
+import 'package:api/src/services/email_service.dart';
 import 'package:api/src/utils/hash_extension.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:mailer/mailer.dart';
@@ -10,42 +11,15 @@ import 'package:postgres/postgres.dart';
 import '../models/user.dart';
 
 class UserRepository {
-  const UserRepository(this._conn);
+  UserRepository(this._conn) : _emailService = EmailService();
 
   final Connection _conn;
+  final EmailService _emailService;
 
   String _generateOtp() {
     final random = Random();
     return String.fromCharCodes(
         List.generate(4, (index) => random.nextInt(10) + 48));
-  }
-
-  void _sendEmailOtp(String email, String otp) async {
-    final env = DotEnv(includePlatformEnvironment: true)..load();
-    final senderEmail = env['SENDER_EMAIL'] as String;
-    final appPassword = env['APP_PASSWORD'] as String;
-
-    final smtpServer = gmail(senderEmail, appPassword);
-    final message = Message()
-      ..from = Address(senderEmail, 'QRIMS Support')
-      ..recipients.add(email)
-      ..subject = 'Your QRIMS Email Verification Code'
-      ..text = '''
-      Hello,
-
-      Your OTP code is: $otp
-
-      If you did not request this, please ignore this email.
-
-      Best regards,
-      The QRIMS Team
-    ''';
-
-    try {
-      await send(message, smtpServer);
-    } on MailerException catch (e) {
-      print('Message not sent. $e');
-    }
   }
 
   Future<void> sendEmailOtp(String email) async {
@@ -65,43 +39,6 @@ class UserRepository {
         throw Exception('User email is not registered.');
       }
 
-      /// Todo: currently, there is a problem in checking the current datetime and otp expiry
-      // final result = await _conn.execute(
-      //   Sql.named(
-      //     '''
-      //     SELECT otp, otp_expiry
-      //     FROM Users
-      //     WHERE email = @email;
-      //     ''',
-      //   ),
-      //   parameters: {
-      //     'email': email,
-      //   },
-      // );
-      //
-      // if (result.isNotEmpty) {
-      //   final row = result.first;
-      //   print(row);
-      //   final storedOtp = row[0] as String?;
-      //   final storedOtpExpiry = row[1] as DateTime?;
-      //
-      //   if (storedOtp != null && storedOtpExpiry != null) {
-      //     final currentTime = DateTime.now();
-      //     print('Current time: $currentTime');
-      //     print('Stored OTP expiry: $storedOtpExpiry');
-      //
-      //     if (currentTime.isBefore(storedOtpExpiry)) {
-      //       final remainingSeconds = storedOtpExpiry.difference(currentTime).inSeconds;
-      //       final remainingMinutes = (remainingSeconds / 60).ceil();
-      //       print('OTP is still valid. Remaining time: $remainingMinutes minutes.');
-      //
-      //       throw Exception('Please wait for $remainingMinutes minutes before requesting a new OTP.');
-      //     } else {
-      //       print('OTP has expired, a new OTP can be sent.');
-      //     }
-      //   }
-      // }
-
       await _conn.execute(
         Sql.named(
           '''
@@ -117,16 +54,35 @@ class UserRepository {
         },
       );
 
-      _sendEmailOtp(email, otp);
+      await _emailService.sendOtpEmail(email, otp);
     } catch (e) {
       if (e.toString().contains('User email is not registered.')) {
         throw Exception('User email is not registered.');
       }
-      if (e.toString().contains(
-          'Please wait for 10 minutes before requesting a new OTP.')) {
-        throw Exception(
-            'Please wait for 10 minutes before requesting a new OTP.');
+
+      print('Error in sendEmailOtp: $e');
+      throw Exception('Failed to send OTP.');
+    }
+  }
+
+  Future<void> sendAdminApprovalEmail(String email) async {
+    try {
+      /// Check if email is registered in the db
+      /// to avoid sending wasting the daily sending limit of email
+      final userExist = await checkUserIfExist(
+        email: email,
+      );
+
+      if (!userExist) {
+        throw Exception('User email is not registered.');
       }
+
+      await _emailService.sendAdminApprovalEmail(email);
+    } catch (e) {
+      if (e.toString().contains('User email is not registered.')) {
+        throw Exception('User email is not registered.');
+      }
+
       print('Error in sendEmailOtp: $e');
       throw Exception('Failed to send OTP.');
     }
@@ -185,6 +141,27 @@ class UserRepository {
       print('Error verifying OTP for email $email: $e.');
       return false;
     }
+  }
+
+  Future<bool?> updateAdminApprovalStatus({
+    required String id,
+    required AdminApprovalStatus adminApprovalStatus,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        UPDATE MobileUsers
+        SET admin_approval_status = @admin_approval_status
+        WHERE user_id = @user_id;
+        ''',
+      ),
+      parameters: {
+        'user_id': id,
+        'admin_approval_status': adminApprovalStatus.toString().split('.').last,
+      },
+    );
+
+    return result.affectedRows == 1;
   }
 
   Future<int> getUsersCount() async {
@@ -484,80 +461,78 @@ class UserRepository {
       parameters: parameters,
     );
 
+    final row = result.first;
+    final isSupplyDepartmentEmployee = row[11] != null;
+    final isMobileUser = row[13] != null;
 
+    if (isSupplyDepartmentEmployee) {
+      print('returning supp emp');
+      return SupplyDepartmentEmployee.fromJson({
+        'user_id': row[0],
+        'name': row[1],
+        'email': row[2],
+        'password': row[3],
+        'created_at': row[4].toString(),
+        'updated_at': row[5]?.toString(),
+        'auth_status': row[6],
+        'is_archived': row[7],
+        'otp': row[8],
+        'otp_expiry': row[9]?.toString(),
+        'profile_image': row[10],
+        'supp_dept_emp_id': row[11],
+        'role': row[12],
+      });
+    }
 
-      final row = result.first;
-      final isSupplyDepartmentEmployee = row[11] != null;
-      final isMobileUser = row[13] != null;
+    if (isMobileUser) {
+      print('returning mobile user: ${row[13]}');
+      final mobileUserMap = {
+        'user_id': row[0],
+        'name': row[1],
+        'email': row[2],
+        'password': row[3],
+        'created_at': row[4].toString(),
+        'updated_at': row[5]?.toString(),
+        'auth_status': row[6],
+        'is_archived': row[7],
+        'otp': row[8],
+        'otp_expiry': row[9]?.toString(),
+        'profile_image': row[10],
+        'mobile_user_id': row[13],
+        'officer_id': row[14],
+        'officer_user_id': row[15],
+        'officer_name': row[16],
+        'position_id': row[17],
+        'position_name': row[18],
+        'office_name': row[19],
+        'officer_is_archived': row[20],
+        'admin_approval_status': row[21],
+      };
 
-      if (isSupplyDepartmentEmployee) {
-        print('returning supp emp');
-        return SupplyDepartmentEmployee.fromJson({
-          'user_id': row[0],
-          'name': row[1],
-          'email': row[2],
-          'password': row[3],
-          'created_at': row[4].toString(),
-          'updated_at': row[5]?.toString(),
-          'auth_status': row[6],
-          'is_archived': row[7],
-          'otp': row[8],
-          'otp_expiry': row[9]?.toString(),
-          'profile_image': row[10],
-          'supp_dept_emp_id': row[11],
-          'role': row[12],
-        });
-      }
-
-      if (isMobileUser) {
-        print('returning mobile user: ${row[13]}');
-        final mobileUserMap = {
-          'user_id': row[0],
-          'name': row[1],
-          'email': row[2],
-          'password': row[3],
-          'created_at': row[4].toString(),
-          'updated_at': row[5]?.toString(),
-          'auth_status': row[6],
-          'is_archived': row[7],
-          'otp': row[8],
-          'otp_expiry': row[9]?.toString(),
-          'profile_image': row[10],
-          'mobile_user_id': row[13],
-          'officer_id': row[14],
-          'officer_user_id': row[15],
-          'officer_name': row[16],
-          'position_id': row[17],
-          'position_name': row[18],
-          'office_name': row[19],
-          'officer_is_archived': row[20],
-          'admin_approval_status': row[21],
-        };
-
-        print('mu: $mobileUserMap');
-        return MobileUser.fromJson({
-          'user_id': row[0],
-          'name': row[1],
-          'email': row[2],
-          'password': row[3],
-          'created_at': row[4].toString(),
-          'updated_at': row[5]?.toString(),
-          'auth_status': row[6],
-          'is_archived': row[7],
-          'otp': row[8],
-          'otp_expiry': row[9]?.toString(),
-          'profile_image': row[10],
-          'mobile_user_id': row[13],
-          'officer_id': row[14],
-          'officer_user_id': row[15],
-          'officer_name': row[16],
-          'position_id': row[17],
-          'position_name': row[18],
-          'office_name': row[19],
-          'officer_is_archived': row[20],
-          'admin_approval_status': row[21],
-        });
-      }
+      print('mu: $mobileUserMap');
+      return MobileUser.fromJson({
+        'user_id': row[0],
+        'name': row[1],
+        'email': row[2],
+        'password': row[3],
+        'created_at': row[4].toString(),
+        'updated_at': row[5]?.toString(),
+        'auth_status': row[6],
+        'is_archived': row[7],
+        'otp': row[8],
+        'otp_expiry': row[9]?.toString(),
+        'profile_image': row[10],
+        'mobile_user_id': row[13],
+        'officer_id': row[14],
+        'officer_user_id': row[15],
+        'officer_name': row[16],
+        'position_id': row[17],
+        'position_name': row[18],
+        'office_name': row[19],
+        'officer_is_archived': row[20],
+        'admin_approval_status': row[21],
+      });
+    }
     return null;
   }
 
@@ -1111,29 +1086,44 @@ class UserRepository {
       final result = await _conn.execute(
         Sql.named(
           '''
-        SELECT Users.id AS user_id,
-          Users.name,
-          Users.email,
-          Users.password,
-          to_char(Users.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
-          to_char(Users.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
-          Users.auth_status,
-          Users.is_archived,
-          Users.otp,
-          to_char(Users.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
-          Users.profile_image,
-          SupplyDepartmentEmployees.id AS supp_dept_emp_id,
-          SupplyDepartmentEmployees.role,
-          MobileUsers.id as mobile_user_id
-        FROM
-          Users
-        LEFT JOIN
-          SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
-        LEFT JOIN
-          MobileUsers ON Users.id = MobileUsers.user_id
-        WHERE
-          Users.email = @email AND Users.password = @password;
-      ''',
+          SELECT 
+            u.id AS user_id,
+            u.name,
+            u.email,
+            u.password,
+            to_char(u.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
+            to_char(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
+            u.auth_status,
+            u.is_archived,
+            u.otp,
+            to_char(u.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
+            u.profile_image,
+            s.id AS supp_dept_emp_id,
+            s.role,
+            m.id AS mobile_user_id,
+            ofc.id AS officer_id,
+            ofr.user_id AS officer_user_id,
+            ofr.name AS officer_name,
+            pos.id AS position_id,
+            pos.position_name AS position_name,
+            ofc.name AS office_name,
+            ofr.is_archived AS officer_is_archived,
+            m.admin_approval_status 
+          FROM
+            Users u
+          LEFT JOIN
+            SupplyDepartmentEmployees s ON u.id = s.user_id
+          LEFT JOIN
+            MobileUsers m ON u.id = m.user_id
+          LEFT JOIN
+            Officers ofr ON u.id = ofr.user_id
+          LEFT JOIN
+            Positions pos ON ofr.position_id = pos.id
+          LEFT JOIN
+            Offices ofc ON pos.office_id = ofc.id
+          WHERE
+            u.email = @email AND u.password = @password;
+          ''',
         ),
         parameters: {
           'email': email,
@@ -1141,33 +1131,77 @@ class UserRepository {
         },
       );
 
-      /// Return a concrete User if result is not empty
-      /// Otherwise, return null
-      if (result.isNotEmpty) {
-        for (final row in result) {
-          final userMap = {
-            'user_id': row[0],
-            'name': row[1],
-            'email': row[2],
-            'password': row[3],
-            'created_at': row[4],
-            'updated_at': row[5],
-            'auth_status': row[6],
-            'is_archived': row[7],
-            'otp': row[8],
-            'otp_expiry': row[9],
-            'profile_image': row[10],
-            'supp_dept_emp_id': row[11],
-            'role': row[12],
-            'mobile_user_id': row[13],
-          };
+      final row = result.first;
+      final isSupplyDepartmentEmployee = row[11] != null;
+      final isMobileUser = row[13] != null;
 
-          if (row[12] != null) {
-            return SupplyDepartmentEmployee.fromJson(userMap);
-          } else {
-            return MobileUser.fromJson(userMap);
-          }
-        }
+      if (isSupplyDepartmentEmployee) {
+        print('returning supp emp');
+        return SupplyDepartmentEmployee.fromJson({
+          'user_id': row[0],
+          'name': row[1],
+          'email': row[2],
+          'password': row[3],
+          'created_at': row[4].toString(),
+          'updated_at': row[5]?.toString(),
+          'auth_status': row[6],
+          'is_archived': row[7],
+          'otp': row[8],
+          'otp_expiry': row[9]?.toString(),
+          'profile_image': row[10],
+          'supp_dept_emp_id': row[11],
+          'role': row[12],
+        });
+      }
+
+      if (isMobileUser) {
+        print('returning mobile user: ${row[13]}');
+        final mobileUserMap = {
+          'user_id': row[0],
+          'name': row[1],
+          'email': row[2],
+          'password': row[3],
+          'created_at': row[4].toString(),
+          'updated_at': row[5]?.toString(),
+          'auth_status': row[6],
+          'is_archived': row[7],
+          'otp': row[8],
+          'otp_expiry': row[9]?.toString(),
+          'profile_image': row[10],
+          'mobile_user_id': row[13],
+          'officer_id': row[14],
+          'officer_user_id': row[15],
+          'officer_name': row[16],
+          'position_id': row[17],
+          'position_name': row[18],
+          'office_name': row[19],
+          'officer_is_archived': row[20],
+          'admin_approval_status': row[21],
+        };
+
+        print('mu: $mobileUserMap');
+        return MobileUser.fromJson({
+          'user_id': row[0],
+          'name': row[1],
+          'email': row[2],
+          'password': row[3],
+          'created_at': row[4].toString(),
+          'updated_at': row[5]?.toString(),
+          'auth_status': row[6],
+          'is_archived': row[7],
+          'otp': row[8],
+          'otp_expiry': row[9]?.toString(),
+          'profile_image': row[10],
+          'mobile_user_id': row[13],
+          'officer_id': row[14],
+          'officer_user_id': row[15],
+          'officer_name': row[16],
+          'position_id': row[17],
+          'position_name': row[18],
+          'office_name': row[19],
+          'officer_is_archived': row[20],
+          'admin_approval_status': row[21],
+        });
       }
       return null;
     } catch (e) {
@@ -1175,3 +1209,66 @@ class UserRepository {
     }
   }
 }
+
+// final result = await _conn.execute(
+//   Sql.named(
+//     '''
+//   SELECT Users.id AS user_id,
+//     Users.name,
+//     Users.email,
+//     Users.password,
+//     to_char(Users.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
+//     to_char(Users.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
+//     Users.auth_status,
+//     Users.is_archived,
+//     Users.otp,
+//     to_char(Users.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
+//     Users.profile_image,
+//     SupplyDepartmentEmployees.id AS supp_dept_emp_id,
+//     SupplyDepartmentEmployees.role,
+//     MobileUsers.id as mobile_user_id
+//   FROM
+//     Users
+//   LEFT JOIN
+//     SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
+//   LEFT JOIN
+//     MobileUsers ON Users.id = MobileUsers.user_id
+//   WHERE
+//     Users.email = @email AND Users.password = @password;
+// ''',
+//   ),
+//   parameters: {
+//     'email': email,
+//     'password': hashedPassword,
+//   },
+// );
+
+/// Return a concrete User if result is not empty
+/// Otherwise, return null
+// if (result.isNotEmpty) {
+//   for (final row in result) {
+//     final userMap = {
+//       'user_id': row[0],
+//       'name': row[1],
+//       'email': row[2],
+//       'password': row[3],
+//       'created_at': row[4],
+//       'updated_at': row[5],
+//       'auth_status': row[6],
+//       'is_archived': row[7],
+//       'otp': row[8],
+//       'otp_expiry': row[9],
+//       'profile_image': row[10],
+//       'supp_dept_emp_id': row[11],
+//       'role': row[12],
+//       'mobile_user_id': row[13],
+//     };
+//
+//     if (row[12] != null) {
+//       return SupplyDepartmentEmployee.fromJson(userMap);
+//     } else {
+//       return MobileUser.fromJson(userMap);
+//     }
+//   }
+// }
+// return null;

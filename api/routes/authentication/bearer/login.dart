@@ -34,6 +34,7 @@ Future<Response> _authenticateUser(
       password: password,
     );
 
+    print('returned user: $user');
     if (user == null) {
       return Response.json(statusCode: HttpStatus.unauthorized);
     } else {
@@ -49,6 +50,8 @@ Future<Response> _authenticateUser(
       //     : user is MobileUser
       //         ? user.id
       //         : null;
+
+      print('user id: $userId');
 
       final session = await sessionRepository.createSession(userId);
       return Response.json(
