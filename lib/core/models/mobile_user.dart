@@ -74,6 +74,19 @@ class MobileUserModel extends MobileUserEntity implements UserModel {
     );
   }
 
+  factory MobileUserModel.fromEntity(MobileUserEntity mobileUserEntity) {
+    return MobileUserModel(
+      id: mobileUserEntity.id,
+      name: mobileUserEntity.name,
+      email: mobileUserEntity.email,
+      password: mobileUserEntity.password,
+      createdAt: mobileUserEntity.createdAt,
+      profileImage: mobileUserEntity.profileImage,
+      mobileUserId: mobileUserEntity.mobileUserId,
+      officerEntity: mobileUserEntity.officerEntity,
+    );
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {

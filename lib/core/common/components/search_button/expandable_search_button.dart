@@ -29,7 +29,7 @@ class ExpandableSearchButton extends StatelessWidget {
           duration: const Duration(
             milliseconds: 300,
           ),
-          width: isExpanded ? 300.0 : 40.0,
+          width: isExpanded ? 300.0 : 44.0,
           height: 40.0,
           decoration: BoxDecoration(
             border: Border.all(

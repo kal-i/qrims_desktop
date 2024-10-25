@@ -29,6 +29,7 @@ Future<Response> _getUsers(
         bool.tryParse(queryParams['sort_ascending'] ?? 'false') ?? false;
     final role = queryParams['role']?.trim() ?? '';
     final statusString = queryParams['status'];
+    final adminApprovalStatusString = queryParams['admin_approval_status'];
 
     final status = statusString != null
         ? AuthStatus.values.firstWhere(
@@ -36,7 +37,15 @@ Future<Response> _getUsers(
                 authStatus.toString().split('.').last == statusString,
           )
         : null;
-    final isArchived = bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
+    final adminApprovalStatus = adminApprovalStatusString != null
+        ? AdminApprovalStatus.values.firstWhere(
+            (adminApprovalStatus) =>
+                adminApprovalStatus.toString().split('.').last ==
+                adminApprovalStatusString,
+          )
+        : null;
+    final isArchived =
+        bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
 
     // if search query is not empty or user type, use the userJson.lenght otherwise, totalusercount
     // done for search but I'll need a way to count of the thing that matches the query without the intervention of limit
@@ -50,6 +59,7 @@ Future<Response> _getUsers(
       sortAscending: sortAscending,
       role: role,
       status: status,
+      adminApprovalStatus: adminApprovalStatus,
       isArchived: isArchived,
     );
 
@@ -57,6 +67,7 @@ Future<Response> _getUsers(
       searchQuery: searchQuery,
       role: role,
       status: status,
+      adminApprovalStatus: adminApprovalStatus,
       isArchived: isArchived,
     );
 

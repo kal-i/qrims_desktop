@@ -7,8 +7,8 @@ sealed class UsersManagementEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class FetchUsers extends UsersManagementEvent {
-  const FetchUsers({
+final class FetchUsersEvent extends UsersManagementEvent {
+  const FetchUsersEvent({
     required this.page,
     required this.pageSize,
     this.searchQuery,
@@ -16,6 +16,7 @@ final class FetchUsers extends UsersManagementEvent {
     this.sortAscending,
     this.role,
     this.status,
+    this.adminApprovalStatus,
     this.isArchived,
   });
 
@@ -26,11 +27,12 @@ final class FetchUsers extends UsersManagementEvent {
   final bool? sortAscending;
   final String? role;
   final AuthStatus? status;
+  final AdminApprovalStatus? adminApprovalStatus;
   final bool? isArchived;
 }
 
-final class UpdateUserAuthenticationStatus extends UsersManagementEvent {
-  const UpdateUserAuthenticationStatus({
+final class UpdateUserAuthenticationStatusEvent extends UsersManagementEvent {
+  const UpdateUserAuthenticationStatusEvent({
     required this.userId,
     required this.authStatus,
   });
@@ -39,12 +41,22 @@ final class UpdateUserAuthenticationStatus extends UsersManagementEvent {
   final AuthStatus authStatus;
 }
 
-final class UpdateArchiveStatus extends UsersManagementEvent {
-  const UpdateArchiveStatus({
+final class UpdateArchiveStatusEvent extends UsersManagementEvent {
+  const UpdateArchiveStatusEvent({
     required this.userId,
     required this.isArchived,
   });
 
   final String userId;
   final bool isArchived;
+}
+
+final class UpdateAdminApprovalStatusEvent extends UsersManagementEvent {
+  const UpdateAdminApprovalStatusEvent({
+    required this.userId,
+    required this.adminApprovalStatus,
+  });
+
+  final String userId;
+  final AdminApprovalStatus adminApprovalStatus;
 }

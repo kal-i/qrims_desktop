@@ -161,6 +161,22 @@ class UserRepository {
       },
     );
 
+    if (adminApprovalStatus == AdminApprovalStatus.rejected) {
+      final deleteResult = await _conn.execute(
+        Sql.named(
+          '''
+          DELETE FROM Users
+          WHERE id = @id;
+          ''',
+        ),
+        parameters: {
+          'id': id,
+        },
+      );
+
+      return result.affectedRows == 1 && deleteResult.affectedRows == 1;
+    }
+
     return result.affectedRows == 1;
   }
 
@@ -184,6 +200,7 @@ class UserRepository {
     String? searchQuery,
     String? role,
     AuthStatus? status,
+    AdminApprovalStatus? adminApprovalStatus,
     bool isArchived = false,
   }) async {
     try {
@@ -193,6 +210,9 @@ class UserRepository {
         LEFT JOIN SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
         LEFT JOIN MobileUsers ON Users.id = MobileUsers.user_id
         ''';
+      final params = <String, dynamic>{
+        'is_archived': isArchived,
+      };
 
       final whereClause = StringBuffer();
       whereClause.write('WHERE is_archived = @is_archived');
@@ -202,6 +222,7 @@ class UserRepository {
           AND (Users.id ILIKE @search_query OR Users.name ILIKE @search_query)
           ''',
         );
+        params['search_query'] = '%$searchQuery%';
       }
 
       if (role != null && role.isNotEmpty) {
@@ -210,7 +231,7 @@ class UserRepository {
         if (role == 'supply') {
           whereClause.write('SupplyDepartmentEmployees.id IS NOT NULL');
         } else if (role == 'mobile') {
-          whereClause.write('MobileUsers.id IS NOT NULL');
+          whereClause.write('MobileUsers.id IS NOT NULL AND MobileUsers.admin_approval_status = \'pending\'');
         } else {
           throw ArgumentError('Invalid role: $role.');
         }
@@ -219,23 +240,20 @@ class UserRepository {
       if (status != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
         whereClause.write('Users.auth_status = @status');
+        params['status'] = status.toString().split('.').last;
+      }
+
+      if (adminApprovalStatus != null) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+        whereClause.write('MobileUsers.admin_approval_status = @admin_approval_status');
+        params['admin_approval_status'] =
+            adminApprovalStatus.toString().split('.').last;
       }
 
       final finalQuery = '''
       $baseQuery
       $whereClause
       ''';
-
-      final params = <String, dynamic>{
-        'is_archived': isArchived,
-      };
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        params['search_query'] = '%$searchQuery%';
-      }
-
-      if (status != null) {
-        params['status'] = status.toString().split('.').last;
-      }
 
       final result = await _conn.execute(
         Sql.named(finalQuery),
@@ -263,11 +281,18 @@ class UserRepository {
     bool sortAscending = false, // default sort order
     String? role,
     AuthStatus? status,
+    AdminApprovalStatus? adminApprovalStatus = AdminApprovalStatus.accepted,
     bool isArchived = false,
   }) async {
     try {
       final offset = (page - 1) * pageSize;
       final userList = <User>[];
+      final params = <String, dynamic>{
+        'is_archived': isArchived,
+        //'admin_approval_status': adminApprovalStatus.toString().split('.').last,
+        'page_size': pageSize,
+        'offset': offset,
+      };
 
       // to avoid sql injection, we'll check if it is a valid sort col
       final validSortColumns = {'id', 'created_at'};
@@ -275,50 +300,68 @@ class UserRepository {
         throw ArgumentError('Invalid sort column: $sortBy');
       }
 
-      final sortColumn = sortBy == 'id' ? 'Users.id' : 'Users.created_at';
+      final sortColumn = sortBy == 'id' ? 'u.id' : 'u.created_at';
 
       final baseQuery = '''
           SELECT 
-            Users.id AS user_id,
-            Users.name,
-            Users.email,
-            Users.password,
-            to_char(Users.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
-            to_char(Users.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
-            Users.auth_status,
-            Users.is_archived,
-            Users.otp,
-            to_char(Users.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
-            Users.profile_image,
-            SupplyDepartmentEmployees.id AS supp_dept_emp_id,
-            SupplyDepartmentEmployees.role,
-            MobileUsers.id as mobile_user_id
+            u.id AS user_id,
+            u.name,
+            u.email,
+            u.password,
+            to_char(u.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
+            to_char(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
+            u.auth_status,
+            u.is_archived,
+            u.otp,
+            to_char(u.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
+            u.profile_image,
+            s.id AS supp_dept_emp_id,
+            s.role,
+            m.id AS mobile_user_id,
+            ofc.id AS officer_id,
+            ofr.user_id AS officer_user_id,
+            ofr.name AS officer_name,
+            pos.id AS position_id,
+            pos.position_name AS position_name,
+            ofc.name AS office_name,
+            ofr.is_archived AS officer_is_archived,
+            m.admin_approval_status 
           FROM
-            Users
+            Users u
           LEFT JOIN
-            SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
+            SupplyDepartmentEmployees s ON u.id = s.user_id
           LEFT JOIN
-            MobileUsers ON Users.id = MobileUsers.user_id
+            MobileUsers m ON u.id = m.user_id
+          LEFT JOIN
+            Officers ofr ON u.id = ofr.user_id
+          LEFT JOIN
+            Positions pos ON ofr.position_id = pos.id
+          LEFT JOIN
+            Offices ofc ON pos.office_id = ofc.id
           ''';
 
       // ILIKE is used for case-insensitive matching
       final whereClause = StringBuffer();
-      whereClause.write('WHERE Users.is_archived = @is_archived');
+      whereClause.write('WHERE u.is_archived = @is_archived');
+// Include both supply department employees and mobile users
+      whereClause.write(' AND (s.id IS NOT NULL OR (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status))');
+
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
           '''
-          AND (Users.id ILIKE @search_query OR Users.name ILIKE @search_query)
+          AND (u.id ILIKE @search_query OR u.name ILIKE @search_query)
           ''',
         );
+        params['search_query'] = '%$searchQuery%';
       }
 
       if (role != null && role.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
 
         if (role == 'supply') {
-          whereClause.write('SupplyDepartmentEmployees.id IS NOT NULL');
+          whereClause.write('s.id IS NOT NULL');
         } else if (role == 'mobile') {
-          whereClause.write('MobileUsers.id IS NOT NULL');
+          whereClause.write('m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status');
         } else {
           throw ArgumentError('Invalid role: $role.');
         }
@@ -326,8 +369,22 @@ class UserRepository {
 
       if (status != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('Users.auth_status = @status');
+        whereClause.write('u.auth_status = @status');
+        params['status'] = status.toString().split('.').last;
       }
+
+      if (adminApprovalStatus != null) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+        whereClause.write('m.admin_approval_status = @admin_approval_status');
+        params['admin_approval_status'] =
+            adminApprovalStatus.toString().split('.').last;
+      }
+
+      // Set admin approval status parameter only if not already defined in role-specific logic
+      if (adminApprovalStatus != null && role != 'mobile') {
+        params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
+      }
+
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
 
@@ -339,59 +396,59 @@ class UserRepository {
       LIMIT @page_size OFFSET @offset;
       ''';
 
-      final params = <String, dynamic>{
-        'is_archived': isArchived,
-      };
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        params['search_query'] = '%$searchQuery%';
-      }
-
-      if (status != null) {
-        params['status'] = status.toString().split('.').last;
-      }
-
-      params['page_size'] = pageSize;
-      params['offset'] = offset;
-
       final results = await _conn.execute(
         Sql.named(finalQuery),
         parameters: params,
       );
 
-      print(finalQuery);
-      print(params);
-      print(results);
-
       for (final row in results) {
-        final userMap = {
-          'user_id': row[0],
-          'name': row[1],
-          'email': row[2],
-          'password': row[3],
-          'created_at': row[4],
-          'updated_at': row[5] != null ? row[5] : null,
-          'auth_status': row[6],
-          'is_archived': row[7],
-          'otp': row[8],
-          'otp_expiry': row[9],
-          'profile_image': row[10],
-          'supp_dept_emp_id': row[11],
-          'role': row[12],
-          'mobile_user_id': row[13],
-        };
+        final isSupplyDepartmentEmployee = row[11] != null;
+        final isMobileUser = row[13] != null;
 
-        if (row[12] != null) {
-          try {
-            userList.add(SupplyDepartmentEmployee.fromJson(userMap));
-          } catch (e) {
-            print('Error parsing SupplyDepartmentEmployee: $e');
-          }
-        } else {
-          userList.add(MobileUser.fromJson(userMap));
+        if (isSupplyDepartmentEmployee) {
+          userList.add(SupplyDepartmentEmployee.fromJson({
+            'user_id': row[0],
+            'name': row[1],
+            'email': row[2],
+            'password': row[3],
+            'created_at': row[4].toString(),
+            'updated_at': row[5]?.toString(),
+            'auth_status': row[6],
+            'is_archived': row[7],
+            'otp': row[8],
+            'otp_expiry': row[9]?.toString(),
+            'profile_image': row[10],
+            'supp_dept_emp_id': row[11],
+            'role': row[12],
+          }));
+        }
+
+        if (isMobileUser) {
+          userList.add(MobileUser.fromJson({
+            'user_id': row[0],
+            'name': row[1],
+            'email': row[2],
+            'password': row[3],
+            'created_at': row[4].toString(),
+            'updated_at': row[5]?.toString(),
+            'auth_status': row[6],
+            'is_archived': row[7],
+            'otp': row[8],
+            'otp_expiry': row[9]?.toString(),
+            'profile_image': row[10],
+            'mobile_user_id': row[13],
+            'officer_id': row[14],
+            'officer_user_id': row[15],
+            'officer_name': row[16],
+            'position_id': row[17],
+            'position_name': row[18],
+            'office_name': row[19],
+            'officer_is_archived': row[20],
+            'admin_approval_status': row[21],
+          }));
         }
       }
-
-      //print('Fetched users for page $page: ${userList.length}');
+      print('Fetched users for page $page: ${userList.length}');
       return userList;
     } catch (e) {
       print('Error fetching users: $e');
@@ -401,7 +458,6 @@ class UserRepository {
 
   Future<User?> getUserInformation({
     String? id,
-    //String? email,
   }) async {
     var baseQuery = '''
           SELECT 
@@ -448,11 +504,6 @@ class UserRepository {
       baseQuery += 'u.id = @id';
       parameters['id'] = id;
     }
-
-    // if (email != null) {
-    //   baseQuery += 'Users.email = @email';
-    //   parameters['email'] = email;
-    // }
 
     final result = await _conn.execute(
       Sql.named(
@@ -778,7 +829,7 @@ class UserRepository {
   //   }
   // }
 
-  Future<String?> _createBaseEntityUser({
+  Future<String?> createBaseEntityUser({
     required String name,
     required String email,
     required String password,
@@ -820,21 +871,10 @@ class UserRepository {
   }
 
   Future<String?> createDesktopUser({
-    required String name,
-    required String email,
-    required String password,
-    required DateTime createdAt,
+    required String baseUserEntityId,
     Role? role,
   }) async {
     try {
-      /// Invoke method _generateUniqueUserId and assign its return value to userId
-      final baseUserEntityId = await _createBaseEntityUser(
-        name: name,
-        email: email,
-        password: password,
-        createdAt: createdAt,
-      );
-
       final concreteUserId = await _generateUniqueDesktopUserId();
 
       await _conn.execute(
@@ -860,19 +900,9 @@ class UserRepository {
   }
 
   Future<String?> createMobileUser({
-    required String name,
-    required String email,
-    required String password,
-    required DateTime createdAt,
+    required String baseUserEntityId,
   }) async {
     try {
-      final baseUserEntityId = await _createBaseEntityUser(
-        name: name,
-        email: email,
-        password: password,
-        createdAt: createdAt,
-      );
-
       final concreteUserId = await _generateUniqueMobileUserId();
 
       await _conn.execute(
@@ -892,6 +922,7 @@ class UserRepository {
       print('Error creating user: $e');
       throw Exception('Database connection error.');
     }
+    return null;
   }
 
   Future<bool> updateUserInformation({
@@ -1131,6 +1162,10 @@ class UserRepository {
         },
       );
 
+      if (result.isEmpty) {
+        return null;
+      }
+
       final row = result.first;
       final isSupplyDepartmentEmployee = row[11] != null;
       final isMobileUser = row[13] != null;
@@ -1209,66 +1244,3 @@ class UserRepository {
     }
   }
 }
-
-// final result = await _conn.execute(
-//   Sql.named(
-//     '''
-//   SELECT Users.id AS user_id,
-//     Users.name,
-//     Users.email,
-//     Users.password,
-//     to_char(Users.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
-//     to_char(Users.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
-//     Users.auth_status,
-//     Users.is_archived,
-//     Users.otp,
-//     to_char(Users.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
-//     Users.profile_image,
-//     SupplyDepartmentEmployees.id AS supp_dept_emp_id,
-//     SupplyDepartmentEmployees.role,
-//     MobileUsers.id as mobile_user_id
-//   FROM
-//     Users
-//   LEFT JOIN
-//     SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
-//   LEFT JOIN
-//     MobileUsers ON Users.id = MobileUsers.user_id
-//   WHERE
-//     Users.email = @email AND Users.password = @password;
-// ''',
-//   ),
-//   parameters: {
-//     'email': email,
-//     'password': hashedPassword,
-//   },
-// );
-
-/// Return a concrete User if result is not empty
-/// Otherwise, return null
-// if (result.isNotEmpty) {
-//   for (final row in result) {
-//     final userMap = {
-//       'user_id': row[0],
-//       'name': row[1],
-//       'email': row[2],
-//       'password': row[3],
-//       'created_at': row[4],
-//       'updated_at': row[5],
-//       'auth_status': row[6],
-//       'is_archived': row[7],
-//       'otp': row[8],
-//       'otp_expiry': row[9],
-//       'profile_image': row[10],
-//       'supp_dept_emp_id': row[11],
-//       'role': row[12],
-//       'mobile_user_id': row[13],
-//     };
-//
-//     if (row[12] != null) {
-//       return SupplyDepartmentEmployee.fromJson(userMap);
-//     } else {
-//       return MobileUser.fromJson(userMap);
-//     }
-//   }
-// }
-// return null;

@@ -398,9 +398,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
         if (e.response?.statusCode == HttpStatus.unauthorized &&
-            errorMessage == 'Invalid user credential.') {
+            errorMessage == 'Invalid user credential. Please check your email or password and try again.') {
           throw const ServerException(
-            'Invalid user credential.',
+            'Invalid user credential. Please check your email or password and try again.',
           );
         }
         throw ServerException(

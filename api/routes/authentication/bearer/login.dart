@@ -24,7 +24,6 @@ Future<Response> _authenticateUser(
   SessionRepository sessionRepository,
 ) async {
   try {
-    print('triggered');
     final json = await context.request.json() as Map<String, dynamic>;
     final email = json['email'] as String;
     final password = json['password'] as String;
@@ -34,38 +33,38 @@ Future<Response> _authenticateUser(
       password: password,
     );
 
-    print('returned user: $user');
     if (user == null) {
-      return Response.json(statusCode: HttpStatus.unauthorized);
-    } else {
-      final Map<String, dynamic>? userJson = user is SupplyDepartmentEmployee
-          ? user.toJson()
-          : user is MobileUser
-              ? user.toJson()
-              : null;
-
-      final userId = user.id;
-      // final userId = user is SupplyDepartmentEmployee
-      //     ? user.id
-      //     : user is MobileUser
-      //         ? user.id
-      //         : null;
-
-      print('user id: $userId');
-
-      final session = await sessionRepository.createSession(userId);
+      print('null user');
       return Response.json(
+        statusCode: HttpStatus.unauthorized,
         body: {
-          'token': session.token,
-          'user': userJson,
+          'message': 'Invalid user credential. Please check your email or password and try again.',
         },
       );
     }
+
+    final Map<String, dynamic>? userJson = user is SupplyDepartmentEmployee
+        ? user.toJson()
+        : user is MobileUser
+            ? user.toJson()
+            : null;
+
+    final userId = user.id;
+
+    print('user id: $userId');
+
+    final session = await sessionRepository.createSession(userId);
+    return Response.json(
+      body: {
+        'token': session.token,
+        'user': userJson,
+      },
+    );
   } catch (e) {
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {
-        'message': e,
+        'message': 'Error processing login: $e.',
       },
     );
   }

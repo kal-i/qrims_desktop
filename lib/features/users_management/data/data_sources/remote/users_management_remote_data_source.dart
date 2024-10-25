@@ -1,3 +1,4 @@
+import '../../../../../core/enums/admin_approval_status.dart';
 import '../../../../../core/enums/auth_status.dart';
 import '../../../../../core/models/paginated_user_result.dart';
 
@@ -11,6 +12,7 @@ abstract class UsersManagementRemoteDataSource {
     bool? sortAscending,
     String? role,
     AuthStatus? status,
+    AdminApprovalStatus? adminApprovalStatus,
     bool? isArchived,
   });
 
@@ -22,5 +24,10 @@ abstract class UsersManagementRemoteDataSource {
   Future<bool> updateUserArchiveStatus({
     required String id,
     required bool isArchived,
+  });
+
+  Future<bool> updateAdminApprovalStatus({
+    required String id,
+    required AdminApprovalStatus adminApprovalStatus,
   });
 }

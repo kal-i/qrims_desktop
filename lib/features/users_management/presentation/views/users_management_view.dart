@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_data_table.dart';
+import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/custom_popup_menu.dart';
@@ -22,6 +23,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../bloc/users_management_bloc.dart';
+import '../components/admin_approval_modal.dart';
 
 class UsersManagementView extends StatefulWidget {
   const UsersManagementView({super.key});
@@ -86,7 +88,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
   void _fetchUsers() {
     _usersManagementBloc.add(
-      FetchUsers(
+      FetchUsersEvent(
         page: _currentPage,
         pageSize: _pageSize,
         searchQuery: _searchController.text,
@@ -123,6 +125,13 @@ class _UsersManagementViewState extends State<UsersManagementView> {
     });
   }
 
+  void _showAdminApprovalModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const AdminApprovalModal(),
+    );
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -143,7 +152,17 @@ class _UsersManagementViewState extends State<UsersManagementView> {
           const SizedBox(
             height: 50.0,
           ),
-          _buildDisplayUsersCount(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildDisplayUsersCount(),
+              CustomFilledButton(
+                onTap: () => _showAdminApprovalModal(context),
+                height: 40.0,
+                text: 'Pending Requests',
+              ),
+            ],
+          ),
           const SizedBox(
             height: 20.0,
           ),
@@ -522,7 +541,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
       print('user id: $userId');
       _usersManagementBloc.add(
-        UpdateUserAuthenticationStatus(
+        UpdateUserAuthenticationStatusEvent(
           userId: userId,
           authStatus: authStatus,
         ),
@@ -532,7 +551,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
     if (action == 'Archive') {
       print('Archiving user id: $userId');
       _usersManagementBloc.add(
-        UpdateArchiveStatus(
+        UpdateArchiveStatusEvent(
           userId: userId,
           isArchived: true,
         ),

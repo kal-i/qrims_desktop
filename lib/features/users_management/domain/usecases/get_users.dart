@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/enums/admin_approval_status.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -23,6 +24,7 @@ class GetUsers implements UseCase<PaginatedUserResultEntity, GetUsersParams> {
       sortAscending: params.sortAscending,
       role: params.role,
       status: params.status,
+      adminApprovalStatus: params.adminApprovalStatus,
       isArchived: params.isArchived,
     );
   }
@@ -37,6 +39,7 @@ class GetUsersParams {
     this.sortAscending,
     this.role,
     this.status,
+    this.adminApprovalStatus,
     this.isArchived,
   });
 
@@ -47,5 +50,6 @@ class GetUsersParams {
   final bool? sortAscending;
   final String? role;
   final AuthStatus? status;
+  final AdminApprovalStatus? adminApprovalStatus;
   final bool? isArchived;
 }

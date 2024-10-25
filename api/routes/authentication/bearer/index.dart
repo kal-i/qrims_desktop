@@ -53,19 +53,23 @@ Future<Response> _createUser(
     final officeName = json['office_name'] as String?;
     final positionName = json['position_name'] as String?;
 
-    String? userId;
+    String? concreteUserId;
+
+    final baseEntityUserId = await userRepository.createBaseEntityUser(
+      name: name,
+      email: email,
+      password: password,
+      createdAt: createdAt,
+    );
 
     if (role != null) {
       print('desktop user is being created');
-      userId = await userRepository.createDesktopUser(
-        name: name,
-        email: email,
-        password: password,
-        createdAt: createdAt,
+      concreteUserId = await userRepository.createDesktopUser(
+        baseUserEntityId: baseEntityUserId!,
         role: role,
       );
 
-      print('desktop user id: $userId');
+      print('desktop user id: $concreteUserId');
     }
 
     if ((officeName != null && officeName.isNotEmpty) &&
@@ -74,43 +78,46 @@ Future<Response> _createUser(
       final officeId = await officeRepository.checkOfficeIfExist(
         officeName: officeName,
       );
+      print('ofc id: $officeId');
 
       final positionId = await positionRepository.checkIfPositionExist(
         officeId: officeId,
         positionName: positionName,
       );
+      print('pos id: $positionId');
 
-      userId = await userRepository.createMobileUser(
-        name: name,
-        email: email,
-        password: password,
-        createdAt: createdAt,
+      // reg user 1st b4 the officer to avoid data inconsistency or redundancy
+      concreteUserId = await userRepository.createMobileUser(
+        baseUserEntityId: baseEntityUserId!,
       );
-      print('mobile user id: $userId');
+      print('mobile user id: $concreteUserId');
 
-      final officerId = await officerRepository.checkOfficerIfExist(
-            name: name,
-            positionId: positionId,
-          ) ??
+      // the problem is from the logic I've put that if the name exist, it will bind that to that specific officer
+      final officerId =
+           // await officerRepository.checkOfficerIfExist(
+            // name: name,
+            // positionId: positionId,
+          // ) ??
           await officerRepository.registerOfficer(
+            userId: baseEntityUserId,
             name: name,
             positionId: positionId,
           );
-
-      print('registered officer: $officerId');
+      print('registered officer: $officerId'); // reached
     }
 
-    if (userId == null) {
+    if ((baseEntityUserId == null && baseEntityUserId!.isEmpty) &&
+        (concreteUserId == null && concreteUserId!.isEmpty)) {
       return Response.json(
         statusCode: 500,
         body: {
-          'message': 'Error creating user',
+          'message': 'Error creating user.',
         },
       );
     }
 
     final user = await userRepository.getUserInformation(
-      id: userId,
+      id: baseEntityUserId,
     );
 
     Map<String, dynamic> userJson;
@@ -129,11 +136,14 @@ Future<Response> _createUser(
       },
     );
   } catch (e) {
-    print('Error in _createUser: $e');
+    print('triggered res: $e');
+
     return Response.json(
       statusCode: 500,
       body: {
-        'message': 'Error processing the create user request',
+        'message': e.toString().contains('Email already exists.')
+            ? 'Email already exists.'
+            : 'Error processing the create user request. $e',
       },
     );
   }

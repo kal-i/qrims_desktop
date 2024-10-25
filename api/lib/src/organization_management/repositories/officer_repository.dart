@@ -30,27 +30,28 @@ class OfficerRepository {
   }
 
   Future<String> registerOfficer({
+    String? userId,
     required String name,
     required String positionId,
   }) async {
     try {
       final officerId = await _generateUniqueOfficerId();
 
-      final nameExistResult = await _conn.execute(
-        Sql.named(
-          '''
-          SELECT id FROM Users WHERE name ILIKE @name;
-          ''',
-        ),
-        parameters: {
-          'name': name,
-        },
-      );
+      //final nameExistResult = await _conn.execute(
+        //Sql.named(
+          //'''
+          //SELECT id FROM Users WHERE name ILIKE @name;
+         // ''',
+        //),
+        //parameters: {
+          //'name': name,
+        //},
+      //);
 
-      String? userId;
-      if (nameExistResult.isNotEmpty) {
-        userId = nameExistResult.first[0] as String;
-      }
+      //String? userId;
+      //if (nameExistResult.isNotEmpty) {
+        //userId = nameExistResult.first[0] as String;
+      //}
 
       await _conn.execute(
         Sql.named('''
@@ -72,7 +73,7 @@ class OfficerRepository {
     }
   }
 
-  Future<String?> checkOfficerIfExist({
+  Future<String?>   checkOfficerIfExist({
     required String name,
     required String positionId,
   }) async {

@@ -51,7 +51,10 @@ class CustomOutlineButton extends StatelessWidget {
             children: [
               Text(
                 text!,
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
               if (icon != null || imagePath != null) // add space conditionally
                 const SizedBox(

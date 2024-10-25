@@ -2,8 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/entities/user.dart';
+import '../../../../core/enums/admin_approval_status.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../domain/usecases/get_users.dart';
+import '../../domain/usecases/update_admin_approval_status.dart';
 import '../../domain/usecases/update_user_archive_status.dart';
 import '../../domain/usecases/update_user_auth_status.dart';
 
@@ -16,21 +18,25 @@ class UsersManagementBloc
     required GetUsers getUsers,
     required UpdateUserAuthStatus updateUserAuthStatus,
     required UpdateUserArchiveStatus updateUserArchiveStatus,
+    required UpdateAdminApprovalStatus updateAdminApprovalStatus,
   })  : _getUsers = getUsers,
         _updateUserAuthStatus = updateUserAuthStatus,
         _updateUserArchiveStatus = updateUserArchiveStatus,
+        _updateAdminApprovalStatus = updateAdminApprovalStatus,
         super(UsersInitial()) {
-    on<FetchUsers>(_onFetchUsers);
-    on<UpdateUserAuthenticationStatus>(_onUpdateUserAuth);
-    on<UpdateArchiveStatus>(_onUpdateArchiveStatus);
+    on<FetchUsersEvent>(_onFetchUsers);
+    on<UpdateUserAuthenticationStatusEvent>(_onUpdateUserAuth);
+    on<UpdateArchiveStatusEvent>(_onUpdateArchiveStatus);
+    on<UpdateAdminApprovalStatusEvent>(_onUpdateAdminApprovalStatus);
   }
 
   final GetUsers _getUsers;
   final UpdateUserAuthStatus _updateUserAuthStatus;
   final UpdateUserArchiveStatus _updateUserArchiveStatus;
+  final UpdateAdminApprovalStatus _updateAdminApprovalStatus;
 
   void _onFetchUsers(
-    FetchUsers event,
+    FetchUsersEvent event,
     Emitter<UsersManagementState> emit,
   ) async {
     emit(UsersLoading());
@@ -44,6 +50,7 @@ class UsersManagementBloc
         sortAscending: event.sortAscending,
         role: event.role,
         status: event.status,
+        adminApprovalStatus: event.adminApprovalStatus,
         isArchived: event.isArchived,
       ),
     );
@@ -67,7 +74,7 @@ class UsersManagementBloc
   }
 
   void _onUpdateUserAuth(
-    UpdateUserAuthenticationStatus event,
+    UpdateUserAuthenticationStatusEvent event,
     Emitter<UsersManagementState> emit,
   ) async {
     emit(UsersLoading());
@@ -94,7 +101,7 @@ class UsersManagementBloc
   }
 
   void _onUpdateArchiveStatus(
-    UpdateArchiveStatus event,
+    UpdateArchiveStatusEvent event,
     Emitter<UsersManagementState> emit,
   ) async {
     emit(UsersLoading());
@@ -115,6 +122,31 @@ class UsersManagementBloc
       },
       (r) {
         print('User archive status updated successfully: $r');
+        emit(UserArchiveStatusUpdated(isSuccessful: r));
+      },
+    );
+  }
+
+  void _onUpdateAdminApprovalStatus(
+    UpdateAdminApprovalStatusEvent event,
+    Emitter<UsersManagementState> emit,
+  ) async {
+    emit(UsersLoading());
+
+    final response = await _updateAdminApprovalStatus(
+      UpdateAdminApprovalStatusParams(
+        id: event.userId,
+        adminApprovalStatus: event.adminApprovalStatus,
+      ),
+    );
+
+    response.fold(
+      (l) {
+        print('Error updating user admin approval status: ${l.message}');
+        emit(UsersError(message: l.message));
+      },
+      (r) {
+        print('User admin approval status updated successfully: $r');
         emit(UserArchiveStatusUpdated(isSuccessful: r));
       },
     );

@@ -18,6 +18,7 @@ class AppTheme {
       color: AppColor.icon,
       size: 20.0,
     ),
+    primaryColor: AppColor.lightPrimary,
     scaffoldBackgroundColor: AppColor.lightBackground,
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -85,6 +86,7 @@ class AppTheme {
       color: AppColor.icon,
       size: 20.0,
     ),
+    primaryColor: AppColor.darkPrimary,
     scaffoldBackgroundColor: AppColor.darkBackground,
     textTheme: const TextTheme(
       displayLarge: TextStyle(

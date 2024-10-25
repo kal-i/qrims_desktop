@@ -56,8 +56,9 @@ class CustomFilledButton extends StatelessWidget {
         focusColor: focusColor,
         splashColor: splashColor,
         child: Container(
-          width: width ?? 100.0,
-          height: height ?? 30.0,
+          padding: const EdgeInsets.all(10.0),
+          // width: width ?? 100.0,
+          height: height ?? 40.0,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(borderRadiusTopLeft ?? 10.0),
@@ -69,12 +70,20 @@ class CustomFilledButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (prefixWidget != null) prefixWidget!, const SizedBox(width: 10.0,),
+              if (prefixWidget != null)
+                Column(
+                  children: [
+                    prefixWidget!,
+                    const SizedBox(
+                      width: 10.0,
+                    ),
+                  ],
+                ),
               Text(
                 text,
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColor.lightPrimary,
-                  fontSize: 12.0,
+                  fontSize: 11.0,
                   fontWeight: FontWeight.w400,
                 ),
               ),

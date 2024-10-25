@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../user/models/user.dart';
+
 /// when pr is registered, we will send a notif to user
 ///
 enum NotificationType {

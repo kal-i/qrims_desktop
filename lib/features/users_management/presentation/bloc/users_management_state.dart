@@ -60,3 +60,16 @@ final class UserArchiveStatusUpdated extends UsersManagementState {
     isSuccessful,
   ];
 }
+
+final class AdminApprovalStatusUpdated extends UsersManagementState {
+  const AdminApprovalStatusUpdated({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+
+  @override
+  List<Object?> get props => [
+    isSuccessful,
+  ];
+}

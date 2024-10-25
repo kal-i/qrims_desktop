@@ -11,6 +11,7 @@ const bearerLogoutEP = '$bearerAuthEP/logout';
 const bearerUsersEP = '$bearerAuthEP/users';
 const bearerUsersUpdateAuthStatusEP = '$bearerUsersEP/update_user_auth_status';
 const bearerUsersUpdateArchiveStatusEP = '$bearerUsersEP/update_user_archive_status';
+const bearerUsersUpdateAdminApprovalStatusEP = '$bearerUsersEP/update_admin_approval_status';
 const updateUserInfoEP = '$bearerUsersEP/update_user_info';
 const otpEP = '$authEP/otp';
 const sendOtpEP = '$otpEP/send_otp';

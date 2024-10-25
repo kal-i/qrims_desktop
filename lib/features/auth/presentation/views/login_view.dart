@@ -79,6 +79,13 @@ class _LoginViewState extends State<LoginView> {
 
         if (state is OtpSent) {
           _isLoading.value = false;
+          DelightfulToastUtils.showDelightfulToast(
+            context: context,
+            icon: Icons.check_circle_outline,
+            title: 'Verify Email',
+            subtitle: 'An OTP was sent to ${_emailController.text}.',
+          );
+          await Future.delayed(const Duration(seconds: 3));
           context.go(
             RoutingConstants.otpVerificationViewRoutePath,
             extra: {

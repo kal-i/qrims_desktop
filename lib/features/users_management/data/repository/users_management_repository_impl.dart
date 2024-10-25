@@ -1,3 +1,4 @@
+import '../../../../core/enums/admin_approval_status.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
@@ -23,6 +24,7 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
     bool? sortAscending,
     String? role,
     AuthStatus? status,
+    AdminApprovalStatus? adminApprovalStatus,
     bool? isArchived,
   }) async {
     try {
@@ -35,6 +37,7 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
         sortAscending: sortAscending,
         role: role,
         status: status,
+        adminApprovalStatus: adminApprovalStatus,
         isArchived: isArchived,
       );
 
@@ -76,6 +79,24 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
       await usersManagementRemoteDataSource.updateUserArchiveStatus(
         id: id,
         isArchived: isArchived,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateAdminApprovalStatus({
+    required String id,
+    required AdminApprovalStatus adminApprovalStatus,
+  }) async {
+    try {
+      final response =
+      await usersManagementRemoteDataSource.updateAdminApprovalStatus(
+        id: id,
+        adminApprovalStatus: adminApprovalStatus,
       );
 
       return right(response);

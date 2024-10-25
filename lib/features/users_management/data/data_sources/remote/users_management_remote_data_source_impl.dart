@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/enums/admin_approval_status.dart';
 import '../../../../../core/enums/auth_status.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
@@ -25,6 +26,7 @@ class UsersManagementRemoteDataSourceImpl
     bool? sortAscending,
     String? role,
     AuthStatus? status,
+    AdminApprovalStatus? adminApprovalStatus,
     bool? isArchived,
   }) async {
     try {
@@ -45,6 +47,7 @@ class UsersManagementRemoteDataSourceImpl
         if (sortAscending != null) 'sort_ascending': sortAscending,
         if (role != null && role.isNotEmpty) 'role': role,
         if (status != null) 'status': status.toString().split('.').last,
+        if (adminApprovalStatus != null) 'admin_approval_status': adminApprovalStatus.toString().split('.').last,
         if (isArchived != null) 'is_archived': isArchived,
       };
 
@@ -126,6 +129,39 @@ class UsersManagementRemoteDataSourceImpl
       // don't forget that only admin can do this
       final response = await httpService.patch(
         endpoint: bearerUsersUpdateArchiveStatusEP,
+        queryParams: queryParam,
+        params: param,
+      );
+
+      print('Response from patch request: $response');
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updateAdminApprovalStatus({
+    required String id,
+    required AdminApprovalStatus adminApprovalStatus,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParam = {
+        'user_id': id,
+      };
+
+      final Map<String, dynamic> param = {
+        'admin_approval_status': adminApprovalStatus.toString().split('.').last,
+      };
+
+      print('Making patch request with params: $param');
+
+      // don't forget that only admin can do this
+      final response = await httpService.patch(
+        endpoint: bearerUsersUpdateAdminApprovalStatusEP,
         queryParams: queryParam,
         params: param,
       );
