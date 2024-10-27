@@ -31,6 +31,16 @@ final class FetchUsersEvent extends UsersManagementEvent {
   final bool? isArchived;
 }
 
+final class FetchPendingUsersEvent extends UsersManagementEvent {
+  const FetchPendingUsersEvent({
+    required this.page,
+    required this.pageSize,
+  });
+
+  final int page;
+  final int pageSize;
+}
+
 final class UpdateUserAuthenticationStatusEvent extends UsersManagementEvent {
   const UpdateUserAuthenticationStatusEvent({
     required this.userId,

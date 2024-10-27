@@ -35,6 +35,34 @@ final class UsersError extends UsersManagementState {
   final String message;
 }
 
+final class PendingUsersInitial extends UsersManagementState {}
+
+final class PendingUsersLoading extends UsersManagementState {}
+
+final class PendingUsersLoaded extends UsersManagementState {
+  const PendingUsersLoaded({
+    required this.users,
+    required this.totalUserCount,
+  });
+
+  final List<MobileUserEntity> users;
+  final int totalUserCount;
+
+  @override
+  List<Object?> get props => [
+    users,
+    totalUserCount,
+  ];
+}
+
+final class PendingUsersError extends UsersManagementState {
+  const PendingUsersError({
+    required this.message,
+  });
+
+  final String message;
+}
+
 final class UserAuthenticationStatusUpdated extends UsersManagementState {
   const UserAuthenticationStatusUpdated({
     required this.isSuccessful,

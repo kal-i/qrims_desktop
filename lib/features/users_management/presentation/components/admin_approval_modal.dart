@@ -4,8 +4,9 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
+import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/entities/mobile_user.dart';
+import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/enums/admin_approval_status.dart';
 import '../../../../core/models/mobile_user.dart';
 import '../../../../core/utils/capitalizer.dart';
@@ -23,16 +24,12 @@ class AdminApprovalModal extends StatefulWidget {
 class _AdminApprovalModalState extends State<AdminApprovalModal> {
   late UsersManagementBloc _usersManagementBloc;
 
-  final ValueNotifier<List<MobileUserModel>> _pendingUsers =
-      ValueNotifier(<MobileUserModel>[]);
+  final List<MobileUserModel> _pendingUsers = [];
+  final ValueNotifier<int> _totalRecords = ValueNotifier(0);
   final ValueNotifier<bool> _isLoading = ValueNotifier(false);
 
-  final String _selectedSortValue = 'Account Creation';
-  final String _selectedSortOrder = 'Descending';
-  AdminApprovalStatus adminApprovalStatus = AdminApprovalStatus.pending;
-
   int _currentPage = 1;
-  int _pageSize = 10;
+  int _pageSize = 2;
 
   @override
   void initState() {
@@ -43,18 +40,17 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
 
   void _fetchUsers() {
     _usersManagementBloc.add(
-      FetchUsersEvent(
+      FetchPendingUsersEvent(
         page: _currentPage,
         pageSize: _pageSize,
-        sortBy: _selectedSortValue,
-        sortAscending: _selectedSortOrder == 'Ascending',
-        adminApprovalStatus: adminApprovalStatus,
       ),
     );
   }
 
-  void _updateAdminApprovalStatus(
-      {required String id, required AdminApprovalStatus status}) {
+  void _updateAdminApprovalStatus({
+    required String id,
+    required AdminApprovalStatus status,
+  }) {
     _usersManagementBloc.add(
       UpdateAdminApprovalStatusEvent(
         userId: id,
@@ -65,7 +61,9 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
 
   @override
   void dispose() {
-    _pendingUsers.dispose();
+    //_pendingUsers.dispose();
+    _totalRecords.dispose();
+    _isLoading.dispose();
     super.dispose();
   }
 
@@ -75,8 +73,7 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
       width: 500.0,
       height: 550.0,
       headerTitle: 'Pending Request',
-      subtitle: '''Mobile-registered accounts pending approval. 
-          Accept to grant access, or reject to delete.''',
+      subtitle: 'Accept to grant access, or reject to delete.',
       content: _buildContent(),
     );
   }
@@ -84,36 +81,33 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
   Widget _buildContent() {
     return BlocListener<UsersManagementBloc, UsersManagementState>(
       listener: (context, state) {
-        if (state is UsersLoading) {
+        if (state is PendingUsersLoading) {
           _isLoading.value = true;
         }
 
-        if (state is UsersLoaded) {
+        if (state is PendingUsersLoaded) {
           _isLoading.value = false;
-          _pendingUsers.value.addAll(state.users
-              .map((user) {
-                if (user is MobileUserEntity) {
-                  return MobileUserModel.fromEntity(user);
-                }
-                return null;
-              })
-              .whereType<MobileUserModel>()
+          _totalRecords.value = state.totalUserCount;
+          _pendingUsers.clear();
+          _pendingUsers.addAll(state.users
+              .map((user) => MobileUserModel.fromEntity(user))
               .toList());
         }
 
         if (state is AdminApprovalStatusUpdated && state.isSuccessful) {
+          _isLoading.value = false;
           _fetchUsers();
         }
       },
       child: BlocBuilder<UsersManagementBloc, UsersManagementState>(
           builder: (context, state) {
-        return ValueListenableBuilder(
-            valueListenable: _pendingUsers,
-            builder: (context, pendingUsers, child) {
-              return ListView.builder(
-                itemCount: pendingUsers.length,
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: _pendingUsers.length,
                 itemBuilder: (context, index) {
-                  final user = pendingUsers[index];
+                  final user = _pendingUsers[index];
 
                   return Container(
                     padding: const EdgeInsets.all(10.0),
@@ -138,7 +132,7 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
                           width: 20.0,
                         ),
                         Expanded(
-                          flex: 4,
+                          flex: 5,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -196,7 +190,7 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
                             ],
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 20.0,
                         ),
                         Text(
@@ -209,44 +203,27 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
                       ],
                     ),
                   );
-
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10.0),
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: const BoxDecoration(
-                        color: AppColor.lightYellow,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        HugeIcons.strokeRoundedUser,
-                        color: AppColor.lightYellowOutline,
-                      ),
-                    ),
-                    title: Text(
-                      capitalizeWord('full name'),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    subtitle: Text(
-                      capitalizeWord('Supply - Supply Officer I'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                    trailing: Text(
-                      '2w',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w400,
-                          ),
-                    ),
-                  );
                 },
-              );
-            });
+              ),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            PaginationControls(
+              currentPage: _currentPage,
+              totalRecords: _totalRecords.value,
+              pageSize: _pageSize,
+              onPageChanged: (page) {
+                _currentPage = page;
+                _fetchUsers();
+              },
+              onPageSizeChanged: (size) {
+                _pageSize = size;
+                _fetchUsers();
+              },
+            ),
+          ],
+        );
       }),
     );
   }

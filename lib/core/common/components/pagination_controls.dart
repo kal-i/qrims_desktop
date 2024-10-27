@@ -33,41 +33,41 @@ class PaginationControls extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         // Page size dropdown
-        DropdownButtonHideUnderline(
-          child: DropdownButton<int>(
-            icon: const Icon(
-              Icons.arrow_drop_down_outlined,
-              color: AppColor.accent,
-              size: 12.0,
-            ),
-            value: pageSize,
-            items: [10, 25, 50, 100]
-                .map(
-                  (size) => DropdownMenuItem(
-                    value: size,
-                    child: Text(
-                      'Rows per page: $size',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColor.accent,
-                          ),
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (int? newSize) {
-              if (newSize != null) {
-                final newTotalPages = (totalRecords / newSize).ceil();
-                final newPage = adjustedCurrentPage > newTotalPages ? newTotalPages : adjustedCurrentPage;
-                onPageSizeChanged(newSize);
-                onPageChanged(newPage);
-              }
-            },
-          ),
-        ),
-
-        const SizedBox(
-          width: 30.0,
-        ),
+        // DropdownButtonHideUnderline(
+        //   child: DropdownButton<int>(
+        //     icon: const Icon(
+        //       Icons.arrow_drop_down_outlined,
+        //       color: AppColor.accent,
+        //       size: 12.0,
+        //     ),
+        //     value: pageSize,
+        //     items: [10, 25, 50, 100]
+        //         .map(
+        //           (size) => DropdownMenuItem(
+        //             value: size,
+        //             child: Text(
+        //               'Rows per page: $size',
+        //               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        //                     color: AppColor.accent,
+        //                   ),
+        //             ),
+        //           ),
+        //         )
+        //         .toList(),
+        //     onChanged: (int? newSize) {
+        //       if (newSize != null) {
+        //         final newTotalPages = (totalRecords / newSize).ceil();
+        //         final newPage = adjustedCurrentPage > newTotalPages ? newTotalPages : adjustedCurrentPage;
+        //         onPageSizeChanged(newSize);
+        //         onPageChanged(newPage);
+        //       }
+        //     },
+        //   ),
+        // ),
+        //
+        // const SizedBox(
+        //   width: 30.0,
+        // ),
 
         // Display curr page and total rec
         Text(

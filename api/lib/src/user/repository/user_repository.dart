@@ -205,50 +205,57 @@ class UserRepository {
   }) async {
     try {
       final baseQuery = '''
-        SELECT COUNT(*)
-        FROM Users
-        LEFT JOIN SupplyDepartmentEmployees ON Users.id = SupplyDepartmentEmployees.user_id
-        LEFT JOIN MobileUsers ON Users.id = MobileUsers.user_id
-        ''';
+      SELECT COUNT(*)
+      FROM Users u
+      LEFT JOIN SupplyDepartmentEmployees s ON u.id = s.user_id
+      LEFT JOIN MobileUsers m ON u.id = m.user_id
+      ''';
+
       final params = <String, dynamic>{
         'is_archived': isArchived,
       };
 
       final whereClause = StringBuffer();
-      whereClause.write('WHERE is_archived = @is_archived');
+      whereClause.write('WHERE u.is_archived = @is_archived');
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
-          '''
-          AND (Users.id ILIKE @search_query OR Users.name ILIKE @search_query)
-          ''',
+          ' AND (CAST(u.id AS TEXT) ILIKE @search_query OR u.name ILIKE @search_query)',
         );
         params['search_query'] = '%$searchQuery%';
       }
 
-      if (role != null && role.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-
-        if (role == 'supply') {
-          whereClause.write('SupplyDepartmentEmployees.id IS NOT NULL');
-        } else if (role == 'mobile') {
-          whereClause.write('MobileUsers.id IS NOT NULL AND MobileUsers.admin_approval_status = \'pending\'');
-        } else {
-          throw ArgumentError('Invalid role: $role.');
-        }
-      }
-
       if (status != null) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('Users.auth_status = @status');
+        whereClause.write(' AND u.auth_status = @status');
         params['status'] = status.toString().split('.').last;
       }
 
-      if (adminApprovalStatus != null) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('MobileUsers.admin_approval_status = @admin_approval_status');
-        params['admin_approval_status'] =
-            adminApprovalStatus.toString().split('.').last;
+      if (role != null && role.isNotEmpty) {
+        if (role == 'supply') {
+          whereClause.write(' AND s.id IS NOT NULL');
+          params.remove('admin_approval_status');
+        } else if (role == 'mobile') {
+          whereClause.write(' AND m.id IS NOT NULL');
+
+          if (adminApprovalStatus != null) {
+            whereClause
+                .write(' AND m.admin_approval_status = @admin_approval_status');
+            params['admin_approval_status'] =
+                adminApprovalStatus.toString().split('.').last;
+          }
+        } else {
+          throw ArgumentError('Invalid role: $role.');
+        }
+      } else {
+        whereClause.write(
+            ''' AND (
+          (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status)
+          OR
+          m.id IS NULL
+          )'''
+        );
+        params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
       }
+
 
       final finalQuery = '''
       $baseQuery
@@ -268,8 +275,8 @@ class UserRepository {
         return 0;
       }
     } catch (e) {
-      print('Err counting filtered users: $e');
-      throw Exception(e.toString());
+      print('Error counting filtered users: $e');
+      throw Exception('Failed to count filtered users.');
     }
   }
 
@@ -277,11 +284,11 @@ class UserRepository {
     String? searchQuery,
     required int page,
     required int pageSize,
-    String sortBy = 'created_at', // default sort
-    bool sortAscending = false, // default sort order
+    String sortBy = 'created_at',
+    bool sortAscending = false,
     String? role,
     AuthStatus? status,
-    AdminApprovalStatus? adminApprovalStatus = AdminApprovalStatus.accepted,
+    AdminApprovalStatus? adminApprovalStatus,
     bool isArchived = false,
   }) async {
     try {
@@ -289,112 +296,105 @@ class UserRepository {
       final userList = <User>[];
       final params = <String, dynamic>{
         'is_archived': isArchived,
-        //'admin_approval_status': adminApprovalStatus.toString().split('.').last,
         'page_size': pageSize,
         'offset': offset,
       };
 
-      // to avoid sql injection, we'll check if it is a valid sort col
       final validSortColumns = {'id', 'created_at'};
       if (!validSortColumns.contains(sortBy)) {
         throw ArgumentError('Invalid sort column: $sortBy');
       }
-
       final sortColumn = sortBy == 'id' ? 'u.id' : 'u.created_at';
 
       final baseQuery = '''
-          SELECT 
-            u.id AS user_id,
-            u.name,
-            u.email,
-            u.password,
-            to_char(u.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
-            to_char(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
-            u.auth_status,
-            u.is_archived,
-            u.otp,
-            to_char(u.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
-            u.profile_image,
-            s.id AS supp_dept_emp_id,
-            s.role,
-            m.id AS mobile_user_id,
-            ofc.id AS officer_id,
-            ofr.user_id AS officer_user_id,
-            ofr.name AS officer_name,
-            pos.id AS position_id,
-            pos.position_name AS position_name,
-            ofc.name AS office_name,
-            ofr.is_archived AS officer_is_archived,
-            m.admin_approval_status 
-          FROM
-            Users u
-          LEFT JOIN
-            SupplyDepartmentEmployees s ON u.id = s.user_id
-          LEFT JOIN
-            MobileUsers m ON u.id = m.user_id
-          LEFT JOIN
-            Officers ofr ON u.id = ofr.user_id
-          LEFT JOIN
-            Positions pos ON ofr.position_id = pos.id
-          LEFT JOIN
-            Offices ofc ON pos.office_id = ofc.id
-          ''';
+      SELECT 
+        u.id AS user_id,
+        u.name,
+        u.email,
+        u.password,
+        to_char(u.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
+        to_char(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
+        u.auth_status,
+        u.is_archived,
+        u.otp,
+        to_char(u.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
+        u.profile_image,
+        s.id AS supp_dept_emp_id,
+        s.role,
+        m.id AS mobile_user_id,
+        ofc.id AS officer_id,
+        ofr.user_id AS officer_user_id,
+        ofr.name AS officer_name,
+        pos.id AS position_id,
+        pos.position_name AS position_name,
+        ofc.name AS office_name,
+        ofr.is_archived AS officer_is_archived,
+        m.admin_approval_status 
+      FROM
+        Users u
+      LEFT JOIN
+        SupplyDepartmentEmployees s ON u.id = s.user_id
+      LEFT JOIN
+        MobileUsers m ON u.id = m.user_id
+      LEFT JOIN
+        Officers ofr ON u.id = ofr.user_id
+      LEFT JOIN
+        Positions pos ON ofr.position_id = pos.id
+      LEFT JOIN
+        Offices ofc ON pos.office_id = ofc.id
+    ''';
 
-      // ILIKE is used for case-insensitive matching
-      final whereClause = StringBuffer();
-      whereClause.write('WHERE u.is_archived = @is_archived');
-// Include both supply department employees and mobile users
-      whereClause.write(' AND (s.id IS NOT NULL OR (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status))');
-
+      final whereClause = StringBuffer('WHERE u.is_archived = @is_archived');
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
-          '''
-          AND (u.id ILIKE @search_query OR u.name ILIKE @search_query)
-          ''',
-        );
+            ' AND (u.id ILIKE @search_query OR u.name ILIKE @search_query)');
         params['search_query'] = '%$searchQuery%';
       }
 
-      if (role != null && role.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-
-        if (role == 'supply') {
-          whereClause.write('s.id IS NOT NULL');
-        } else if (role == 'mobile') {
-          whereClause.write('m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status');
-        } else {
-          throw ArgumentError('Invalid role: $role.');
-        }
-      }
-
       if (status != null) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('u.auth_status = @status');
+        whereClause.write(' AND u.auth_status = @status');
         params['status'] = status.toString().split('.').last;
       }
 
-      if (adminApprovalStatus != null) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('m.admin_approval_status = @admin_approval_status');
-        params['admin_approval_status'] =
-            adminApprovalStatus.toString().split('.').last;
-      }
+      if (role != null && role.isNotEmpty) {
+        if (role == 'supply') {
+          whereClause.write(' AND s.id IS NOT NULL');
+          params.remove('admin_approval_status');
+        } else if (role == 'mobile') {
+          whereClause.write(' AND m.id IS NOT NULL');
 
-      // Set admin approval status parameter only if not already defined in role-specific logic
-      if (adminApprovalStatus != null && role != 'mobile') {
+          if (adminApprovalStatus != null) {
+            whereClause
+                .write(' AND m.admin_approval_status = @admin_approval_status');
+            params['admin_approval_status'] =
+                adminApprovalStatus.toString().split('.').last;
+          }
+        } else {
+          throw ArgumentError('Invalid role: $role.');
+        }
+      } else {
+        whereClause.write(
+          ''' AND (
+          (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status)
+          OR
+          m.id IS NULL
+          )'''
+        );
         params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
       }
-
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
 
       final finalQuery = '''
       $baseQuery
-      $whereClause
-      ORDER BY
-        $sortColumn $sortDirection
+      ${whereClause.toString()}
+      ORDER BY $sortColumn $sortDirection
       LIMIT @page_size OFFSET @offset;
-      ''';
+    ''';
+
+      // Debugging: Print final query and params to validate SQL construction
+      print('Executing Query: $finalQuery');
+      print('Parameters: $params');
 
       final results = await _conn.execute(
         Sql.named(finalQuery),
@@ -453,6 +453,145 @@ class UserRepository {
     } catch (e) {
       print('Error fetching users: $e');
       throw Exception('Failed to fetch users.');
+    }
+  }
+
+  Future<int> getPendingUsersFilteredCount() async {
+    try {
+      final baseQuery = '''
+      SELECT 
+        COUNT(*)
+      FROM 
+        Users u
+      LEFT JOIN 
+        MobileUsers m ON u.id = m.user_id
+      WHERE 
+        u.is_archived  = @is_archived
+      AND
+        u.auth_status = @auth_status
+      AND
+        m.admin_approval_status = @admin_approval_status;
+      ''';
+
+      final params = <String, dynamic>{
+        'is_archived': false,
+        'auth_status': 'authenticated',
+        'admin_approval_status': 'pending',
+      };
+
+      final result = await _conn.execute(
+        Sql.named(baseQuery),
+        parameters: params,
+      );
+
+      if (result.isNotEmpty) {
+        final count = result.first[0] as int;
+        print('Total no. of filtered pending users: $count');
+        return count;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      print('Error counting filtered pending users: $e');
+      throw Exception('Failed to count filtered pending users.');
+    }
+  }
+
+  Future<List<MobileUser>?> getPendingUsers({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final offset = (page - 1) * pageSize;
+      final userList = <MobileUser>[];
+      final params = <String, dynamic>{
+        'page_size': pageSize,
+        'offset': offset,
+        'is_archived': false,
+        'auth_status': 'authenticated',
+        'admin_approval_status': 'pending',
+      };
+
+      final baseQuery = '''
+      SELECT 
+        u.id AS user_id,
+        u.name,
+        u.email,
+        u.password,
+        to_char(u.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at,
+        to_char(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at,
+        u.auth_status,
+        u.is_archived,
+        u.otp,
+        to_char(u.otp_expiry, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS otp_expiry,
+        u.profile_image,
+        m.id AS mobile_user_id,
+        ofc.id AS officer_id,
+        ofr.user_id AS officer_user_id,
+        ofr.name AS officer_name,
+        pos.id AS position_id,
+        pos.position_name AS position_name,
+        ofc.name AS office_name,
+        ofr.is_archived AS officer_is_archived,
+        m.admin_approval_status 
+      FROM
+        Users u
+      LEFT JOIN
+        MobileUsers m ON u.id = m.user_id
+      LEFT JOIN
+        Officers ofr ON u.id = ofr.user_id
+      LEFT JOIN
+        Positions pos ON ofr.position_id = pos.id
+      LEFT JOIN
+        Offices ofc ON pos.office_id = ofc.id
+      WHERE 
+        u.is_archived = @is_archived
+      AND
+        u.auth_status = @auth_status
+      AND
+        m.admin_approval_status = @admin_approval_status
+    ''';
+
+      final finalQuery = '''
+      $baseQuery
+      ORDER BY u.created_at DESC
+      LIMIT @page_size OFFSET @offset;
+    ''';
+
+      final results = await _conn.execute(
+        Sql.named(finalQuery),
+        parameters: params,
+      );
+
+      for (final row in results) {
+        userList.add(MobileUser.fromJson({
+          'user_id': row[0],
+          'name': row[1],
+          'email': row[2],
+          'password': row[3],
+          'created_at': row[4].toString(),
+          'updated_at': row[5]?.toString(),
+          'auth_status': row[6],
+          'is_archived': row[7],
+          'otp': row[8],
+          'otp_expiry': row[9]?.toString(),
+          'profile_image': row[10],
+          'mobile_user_id': row[11],
+          'officer_id': row[12],
+          'officer_user_id': row[13],
+          'officer_name': row[14],
+          'position_id': row[15],
+          'position_name': row[16],
+          'office_name': row[17],
+          'officer_is_archived': row[18],
+          'admin_approval_status': row[19],
+        }));
+      }
+      print('Fetched pending users for page $page: ${userList.length}');
+      return userList;
+    } catch (e) {
+      print('Error fetching pending users: $e');
+      throw Exception('Failed to fetch pending users.');
     }
   }
 
@@ -537,6 +676,7 @@ class UserRepository {
 
     if (isMobileUser) {
       print('returning mobile user: ${row[13]}');
+      //if (row[21] == AdminApprovalStatus.accepted)
       final mobileUserMap = {
         'user_id': row[0],
         'name': row[1],

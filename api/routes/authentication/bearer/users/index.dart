@@ -36,20 +36,21 @@ Future<Response> _getUsers(
             (authStatus) =>
                 authStatus.toString().split('.').last == statusString,
           )
-        : null;
+        : AuthStatus.authenticated;
     final adminApprovalStatus = adminApprovalStatusString != null
         ? AdminApprovalStatus.values.firstWhere(
             (adminApprovalStatus) =>
                 adminApprovalStatus.toString().split('.').last ==
                 adminApprovalStatusString,
           )
-        : null;
+        : AdminApprovalStatus.accepted;
     final isArchived =
         bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
 
     // if search query is not empty or user type, use the userJson.lenght otherwise, totalusercount
     // done for search but I'll need a way to count of the thing that matches the query without the intervention of limit
     // for that I can create a separate method for filtering - searchQuery, sortBy, filter
+    print('admin approval status: $adminApprovalStatus');
 
     final userList = await repository.getUsers(
       page: page,

@@ -9,6 +9,7 @@ const bearerAuthEP = '$authEP/bearer';
 const bearerLoginEP = '$bearerAuthEP/login';
 const bearerLogoutEP = '$bearerAuthEP/logout';
 const bearerUsersEP = '$bearerAuthEP/users';
+const bearerPendingUsersEP = '$bearerUsersEP/pending';
 const bearerUsersUpdateAuthStatusEP = '$bearerUsersEP/update_user_auth_status';
 const bearerUsersUpdateArchiveStatusEP = '$bearerUsersEP/update_user_archive_status';
 const bearerUsersUpdateAdminApprovalStatusEP = '$bearerUsersEP/update_admin_approval_status';

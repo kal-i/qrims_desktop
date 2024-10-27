@@ -6,6 +6,7 @@ class BaseModal extends StatelessWidget {
   const BaseModal({
     super.key,
     this.content,
+    this.footer,
     required this.headerTitle,
     this.subtitle,
     this.width,
@@ -13,6 +14,7 @@ class BaseModal extends StatelessWidget {
   });
 
   final Widget? content;
+  final Widget? footer;
   final String headerTitle;
   final String? subtitle;
   final double? width;
@@ -46,6 +48,9 @@ class BaseModal extends StatelessWidget {
                 child: content,
               ),
             ),
+            _ModalFooter(
+              child: footer,
+            ),
           ],
         ),
       ),
@@ -66,6 +71,7 @@ class _ModalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -88,12 +94,17 @@ class _ModalHeader extends StatelessWidget {
             ),
           ],
         ),
-        if (subtitle != null) Text(
-          subtitle!,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w400,
-          ),
+        const SizedBox(
+          height: 5.0,
         ),
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                ),
+          ),
       ],
     );
   }
@@ -101,6 +112,20 @@ class _ModalHeader extends StatelessWidget {
 
 class _ModalContent extends StatelessWidget {
   const _ModalContent({
+    super.key,
+    this.child,
+  });
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return child ?? const SizedBox.shrink();
+  }
+}
+
+class _ModalFooter extends StatelessWidget {
+  const _ModalFooter({
     super.key,
     this.child,
   });

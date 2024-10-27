@@ -1,6 +1,5 @@
 import 'package:api/src/utils/encryption_utils.dart';
 import 'package:api/src/utils/generate_id.dart';
-import 'package:api/src/utils/hash_extension.dart';
 import 'package:api/src/utils/qr_code_utils.dart';
 import 'package:postgres/postgres.dart';
 

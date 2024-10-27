@@ -7,6 +7,7 @@ import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
 import '../../../../../core/models/paginated_user_result.dart';
+import '../../models/paginated_mobile_user_result_model.dart';
 import 'users_management_remote_data_source.dart';
 
 class UsersManagementRemoteDataSourceImpl
@@ -66,6 +67,35 @@ class UsersManagementRemoteDataSourceImpl
         // final List<dynamic> json = response.data;
         // print('umrds: $json');
         // return json.map((user) => UserModel.fromJson(user)).toList();
+      } else {
+        throw const ServerException('Failed to load users.');
+      }
+    } on DioException catch (e) {
+      final formattedError = formatDioError(e);
+      throw ServerException(formattedError);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<PaginatedMobileUserResultModel> getPendingUsers({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'page': page,
+        'page_size': pageSize,
+      };
+
+      final response = await httpService.get(
+        endpoint: bearerPendingUsersEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return PaginatedMobileUserResultModel.fromJson(response.data);
       } else {
         throw const ServerException('Failed to load users.');
       }
@@ -161,8 +191,8 @@ class UsersManagementRemoteDataSourceImpl
 
       // don't forget that only admin can do this
       final response = await httpService.patch(
-        endpoint: bearerUsersUpdateAdminApprovalStatusEP,
-        queryParams: queryParam,
+        endpoint: '$bearerPendingUsersEP/$id',
+        //queryParams: queryParam,
         params: param,
       );
 

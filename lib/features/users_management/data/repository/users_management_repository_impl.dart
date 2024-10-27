@@ -5,6 +5,7 @@ import '../../../../core/error/failure.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/entities/paginated_user_result.dart';
+import '../../domain/entities/paginated_mobile_user_result_entity.dart';
 import '../../domain/repository/users_management_repository.dart';
 import '../data_sources/remote/users_management_remote_data_source.dart';
 
@@ -45,6 +46,24 @@ class UsersManagementRepositoryImpl implements UsersManagementRepository {
       print(paginatedUserModel.users);
 
       print('umr_impl: $paginatedUserModel');
+      return right(paginatedUserModel);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedMobileUserResultEntity>> getPendingUsers({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final paginatedUserModel =
+      await usersManagementRemoteDataSource.getPendingUsers(
+        page: page,
+        pageSize: pageSize,
+      );
+
       return right(paginatedUserModel);
     } on ServerException catch (e) {
       return left(Failure(e.message));

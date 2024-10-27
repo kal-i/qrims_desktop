@@ -82,6 +82,7 @@ import 'features/users_management/data/data_sources/remote/users_management_remo
 import 'features/users_management/data/data_sources/remote/users_management_remote_data_source_impl.dart';
 import 'features/users_management/data/repository/users_management_repository_impl.dart';
 import 'features/users_management/domain/repository/users_management_repository.dart';
+import 'features/users_management/domain/usecases/get_pending_users.dart';
 import 'features/users_management/domain/usecases/get_users.dart';
 import 'features/users_management/domain/usecases/update_admin_approval_status.dart';
 import 'features/users_management/domain/usecases/update_user_auth_status.dart';
@@ -320,6 +321,10 @@ void _registerUsersManagementDependencies() {
     () => GetUsers(usersManagementRepository: serviceLocator()),
   );
 
+  serviceLocator.registerFactory<GetPendingUsers>(
+        () => GetPendingUsers(usersManagementRepository: serviceLocator()),
+  );
+
   serviceLocator.registerFactory<UpdateUserAuthStatus>(
     () => UpdateUserAuthStatus(usersManagementRepository: serviceLocator()),
   );
@@ -336,6 +341,7 @@ void _registerUsersManagementDependencies() {
   serviceLocator.registerFactory<UsersManagementBloc>(
     () => UsersManagementBloc(
       getUsers: serviceLocator(),
+      getPendingUsers: serviceLocator(),
       updateUserAuthStatus: serviceLocator(),
       updateUserArchiveStatus: serviceLocator(),
       updateAdminApprovalStatus: serviceLocator(),
