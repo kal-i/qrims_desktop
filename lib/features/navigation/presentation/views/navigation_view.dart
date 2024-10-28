@@ -15,6 +15,7 @@ import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../components/notification_window.dart';
 import '../components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
 import '../components/side_navigation_drawer/side_navigation_drawer.dart';
 
@@ -141,11 +142,19 @@ class _NavigationViewState extends State<NavigationView> {
             ),
             Row(
               children: [
-                const badges.Badge(
-                  //badgeContent: Text('0'),
-                  child: Icon(
-                    CupertinoIcons.bell,
-                    size: 20.0,
+                badges.Badge(
+                  position: badges.BadgePosition.topEnd(top: 8, end: 0),
+                  child: IconButton(
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        child: NotificationWindow(),
+                      )
+                    ),
+                    icon: const Icon(
+                      HugeIcons.strokeRoundedNotification03,
+                      size: 20.0,
+                    ),
                   ),
                 ),
                 const SizedBox(

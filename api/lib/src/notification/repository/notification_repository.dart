@@ -73,7 +73,7 @@ class NotificationRepository {
   }
 
   Future<List<notif.Notification>?> getNotifications({
-    required int recipientId,
+    required String recipientId,
   }) async {
     final notifications = <notif.Notification>[];
 
@@ -109,10 +109,10 @@ class NotificationRepository {
     return notifications;
   }
 
-  Future<void> markAsRead({
-    required int notificationId,
+  Future<bool?> markAsRead({
+    required String notificationId,
   }) async {
-    await _conn.execute(
+    final result = await _conn.execute(
       Sql.named(
         '''
       UPDATE Notifications
@@ -124,5 +124,7 @@ class NotificationRepository {
         'id': notificationId,
       },
     );
+
+    return result.affectedRows == 1;
   }
 }

@@ -1,6 +1,49 @@
-import 'package:dart_frog/dart_frog.dart';
+import 'dart:io';
 
-Response onRequest(RequestContext context) {
-  // TODO: implement route handler
-  return Response(body: 'This is a new route!');
+import 'package:api/src/notification/repository/notification_repository.dart';
+import 'package:api/src/session/session_repository.dart';
+import 'package:dart_frog/dart_frog.dart';
+import 'package:postgres/postgres.dart';
+
+Future<Response> onRequest(RequestContext context) async {
+  final connection = await context.read<Connection>();
+  final notifRepository = NotificationRepository(connection);
+  final sessionRepository = SessionRepository(connection);
+
+  return switch (context.request.method) {
+    HttpMethod.get =>
+      _getUserNotifications(context, notifRepository, sessionRepository),
+    _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed))
+  };
+}
+
+Future<Response> _getUserNotifications(
+  RequestContext context,
+  NotificationRepository notificationRepository,
+  SessionRepository sessionRepository,
+) async {
+  try {
+    final headers = await context.request.headers;
+    final bearerToken = headers['Authorization']?.substring(7) as String;
+    final session = await sessionRepository.sessionFromToken(bearerToken);
+    final recipientId = session!.userId;
+
+    final notifications = await notificationRepository.getNotifications(
+      recipientId: recipientId,
+    );
+
+    return Response.json(
+      statusCode: 200,
+      body: {
+        'notifications': notifications?.map((notification) => notification.toJson()).toList(),
+      },
+    );
+  } catch (e) {
+    return Response.json(
+      statusCode: HttpStatus.internalServerError,
+      body: {
+        'message': 'Error processing get user notifications: $e',
+      },
+    );
+  }
 }

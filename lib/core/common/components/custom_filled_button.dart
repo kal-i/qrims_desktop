@@ -57,7 +57,7 @@ class CustomFilledButton extends StatelessWidget {
         splashColor: splashColor,
         child: Container(
           padding: const EdgeInsets.all(10.0),
-          // width: width ?? 100.0,
+          width: width,
           height: height ?? 40.0,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.only(
@@ -75,15 +75,15 @@ class CustomFilledButton extends StatelessWidget {
                   children: [
                     prefixWidget!,
                     const SizedBox(
-                      width: 10.0,
+                      width: 30.0,
                     ),
                   ],
                 ),
               Text(
                 text,
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColor.lightPrimary,
-                  fontSize: 11.0,
+                  fontSize: 12.0,
                   fontWeight: FontWeight.w400,
                 ),
               ),

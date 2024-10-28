@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 
 import '../constants/app_constants.dart';
 
+// not sure how it happened but when I encounter an err where the ep is correct
+// but the req is not pushing through, just comment then uncomment that part
 class HttpService {
   final Dio dio;
   String? bearerToken;

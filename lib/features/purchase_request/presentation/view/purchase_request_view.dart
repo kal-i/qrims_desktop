@@ -145,11 +145,11 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         _buildSummaryRow(),
         const SizedBox(
-          height: 20.0,
+          height: 40.0,
         ),
         _buildTableRelatedActionsRow(),
         const SizedBox(
-          height: 50.0,
+          height: 20.0,
         ),
         Expanded(
           child: _buildDataTable(),
@@ -173,7 +173,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         Row(
           children: [
-            _buildKPIFilterSelection(),
+            //_buildKPIFilterSelection(),
             const SizedBox(
               width: 10.0,
             ),
@@ -184,11 +184,11 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     );
   }
 
-  Widget _buildKPIFilterSelection() {
-    return CustomDropdownField(
-      onChanged: (value) {},
-    );
-  }
+  // Widget _buildKPIFilterSelection() {
+  //   return CustomDropdownField(
+  //     onChanged: (value) {},
+  //   );
+  // }
 
   final ValueNotifier<int> _pendingPurchaseRequestsCount = ValueNotifier(0);
   final ValueNotifier<int> _semiFulfilledPurchaseRequestsCount =
@@ -199,57 +199,61 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   Widget _purchaseRequestKPICard() {
     return BaseContainer(
       padding: 20.0,
-      height: 150.0,
+      height: 160.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Pending Requests',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 18.0,
+                  fontSize: 15.0,
                   fontWeight: FontWeight.w500,
                 ),
           ),
           const SizedBox(
             height: 5.0,
           ),
-          Expanded(
-            child: Row(
-              children: [
-                Text(
-                  '359',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 28.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(
-                  width: 10.0,
-                ),
-                const Icon(
-                  HugeIcons.strokeRoundedTradeUp,
-                  color: AppColor.green,
-                  size: 24.0,
-                ),
-                Text(
-                  '+2.5%',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Text(
+                '359',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 32.0,
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(
+                width: 10.0,
+              ),
+              const Icon(
+                HugeIcons.strokeRoundedTradeUp,
+                color: AppColor.green,
+                size: 24.0,
+              ),
+              Text(
+                '+2.5%',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
           ),
           const SizedBox(
-            height: 5.0,
+            height: 10.0,
           ),
-          Text(
-            'There has been a 15% increase in pending purchase requests this month.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: SizingConfig.textMultiplier * 1.5,
-                  fontWeight: FontWeight.w400,
-                ),
+          Expanded(
+            child: Text(
+              'There has been a 15% increase in pending purchase requests this month.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              textAlign: TextAlign.left,
+            ),
           ),
         ],
       ),
@@ -479,10 +483,16 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
 
     return CustomFilledButton(
       height: 40.0,
+      width: 150.0,
       onTap: () => context.go(
         '${RoutingConstants.purchaseRequestViewRoutePath}/${RoutingConstants.registerPurchaseRequestViewRoutePath}',
       ),
-      text: 'Register Item',
+      prefixWidget: Icon(
+        HugeIcons.strokeRoundedNoteAdd,
+        size: 18.0,
+        color: AppColor.lightPrimary,
+      ),
+      text: 'Register PR',
     );
   }
 
@@ -530,78 +540,4 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         throw Exception('Invalid Purchase Request Status');
     }
   }
-
-  // req. off.
-  // pr no.
-  // status
-  // date
-  // Widget _purchaseRequestCard() {
-  //   return Container(
-  //     padding: const EdgeInsets.all(20.0),
-  //     decoration: BoxDecoration(
-  //       borderRadius: BorderRadius.circular(10.0),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: AppColor.darkPrimary.withOpacity(0.25),
-  //           blurRadius: 4.0,
-  //           spreadRadius: 0.0,
-  //           offset: const Offset(0.0, 4.0),
-  //         )
-  //       ],
-  //       color: Theme.of(context).cardColor,
-  //     ),
-  //     child: Column(
-  //       children: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             RichText(
-  //               text: TextSpan(
-  //                 text: 'PR #',
-  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //                       fontSize: 24.0,
-  //                       fontWeight: FontWeight.w700,
-  //                     ),
-  //                 children: [
-  //                   TextSpan(
-  //                     text: '2024-10-012',
-  //                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //                           fontSize: 24.0,
-  //                           fontWeight: FontWeight.w700,
-  //                         ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             IconButton(
-  //               onPressed: () {},
-  //               icon: const Icon(
-  //                 HugeIcons.strokeRoundedMoreVertical,
-  //                 size: 20.0,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         const SizedBox(
-  //           height: 10.0,
-  //         ),
-  //         Text(
-  //           '13/10/2024',
-  //           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-  //                 fontSize: 13.0,
-  //                 fontWeight: FontWeight.w400,
-  //               ),
-  //         ),
-  //         const SizedBox(
-  //           height: 10.0,
-  //         ),
-  //         HighlightStatusContainer(
-  //           statusStyle: StatusStyle.yellow(
-  //             label: 'Pending',
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

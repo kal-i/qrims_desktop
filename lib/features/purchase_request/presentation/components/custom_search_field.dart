@@ -61,23 +61,17 @@ class CustomSearchField extends StatelessWidget {
                 fillColor: context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightBackground
                     : AppColor.darkBackground,
-                disabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                    width: 1.5,
-                  ),
-                  borderRadius: BorderRadius.circular(5.0),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  // borderSide: BorderSide(
+                  //   color: Theme.of(context).dividerColor,
+                  //   width: 1.5,
+                  // ),
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderSide: const BorderSide(
                     color: AppColor.error,
-                    width: 2.0,
-                  ),
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).dividerColor,
                     width: 1.5,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -85,16 +79,16 @@ class CustomSearchField extends StatelessWidget {
                 focusedBorder: OutlineInputBorder(
                   borderSide: const BorderSide(
                     color: AppColor.accent,
-                    width: 2.0,
+                    width: 1.5,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderSide: const BorderSide(
                     color: AppColor.error,
-                    width: 2.0,
+                    width: 1.5,
                   ),
-                  borderRadius: BorderRadius.circular(5.0),
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
               maxLines: maxLines,

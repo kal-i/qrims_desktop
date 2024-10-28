@@ -4,7 +4,6 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
-import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/enums/admin_approval_status.dart';
@@ -103,128 +102,165 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
           builder: (context, state) {
         return Column(
           children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: _pendingUsers.length,
-                itemBuilder: (context, index) {
-                  final user = _pendingUsers[index];
+            _pendingUsers.isEmpty
+                ? Expanded(child: _buildEmptyState())
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _pendingUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = _pendingUsers[index];
 
-                  return Container(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(10.0),
-                            width: 80.0,
-                            height: 80.0,
-                            decoration: const BoxDecoration(
-                              color: AppColor.lightYellow,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              HugeIcons.strokeRoundedUser,
-                              color: AppColor.lightYellowOutline,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 20.0,
-                        ),
-                        Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                capitalizeWord(user.name),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(
-                                height: 5.0,
-                              ),
-                              Text(
-                                capitalizeWord(
-                                    '${user.officerEntity.officeName} - ${user.officerEntity.positionName}'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      fontSize: 11.0,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                              ),
-                              const SizedBox(
-                                height: 5.0,
-                              ),
-                              Row(
+                            return Container(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Row(
                                 children: [
                                   Expanded(
-                                      child: CustomFilledButton(
-                                    onTap: () => _updateAdminApprovalStatus(
-                                      id: user.id,
-                                      status: AdminApprovalStatus.accepted,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10.0),
+                                      width: 80.0,
+                                      height: 80.0,
+                                      decoration: const BoxDecoration(
+                                        color: AppColor.lightYellow,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        HugeIcons.strokeRoundedUser,
+                                        color: AppColor.lightYellowOutline,
+                                      ),
                                     ),
-                                    text: 'Accept',
-                                    height: 40.0,
-                                  )),
+                                  ),
                                   const SizedBox(
-                                    width: 10.0,
+                                    width: 20.0,
                                   ),
                                   Expanded(
-                                      child: CustomOutlineButton(
-                                    onTap: () => _updateAdminApprovalStatus(
-                                      id: user.id,
-                                      status: AdminApprovalStatus.rejected,
+                                    flex: 5,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Text(
+                                          capitalizeWord(user.name),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(
+                                          height: 5.0,
+                                        ),
+                                        Text(
+                                          capitalizeWord(
+                                              '${user.officerEntity.officeName} - ${user.officerEntity.positionName}'),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontSize: 11.0,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
+                                        const SizedBox(
+                                          height: 5.0,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                                child: CustomFilledButton(
+                                              onTap: () =>
+                                                  _updateAdminApprovalStatus(
+                                                id: user.id,
+                                                status: AdminApprovalStatus
+                                                    .accepted,
+                                              ),
+                                              text: 'Accept',
+                                              height: 40.0,
+                                            )),
+                                            const SizedBox(
+                                              width: 10.0,
+                                            ),
+                                            Expanded(
+                                                child: CustomOutlineButton(
+                                              onTap: () =>
+                                                  _updateAdminApprovalStatus(
+                                                id: user.id,
+                                                status: AdminApprovalStatus
+                                                    .rejected,
+                                              ),
+                                              text: 'Delete',
+                                              height: 40.0,
+                                            )),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    text: 'Delete',
-                                    height: 40.0,
-                                  )),
+                                  ),
+                                  const SizedBox(
+                                    width: 20.0,
+                                  ),
+                                  Text(
+                                    timeAgo(user.createdAt),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                        const SizedBox(
-                          width: 20.0,
-                        ),
-                        Text(
-                          timeAgo(user.createdAt),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            PaginationControls(
-              currentPage: _currentPage,
-              totalRecords: _totalRecords.value,
-              pageSize: _pageSize,
-              onPageChanged: (page) {
-                _currentPage = page;
-                _fetchUsers();
-              },
-              onPageSizeChanged: (size) {
-                _pageSize = size;
-                _fetchUsers();
-              },
-            ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      PaginationControls(
+                        currentPage: _currentPage,
+                        totalRecords: _totalRecords.value,
+                        pageSize: _pageSize,
+                        onPageChanged: (page) {
+                          _currentPage = page;
+                          _fetchUsers();
+                        },
+                        onPageSizeChanged: (size) {
+                          _pageSize = size;
+                          _fetchUsers();
+                        },
+                      ),
+                    ],
+                  ),
           ],
         );
       }),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            HugeIcons.strokeRoundedUserAdd01,
+            size: 34,
+            color: AppColor.lightYellowOutline,
+          ),
+          SizedBox(height: 20),
+          Text(
+            'No pending requests.',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColor.lightYellowOutline,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

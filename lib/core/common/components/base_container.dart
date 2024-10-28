@@ -10,7 +10,7 @@ class BaseContainer extends StatelessWidget {
     super.key,
     this.child,
     this.width,
-    this.height = 100.0,
+    this.height,// = 100.0,
     this.padding,
     this.borderRadius,
     this.color,

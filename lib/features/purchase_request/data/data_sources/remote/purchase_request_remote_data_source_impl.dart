@@ -80,8 +80,10 @@ class PurchaseRequestRemoteDataSourceImpl
         'entity_name': entityName,
         'fund_cluster': fundCluster.toString().split('.').last,
         'office_name': officeName,
-        if (responsibilityCenterCode != null && responsibilityCenterCode.isNotEmpty) 'responsibility_center_code': responsibilityCenterCode,
-        'date': date,
+        if (responsibilityCenterCode != null &&
+            responsibilityCenterCode.isNotEmpty)
+          'responsibility_center_code': responsibilityCenterCode,
+        'date': date.toIso8601String(),
         'product_name': productName,
         'product_description': productDescription,
         'unit': unit.toString().split('.').last,
@@ -96,13 +98,15 @@ class PurchaseRequestRemoteDataSourceImpl
         'approving_officer_name': approvingOfficerName,
       };
 
+      print('params received: $params');
+
       final response = await httpService.post(
         endpoint: purchaseRequestsEP,
         params: params,
       );
 
       print('response after req: $response');
-      
+
       if (response.statusCode == 200) {
         return PurchaseRequestModel.fromJson(response.data['purchase_request']);
       } else {

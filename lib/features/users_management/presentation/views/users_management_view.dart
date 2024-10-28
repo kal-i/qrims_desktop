@@ -469,6 +469,10 @@ class _UsersManagementViewState extends State<UsersManagementView> {
           }
         }
 
+        if (state is AdminApprovalStatusUpdated && state.isSuccessful) {
+          _refreshUserList();
+        }
+
         if (state is UsersError) {
           _isLoading = false;
           _errorMessage = state.message;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_validator/form_validator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../../../config/sizing/sizing_config.dart';
 import '../../../../core/common/components/custom_loading_filled_button.dart';
@@ -105,6 +106,7 @@ class _LoginViewState extends State<LoginView> {
           );
           context.read<CustomAuthPasswordTextBoxBloc>().add(ResetVisibility());
           await Future.delayed(const Duration(seconds: 3));
+          await windowManager.maximize();
           context.go(RoutingConstants.dashboardViewRoutePath);
         }
       },
