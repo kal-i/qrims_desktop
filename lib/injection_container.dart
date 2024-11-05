@@ -9,6 +9,7 @@ import 'core/services/http_service.dart';
 // Authentication
 import 'core/services/item_suggestions_service.dart';
 import 'core/services/officer_suggestions_service.dart';
+import 'core/services/purchase_request_suggestions_service.dart';
 import 'features/archive/data/user/data_sources/remote/archive_users_remote_data_source.dart';
 import 'features/archive/data/user/data_sources/remote/archive_users_remote_data_source_impl.dart';
 import 'features/archive/data/user/repository/archive_user_repository_impl.dart';
@@ -123,6 +124,8 @@ void _registerServicesDependencies() {
       ItemSuggestionsService(httpService: serviceLocator()));
   serviceLocator.registerSingleton<OfficerSuggestionsService>(
       OfficerSuggestionsService(httpService: serviceLocator()));
+  serviceLocator.registerSingleton(
+      PurchaseRequestSuggestionsService(httpService: serviceLocator()));
 }
 
 /// Authentication
@@ -322,7 +325,7 @@ void _registerUsersManagementDependencies() {
   );
 
   serviceLocator.registerFactory<GetPendingUsers>(
-        () => GetPendingUsers(usersManagementRepository: serviceLocator()),
+    () => GetPendingUsers(usersManagementRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<UpdateUserAuthStatus>(

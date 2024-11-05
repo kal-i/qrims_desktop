@@ -9,14 +9,14 @@ import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
 
-
 class CustomSearchField extends StatelessWidget {
   const CustomSearchField({
     super.key,
     required this.suggestionsCallback,
     required this.onSelected,
     required this.controller,
-    required this.label,
+    this.label,
+    this.placeHolderText,
     this.maxLines = 1,
     this.enabled,
     this.scrollController,
@@ -25,7 +25,8 @@ class CustomSearchField extends StatelessWidget {
   final FutureOr<List<String>?> Function(String) suggestionsCallback;
   final void Function(String)? onSelected;
   final TextEditingController controller;
-  final String label;
+  final String? label;
+  final String? placeHolderText;
   final int? maxLines;
   final bool? enabled;
   final ScrollController? scrollController;
@@ -35,16 +36,14 @@ class CustomSearchField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 13.0,
-            fontWeight: FontWeight.w600,
+        if (label != null)
+          Text(
+            label!,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
-        ),
-        const SizedBox(
-          height: 10.0,
-        ),
         TypeAheadField<String>(
           controller: controller,
           constraints: const BoxConstraints(
@@ -90,13 +89,19 @@ class CustomSearchField extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
+                hintText: placeHolderText,
+                hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColor.darkPlaceHolderText,
+                ),
               ),
               maxLines: maxLines,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 12.0,
-                fontWeight: FontWeight.w500,
-              ),
-              validator: ValidationBuilder(requiredMessage: '$label is required').build(),
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+              validator:
+                  ValidationBuilder(requiredMessage: '$label is required')
+                      .build(),
             );
           },
           itemBuilder: (context, itemName) {
@@ -104,9 +109,9 @@ class CustomSearchField extends StatelessWidget {
               title: Text(
                 itemName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             );
           },
@@ -126,9 +131,9 @@ class CustomSearchField extends StatelessWidget {
               child: Text(
                 message,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             );
           },
@@ -137,9 +142,9 @@ class CustomSearchField extends StatelessWidget {
               child: Text(
                 'No data found.',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             );
           },

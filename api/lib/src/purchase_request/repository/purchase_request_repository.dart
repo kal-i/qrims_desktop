@@ -31,7 +31,10 @@ class PurchaseRequestRepository {
 
     int? n; // represent the no. of record
     if (result.isNotEmpty) {
-      n = int.parse(result.first[0].toString().split('-').last) + 1;
+      n = int.parse(result.first[0]
+          .toString()
+          .split('-')
+          .last) + 1;
     } else {
       n = 1;
     }
@@ -78,13 +81,19 @@ class PurchaseRequestRepository {
         parameters: {
           'id': prId,
           'entity_id': entityId,
-          'fund_cluster': fundCluster.toString().split('.').last,
+          'fund_cluster': fundCluster
+              .toString()
+              .split('.')
+              .last,
           'office_id': officeId,
           'responsibility_center_code': responsibilityCenterCode,
           'date': date,
           'product_name_id': productNameId,
           'product_description_id': productDescriptionId,
-          'unit': unit.toString().split('.').last,
+          'unit': unit
+              .toString()
+              .split('.')
+              .last,
           'quantity': quantity,
           'unit_cost': unitCost,
           'total_cost': unitCost * quantity,
@@ -378,7 +387,7 @@ class PurchaseRequestRepository {
           -- Approving Officer Details
           aofc.user_id AS approving_officer_user_id,
           aofc.name AS approving_officer_name,
-          app_pos.id AS requesting_officer_position_id,
+          app_pos.id AS approving_officer_position_id,
           app_pos.position_name AS approving_officer_position_name,
           app_ofc.name AS approving_officer_office_name,  -- Approving Officer's Office
           aofc.is_archived AS approving_officer_is_archived
@@ -523,6 +532,120 @@ class PurchaseRequestRepository {
     } catch (e) {
       print('Error fetching prs: $e');
       throw Exception('Failed to fetch prs.');
+    }
+  }
+
+  Future<int> getPurchaseRequestIdsFilteredCount({
+    String? prId,
+    String? type,
+    // bool isConsumable - prolly for ris
+  }) async {
+    try {
+      final Map<String, dynamic> params = {};
+
+      String baseQuery = '''
+      SELECT COUNT(id) FROM PurchaseRequests
+      ''';
+
+      final whereClause = StringBuffer();
+      if (prId != null && prId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('id ZXZDXSA ;LFG?         WSSSSLIKE @id');
+        params['id'] = '%$prId%';
+      }
+
+      if (type != null && type.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+
+        if (type == 'ics') {
+          whereClause.write('unit_cost <= 50000');
+        }
+
+        if (type == 'par') {
+          whereClause.write('unit_cost > 50000');
+        }
+      }
+
+      final finalQuery = '''
+      $baseQuery
+      $whereClause;
+      ''';
+
+      final result = await _conn.execute(
+        Sql.named(
+          finalQuery,
+        ),
+        parameters: params,
+      );
+
+      return result.first[0] as int;
+    } catch (e) {
+      print('Error fetching filtered pr ids count: $e');
+      throw Exception('Failed to fetch pr id count');
+    }
+  }
+
+  Future<List<String>> getPurchaseRequestIds({
+    required int page,
+    required int pageSize,
+    String? prId,
+    String? type,
+    // bool isConsumable - prolly for ris
+  }) async {
+    try {
+      final offset = (page - 1) * pageSize;
+      final prIdList = <String>[];
+      final Map<String, dynamic> params = {};
+
+      String baseQuery = '''
+      SELECT id FROM PurchaseRequests
+      ''';
+
+      final whereClause = StringBuffer();
+      if (prId != null && prId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('id LIKE @id');
+        params['id'] = '%$prId%';
+      }
+
+      if (type != null && type.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+
+        if (type == 'ics') {
+          whereClause.write('unit_cost <= 50000');
+        }
+
+        if (type == 'par') {
+          whereClause.write('unit_cost > 50000');
+        }
+      }
+
+      final finalQuery = '''
+      $baseQuery
+      $whereClause
+      ORDER BY date ASC
+      LIMIT @page_size OFFSET @offset;
+      ''';
+
+      params['page_size'] = pageSize;
+      params['offset'] = offset;
+
+      print(finalQuery);
+      print(params);
+      final results = await _conn.execute(
+        Sql.named(
+          finalQuery,
+        ),
+        parameters: params,
+      );
+
+      for (final row in results) {
+        prIdList.add(row[0] as String);
+      }
+      return prIdList;
+    } catch (e) {
+      print('Error fetching pr ids: $e');
+      throw Exception('Failed to fetch pr id');
     }
   }
 }

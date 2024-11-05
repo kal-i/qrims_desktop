@@ -25,7 +25,6 @@ class KPICard extends StatelessWidget {
     final currentTheme = Theme.of(context);
 
     return BaseContainer(
-      color: baseColor,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -50,14 +49,17 @@ class KPICard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: currentTheme.textTheme.titleMedium?.copyWith(
-                  fontSize: 13.0,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 15.0,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 data,
-                style: currentTheme.textTheme.displayLarge,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),

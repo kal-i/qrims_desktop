@@ -12,36 +12,36 @@ class StatusStyle {
 
   factory StatusStyle.green({required String label}) {
     return StatusStyle(
-      borderColor: AppColor.greenOutline,
-      backgroundColor: AppColor.greenBackground,
-      textColor: AppColor.greenText,
+      borderColor: AppColor.lightGreenOutline,
+      backgroundColor: AppColor.lightGreen,
+      textColor: AppColor.lightGreenText,
       label: label,
     );
   }
 
   factory StatusStyle.yellow({required String label}) {
     return StatusStyle(
-      borderColor: AppColor.yellowOutline,
-      backgroundColor: AppColor.yellowBackground,
-      textColor: AppColor.yellowText,
+      borderColor: AppColor.lightYellowOutline,
+      backgroundColor: AppColor.lightYellow,
+      textColor: AppColor.lightYellowText,
       label: label,
     );
   }
 
   factory StatusStyle.blue({required String label}) {
     return StatusStyle(
-      borderColor: const Color(0xFF4CB3D4),
-      backgroundColor: const Color(0xFFEEF9FD),
-      textColor: const Color(0xFF000000),
+      borderColor: AppColor.lightBlueOutline,
+      backgroundColor: AppColor.lightBlue,
+      textColor: AppColor.lightBlueText,
       label: label,
     );
   }
 
   factory StatusStyle.red({required String label}) {
     return StatusStyle(
-      borderColor: AppColor.redOutline,
-      backgroundColor: AppColor.redBackground,
-      textColor: AppColor.redText,
+      borderColor: AppColor.lightRedOutline,
+      backgroundColor: AppColor.lightRed,
+      textColor: AppColor.lightRedText,
       label: label,
     );
   }

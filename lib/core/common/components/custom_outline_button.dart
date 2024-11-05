@@ -51,8 +51,9 @@ class CustomOutlineButton extends StatelessWidget {
             children: [
               Text(
                 text!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 11.0,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColor.accent,
+                  fontSize: 12.0,
                   fontWeight: FontWeight.w400,
                 ),
               ),

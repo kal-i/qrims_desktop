@@ -13,8 +13,6 @@ import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/services/document_service.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../injection_container.dart';
-import '../../../auth/presentation/components/custom_outline_button.dart';
-import '../../../users_management/presentation/components/custom_dropdown.dart';
 
 class CustomDocumentPreview extends StatefulWidget {
   const CustomDocumentPreview({super.key});

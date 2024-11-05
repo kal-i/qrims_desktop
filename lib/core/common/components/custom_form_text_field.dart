@@ -12,7 +12,8 @@ class CustomFormTextField extends StatefulWidget {
     super.key,
     this.controller,
     this.onTap,
-    required this.label,
+    this.label,
+    this.placeholderText,
     this.width,
     this.height,
     this.maxLines = 1,
@@ -26,7 +27,8 @@ class CustomFormTextField extends StatefulWidget {
 
   final TextEditingController? controller;
   final Function()? onTap;
-  final String label;
+  final String? label;
+  final String? placeholderText;
   final double? width;
   final double? height;
   final int? maxLines;
@@ -73,16 +75,14 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 13.0,
-              fontWeight: FontWeight.w600,
+          if (widget.label != null)
+            Text(
+              widget.label!,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 13.0,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(
-            height: 10.0,
-          ),
           TextFormField(
             controller: widget.controller,
             enabled: widget.enabled,
@@ -125,6 +125,10 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
                   width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(10.0),
+              ),
+              hintText: widget.placeholderText,
+              hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColor.darkPlaceHolderText,
               ),
               suffixIcon: widget.suffixIcon != null
                   ? Icon(

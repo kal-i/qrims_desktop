@@ -34,7 +34,7 @@ class CustomIconButton extends StatelessWidget {
       textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColor.darkPrimary,
             fontSize: 13.0,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w400,
           ),
       message: tooltip ?? '',
       child: Material(
@@ -48,15 +48,16 @@ class CustomIconButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(7.0),
             height: height ?? 40.0,
-            width: width ?? 40.0,
+            width: width ?? 44.0,
             decoration: BoxDecoration(
-              border: isOutlined
-                  ? Border.all(
-                      color: outlineBorderColor,
-                      width: 1.5,
-                    )
-                  : null,
+              // border: isOutlined
+              //     ? Border.all(
+              //         color: outlineBorderColor,
+              //         width: 1.5,
+              //       )
+              //     : null,
               borderRadius: BorderRadius.circular(10.0),
+              color: hoverColor,
             ),
             child: imagePath != null
                 ? Image.asset(imagePath!)

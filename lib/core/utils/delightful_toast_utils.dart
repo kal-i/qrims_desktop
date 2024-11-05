@@ -18,30 +18,39 @@ class DelightfulToastUtils {
             snackbarDuration: const Duration(milliseconds: 2950),
             autoDismiss: true,
             builder: (context) {
-              return ToastCard(
-                leading: Icon(
-                  icon,
-                  size: 20.0,
-                ),
-                title: Text(
-                  title,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600
+              return Align(
+                alignment: Alignment.center,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 600.0
                   ),
-                ),
-                subtitle: Text(
-                  subtitle,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .titleMedium?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w400
+                  child: ToastCard(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    leading: Icon(
+                      icon,
+                      size: 20.0,
+                    ),
+                    title: Text(
+                      title,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600
+                      ),
+                    ),
+                    subtitle: Text(
+                      subtitle,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w400
+                      ),
+                    ),
                   ),
                 ),
               );

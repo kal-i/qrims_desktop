@@ -29,7 +29,7 @@ class AppColor {
   static const lightTableOutline = Color(0xFFDFDFDF);
   static const lightTableColumn = Color(0xFFF3F3F3);
   static const lightTableRow = Color(0xFFFCFCFC);
-  static const lightTableColumnText = Color(0xFF525252);
+  static const lightTableColumnText = Color(0xFF1E1E20); //Color(0xFF525252);
   static const lightTableRowText = Color(0xFF525252);
   static const lightHoverColor = Color(0xFFE0E0E0);
   static const lightPressedColor = Color(0xFFB0B0B0);
@@ -87,19 +87,6 @@ class AppColor {
   static const blue = Color(0xFF006BB1);
 
   //static const icon = Color(0xFFA1A1A1);
-
-  /// status highlighter color
-  static const redBackground = Color(0xFFFFE5E5);
-  static const redOutline = Color(0xFFFF2E2E);
-  static const redText = Color(0xFF000000);
-
-  static const yellowBackground = Color(0xFFFFF8E6);
-  static const yellowOutline = Color(0xFFE6A700);
-  static const yellowText = Color(0xFF993901);
-
-  static const greenBackground = Color(0xFFE6F6E6);
-  static const greenOutline = Color(0xFF009400);
-  static const greenText = Color(0xFF003100);
 
   static const lightGreen = Color(0xFFE6F6E6);
   static const lightGreenOutline = Color(0xFF009400);

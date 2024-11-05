@@ -252,7 +252,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
             ),
             _buildSummaryRow(),
             const SizedBox(
-              height: 50.0,
+              height: 40.0,
             ),
             _buildTableRelatedActionsRow(),
             const SizedBox(
@@ -401,10 +401,16 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     };
 
     return CustomFilledButton(
+      width: 160.0,
       height: 40.0,
       onTap: () => context.go(
-        '${RoutingConstants.itemInventoryViewRoutePath}/${RoutingConstants.registerItemViewRoutePath}',
+        RoutingConstants.nestedRegisterItemViewRoutePath,
         extra: extra,
+      ),
+      prefixWidget: const Icon(
+        HugeIcons.strokeRoundedDeliveryBox01,
+        size: 15.0,
+        color: AppColor.lightPrimary,
       ),
       text: 'Register Item',
     );
@@ -575,56 +581,50 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                       Text(
                         capitalizeWord(
                             item.productStockEntity.productName.name),
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         item.productStockEntity.productDescription
                                 ?.description ??
                             '',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         item.manufacturerBrandEntity.manufacturer.name,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         item.manufacturerBrandEntity.brand.name,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         item.itemEntity.quantity.toString(),
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         item.itemEntity.unitCost.toString(),
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       SizedBox(
                         width: 50.0,
@@ -666,8 +666,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                       ),
                       onActionSelected: (index, action) {
                         final itemId = _tableRows[index].id;
-                        String basePath =
-                            '${RoutingConstants.itemInventoryViewRoutePath}/';
+                        String? path;
                         final Map<String, dynamic> extras = {
                           'item_id': itemId,
                         };
@@ -675,17 +674,17 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                         if (action.isNotEmpty) {
                           if (action.contains('View')) {
                             extras['is_update'] = false;
-                            basePath += RoutingConstants.viewItemRoutePath;
+                            path = RoutingConstants.nestedViewItemRoutePath;
                           }
 
                           if (action.contains('Edit')) {
                             extras['is_update'] = true;
-                            basePath +=
-                                RoutingConstants.updateItemViewRoutePath;
+                            path =
+                                RoutingConstants.nestedUpdateItemViewRoutePath;
                           }
 
                           context.go(
-                            basePath,
+                            path!,
                             extra: extras,
                           );
                         }

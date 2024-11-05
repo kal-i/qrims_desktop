@@ -44,7 +44,7 @@ class AppTheme {
       bodyLarge: TextStyle(
         color: AppColor.lightTableColumnText,
         fontSize: 14.0,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
       ),
       bodyMedium: TextStyle(
         color: AppColor.accent,

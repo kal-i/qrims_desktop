@@ -38,3 +38,7 @@ const officerNamesEP = '$officersEP/names';
 
 const entitiesEP = '/entities';
 const purchaseRequestsEP = '/purchase_requests';
+const purchaseRequestIdsEP = '$purchaseRequestsEP/ids';
+
+const issuancesEP = '/issuances';
+const matchPurchaseRequestWithInventoryItemEP = '$issuancesEP/match';

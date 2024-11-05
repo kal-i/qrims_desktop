@@ -35,10 +35,8 @@ class DocumentCard extends StatelessWidget {
             height: 80.0,
             decoration: BoxDecoration(
               border: Border.all(
-                color: context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightOutline
-                    : AppColor.darkOutlineCardBorder,
-                width: 1.5,
+                color: Theme.of(context).dividerColor,
+                width: 1.0,
               ),
               borderRadius: BorderRadius.circular(10.0),
             ),
@@ -54,7 +52,7 @@ class DocumentCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10.0),
                         color:
                             (context.watch<ThemeBloc>().state == AppTheme.light
-                                ? AppColor.lightTertiary
+                                ? AppColor.lightPrimary
                                 : AppColor.darkTertiary),
                       ),
                       child: const Icon(

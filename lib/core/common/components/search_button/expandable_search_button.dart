@@ -32,15 +32,16 @@ class ExpandableSearchButton extends StatelessWidget {
           width: isExpanded ? 300.0 : 44.0,
           height: 40.0,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightOutlineBorder
-                  : AppColor.darkOutlineBorder,
-              width: 1.5,
-            ),
+            // border: Border.all(
+            //   color: context.watch<ThemeBloc>().state == AppTheme.light
+            //       ? AppColor.lightOutlineBorder
+            //       : AppColor.darkOutlineBorder,
+            //   width: 1.5,
+            // ),
             borderRadius: BorderRadius.circular(
               10.0,
             ),
+            color: Theme.of(context).dividerColor.withOpacity(0.6),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -54,15 +55,16 @@ class ExpandableSearchButton extends StatelessWidget {
                       hintStyle:
                           Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColor.darkPlaceHolderText,
-                            fontSize: 14.0,
+                            fontSize: 12.0,
                             fontWeight: FontWeight.w400,
                               ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.only(
                         left: 10.0,
-                        bottom: 12.0,
+                        bottom: 10.0,
                       ),
                     ),
+                    cursorColor: AppColor.accent,
                   ),
                 ),
               ],

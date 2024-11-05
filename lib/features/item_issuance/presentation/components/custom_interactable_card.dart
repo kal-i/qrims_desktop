@@ -6,7 +6,6 @@ import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
 
-
 class CustomInteractableCard extends StatelessWidget {
   const CustomInteractableCard({
     super.key,
@@ -36,10 +35,8 @@ class CustomInteractableCard extends StatelessWidget {
             height: 100.0,
             decoration: BoxDecoration(
               border: Border.all(
-                color: context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightOutline
-                    : AppColor.darkOutlineCardBorder,
-                width: 1.5,
+                color: Theme.of(context).dividerColor,
+                width: 1.0,
               ),
               borderRadius: BorderRadius.circular(10.0),
             ),
@@ -55,9 +52,9 @@ class CustomInteractableCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.0),
                         color:
-                        context.watch<ThemeBloc>().state == AppTheme.light
-                            ? AppColor.lightTertiary
-                            : AppColor.darkTertiary,
+                            (context.watch<ThemeBloc>().state == AppTheme.light
+                                ? AppColor.lightPrimary
+                                : AppColor.darkTertiary),
                       ),
                       child: Icon(icon),
                     ),
@@ -76,9 +73,9 @@ class CustomInteractableCard extends StatelessWidget {
                 Text(
                   name,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ],
             ),

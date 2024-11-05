@@ -69,16 +69,10 @@ class CustomFilledButton extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (prefixWidget != null)
-                Column(
-                  children: [
-                    prefixWidget!,
-                    const SizedBox(
-                      width: 30.0,
-                    ),
-                  ],
-                ),
+                prefixWidget!, const SizedBox(width: 5.0,),
               Text(
                 text,
                 style: theme.textTheme.bodySmall?.copyWith(

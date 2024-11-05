@@ -11,7 +11,7 @@ import '../../../../core/models/mobile_user.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/time_ago_formatter.dart';
 import '../bloc/users_management_bloc.dart';
-import 'base_modal.dart';
+import '../../../../core/common/components/base_modal.dart';
 
 class AdminApprovalModal extends StatefulWidget {
   const AdminApprovalModal({super.key});
@@ -69,8 +69,8 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 500.0,
-      height: 550.0,
+      width: 650.0,
+      height: 700.0,
       headerTitle: 'Pending Request',
       subtitle: 'Accept to grant access, or reject to delete.',
       content: _buildContent(),

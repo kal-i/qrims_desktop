@@ -29,7 +29,7 @@ class OfficeRepository {
     }
   }
 
-  Future<String> registerOfficer({
+  Future<String> registerOffice({
     required String officeName,
   }) async {
     try {
@@ -70,7 +70,7 @@ class OfficeRepository {
     );
 
     if (result.isEmpty) {
-      return await registerOfficer(officeName: officeName);
+      return await registerOffice(officeName: officeName);
     } else {
       return result.first[0] as String;
     }

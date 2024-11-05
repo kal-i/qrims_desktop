@@ -10,7 +10,7 @@ class BaseContainer extends StatelessWidget {
     super.key,
     this.child,
     this.width,
-    this.height,// = 100.0,
+    this.height,
     this.padding,
     this.borderRadius,
     this.color,
@@ -30,9 +30,9 @@ class BaseContainer extends StatelessWidget {
     final currentTheme = Theme.of(context);
 
     return Container(
-      padding: EdgeInsets.all(padding ?? 10.0),
+      padding: EdgeInsets.all(padding ?? 20.0),
       width: width,
-      height: height,
+      height: height ?? 160.0,
       decoration: BoxDecoration(
         border: Border.all(
           color: currentTheme.dividerColor,

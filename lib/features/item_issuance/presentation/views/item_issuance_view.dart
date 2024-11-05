@@ -14,6 +14,8 @@ import '../../../../core/common/components/reusable_filter_custom_outline_button
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../../../../core/common/components/custom_data_table.dart';
+import '../components/create_ics_modal.dart';
+import '../components/create_issuance_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
@@ -57,7 +59,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New Issuance',
             icon: CupertinoIcons.folder,
-            onTap: () {},
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const CreateIssuanceModal(),
+            ),
           ),
         ),
         const SizedBox(
@@ -67,7 +72,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New ICS',
             icon: Icons.note_outlined,
-            onTap: () {},
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const CreateIcsModal(),
+            ),
           ),
         ),
         const SizedBox(
@@ -249,11 +257,17 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   }
 
   Widget _buildFilterButton() {
-    return const CustomIconButton(icon: FluentIcons.filter_add_20_regular, isOutlined: true,);
+    return const CustomIconButton(
+      icon: FluentIcons.filter_add_20_regular,
+      isOutlined: true,
+    );
   }
 
   Widget _buildSortButton() {
-    return const CustomIconButton(icon: FluentIcons.text_sort_ascending_20_regular, isOutlined: true,);
+    return const CustomIconButton(
+      icon: FluentIcons.text_sort_ascending_20_regular,
+      isOutlined: true,
+    );
   }
 
   Widget _buildDataTable() {

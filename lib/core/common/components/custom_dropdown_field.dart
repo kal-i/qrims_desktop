@@ -8,12 +8,14 @@ import '../../../config/themes/app_color.dart';
 import '../../../config/themes/app_theme.dart';
 import '../../../config/themes/bloc/theme_bloc.dart';
 
+// todo: fix the hint text alignment
 class CustomDropdownField<T> extends StatelessWidget {
   const CustomDropdownField({
     super.key,
     required this.onChanged,
     this.value,
     this.label,
+    this.placeholderText,
     this.items,
     this.onMenuStateChange,
     this.validator,
@@ -23,6 +25,7 @@ class CustomDropdownField<T> extends StatelessWidget {
   final void Function(T?)? onChanged;
   final T? value;
   final String? label;
+  final String? placeholderText;
   final List<DropdownMenuItem<T>>? items;
   final void Function(bool)? onMenuStateChange;
   final String? Function(T?)? validator;
@@ -41,10 +44,13 @@ class CustomDropdownField<T> extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
           ),
-          const SizedBox(
-            height: 10.0,
-          ),
         DropdownButtonFormField2<T>(
+          hint: Text(
+            placeholderText ?? '',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColor.darkPlaceHolderText,
+            ),
+          ),
           isExpanded: true,
           onChanged: onChanged,
           value: value,
@@ -90,6 +96,11 @@ class CustomDropdownField<T> extends StatelessWidget {
               //color: AppColor.accent,
             ),
             iconSize: 20.0,
+          ),
+          buttonStyleData: ButtonStyleData(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
           ),
           dropdownStyleData: DropdownStyleData(
             decoration: BoxDecoration(

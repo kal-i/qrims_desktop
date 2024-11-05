@@ -1,6 +1,6 @@
 import 'package:api/src/item/models/item.dart';
+import 'package:api/src/purchase_request/model/purchase_request.dart';
 
-import '../../entity/model/entity.dart';
 import '../../organization_management/models/officer.dart';
 
 enum FundCluster {
@@ -27,9 +27,13 @@ class IssuanceItem {
   final int quantity;
 
   factory IssuanceItem.fromJson(Map<String, dynamic> json) {
+    print('received item: ${json['item']}');
+    final item = ItemWithStock.fromJson(json['item'] as Map<String, dynamic>);
+    print('after conversion to obj: $item');
+
     return IssuanceItem(
       issuanceId: json['issuance_id'] as String,
-      item: ItemWithStock.fromJson(json['item'] as Map<String, dynamic>),
+      item: item,
       quantity: json['quantity'] as int,
     );
   }
@@ -47,10 +51,8 @@ class IssuanceItem {
 abstract class Issuance {
   const Issuance({
     required this.id,
-    required this.entity,
-    required this.fundCluster,
     required this.items,
-    required this.purchaseRequestId,
+    required this.purchaseRequest,
     required this.receivingOfficer,
     required this.issuedDate,
     this.returnDate,
@@ -58,10 +60,8 @@ abstract class Issuance {
   });
 
   final String id;
-  final Entity entity;
-  final FundCluster fundCluster;
   final List<IssuanceItem> items;
-  final String purchaseRequestId;
+  final PurchaseRequest purchaseRequest;
   final Officer receivingOfficer;
   final DateTime issuedDate;
   final DateTime? returnDate;
@@ -84,10 +84,8 @@ abstract class Issuance {
 class InventoryCustodianSlip extends Issuance {
   const InventoryCustodianSlip({
     required super.id, // refer to the parent/ issuance id
-    required super.entity,
-    required super.fundCluster,
     required super.items,
-    required super.purchaseRequestId,
+    required super.purchaseRequest,
     required super.receivingOfficer,
     required super.issuedDate,
     super.returnDate,
@@ -97,35 +95,21 @@ class InventoryCustodianSlip extends Issuance {
   });
 
   final String icsId;
-  final Officer sendingOfficer;
+  final Officer sendingOfficer; // represents the receive from
 
   factory InventoryCustodianSlip.fromJson(Map<String, dynamic> json) {
-    final fundClusterString = json['fund_cluster'] as String;
-    final fundCluster = FundCluster.values.firstWhere(
-      (e) => e.toString().split('.').last == fundClusterString,
-    );
-
     return InventoryCustodianSlip(
       id: json['id'] as String,
-      entity: Entity.fromJson({
-        'entity_id': json['entity_id'],
-        'entity_name': json['entity_name'],
-      }),
-      fundCluster: fundCluster,
       items: (json['items'] as List<dynamic>)
           .map((itemJson) =>
           IssuanceItem.fromJson(itemJson as Map<String, dynamic>))
           .toList(),
-      purchaseRequestId: json['purchase_request_id'] as String,
-      receivingOfficer: Officer.fromJson({
-        'id': json['receiving_officer_id'],
-        'user_id': json['receiving_officer_user_id'],
-        'name': json['receiving_officer_name'],
-        'position_id': json['receiving_officer_position_id'],
-        'office_name': json['receiving_officer_office_name'],
-        'position_name': json['receiving_officer_position_name'],
-        'is_archived': json['receiving_officer_is_archived'],
-      }),
+      purchaseRequest: PurchaseRequest.fromJson(
+        json['purchase_request'] as Map<String, dynamic>
+      ),
+      receivingOfficer: Officer.fromJson(
+        json['receiving_officer'] as Map<String, dynamic>
+      ),
       issuedDate: json['issued_date'] is String
           ? DateTime.parse(json['issued_date'] as String)
           : json['issued_date'] as DateTime,
@@ -134,24 +118,16 @@ class InventoryCustodianSlip extends Issuance {
           : json['return_date'] as DateTime,
       isArchived: json['is_archived'] as bool,
       icsId: json['ics_id'] as String,
-      sendingOfficer: Officer.fromJson({
-        'id': json['sending_officer_id'],
-        'user_id': json['sending_officer_user_id'],
-        'name': json['sending_officer_name'],
-        'position_id': json['sending_officer_position_id'],
-        'office_name': json['sending_officer_office_name'],
-        'position_name': json['sending_officer_position_name'],
-        'is_archived': json['sending_officer_is_archived'],
-      }),
+      sendingOfficer: Officer.fromJson(
+        json['sending_officer'] as Map<String, dynamic>
+      ),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'entity': entity.toJson(),
-      'fund_cluster': fundCluster.toString().split('.').last,
-      'purchase_request_id': purchaseRequestId,
+      'purchase_request': purchaseRequest.toJson(),
       'receiving_officer': receivingOfficer.toJson(),
       'issued_date': issuedDate,
       'return_date': returnDate,

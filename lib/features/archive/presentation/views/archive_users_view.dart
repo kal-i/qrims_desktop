@@ -227,33 +227,33 @@ class _ArchiveUsersViewState extends State<ArchiveUsersView> {
                   columns: [
                     Text(
                       user.id.toString(),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     Text(
                       capitalizeWord(user.name),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       user.email,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       dateFormatter(user.createdAt),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     SizedBox(
                       width: 50.0,

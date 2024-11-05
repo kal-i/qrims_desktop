@@ -36,7 +36,7 @@ Future<Response> _getUsers(
             (authStatus) =>
                 authStatus.toString().split('.').last == statusString,
           )
-        : AuthStatus.authenticated;
+        : null;
     final adminApprovalStatus = adminApprovalStatusString != null
         ? AdminApprovalStatus.values.firstWhere(
             (adminApprovalStatus) =>

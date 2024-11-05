@@ -26,6 +26,7 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../auth/presentation/components/custom_container.dart';
 import '../bloc/purchase_requests_bloc.dart';
+import '../components/purchase_request_kpi_card.dart';
 
 class PurchaseRequestView extends StatefulWidget {
   const PurchaseRequestView({super.key});
@@ -196,67 +197,17 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   final ValueNotifier<int> _fulfilledPurchaseRequestsCount = ValueNotifier(0);
   final ValueNotifier<int> _cancelledPurchaseRequestsCount = ValueNotifier(0);
 
+  final PurchaseRequestKPI _samplePRKPI = const PurchaseRequestKPI(
+    title: 'Pending Requests',
+    number: 359,
+    percentage: 2.5,
+    feedback:
+        'There has been a 15% increase in pending purchase requests this month.',
+  );
+
   Widget _purchaseRequestKPICard() {
-    return BaseContainer(
-      padding: 20.0,
-      height: 160.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pending Requests',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          const SizedBox(
-            height: 5.0,
-          ),
-          Row(
-            children: [
-              Text(
-                '359',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 32.0,
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(
-                width: 10.0,
-              ),
-              const Icon(
-                HugeIcons.strokeRoundedTradeUp,
-                color: AppColor.green,
-                size: 24.0,
-              ),
-              Text(
-                '+2.5%',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 10.0,
-          ),
-          Expanded(
-            child: Text(
-              'There has been a 15% increase in pending purchase requests this month.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-              softWrap: true,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              textAlign: TextAlign.left,
-            ),
-          ),
-        ],
-      ),
+    return PurchaseRequestKPICard(
+      purchaseRequestKPI: _samplePRKPI,
     );
   }
 
@@ -356,25 +307,25 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                 columns: [
                   Text(
                     purchaseRequest.id,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   Text(
                     capitalizeWord(
                         purchaseRequest.requestingOfficerEntity.name),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   Text(
                     dateFormatter(purchaseRequest.date),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   SizedBox(
                     width: 50.0,
@@ -466,7 +417,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
       'Pending': 'pending',
-      'Partially Fulfilled': 'low',
+      'Incomplete': 'low',
       'Fulfilled': 'out',
       'Cancelled': 'out',
     };
@@ -482,14 +433,14 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     };
 
     return CustomFilledButton(
+      width: 160.0,
       height: 40.0,
-      width: 150.0,
       onTap: () => context.go(
-        '${RoutingConstants.purchaseRequestViewRoutePath}/${RoutingConstants.registerPurchaseRequestViewRoutePath}',
+        RoutingConstants.nestedRegisterPurchaseRequestViewRoutePath,
       ),
-      prefixWidget: Icon(
+      prefixWidget: const Icon(
         HugeIcons.strokeRoundedNoteAdd,
-        size: 18.0,
+        size: 15.0,
         color: AppColor.lightPrimary,
       ),
       text: 'Register PR',

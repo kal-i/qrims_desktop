@@ -25,6 +25,7 @@ import '../../../../injection_container.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../bloc/officers_bloc.dart';
 import '../components/dropdown_action_button.dart';
+import '../components/reusable_officer_modal.dart';
 
 class OfficersManagementView extends StatefulWidget {
   const OfficersManagementView({super.key});
@@ -35,12 +36,6 @@ class OfficersManagementView extends StatefulWidget {
 
 class _OfficersManagementViewState extends State<OfficersManagementView> {
   late OfficersBloc _officersBloc;
-  late OfficerSuggestionsService _officerSuggestionsService;
-
-  final _formKey = GlobalKey<FormState>();
-  final _officeNameController = TextEditingController();
-  final _positionNameController = TextEditingController();
-  final _nameController = TextEditingController();
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -57,8 +52,6 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
   final ValueNotifier<int> _totalRecords = ValueNotifier(0);
-  final ValueNotifier<bool> _isModalVisible = ValueNotifier(false);
-  final ValueNotifier<String?> _selectedOfficeName = ValueNotifier(null);
 
   int _currentPage = 1;
   int _pageSize = 10;
@@ -70,7 +63,6 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   void initState() {
     super.initState();
     _officersBloc = context.read<OfficersBloc>();
-    _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
 
     _searchController.addListener(_onSearchChanged);
 
@@ -115,88 +107,8 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     });
   }
 
-  void _addOfficer() {
-    if (_formKey.currentState!.validate()) {
-      _officersBloc.add(
-        RegisterOfficerEvent(
-          name: _nameController.text,
-          officeName: _officeNameController.text,
-          positionName: _positionNameController.text,
-        ),
-      );
-
-      _nameController.clear();
-      _officeNameController.clear();
-      _positionNameController.clear();
-
-      _selectedOfficeName.value = null;
-
-      _isModalVisible.value = false;
-    }
-  }
-
-  Future<List<String>?> _officeSuggestionCallback(String? officeName) async {
-    final offices = await _officerSuggestionsService.fetchOffices(
-      officeName: officeName,
-    );
-
-    if (offices == null) {
-      _positionNameController.clear();
-      _selectedOfficeName.value = null;
-    }
-
-    return offices;
-  }
-
-  void _onOfficeSelected(String value) {
-    _officeNameController.text = value;
-    _positionNameController.clear();
-    _selectedOfficeName.value = value;
-  }
-
-  Future<List<String>?> _positionSuggestionCallback(String? positionName) async {
-
-  }
-
-  void _onPositionSelected(String value) {
-    _positionNameController.text = value;
-  }
-
-  // void _handleActionSelection(String selectedAction) {
-  //   // Determine the content based on the selected action
-  //   switch (selectedAction) {
-  //     case 'Add Officer':
-  //       setState(() {
-  //         _modalContent = _buildModalContent();
-  //         _isModalVisible.value = true;
-  //       });
-  //       break;
-  //     case 'Add Office':
-  //       setState(() {
-  //         _modalContent =
-  //             Text('Add Office Content'); // Replace with your actual widget
-  //         _isModalVisible.value = true;
-  //       });
-  //       break;
-  //     case 'Add Position':
-  //       setState(() {
-  //         _modalContent =
-  //             Text('Add Position Content'); // Replace with your actual widget
-  //         _isModalVisible.value = true;
-  //       });
-  //       break;
-  //   }
-  // }
-
   @override
   void dispose() {
-    _nameController.dispose();
-    _officeNameController.dispose();
-    _positionNameController.dispose();
-
-    _isModalVisible.dispose();
-    _selectedOfficeName.dispose();
-
     _searchController.dispose();
     _debounce?.cancel();
     _totalRecords.dispose();
@@ -206,29 +118,24 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            _buildActionsRow(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildTableActionsRow(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            Expanded(
-              child: _buildDataTable(),
-            ),
-          ],
+        _buildHeader(),
+        const SizedBox(
+          height: 50.0,
         ),
-        _buildModal(),
+        _buildActionsRow(),
+        const SizedBox(
+          height: 30.0,
+        ),
+        _buildTableActionsRow(),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Expanded(
+          child: _buildDataTable(),
+        ),
       ],
     );
   }
@@ -258,8 +165,17 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
         //   onActionSelected: _handleActionSelection,
         // ),
         CustomFilledButton(
+          width: 160.0,
           height: 40.0,
-          onTap: () => _isModalVisible.value = true,
+          onTap: () => showDialog(
+            context: context,
+            builder: (context) => const ReusableOfficerModal(),
+          ),
+          prefixWidget: const Icon(
+            HugeIcons.strokeRoundedUserAdd01,
+            size: 15.0,
+            color: AppColor.lightPrimary,
+          ),
           text: 'Add Officer',
         ),
       ],
@@ -279,7 +195,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
             const SizedBox(
               width: 10.0,
             ),
-            const ReusableCustomRefreshOutlineButton(),
+            ReusableCustomRefreshOutlineButton(
+              onTap: _refreshOfficerList,
+            ),
           ],
         ),
       ],
@@ -317,31 +235,31 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
               columns: [
                 Text(
                   officer.id,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   officer.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   officer.officeName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   officer.positionName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
               menuItems: [
@@ -431,135 +349,6 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildModal() {
-    return ValueListenableBuilder(
-      valueListenable: _isModalVisible,
-      builder: (context, isModalVisible, child) {
-        return SlideableContainer(
-          content: isModalVisible ? _buildModalContent() : const SizedBox.shrink(),
-          isVisible: isModalVisible,
-          onClose: () {
-            _formKey.currentState!.reset();
-            _isModalVisible.value = false;
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildModalContent() {
-    return Column(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Add Officer',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-              const SizedBox(
-                height: 30.0,
-              ),
-              _buildForm(),
-              const SizedBox(
-                height: 20.0,
-              ),
-            ],
-          ),
-        ),
-        _modalActionsRow(),
-      ],
-    );
-  }
-
-  Widget _buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          CustomLabeledTextBox(
-            controller: _nameController,
-            label: 'Name',
-          ),
-          const SizedBox(
-            height: 20.0,
-          ),
-          _buildOfficeNameSearchBox(),
-          const SizedBox(
-            height: 20.0,
-          ),
-          _buildPositionSearchBox(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOfficeNameSearchBox() {
-    return CustomSearchBox(
-      suggestionsCallback: _officeSuggestionCallback,
-      onSelected: _onOfficeSelected,
-      controller: _officeNameController,
-      label: 'Office Name',
-    );
-  }
-
-  Widget _buildPositionSearchBox() {
-    return ValueListenableBuilder(
-      valueListenable: _selectedOfficeName,
-      builder: (context, selectedOfficeName, child) {
-        return CustomSearchBox(
-          suggestionsCallback: (String? positionName) async {
-            if (selectedOfficeName != null && selectedOfficeName.isNotEmpty) {
-              final positionNames =
-                  await _officerSuggestionsService.fetchOfficePositions(
-                officeName: selectedOfficeName,
-                positionName: positionName,
-              );
-
-              return positionNames;
-            }
-            return null;
-          },
-          onSelected: _onPositionSelected,
-          controller: _positionNameController,
-          label: 'Position Name',
-        );
-      },
-    );
-  }
-
-  Widget _modalActionsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Expanded(
-          child: CustomOutlineButton(
-            onTap: () {
-              _isModalVisible.value = false;
-              _formKey.currentState!.reset();
-            },
-            height: 40.0,
-            text: 'Cancel',
-          ),
-        ),
-        const SizedBox(
-          width: 5.0,
-        ),
-        Expanded(
-          child: CustomFilledButton(
-            onTap: _addOfficer,
-            height: 40.0,
-            text: 'Add',
-          ),
-        ),
-      ],
     );
   }
 }

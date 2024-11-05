@@ -24,6 +24,7 @@ import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../bloc/users_management_bloc.dart';
 import '../components/admin_approval_modal.dart';
+import '../components/filter_user_modal.dart';
 
 class UsersManagementView extends StatefulWidget {
   const UsersManagementView({super.key});
@@ -48,6 +49,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   final ValueNotifier<int> _totalRecords = ValueNotifier(0);
   final ValueNotifier<String> _selectedFilterRole = ValueNotifier('');
   final ValueNotifier<bool> _trackFilterSelection = ValueNotifier(false);
+  final ValueNotifier<AuthStatus?> _selectedAuthStatus = ValueNotifier(null);
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -66,8 +68,11 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   void initState() {
     super.initState();
     _usersManagementBloc = context.read<UsersManagementBloc>();
+
     _searchController.addListener(_onSearchChanged);
     _selectedFilterRole.addListener(_onRoleFilterChanged);
+    _selectedAuthStatus.addListener(_fetchUsers);
+
     _initializeTableConfig();
     _fetchUsers();
   }
@@ -95,7 +100,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
         sortBy: _selectedSortValue,
         sortAscending: _selectedSortOrder == 'Ascending',
         role: _selectedFilterRole.value,
-        status: _selectedStatus,
+        status: _selectedAuthStatus.value, // _selectedStatus,
       ),
     );
   }
@@ -103,7 +108,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   void _refreshUserList() {
     _searchController.clear();
     _selectedFilterRole.value = '';
-    _selectedStatus = null;
+    _selectedAuthStatus.value = null; // _selectedStatus = null;
     _currentPage = 1;
     _trackFilterSelection.value = false;
     _fetchUsers();
@@ -111,7 +116,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
   void _onRoleFilterChanged() {
     _searchController.clear();
-    _selectedStatus = null;
+    _selectedAuthStatus.value = null; // _selectedStatus = null;
     _currentPage = 1;
     _trackFilterSelection.value = false;
     _fetchUsers();
@@ -138,6 +143,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
     _debounce?.cancel();
     _selectedFilterRole.dispose();
     _trackFilterSelection.dispose();
+    _selectedAuthStatus.dispose();
     _totalRecords.dispose();
     super.dispose();
   }
@@ -156,15 +162,11 @@ class _UsersManagementViewState extends State<UsersManagementView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDisplayUsersCount(),
-              CustomFilledButton(
-                onTap: () => _showAdminApprovalModal(context),
-                height: 40.0,
-                text: 'Pending Requests',
-              ),
+              _buildPendingRequestButton(),
             ],
           ),
           const SizedBox(
-            height: 20.0,
+            height: 30.0,
           ),
           _buildActionsRow(),
           const SizedBox(
@@ -185,6 +187,20 @@ class _UsersManagementViewState extends State<UsersManagementView> {
             fontSize: 14.0,
             fontWeight: FontWeight.w400,
           ),
+    );
+  }
+
+  Widget _buildPendingRequestButton() {
+    return CustomFilledButton(
+      width: 160.0,
+      height: 40.0,
+      onTap: () => _showAdminApprovalModal(context),
+      prefixWidget: const Icon(
+        HugeIcons.strokeRoundedUserAdd01,
+        size: 15.0,
+        color: AppColor.lightPrimary,
+      ),
+      text: 'Pending Requests',
     );
   }
 
@@ -299,6 +315,15 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   }
 
   Widget _buildFilterStatusButton() {
+    return CustomIconButton(
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => FilterUserModal(
+          selectedAuthStatusNotifier: _selectedAuthStatus,
+        ),
+      ),
+      icon: FluentIcons.filter_add_20_regular,
+    );
     return CustomMenuButton(
       tooltip: 'Filter',
       items: const [
@@ -389,33 +414,33 @@ class _UsersManagementViewState extends State<UsersManagementView> {
               columns: [
                 Text(
                   user.id,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   capitalizeWord(user.name),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
                       ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   user.email,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   dateFormatter(user.createdAt),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(
                   width: 50.0,
@@ -570,7 +595,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
       case AuthStatus.unauthenticated:
         return StatusStyle.yellow(label: 'Unauthenticated');
       case AuthStatus.revoked:
-        return StatusStyle.red(label: 'Archived');
+        return StatusStyle.red(label: 'Revoked');
       default:
         return StatusStyle.red(label: 'Error');
     }

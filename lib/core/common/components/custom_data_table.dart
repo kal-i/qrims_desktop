@@ -125,6 +125,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
               children: [
                 /// Checkbox for selecting/deselecting all rows.
                 Checkbox(
+                  activeColor: AppColor.accent,
                   value: false,
                   onChanged: (isSelectedAll) {},
                 ),
@@ -205,7 +206,13 @@ class _CustomDataTableState extends State<CustomDataTable> {
                                 const EdgeInsets.symmetric(horizontal: 10.0),
                             height: 70.0,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.0),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Theme.of(context).dividerColor,
+                                  width: 1.0 ,
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(0.0), // set border radius to 0 if we will add a border, otherwise set to 10.0
                               color: _selectedRowIndex == index
                                   ? Theme.of(context)
                                       .dividerColor
@@ -220,6 +227,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
                               children: [
                                 /// Check box for selecting the individual row.
                                 Checkbox(
+                                  activeColor: AppColor.accent,
                                   value: rowData.isSelected,
                                   onChanged: (isSelected) {
                                     setState(() {
