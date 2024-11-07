@@ -12,26 +12,26 @@ Future<Response> onRequest(
   final repository = IssuanceRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getIcsInformation(context, repository, id),
+    HttpMethod.get => _getParInformation(context, repository, id),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
 
-Future<Response> _getIcsInformation(
+Future<Response> _getParInformation(
     RequestContext context,
     IssuanceRepository repository,
     String id,
     ) async {
   try {
-    final ics = await repository.getIcsById(
+    final par = await repository.getParById(
       id: id,
     );
 
-    if (ics != null) {
+    if (par != null) {
       return Response.json(
         statusCode: 200,
         body: {
-          'ics': ics.toJson(),
+          'ics': par.toJson(),
         },
       );
     }
@@ -39,14 +39,14 @@ Future<Response> _getIcsInformation(
     return Response.json(
       statusCode: HttpStatus.notFound,
       body: {
-        'message': 'ICS request not found.',
+        'message': 'PAR request not found.',
       },
     );
   } catch (e) {
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {
-        'message': 'Error processing get ics information: $e',
+        'message': 'Error processing get par information: $e',
       },
     );
   }

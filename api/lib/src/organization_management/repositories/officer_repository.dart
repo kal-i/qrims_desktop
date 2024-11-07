@@ -108,7 +108,8 @@ class OfficerRepository {
             Officers.id AS officer_id,
             Officers.user_id AS user_id,
             Officers.name AS officer_name,
-            Positions.office_id AS office_id,
+            Positions.id AS position_id,
+            -- Positions.office_id AS office_id,
             Offices.name AS office_name,
             Positions.position_name AS position_name,
             Officers.is_archived AS is_archived

@@ -69,30 +69,58 @@ class PurchaseRequest {
       (e) => e.toString().split('.').last == prStatusString,
     );
 
+    final entity = Entity.fromJson({
+      'entity_id': json['entity_id'],
+      'entity_name': json['entity_name'],
+    });
+
+    final office = Office.fromJson({
+      'office_id': json['office_id'],
+      'office_name': json['office_name'],
+    });
+
+    final productName = ProductName.fromJson({
+      'product_name_id': json['product_name_id'],
+      'product_name': json['product_name'],
+    });
+
+    final productDescription = ProductDescription.fromJson({
+      'product_description_id': json['product_description_id'],
+      'product_description': json['product_description'],
+    });
+
+    final requestingOfficer = Officer.fromJson({
+      'id': json['requesting_officer_id'],
+      'user_id': json['requesting_officer_user_id'],
+      'name': json['requesting_officer_name'],
+      'position_id': json['requesting_officer_position_id'],
+      'office_name': json['requesting_officer_office_name'],
+      'position_name': json['requesting_officer_position_name'],
+      'is_archived': json['requesting_officer_is_archived'],
+    });
+
+    final approvingOfficer = Officer.fromJson({
+      'id': json['approving_officer_id'],
+      'user_id': json['approving_officer_user_id'],
+      'name': json['approving_officer_name'],
+      'position_id': json['approving_officer_position_id'],
+      'office_name': json['approving_officer_office_name'],
+      'position_name': json['approving_officer_position_name'],
+      'is_archived': json['approving_officer_is_archived'],
+    });
+
     return PurchaseRequest(
       id: json['id'] as String,
-      entity: Entity.fromJson({
-        'entity_id': json['entity_id'],
-        'entity_name': json['entity_name'],
-      }),
+      entity: entity,
       fundCluster: fundCluster,
-      office: Office.fromJson({
-        'office_id': json['office_id'],
-        'office_name': json['office_name'],
-      }),
+      office: office,
       responsibilityCenterCode:
           json['responsibility_center_code'] as String? ?? '',
       date: json['date'] is String
           ? DateTime.parse(json['date'] as String)
           : json['date'] as DateTime,
-      productName: ProductName.fromJson({
-        'product_name_id': json['product_name_id'],
-        'product_name': json['product_name'],
-      }),
-      productDescription: ProductDescription.fromJson({
-        'product_description_id': json['product_description_id'],
-        'product_description': json['product_description'],
-      }),
+      productName: productName,
+      productDescription: productDescription,
       unit: unit,
       quantity: json['quantity'] as int,
       remainingQuantity: json['remaining_quantity'] as int? ?? 0,
@@ -103,24 +131,8 @@ class PurchaseRequest {
           ? double.parse(json['total_cost'] as String)
           : json['total_cost'] as double,
       purpose: json['purpose'] as String,
-      requestingOfficer: Officer.fromJson({
-        'id': json['requesting_officer_id'],
-        'user_id': json['requesting_officer_user_id'],
-        'name': json['requesting_officer_name'],
-        'position_id': json['requesting_officer_position_id'],
-        'office_name': json['requesting_officer_office_name'],
-        'position_name': json['requesting_officer_position_name'],
-        'is_archived': json['requesting_officer_is_archived'],
-      }),
-      approvingOfficer: Officer.fromJson({
-        'id': json['approving_officer_id'],
-        'user_id': json['approving_officer_user_id'],
-        'name': json['approving_officer_name'],
-        'position_id': json['approving_officer_position_id'],
-        'office_name': json['approving_officer_office_name'],
-        'position_name': json['approving_officer_position_name'],
-        'is_archived': json['approving_officer_is_archived'],
-      }),
+      requestingOfficer: requestingOfficer,
+      approvingOfficer: approvingOfficer,
       purchaseRequestStatus: prStatus,
       isArchived: json['is_archived'] as bool,
     );

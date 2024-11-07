@@ -120,7 +120,7 @@ Future<Response> _createICS(
       id: prId,
     );
 
-    final icsId = await issuanceRepository.createICS(
+    final issuanceId = await issuanceRepository.createICS(
       purchaseRequestId: purchaseRequest!.id,
       requestedQuantity: purchaseRequest.quantity,
       issuanceItems: issuanceItems,
@@ -129,20 +129,20 @@ Future<Response> _createICS(
       //issuedDate: issuedDate,
     );
 
-    // if (recipientOfficer?.userId != null) {
-    //   await notifRepository.sendNotification(
-    //     recipientId: recipientOfficer!.userId!,
-    //     senderId: responsibleUserId,
-    //     message:
-    //     'Your purchase request #$prId is now issued with a tracking ID $icsId.',
-    //     type: NotificationType.issuanceCreated,
-    //     referenceId: icsId,
-    //   );
-    // }
-
     final ics = await issuanceRepository.getIcsById(
-      id: icsId,
+      id: issuanceId,
     );
+
+    if (recipientOfficer?.userId != null) {
+      await notifRepository.sendNotification(
+        recipientId: recipientOfficer!.userId!,
+        senderId: responsibleUserId,
+        message:
+        'Your purchase request #$prId is now issued with a tracking ID ${ics?.icsId}.',
+        type: NotificationType.issuanceCreated,
+        referenceId: ics!.icsId,
+      );
+    }
 
     return Response.json(
       statusCode: 200,

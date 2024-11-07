@@ -5,6 +5,8 @@ import 'package:api/src/organization_management/models/office.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
+import 'package:api/src/utils/encryption_utils.dart';
+import 'package:api/src/utils/qr_code_utils.dart';
 import 'package:postgres/postgres.dart';
 
 import '../../utils/generate_id.dart';
@@ -63,7 +65,37 @@ class IssuanceRepository {
       n = 1;
     }
 
-    return '$yearMonth-$n';
+    return '$yearMonth-0$n';
+  }
+
+  Future<String> _generateUniqueParId() async {
+    final now = DateTime.now();
+    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+    print('curr ym - $yearMonth');
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT id FROM PropertyAcknowledgementReceipts
+        WHERE id LIKE @year_month || '-%'
+        ORDER BY id DESC 
+        LIMIT 1;
+        ''',
+      ),
+      parameters: {
+        'year_month': yearMonth,
+      },
+    );
+
+    int? n; // represent the no. of record
+    if (result.isNotEmpty) {
+      n = int.parse(result.first[0].toString().split('-').last) + 1;
+    } else {
+      n = 1;
+    }
+
+    return '$yearMonth-0$n';
   }
 
   Future<List<IssuanceItem>> _getIssuanceItems({
@@ -104,10 +136,6 @@ class IssuanceRepository {
     );
 
     for (final row in issuanceItemsResult) {
-      print('row res: $row');
-      for (var r in row) {
-        print(r);
-      }
       issuanceItems.add(
         IssuanceItem.fromJson(
           {
@@ -141,7 +169,7 @@ class IssuanceRepository {
         ),
       );
     }
-    print('returned issuance items: $issuanceItems');
+
     return issuanceItems;
   }
 
@@ -151,18 +179,17 @@ class IssuanceRepository {
     final issuanceItems = await _getIssuanceItems(
       issuance_id: id,
     );
-    print('issuance items: $issuanceItems');
 
     final issuanceResult = await _conn.execute(
       Sql.named(
         '''
-      SELECT 
+      SELECT
         iss.*,
         ics.id AS ics_id,
         ics.sending_officer_id
-      FROM 
+      FROM
         Issuances iss
-      LEFT JOIN
+      JOIN
         InventoryCustodianSlips ics ON iss.id = ics.issuance_id
       WHERE
         iss.id = @issuance_id;
@@ -176,30 +203,28 @@ class IssuanceRepository {
     for (final row in issuanceResult) {
       final purchaseRequest =
           await PurchaseRequestRepository(_conn).getPurchaseRequestById(
-        id: row[1] as String,
+        id: row[3] as String,
       );
-      print('pr: $purchaseRequest');
-      final receivingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[2] as String,
-      );
-      print('receiving officer: $receivingOfficer');
-      final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[7] as String,
-      );
-      print('sending officer: $sendingOfficer');
 
-      print('row res: $row');
+      final receivingOfficer = await OfficerRepository(_conn).getOfficerById(
+        id: row[4] as String,
+      );
+
+      final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
+        id: row[8] as String,
+      );
 
       return InventoryCustodianSlip.fromJson({
         'id': row[0],
+        'ics_id': row[7],
         'items':
             issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
+        'issued_date': row[1],
+        'return_date': row[2],
         'purchase_request': purchaseRequest?.toJson(),
         'receiving_officer': receivingOfficer?.toJson(),
-        'issue_date': row[3],
-        'return_date': row[4],
-        'is_archived': row[5],
-        'ics_id': row[6],
+        'qr_code_image_data': row[5],
+        'is_archived': row[6],
         'sending_officer': sendingOfficer?.toJson(),
       });
     }
@@ -207,14 +232,72 @@ class IssuanceRepository {
     return null;
   }
 
-  // return a list of items id with the quantity reduce
+  Future<PropertyAcknowledgementReceipt?> getParById({
+    required String id,
+  }) async {
+    final issuanceItems = await _getIssuanceItems(
+      issuance_id: id,
+    );
+
+    final issuanceResult = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT
+        iss.*,
+        par.id AS par_id,
+        par.property_number,
+        par.sending_officer_id
+      FROM
+        Issuances iss
+      JOIN
+        PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
+      WHERE
+        iss.id = @issuance_id;
+      ''',
+      ),
+      parameters: {
+        'issuance_id': id,
+      },
+    );
+
+    for (final row in issuanceResult) {
+      final purchaseRequest =
+      await PurchaseRequestRepository(_conn).getPurchaseRequestById(
+        id: row[3] as String,
+      );
+
+      final receivingOfficer = await OfficerRepository(_conn).getOfficerById(
+        id: row[4] as String,
+      );
+
+      final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
+        id: row[9] as String,
+      );
+
+      return PropertyAcknowledgementReceipt.fromJson({
+        'id': row[0],
+        'par_id': row[7],
+        'property_number': row[8],
+        'items': issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
+        'issued_date': row[1],
+        'return_date': row[2],
+        'purchase_request': purchaseRequest?.toJson(),
+        'receiving_officer': receivingOfficer?.toJson(),
+        'qr_code_image_data': row[5],
+        'is_archived': row[6],
+        'sending_officer': sendingOfficer?.toJson(),
+      });
+    }
+
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> matchingItemFromPurchaseRequest({
     required String purchaseRequestId,
-    required int requestedQuantity, // I'll extract this from the prId
+    required int requestedQuantity,
   }) async {
     final matchedItemList = <Map<String, dynamic>>[];
 
-    /// query for matching pr items to inventory items
     final matchingItemQuery = '''
         SELECT 
           i.id,
@@ -291,62 +374,52 @@ class IssuanceRepository {
     return matchedItemList;
   }
 
-  // choose a pr
-  // check for items in db then automatically fill
-  Future<String> createICS({
+  Future<String> _createIssuance({
     required String purchaseRequestId,
     required int requestedQuantity,
-    required List<dynamic>
-        issuanceItems, // we use its length to iterate
+    required List<dynamic> issuanceItems,
     required String receivingOfficerId,
-    required String sendingOfficerId,
-    //required String issuedDate,
+    required String concreteIssuanceEntityQuery,
+    required Map<String, dynamic> concreteIssuanceEntityParams,
   }) async {
-    // generate the necessary ids
     final issuanceId = await _generateUniqueIssuanceId();
-    final icsId = await _generateUniqueIcsId();
+    final qrCodeImageData = await QrCodeUtils.generateQRCode(issuanceId);
 
     await _conn.runTx((ctx) async {
-      /// insert record to base issuance entity only once
+      // Insert into Issuances table
       await ctx.execute(
         Sql.named(
           '''
-          INSERT INTO Issuances (id, purchase_request_id, receiving_officer_id, issued_date)
-          VALUES (@id, @purchase_request_id, @receiving_officer_id, @issued_date);
-          ''',
+        INSERT INTO Issuances (id, purchase_request_id, receiving_officer_id, issued_date, qr_code_image_data)
+        VALUES (@id, @purchase_request_id, @receiving_officer_id, @issued_date, @qr_code_image_data);
+        ''',
         ),
         parameters: {
           'id': issuanceId,
           'purchase_request_id': purchaseRequestId,
           'receiving_officer_id': receivingOfficerId,
           'issued_date': DateTime.now().toIso8601String(),
+          'qr_code_image_data': qrCodeImageData,
         },
       );
 
-      /// insert record to concrete issuance entity only once
+      // Insert into the concrete issuance table (either InventoryCustodianSlips or PropertyAcknowledgementReceipts)
+      concreteIssuanceEntityParams['issuance_id'] = issuanceId;
       await ctx.execute(
         Sql.named(
-          '''
-          INSERT INTO InventoryCustodianSlips (id, issuance_id, sending_officer_id)
-          VALUES (@id, @issuance_id, @sending_officer_id);
-          ''',
+          concreteIssuanceEntityQuery,
         ),
-        parameters: {
-          'id': icsId,
-          'issuance_id': issuanceId,
-          'sending_officer_id': sendingOfficerId,
-        },
+        parameters: concreteIssuanceEntityParams,
       );
 
-      for (int i = 0; i < issuanceItems.length; i++) {
-        final issuanceItem = issuanceItems[i];
+      for (final issuanceItem in issuanceItems) {
         final itemId = issuanceItem['item_id'] as String;
         final fetchedItemQuantity = issuanceItem['issued_quantity'] as int;
         final issuedQuantity = min(requestedQuantity, fetchedItemQuantity);
         final remainingRequestedQuantityAfterIssued =
             requestedQuantity - issuedQuantity;
 
-        /// insert record to issuance item table
+        // Insert into IssuanceItems table
         await ctx.execute(
           Sql.named(
             '''
@@ -361,43 +434,334 @@ class IssuanceRepository {
           },
         );
 
-        /// update remaining quantity and pr status
+        // Update PurchaseRequests table
         await ctx.execute(
           Sql.named(
             '''
-        UPDATE PurchaseRequests
-        SET remaining_quantity = @remaining_quantity, status = @status
-        WHERE id = @id;
-        ''',
+          UPDATE PurchaseRequests
+          SET remaining_quantity = @remaining_quantity, status = @status
+          WHERE id = @id;
+          ''',
           ),
           parameters: {
             'id': purchaseRequestId,
             'remaining_quantity': remainingRequestedQuantityAfterIssued,
             'status': remainingRequestedQuantityAfterIssued > 0
-                ? PurchaseRequestStatus.partiallyFulfilled.toString().split('.').last
+                ? PurchaseRequestStatus.partiallyFulfilled
+                    .toString()
+                    .split('.')
+                    .last
                 : PurchaseRequestStatus.fulfilled.toString().split('.').last,
           },
         );
 
-        /// update inventory item quantity
+        // Update Items table
         await ctx.execute(
           Sql.named(
             '''
           UPDATE Items
-          SET quantity = @quantity
+          SET quantity = quantity - @quantity
           WHERE id = @id;
           ''',
           ),
           parameters: {
             'id': itemId,
-            'quantity': fetchedItemQuantity - issuedQuantity,
+            'quantity': fetchedItemQuantity,
           },
         );
       }
-
-      //await ctx.rollback();
     });
 
     return issuanceId;
   }
+
+  Future<String> createICS({
+    required String purchaseRequestId,
+    required int requestedQuantity,
+    required List<dynamic> issuanceItems,
+    required String receivingOfficerId,
+    required String sendingOfficerId,
+  }) async {
+    final icsId = await _generateUniqueParId();
+
+    final concreteIssuanceEntityQuery = '''
+    INSERT INTO InventoryCustodianSlips (id, issuance_id, sending_officer_id)
+    VALUES (@id, @issuance_id, @sending_officer_id);
+    ''';
+
+    final concreteIssuanceEntityParams = {
+      'id': icsId,
+      'sending_officer_id': sendingOfficerId,
+    };
+
+    return await _createIssuance(
+      purchaseRequestId: purchaseRequestId,
+      requestedQuantity: requestedQuantity,
+      issuanceItems: issuanceItems,
+      receivingOfficerId: receivingOfficerId,
+      concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
+      concreteIssuanceEntityParams: concreteIssuanceEntityParams,
+    );
+  }
+
+  Future<String> createPAR({
+    String? propertyNumber,
+    required String purchaseRequestId,
+    required int requestedQuantity,
+    required List<dynamic> issuanceItems,
+    required String receivingOfficerId,
+    required String sendingOfficerId,
+  }) async {
+    final parId = await _generateUniqueParId();
+
+    final concreteIssuanceEntityQuery = '''
+    INSERT INTO PropertyAcknowledgementReceipts (id, issuance_id, property_number, sending_officer_id)
+    VALUES (@id, @issuance_id, @property_number, @sending_officer_id);
+    ''';
+
+    final concreteIssuanceEntityParams = {
+      'id': parId,
+      'property_number': propertyNumber,
+      'sending_officer_id': sendingOfficerId,
+    };
+
+    return await _createIssuance(
+      purchaseRequestId: purchaseRequestId,
+      requestedQuantity: requestedQuantity,
+      issuanceItems: issuanceItems,
+      receivingOfficerId: receivingOfficerId,
+      concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
+      concreteIssuanceEntityParams: concreteIssuanceEntityParams,
+    );
+  }
+
+  // choose a pr
+  // check for items in db then automatically fill
+  // Future<String> createICS({
+  //   required String purchaseRequestId,
+  //   required int requestedQuantity,
+  //   required List<dynamic> issuanceItems,
+  //   required String receivingOfficerId,
+  //   required String sendingOfficerId,
+  //   //required String issuedDate,
+  // }) async {
+  //   // generate the necessary ids
+  //   final issuanceId = await _generateUniqueIssuanceId();
+  //   final icsId = await _generateUniqueIcsId();
+  //
+  //   final qrCodeImageData = await QrCodeUtils.generateQRCode(issuanceId);
+  //
+  //   await _conn.runTx((ctx) async {
+  //     /// insert record to base issuance entity only once
+  //     await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //         INSERT INTO Issuances (id, purchase_request_id, receiving_officer_id, issued_date, qr_code_image_data)
+  //         VALUES (@id, @purchase_request_id, @receiving_officer_id, @issued_date, @qr_code_image_data);
+  //         ''',
+  //       ),
+  //       parameters: {
+  //         'id': issuanceId,
+  //         'purchase_request_id': purchaseRequestId,
+  //         'receiving_officer_id': receivingOfficerId,
+  //         'issued_date': DateTime.now().toIso8601String(),
+  //         'qr_code_image_data': qrCodeImageData,
+  //       },
+  //     );
+  //
+  //     /// insert record to concrete issuance entity only once
+  //     await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //         INSERT INTO InventoryCustodianSlips (id, issuance_id, sending_officer_id)
+  //         VALUES (@id, @issuance_id, @sending_officer_id);
+  //         ''',
+  //       ),
+  //       parameters: {
+  //         'id': icsId,
+  //         'issuance_id': issuanceId,
+  //         'sending_officer_id': sendingOfficerId,
+  //       },
+  //     );
+  //
+  //     for (int i = 0; i < issuanceItems.length; i++) {
+  //       final issuanceItem = issuanceItems[i];
+  //       final itemId = issuanceItem['item_id'] as String;
+  //       final fetchedItemQuantity =
+  //       issuanceItem['issued_quantity'] as int; // fetched item to be issued
+  //       final issuedQuantity = min(requestedQuantity, fetchedItemQuantity);
+  //       final remainingRequestedQuantityAfterIssued =
+  //           requestedQuantity - issuedQuantity;
+  //
+  //       /// insert record to issuance item table
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //         INSERT INTO IssuanceItems (issuance_id, item_id, quantity)
+  //         VALUES (@issuance_id, @item_id, @quantity);
+  //         ''',
+  //         ),
+  //         parameters: {
+  //           'issuance_id': issuanceId,
+  //           'item_id': itemId,
+  //           'quantity': issuedQuantity,
+  //         },
+  //       );
+  //
+  //       /// update remaining quantity and pr status
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //       UPDATE PurchaseRequests
+  //       SET remaining_quantity = @remaining_quantity, status = @status
+  //       WHERE id = @id;
+  //       ''',
+  //         ),
+  //         parameters: {
+  //           'id': purchaseRequestId,
+  //           'remaining_quantity': remainingRequestedQuantityAfterIssued,
+  //           'status': remainingRequestedQuantityAfterIssued > 0
+  //               ? PurchaseRequestStatus.partiallyFulfilled
+  //               .toString()
+  //               .split('.')
+  //               .last
+  //               : PurchaseRequestStatus.fulfilled.toString().split('.').last,
+  //         },
+  //       );
+  //
+  //       /// update inventory item quantity
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //         UPDATE Items
+  //         SET quantity = quantity - @quantity
+  //         WHERE id = @id;
+  //         ''',
+  //         ),
+  //         parameters: {
+  //           'id': itemId,
+  //           'quantity': fetchedItemQuantity,
+  //         },
+  //       );
+  //     }
+  //     // await ctx.rollback();
+  //   });
+  //
+  //   return issuanceId;
+  // }
+  //
+  // Future<String> createPAR({
+  //   String? propertyNumber,
+  //   required String purchaseRequestId,
+  //   required int requestedQuantity,
+  //   required List<dynamic> issuanceItems,
+  //   required String receivingOfficerId,
+  //   required String sendingOfficerId,
+  //   //required String issuedDate,
+  // }) async {
+  //   // generate the necessary ids
+  //   final issuanceId = await _generateUniqueIssuanceId();
+  //   final parId = await _generateUniqueParId();
+  //
+  //   final qrCodeImageData = await QrCodeUtils.generateQRCode(issuanceId);
+  //
+  //   await _conn.runTx((ctx) async {
+  //     /// insert record to base issuance entity only once
+  //     await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //         INSERT INTO Issuances (id, purchase_request_id, receiving_officer_id, issued_date, qr_code_image_data)
+  //         VALUES (@id, @purchase_request_id, @receiving_officer_id, @issued_date, @qr_code_image_data);
+  //         ''',
+  //       ),
+  //       parameters: {
+  //         'id': issuanceId,
+  //         'purchase_request_id': purchaseRequestId,
+  //         'receiving_officer_id': receivingOfficerId,
+  //         'issued_date': DateTime.now().toIso8601String(),
+  //         'qr_code_image_data': qrCodeImageData,
+  //       },
+  //     );
+  //
+  //     /// insert record to concrete issuance entity only once
+  //     await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //         INSERT INTO PropertyAcknowledgementReceipts (id, issuance_id, property_number, sending_officer_id)
+  //         VALUES (@id, @issuance_id, @property_number, @sending_officer_id);
+  //         ''',
+  //       ),
+  //       parameters: {
+  //         'id': parId,
+  //         'issuance_id': issuanceId,
+  //         'property_number': propertyNumber,
+  //         'sending_officer_id': sendingOfficerId,
+  //       },
+  //     );
+  //
+  //     for (int i = 0; i < issuanceItems.length; i++) {
+  //       final issuanceItem = issuanceItems[i];
+  //       final itemId = issuanceItem['item_id'] as String;
+  //       final fetchedItemQuantity =
+  //           issuanceItem['issued_quantity'] as int; // fetched item to be issued
+  //       final issuedQuantity = min(requestedQuantity, fetchedItemQuantity);
+  //       final remainingRequestedQuantityAfterIssued =
+  //           requestedQuantity - issuedQuantity;
+  //
+  //       /// insert record to issuance item table
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //         INSERT INTO IssuanceItems (issuance_id, item_id, quantity)
+  //         VALUES (@issuance_id, @item_id, @quantity);
+  //         ''',
+  //         ),
+  //         parameters: {
+  //           'issuance_id': issuanceId,
+  //           'item_id': itemId,
+  //           'quantity': issuedQuantity,
+  //         },
+  //       );
+  //
+  //       /// update remaining quantity and pr status
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //       UPDATE PurchaseRequests
+  //       SET remaining_quantity = @remaining_quantity, status = @status
+  //       WHERE id = @id;
+  //       ''',
+  //         ),
+  //         parameters: {
+  //           'id': purchaseRequestId,
+  //           'remaining_quantity': remainingRequestedQuantityAfterIssued,
+  //           'status': remainingRequestedQuantityAfterIssued > 0
+  //               ? PurchaseRequestStatus.partiallyFulfilled
+  //                   .toString()
+  //                   .split('.')
+  //                   .last
+  //               : PurchaseRequestStatus.fulfilled.toString().split('.').last,
+  //         },
+  //       );
+  //
+  //       /// update inventory item quantity
+  //       await ctx.execute(
+  //         Sql.named(
+  //           '''
+  //         UPDATE Items
+  //         SET quantity = quantity - @quantity
+  //         WHERE id = @id;
+  //         ''',
+  //         ),
+  //         parameters: {
+  //           'id': itemId,
+  //           'quantity': fetchedItemQuantity,
+  //         },
+  //       );
+  //     }
+  //     // await ctx.rollback();
+  //   });
+  //
+  //   return issuanceId;
+  // }
 }
