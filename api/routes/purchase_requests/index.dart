@@ -252,6 +252,7 @@ Future<Response> _registerPurchaseRequest(
     final recipientOfficer = await officerRepository.getOfficerById(
       id: requestingOfficerId,
     );
+    print('recipient officer: $recipientOfficer');
 
     /// notif
     /// must be a user

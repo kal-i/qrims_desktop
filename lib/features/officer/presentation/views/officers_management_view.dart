@@ -20,6 +20,7 @@ import '../../../../core/common/components/reusable_linear_progress_indicator.da
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
+import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
@@ -184,9 +185,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   Widget _buildTableActionsRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.end, // MainAxisAlignment.spaceBetween,
       children: [
-        _buildFilterTableRow(),
+       // _buildFilterTableRow(),
         Row(
           children: [
             ExpandableSearchButton(
@@ -204,18 +205,18 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     );
   }
 
-  Widget _buildFilterTableRow() {
-    final Map<String, String> filterMapping = {
-      'View All': '',
-      'Supply': 'supply',
-      'Others': 'others',
-    };
-
-    return FilterTableRow(
-      selectedFilterNotifier: _selectedFilterNotifier,
-      filterMapping: filterMapping,
-    );
-  }
+  // Widget _buildFilterTableRow() {
+  //   final Map<String, String> filterMapping = {
+  //     'View All': '',
+  //     'Supply': 'supply',
+  //     'Others': 'others',
+  //   };
+  //
+  //   return FilterTableRow(
+  //     selectedFilterNotifier: _selectedFilterNotifier,
+  //     filterMapping: filterMapping,
+  //   );
+  // }
 
   Widget _buildDataTable() {
     return BlocConsumer<OfficersBloc, OfficersState>(
@@ -241,21 +242,21 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                   ),
                 ),
                 Text(
-                  officer.name,
+                  capitalizeWord(officer.name),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  officer.officeName,
+                  capitalizeWord(officer.officeName),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  officer.positionName,
+                  capitalizeWord(officer.positionName),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w500,

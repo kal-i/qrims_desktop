@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_validator/form_validator.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+import '../../../config/themes/app_color.dart';
+import '../../../config/themes/app_theme.dart';
+import '../../../config/themes/bloc/theme_bloc.dart';
 import 'custom_form_text_field.dart';
 import '../../utils/date_formatter.dart';
 
@@ -13,6 +17,7 @@ class CustomDatePicker extends StatefulWidget {
     required this.dateController,
     this.firstDate,
     this.lastDate,
+    this.fillColor,
   });
 
   final ValueChanged<DateTime?>? onDateChanged;
@@ -20,6 +25,7 @@ class CustomDatePicker extends StatefulWidget {
   final TextEditingController dateController;
   final DateTime? firstDate;
   final DateTime? lastDate;
+  final Color? fillColor;
 
   @override
   State<CustomDatePicker> createState() => _CustomDatePickerState();
@@ -46,6 +52,9 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
   @override
   Widget build(BuildContext context) {
     return CustomFormTextField(
+      fillColor: widget.fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightBackground
+          : AppColor.darkBackground),
       controller: widget.dateController,
       label: widget.label,
       suffixIcon: HugeIcons.strokeRoundedCalendar03,

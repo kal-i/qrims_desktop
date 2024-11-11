@@ -177,7 +177,7 @@ class DocumentService {
                         'Quantity',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
@@ -192,7 +192,7 @@ class DocumentService {
                         'Unit',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
@@ -210,7 +210,7 @@ class DocumentService {
                             'Amount',
                             style: pw.TextStyle(
                               font: timesNewRomanRegular,
-                              fontSize: 12.0,
+                              fontSize: 10.0,
                               fontWeight: pw.FontWeight.bold,
                             ),
                             textAlign: pw.TextAlign.center,
@@ -228,7 +228,7 @@ class DocumentService {
                                   'Unit  Cost',
                                   style: pw.TextStyle(
                                     font: timesNewRomanRegular,
-                                    fontSize: 12.0,
+                                    fontSize: 10.0,
                                     fontWeight: pw.FontWeight.bold,
                                   ),
                                   textAlign: pw.TextAlign.center,
@@ -245,7 +245,7 @@ class DocumentService {
                                   'Total Cost',
                                   style: pw.TextStyle(
                                     font: timesNewRomanRegular,
-                                    fontSize: 12.0,
+                                    fontSize: 10.0,
                                     fontWeight: pw.FontWeight.bold,
                                   ),
                                   textAlign: pw.TextAlign.center,
@@ -265,10 +265,13 @@ class DocumentService {
                         'Description',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
+                      ),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(width: 1),
                       ),
                     ),
                     pw.Container(
@@ -277,10 +280,13 @@ class DocumentService {
                         'Inventory Item No.',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
+                      ),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(width: 1),
                       ),
                     ),
                     pw.Container(
@@ -289,10 +295,13 @@ class DocumentService {
                         'Estimated Useful Life',
                         style: pw.TextStyle(
                           font: timesNewRomanRegular,
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: pw.FontWeight.bold,
                         ),
                         textAlign: pw.TextAlign.center,
+                      ),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(width: 1),
                       ),
                     ),
                   ],

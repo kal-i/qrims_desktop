@@ -61,7 +61,7 @@ class RoutingConstants {
   static const updateItemIssuanceViewRouteName = 'updateItemIssuanceView';
   static const updateItemIssuanceViewRoutePath = 'updateItemIssuance';
   static const nestedViewItemIssuanceViewRouteName = '$itemIssuanceViewRouteName/$viewItemIssuanceRouteName';
-  static const nestedViewItemIssuanceViewRoutePath = '$itemIssuanceViewRoutePath/$viewItemRoutePath';
+  static const nestedViewItemIssuanceViewRoutePath = '$itemIssuanceViewRoutePath/$viewItemIssuanceRoutePath';
   static const nestedRegisterItemIssuanceViewRouteName = '$itemIssuanceViewRouteName/$registerItemIssuanceViewRouteName';
   static const nestedRegisterItemIssuanceViewRoutePath = '$itemIssuanceViewRoutePath/$registerItemIssuanceViewRoutePath';
   static const nestedUpdateItemIssuanceViewRouteName = '$itemIssuanceViewRouteName/$updateItemIssuanceViewRouteName';

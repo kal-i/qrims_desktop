@@ -41,7 +41,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   //final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
-  Timer? _denounce;
+  Timer? _debounce;
 
   final ValueNotifier<String> _selectedFilterNotifier =
       ValueNotifier('pending');
@@ -62,11 +62,26 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   ];
   late List<TableData> _tableRows = [];
 
+  final ValueNotifier<int> _pendingPurchaseRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _semiFulfilledPurchaseRequestsCount =
+      ValueNotifier(0);
+  final ValueNotifier<int> _fulfilledPurchaseRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _cancelledPurchaseRequestsCount = ValueNotifier(0);
+
+  final PurchaseRequestKPI _samplePRKPI = const PurchaseRequestKPI(
+    title: 'Pending Requests',
+    number: 359,
+    percentage: 2.5,
+    feedback:
+        'There has been a 15% increase in pending purchase requests this month.',
+  );
+
   @override
   void initState() {
     super.initState();
     _purchaseRequestsBloc = context.read<PurchaseRequestsBloc>();
     _searchController.addListener(_onSearchChanged);
+    _selectedFilterNotifier.addListener(_fetchPurchaseRequests);
     _initializeTableConfig();
     _fetchPurchaseRequests();
     //_scrollController.addListener(_loadMoreData);
@@ -88,7 +103,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         prId: _searchController.text,
         // unitCost: unitCost,
         // date: date,
-        // prStatus: prStatus,
+        prStatus: _selectedPrStatus(
+          selectedPrStatus: _selectedFilterNotifier.value,
+        ),
         // isArchived: isArchived,
       ),
     );
@@ -97,23 +114,33 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   void _refreshPurchaseRequestList() {
     _searchController.clear();
     _currentPage = 1;
-
     _selectedFilterNotifier.value = 'pending';
     _fetchPurchaseRequests();
   }
 
-  void _onFilterChanged() {
-    _searchController.clear();
-    _currentPage = 1;
-    _fetchPurchaseRequests();
-  }
-
   void _onSearchChanged() {
-    if (_denounce?.isActive ?? false) _denounce?.cancel();
-    _denounce = Timer(_searchDelay, () {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(_searchDelay, () {
       _currentPage = 1;
       _fetchPurchaseRequests();
     });
+  }
+
+  PurchaseRequestStatus _selectedPrStatus({
+    required String selectedPrStatus,
+  }) {
+    switch (selectedPrStatus) {
+      case 'pending':
+        return PurchaseRequestStatus.pending;
+      case 'incomplete':
+        return PurchaseRequestStatus.partiallyFulfilled;
+      case 'fulfilled':
+        return PurchaseRequestStatus.fulfilled;
+      case 'cancelled':
+        return PurchaseRequestStatus.cancelled;
+      default:
+        return PurchaseRequestStatus.pending;
+    }
   }
 
   // Future<void> _loadMoreData() async {
@@ -127,8 +154,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   @override
   void dispose() {
     _searchController.dispose();
-    _denounce?.cancel();
-
+    _debounce?.cancel();
     _selectedFilterNotifier.dispose();
     super.dispose();
   }
@@ -190,20 +216,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   //     onChanged: (value) {},
   //   );
   // }
-
-  final ValueNotifier<int> _pendingPurchaseRequestsCount = ValueNotifier(0);
-  final ValueNotifier<int> _semiFulfilledPurchaseRequestsCount =
-      ValueNotifier(0);
-  final ValueNotifier<int> _fulfilledPurchaseRequestsCount = ValueNotifier(0);
-  final ValueNotifier<int> _cancelledPurchaseRequestsCount = ValueNotifier(0);
-
-  final PurchaseRequestKPI _samplePRKPI = const PurchaseRequestKPI(
-    title: 'Pending Requests',
-    number: 359,
-    percentage: 2.5,
-    feedback:
-        'There has been a 15% increase in pending purchase requests this month.',
-  );
 
   Widget _purchaseRequestKPICard() {
     return PurchaseRequestKPICard(
@@ -277,11 +289,11 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
             const SizedBox(
               width: 10.0,
             ),
-            _buildSortButton(),
+            _buildFilterButton(),
             const SizedBox(
               width: 10.0,
             ),
-            _buildFilterButton(),
+            _buildSortButton(),
           ],
         ),
       ],
@@ -296,6 +308,11 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
           _errorMessage = null;
         }
 
+        if (state is PurchaseRequestRegistered) {
+          _isLoading = false;
+          _refreshPurchaseRequestList();
+        }
+
         if (state is PurchaseRequestsLoaded) {
           _isLoading = false;
           _totalRecords = state.totalPurchaseRequestsCount;
@@ -308,24 +325,24 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                   Text(
                     purchaseRequest.id,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   Text(
                     capitalizeWord(
                         purchaseRequest.requestingOfficerEntity.name),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   Text(
                     dateFormatter(purchaseRequest.date),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   SizedBox(
                     width: 50.0,
@@ -417,10 +434,11 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
       'Pending': 'pending',
-      'Incomplete': 'low',
-      'Fulfilled': 'out',
-      'Cancelled': 'out',
+      'Incomplete': 'incomplete',
+      'Fulfilled': 'fulfilled',
+      'Cancelled': 'cancelled',
     };
+
     return FilterTableRow(
       selectedFilterNotifier: _selectedFilterNotifier,
       filterMapping: filterMapping,

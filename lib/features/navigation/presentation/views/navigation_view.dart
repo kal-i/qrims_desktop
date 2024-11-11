@@ -145,12 +145,13 @@ class _NavigationViewState extends State<NavigationView> {
                 badges.Badge(
                   position: badges.BadgePosition.topEnd(top: 8, end: 0),
                   child: IconButton(
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        child: NotificationWindow(),
-                      )
-                    ),
+                    onPressed: () {},
+                    // => showDialog(
+                    //   context: context,
+                    //   builder: (context) => Dialog(
+                    //     child: NotificationWindow(),
+                    //   )
+                    //),
                     icon: const Icon(
                       HugeIcons.strokeRoundedNotification03,
                       size: 20.0,

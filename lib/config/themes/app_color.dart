@@ -105,4 +105,7 @@ class AppColor {
   static const lightYellowText = Color(0xFF993901);
 
   static const icon = Color(0xFFB4B4B4);
+
+  static const lightCustomTextBox = Color(0xFFEBEDEF);
+  static const darkCustomTextBox = Color(0xFF1F1F1F);
 }

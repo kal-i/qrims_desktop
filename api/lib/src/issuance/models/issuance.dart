@@ -55,6 +55,7 @@ abstract class Issuance {
     required this.issuedDate,
     this.returnDate,
     required this.qrCodeImageData,
+    this.isReceived = false,
     this.isArchived = false,
   });
 
@@ -65,6 +66,7 @@ abstract class Issuance {
   final DateTime issuedDate;
   final DateTime? returnDate;
   final String qrCodeImageData;
+  final bool isReceived; // represents if the receiving officer has received the item
   final bool isArchived;
 }
 
@@ -92,6 +94,7 @@ class InventoryCustodianSlip extends Issuance {
     required super.receivingOfficer,
     required this.sendingOfficer,
     required super.qrCodeImageData,
+    super.isReceived,
     super.isArchived,
   });
 
@@ -253,6 +256,7 @@ class InventoryCustodianSlip extends Issuance {
       receivingOfficer: receivingOfficer,
       sendingOfficer: sendingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
+      isReceived: json['is_received'] as bool,
       isArchived: json['is_archived'] as bool,
     );
   }
@@ -268,6 +272,7 @@ class InventoryCustodianSlip extends Issuance {
       'receiving_officer': receivingOfficer.toJson(),
       'sending_officer': sendingOfficer.toJson(),
       'qr_code_image_data': qrCodeImageData,
+      'is_received': isReceived,
       'is_archived': isArchived,
     };
   }
@@ -287,6 +292,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
     required super.receivingOfficer,
     required this.sendingOfficer,
     required super.qrCodeImageData,
+    super.isReceived,
     super.isArchived,
   });
 
@@ -450,6 +456,8 @@ class PropertyAcknowledgementReceipt extends Issuance {
       receivingOfficer: receivingOfficer,
       sendingOfficer: sendingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
+      isReceived: json['is_received'] as bool,
+      isArchived: json['is_archived'] as bool,
     );
   }
 
@@ -465,6 +473,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
       'receiving_officer': receivingOfficer.toJson(),
       'sending_officer': sendingOfficer.toJson(),
       'qr_code_image_data': qrCodeImageData,
+      'is_received': isReceived,
       'is_archived': isArchived,
     };
   }

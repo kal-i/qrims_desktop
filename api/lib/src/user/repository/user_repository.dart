@@ -256,7 +256,6 @@ class UserRepository {
         params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
       }
 
-
       final finalQuery = '''
       $baseQuery
       $whereClause

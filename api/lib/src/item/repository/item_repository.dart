@@ -52,26 +52,115 @@ class ItemRepository {
     }
   }
 
-  Future<String> _generateUniqueItemId() async {
-    while (true) {
-      final itemId = generatedId('ITM');
+  Future<String> _generateUniqueItemId(String itemName) async {
+    final now = DateTime.now();
+    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
-      final result = await _conn.execute(
-        Sql.named('''
-        SELECT COUNT(id) FROM Items Where id = @id;
-        '''),
-        parameters: {
-          'id': itemId,
-        },
-      );
+    // Format the item name: remove spaces and capitalize each word's first letter
+    final formattedItemName = itemName
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join('');
 
-      final count = result.first[0] as int;
+    print('Current year-month: $yearMonth for item: $itemName');
 
-      if (count == 0) {
-        return itemId;
-      }
+    // Step 1: Fetch the latest record for the month to get cumulative count
+    final monthResult = await _conn.execute(
+      Sql.named(
+        '''
+    SELECT id FROM Items
+    WHERE id LIKE '%-' || @year_month || '-%'
+    ORDER BY id DESC
+    LIMIT 1;
+    ''',
+      ),
+      parameters: {
+        'year_month': '%$yearMonth%',
+      },
+    );
+    print('month result: ${monthResult}');
+    // we need to extract the
+
+    int cumulativeCount;
+    if (monthResult.isNotEmpty) {
+      final extractedResult = monthResult.first[0]
+          .toString()
+          .split('-')
+          .last
+          .split('(')
+          .first;
+      print('month result is not empty: ${monthResult.first[0]}');
+      print('extracted result: $extractedResult');
+      print('extracted result after + 1: ${int.parse(extractedResult) + 1}');
+      cumulativeCount = int.parse(monthResult.first[0]
+              .toString()
+              .split('-')
+              .last
+              .split('(')
+              .first) +
+          1;
+    } else {
+      cumulativeCount = 1;
     }
+    print('cumulative count: $cumulativeCount');
+
+    // Step 2: Fetch the latest record for the specific item this month
+    final itemResult = await _conn.execute(
+      Sql.named(
+        '''
+    SELECT id FROM Items
+    WHERE id ILIKE @item_name || '-' || @year_month || '-%'
+    ORDER BY id DESC
+    LIMIT 1;
+    ''',
+      ),
+      parameters: {
+        'item_name': itemName,
+        'year_month': yearMonth,
+      },
+    );
+    print('item result: $itemResult');
+
+    int itemSpecificCount;
+    if (itemResult.isNotEmpty && itemResult.first[0] != null) {
+      itemSpecificCount = int.parse(itemResult.first[0]
+              .toString()
+              .split('(')
+              .last
+              .replaceAll(')', '')) +
+          1;
+    } else {
+      itemSpecificCount = 1;
+    }
+    print('item specific count: $itemSpecificCount');
+
+    // Construct the unique ID with zero-padded cumulative count
+    final uniqueId =
+        '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+    print('Generated unique ID: $uniqueId');
+    return uniqueId;
   }
+
+  // Future<String> _generateUniqueItemId() async {
+  //   while (true) {
+  //     final itemId = generatedId('ITM');
+  //
+  //     final result = await _conn.execute(
+  //       Sql.named('''
+  //       SELECT COUNT(id) FROM Items Where id = @id;
+  //       '''),
+  //       parameters: {
+  //         'id': itemId,
+  //       },
+  //     );
+  //
+  //     final count = result.first[0] as int;
+  //
+  //     if (count == 0) {
+  //       return itemId;
+  //     }
+  //   }
+  // }
 
   Future<String> _generateUniqueManufacturerId() async {
     while (true) {
@@ -154,7 +243,7 @@ class ItemRepository {
   }) async {
     try {
       /// generate an item id
-      final itemId = await _generateUniqueItemId();
+      final itemId = await _generateUniqueItemId(productName);
       print('item id: $itemId');
 
       /// generate encrypted id

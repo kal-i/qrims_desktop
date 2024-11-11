@@ -5,12 +5,12 @@ import '../../user/models/user.dart';
 /// when pr is registered, we will send a notif to user
 ///
 enum NotificationType {
-  prCreated,           // When a purchase request is created
-  prApproved,          // When a purchase request is approved
+  prCreated, // When a purchase request is created
+  prApproved, // When a purchase request is approved
   prPartiallyFulfilled, // When part of the requested items are issued
-  prFulfilled,         // When the PR is fully fulfilled
-  prCancelled,         // When a PR is cancelled
-  issuanceCreated,     // When a new issuance is created for a PR
+  prFulfilled, // When the PR is fully fulfilled
+  prCancelled, // When a PR is cancelled
+  issuanceCreated, // When a new issuance is created for a PR
   generalAlert,
 }
 
@@ -36,12 +36,16 @@ class Notification extends Equatable {
   final DateTime? createdAt;
 
   factory Notification.fromJson(Map<String, dynamic> json) {
+    final type = NotificationType.values.firstWhere(
+      (e) => e.toString().split('.').last == json['type'] as String,
+    );
+
     return Notification(
       id: json['notification_id'] as String,
       recipientId: json['recipient_id'] as String,
       senderId: json['sender_id'] as String,
       message: json['message'] as String,
-      type: json['type'] as NotificationType?,
+      type: type,
       referenceId: json['reference_id'] as String?,
       read: json['read'] as bool,
       createdAt: json['created_at'] is String
@@ -56,7 +60,7 @@ class Notification extends Equatable {
       'recipient_id': recipientId,
       'sender_id': senderId,
       'message': message,
-      'type': type,
+      'type': type.toString().split('.').last,
       'reference_id': referenceId,
       'read': read,
       'created_at': createdAt?.toIso8601String(),

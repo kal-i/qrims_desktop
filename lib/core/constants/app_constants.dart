@@ -42,3 +42,5 @@ const purchaseRequestIdsEP = '$purchaseRequestsEP/ids';
 
 const issuancesEP = '/issuances';
 const matchPurchaseRequestWithInventoryItemEP = '$issuancesEP/match';
+const icsEP = '$issuancesEP/ics';
+const parEP = '$issuancesEP/par';

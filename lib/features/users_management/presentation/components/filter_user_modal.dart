@@ -22,16 +22,17 @@ class FilterUserModal extends StatelessWidget {
       width: 900.0,
       height: 300.0,
       headerTitle: 'Filter User',
-      content: _CreateIssuanceContent(
+      subtitle: 'Filter user based on their authentication status.',
+      content: _FilterContent(
         selectedAuthStatusNotifier: selectedAuthStatusNotifier,
       ),
-      footer: _IssuanceModalFooter(),
+      footer: const _ActionsRow(),
     );
   }
 }
 
-class _CreateIssuanceContent extends StatelessWidget {
-  const _CreateIssuanceContent({
+class _FilterContent extends StatelessWidget {
+  const _FilterContent({
     super.key,
     required this.selectedAuthStatusNotifier,
   });
@@ -61,8 +62,8 @@ class _CreateIssuanceContent extends StatelessWidget {
   }
 }
 
-class _IssuanceModalFooter extends StatelessWidget {
-  const _IssuanceModalFooter({
+class _ActionsRow extends StatelessWidget {
+  const _ActionsRow({
     super.key,
   });
 

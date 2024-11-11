@@ -18,6 +18,7 @@ import 'features/auth/presentation/components/custom_auth_password_text_box/bloc
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_suggestions/item_suggestions_bloc.dart';
+import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
 import 'features/navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
 import 'features/officer/presentation/bloc/officers_bloc.dart';
 import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
@@ -118,6 +119,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (_) => serviceLocator<PurchaseRequestsBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<IssuancesBloc>(),
           ),
           BlocProvider(
             create: (_) => serviceLocator<ItemSuggestionsBloc>(),

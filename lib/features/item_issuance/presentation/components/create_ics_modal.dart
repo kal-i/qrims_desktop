@@ -9,6 +9,7 @@ import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/custom_text_box.dart';
 import '../../../../core/enums/issuance_purpose.dart';
+import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/purchase_request_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../injection_container.dart';
@@ -202,6 +203,7 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
               RoutingConstants.nestedRegisterItemIssuanceViewRoutePath,
               extra: {
                 'purpose': IssuancePurpose.register,
+                'type': IssuanceType.ics,
                 'pr_id': _prIdController.text,
               },
             );

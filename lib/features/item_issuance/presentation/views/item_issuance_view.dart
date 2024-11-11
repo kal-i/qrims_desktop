@@ -1,21 +1,31 @@
+import 'dart:async';
+
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
+import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/filter_table_row.dart';
+import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/reusable_filter_custom_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
+import '../../../../core/utils/capitalizer.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../../../../core/common/components/custom_data_table.dart';
+import '../bloc/issuances_bloc.dart';
 import '../components/create_ics_modal.dart';
 import '../components/create_issuance_modal.dart';
+import '../components/create_par_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
@@ -28,8 +38,86 @@ class ItemIssuanceView extends StatefulWidget {
 }
 
 class _ItemIssuanceViewState extends State<ItemIssuanceView> {
+  late IssuancesBloc _issuancesBloc;
+
   final _searchController = TextEditingController();
-  int _selectedIndex = 0;
+  final _searchDelay = const Duration(milliseconds: 500);
+  Timer? _debounce;
+
+  late TableConfig _tableConfig;
+  final List<String> _tableHeaders = [
+    'Issuance ID',
+    'PR No',
+    'Requesting Officer Name',
+    'Status',
+  ];
+  late List<TableData> _tableRows = [];
+
+  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
+
+  int _currentPage = 1;
+  int _pageSize = 10;
+  int _totalRecords = 0;
+
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _issuancesBloc = context.read<IssuancesBloc>();
+    _searchController.addListener(_onSearchChanged);
+    _selectedFilterNotifier.addListener(_fetchIssuances);
+    _initializeTableConfig();
+    _fetchIssuances();
+  }
+
+  void _initializeTableConfig() {
+    _tableConfig = TableConfig(
+      headers: _tableHeaders,
+      rows: _tableRows,
+      columnFlex: [2, 2, 2, 2],
+    );
+  }
+
+  void _fetchIssuances() {
+    _issuancesBloc.add(
+      GetPaginatedIssuancesEvent(
+        page: _currentPage,
+        pageSize: _pageSize,
+        searchQuery: _searchController.text,
+        //issueDateStart: issueDateStart,
+        //issueDateEnd: issueDateEnd,
+        type: _selectedFilterNotifier.value,
+        //isArchived: isArchived,
+      ),
+    );
+  }
+
+  void _refreshIssuanceList() {
+    _searchController.clear();
+    _currentPage = 1;
+
+    _selectedFilterNotifier.value = '';
+    _fetchIssuances();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(_searchDelay, () {
+      _currentPage = 1;
+      _fetchIssuances();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+
+    _selectedFilterNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +131,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           _buildRecentlyGeneratedDocumentsRow(),
           const SizedBox(
             height: 50.0,
+          ),
+          _buildActionsRow(),
+          const SizedBox(
+            height: 20.0,
           ),
           Expanded(
             child: _buildDataTable(),
@@ -85,7 +177,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New RIS',
             icon: CupertinoIcons.doc,
-            onTap: () => showCustomDocumentPreview(context),
+            onTap: () {},
           ),
         ),
         const SizedBox(
@@ -95,7 +187,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New PAR',
             icon: CupertinoIcons.folder,
-            onTap: () {},
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const CreateParModal(),
+            ),
           ),
         ),
       ],
@@ -123,7 +218,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           children: [
             Expanded(
                 child: DocumentCard(
-              onTap: () {},
+              onTap: () => showCustomDocumentPreview(context),
             )),
             const SizedBox(
               width: 15.0,
@@ -161,72 +256,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildFilterTableRows(),
+            _buildFilterTableRow(),
             _buildActionButtons(),
           ],
         ),
       ],
-    );
-  }
-
-  /// make this stateful
-  /// fields: list of reusable button
-  Widget _buildFilterTableRows() {
-    return Container(
-      height: 50.0,
-      padding: const EdgeInsets.all(5.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.0),
-        color: (context.watch<ThemeBloc>().state == AppTheme.light
-            ? AppColor.lightSecondary
-            : AppColor.darkSecondary),
-      ),
-      child: Row(
-        children: [
-          _buildReusableTableFilterButton(0, 'View All'),
-          _buildReusableTableFilterButton(1, 'ICS'),
-          _buildReusableTableFilterButton(2, 'RIS'),
-          _buildReusableTableFilterButton(3, 'PAR'),
-          // _buildReusableTableFilterButton(4, 'Pending'),
-          // _buildReusableTableFilterButton(5, 'Approved'),
-          // _buildReusableTableFilterButton(6, 'Declined'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReusableTableFilterButton(int index, String text) {
-    bool isSelected = _selectedIndex == index;
-
-    return Material(
-      borderRadius: BorderRadius.circular(10.0),
-      color: isSelected
-          ? Theme.of(context).scaffoldBackgroundColor
-          : Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10.0),
-        hoverColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.3),
-        splashColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.3),
-        onTap: () => setState(() {
-          _selectedIndex = index;
-        }),
-        child: Container(
-          width: 100.0,
-          height: 40.0,
-          padding: const EdgeInsets.all(10.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: Center(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 13.0,
-                  ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -247,6 +281,19 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         ),
         _buildSortButton(),
       ],
+    );
+  }
+
+  Widget _buildFilterTableRow() {
+    final Map<String, String> filterMapping = {
+      'View All': '',
+      'ICS': 'ics',
+      'RIS': 'ris',
+      'PAR': 'par',
+    };
+    return FilterTableRow(
+      selectedFilterNotifier: _selectedFilterNotifier,
+      filterMapping: filterMapping,
     );
   }
 
@@ -271,91 +318,155 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   }
 
   Widget _buildDataTable() {
-    return Column(
-      children: [
-        _buildActionsRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Expanded(
-          child: CustomDataTable(
-            config: TableConfig(
-              headers: [
-                'PR ID',
-                'Requesting Officer',
-                'Issuance Type',
-                'Status',
-              ],
-              rows: [
-                TableData(
-                  columns: [
-                    const Text('2024PR1'),
-                    const Text('Alex Ander'),
-                    const Text('ICS'),
-                    const Text('Pending'),
-                  ],
-                  id: '1',
+    return BlocConsumer<IssuancesBloc, IssuancesState>(
+      listener: (context, state) {
+        if (state is IssuancesLoading) {
+          _isLoading = true;
+          _errorMessage = null;
+        }
+
+        if (state is MatchedItemWithPr) {
+          _isLoading = false;
+          _errorMessage = null;
+        }
+
+        if (state is ICSRegistered || state is PARRegistered) {
+          _isLoading = false;
+          _errorMessage = null;
+          _refreshIssuanceList();
+        }
+
+        if (state is IssuancesLoaded) {
+          _isLoading = false;
+          _totalRecords = state.totalIssuancesCount;
+          _tableRows.clear();
+          _tableRows.addAll(state.issuances.map((issuance) {
+            return TableData(
+              id: issuance.id,
+              columns: [
+                Text(
+                  issuance.id,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                Text(
+                  issuance.purchaseRequestEntity.id,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                Text(
+                  capitalizeWord(issuance.receivingOfficerEntity.name),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                SizedBox(
+                  width: 50.0,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStatusHighlighter(
+                      issuance.isReceived,
+                    ),
+                  ),
                 ),
               ],
+              menuItems: [
+                {'text': 'View', 'icon': FluentIcons.eye_12_regular},
+              ],
+            );
+          }).toList());
+        }
+
+        if (state is IssuancesError) {
+          _isLoading = false;
+          _errorMessage = state.message;
+        }
+      },
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: CustomDataTable(
+                      config: _tableConfig.copyWith(
+                        rows: _tableRows,
+                      ),
+                      onActionSelected: (index, action) {
+                        final issuanceId = _tableRows[index].id;
+                        String? path;
+                        final Map<String, dynamic> extras = {
+                          'issuance_id': issuanceId,
+                        };
+
+                        if (action.isNotEmpty) {
+                          if (action.contains('View')) {
+                            path = RoutingConstants.nestedViewItemIssuanceViewRoutePath;
+                          }
+                        }
+
+                        context.go(
+                          path!,
+                          extra: extras,
+                        );
+                      },
+                    ),
+                  ),
+                  if (_isLoading)
+                    LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).dividerColor,
+                      color: AppColor.accent,
+                    ),
+                  if (_errorMessage != null)
+                    Center(
+                      child: CustomMessageBox.error(
+                        message: _errorMessage!,
+                      ),
+                    ),
+                ],
+              ),
             ),
-            onActionSelected: (index, action) {
-              print('row index: $index - $action');
-            },
-          ),
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        PaginationControls(
-          currentPage: 1,
-          totalRecords: 10,
-          pageSize: 10,
-          onPageChanged: (int page) {},
-          onPageSizeChanged: (int size) {},
-        ),
-      ],
+            const SizedBox(
+              height: 10.0,
+            ),
+            PaginationControls(
+              currentPage: _currentPage,
+              totalRecords: _totalRecords,
+              pageSize: _pageSize,
+              onPageChanged: (page) {
+                _currentPage = page;
+                _fetchIssuances();
+              },
+              onPageSizeChanged: (size) {
+                _pageSize = size;
+                _fetchIssuances();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // define your context menu entries
-  final menus = <ContextMenuEntry>[
-    const MenuHeader(text: "Context Menu"),
-    MenuItem(
-      label: 'Copy',
-      icon: Icons.copy,
-      onSelected: () {
-        // implement copy
-      },
-    ),
-    MenuItem(
-      label: 'Paste',
-      icon: Icons.paste,
-      onSelected: () {
-        // implement paste
-      },
-    ),
-    const MenuDivider(),
-    MenuItem.submenu(
-      label: 'Edit',
-      icon: Icons.edit,
-      items: [
-        MenuItem(
-          label: 'Undo',
-          value: "Undo",
-          icon: Icons.undo,
-          onSelected: () {
-            // implement undo
-          },
-        ),
-        MenuItem(
-          label: 'Redo',
-          value: 'Redo',
-          icon: Icons.redo,
-          onSelected: () {
-            // implement redo
-          },
-        ),
-      ],
-    ),
-  ];
+  Widget _buildStatusHighlighter(bool isReceived) {
+    return HighlightStatusContainer(
+      statusStyle: _issuanceStatusStyler(isReceived: isReceived),
+    );
+  }
+
+  StatusStyle _issuanceStatusStyler({required bool isReceived}) {
+    if (isReceived) {
+      return StatusStyle.green(label: 'Received');
+    } else {
+      return StatusStyle.yellow(label: 'To be receive');
+    }
+  }
 }

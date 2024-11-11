@@ -42,7 +42,7 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
 
       return right(response);
     } on ServerException catch (e) {
-      return Left(Failure(e.message));
+      return left(Failure(e.message));
     }
   }
 
@@ -90,7 +90,7 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
 
       return right(response);
     } on ServerException catch (e) {
-      return Left(Failure(e.toString()));
+      return left(Failure(e.toString()));
     }
   }
 }

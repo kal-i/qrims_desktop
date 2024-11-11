@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,7 +20,6 @@ import '../../../../core/enums/auth_status.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
-import '../../../../core/utils/readable_enum_converter.dart';
 import '../bloc/users_management_bloc.dart';
 import '../components/admin_approval_modal.dart';
 import '../components/filter_user_modal.dart';
@@ -37,7 +35,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   late UsersManagementBloc _usersManagementBloc;
   late final String _selectedSortValue = 'Account Creation';
   late String _selectedSortOrder = 'Descending';
-  late AuthStatus? _selectedStatus = null;
+  late AuthStatus? _selectedStatus;
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -68,6 +66,8 @@ class _UsersManagementViewState extends State<UsersManagementView> {
   void initState() {
     super.initState();
     _usersManagementBloc = context.read<UsersManagementBloc>();
+
+    _selectedStatus = null;
 
     _searchController.addListener(_onSearchChanged);
     _selectedFilterRole.addListener(_onRoleFilterChanged);
@@ -279,41 +279,6 @@ class _UsersManagementViewState extends State<UsersManagementView> {
     );
   }
 
-  Widget _buildFilterButton() {
-    return ValueListenableBuilder(
-        valueListenable: _trackFilterSelection,
-        builder: (context, trackFilterSelection, child) {
-          return TestPopup(
-            tooltip: 'Filter',
-            items: const [
-              {
-                'text': 'Unauthenticated',
-              },
-              {
-                'text': 'Authenticated',
-              },
-              {
-                'text': 'Revoked',
-              }
-            ],
-            onItemSelected: (selectedItem) {
-              _trackFilterSelection.value = true;
-              print('selected status: $selectedItem');
-              _selectedStatus = AuthStatus.values.firstWhere((authStatus) =>
-                  authStatus.toString().split('.').last.toLowerCase() ==
-                  selectedItem.toLowerCase());
-              _searchController.clear();
-              _currentPage = 1;
-              _fetchUsers();
-            },
-            initialItemSelected: _selectedStatus.toString(),
-            icon: FluentIcons.filter_add_20_regular,
-            isIconOutlined: true,
-            trackSelection: trackFilterSelection,
-          );
-        });
-  }
-
   Widget _buildFilterStatusButton() {
     return CustomIconButton(
       onTap: () => showDialog(
@@ -322,26 +287,6 @@ class _UsersManagementViewState extends State<UsersManagementView> {
           selectedAuthStatusNotifier: _selectedAuthStatus,
         ),
       ),
-      icon: FluentIcons.filter_add_20_regular,
-    );
-    return CustomMenuButton(
-      tooltip: 'Filter',
-      items: const [
-        {
-          'text': 'Unauthenticated',
-          'icon': FluentIcons.lock_closed_key_16_regular
-        },
-        {'text': 'Authenticated', 'icon': FluentIcons.key_16_regular},
-        {'text': 'Revoked', 'icon': FluentIcons.shield_keyhole_16_regular},
-      ],
-      onItemSelected: (selectedItem) {
-        _selectedStatus = AuthStatus.values.firstWhere((authStatus) =>
-            authStatus.toString().split('.').last.toLowerCase() ==
-            selectedItem.toLowerCase());
-        _searchController.clear();
-        _currentPage = 1;
-        _fetchUsers();
-      },
       icon: FluentIcons.filter_add_20_regular,
     );
   }

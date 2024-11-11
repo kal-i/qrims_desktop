@@ -1,15 +1,11 @@
 import 'dart:math';
 
-import 'package:api/src/item/models/item.dart';
-import 'package:api/src/organization_management/models/office.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
-import 'package:api/src/utils/encryption_utils.dart';
 import 'package:api/src/utils/qr_code_utils.dart';
 import 'package:postgres/postgres.dart';
 
-import '../../utils/generate_id.dart';
 import '../models/issuance.dart';
 
 class IssuanceRepository {
@@ -18,31 +14,42 @@ class IssuanceRepository {
   final Connection _conn;
 
   Future<String> _generateUniqueIssuanceId() async {
-    while (true) {
-      final issuanceId = generatedId('ISSNC');
+    final now = DateTime.now();
+    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
-      final result = await _conn.execute(
-        Sql.named('''
-        SELECT COUNT(id) FROM Issuances Where id = @id;
-        '''),
-        parameters: {
-          'id': issuanceId,
-        },
-      );
+    print('Current year-month for ISS ID: $yearMonth');
 
-      final count = result.first[0] as int;
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT id FROM Issuances
+        WHERE id LIKE 'ISS' || '-' || @year_month || '-%'
+        ORDER BY id DESC
+        LIMIT 1
+        ''',
+      ),
+      parameters: {
+        'year_month': yearMonth,
+      },
+    );
 
-      if (count == 0) {
-        return issuanceId;
-      }
+    int? n; // represent the no. of record
+    if (result.isNotEmpty) {
+      n = int.parse(result.first[0].toString().split('-').last) + 1;
+    } else {
+      n = 1;
     }
+
+    final uniqueId = 'ISS-$yearMonth-${n.toString().padLeft(3, '0')}';
+    print('Generated ISS ID: $uniqueId');
+    return uniqueId;
   }
 
   Future<String> _generateUniqueIcsId() async {
     final now = DateTime.now();
     final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
-    print('curr ym - $yearMonth');
+    print('Current year-month for ICS ID: $yearMonth');
 
     final result = await _conn.execute(
       Sql.named(
@@ -65,14 +72,16 @@ class IssuanceRepository {
       n = 1;
     }
 
-    return '$yearMonth-0$n';
+    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+    print('Generated ICS ID: $uniqueId');
+    return uniqueId;
   }
 
   Future<String> _generateUniqueParId() async {
     final now = DateTime.now();
     final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
-    print('curr ym - $yearMonth');
+    print('Current year-month for PAR ID: $yearMonth');
 
     final result = await _conn.execute(
       Sql.named(
@@ -95,7 +104,9 @@ class IssuanceRepository {
       n = 1;
     }
 
-    return '$yearMonth-0$n';
+    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+    print('Generated PAR ID: $uniqueId');
+    return uniqueId;
   }
 
   Future<List<IssuanceItem>> _getIssuanceItems({
@@ -173,6 +184,55 @@ class IssuanceRepository {
     return issuanceItems;
   }
 
+  Future<Issuance?> getIssuanceById({
+    required String id,
+  }) async {
+    try {
+      final query = '''
+      SELECT
+        iss.*,
+        ics.id AS ics_id,
+        ics.sending_officer_id,
+        par.id AS par_id,
+        par.property_number,
+        par.sending_officer_id
+      FROM
+        Issuances iss
+      LEFT JOIN
+        InventoryCustodianSlips ics ON iss.id = ics.issuance_id
+      LEFT JOIN
+        PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
+      WHERE iss.id = @id;
+      ''';
+
+      final result = await _conn.execute(
+        Sql.named(
+          query,
+        ),
+        parameters: {
+          'id': id,
+        },
+      );
+
+      final row = result.first;
+      final isICS = row[8] != null;
+      final isPAR = row[10] != null;
+
+      if (isICS) {
+        return await getIcsById(id: row[0] as String);
+      }
+
+      if (isPAR) {
+        return await getParById(id: row[0] as String);
+      }
+
+      return null;
+    } catch (e) {
+      print('Error fetching issuance by id: $e');
+      throw Exception('Failed to fetch issuance by id: $e');
+    }
+  }
+
   Future<InventoryCustodianSlip?> getIcsById({
     required String id,
   }) async {
@@ -211,21 +271,22 @@ class IssuanceRepository {
       );
 
       final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[8] as String,
+        id: row[9] as String,
       );
 
       return InventoryCustodianSlip.fromJson({
         'id': row[0],
-        'ics_id': row[7],
+        'ics_id': row[8],
         'items':
             issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
         'issued_date': row[1],
         'return_date': row[2],
         'purchase_request': purchaseRequest?.toJson(),
         'receiving_officer': receivingOfficer?.toJson(),
-        'qr_code_image_data': row[5],
-        'is_archived': row[6],
         'sending_officer': sendingOfficer?.toJson(),
+        'qr_code_image_data': row[5],
+        'is_received': row[6],
+        'is_archived': row[7],
       });
     }
 
@@ -262,7 +323,7 @@ class IssuanceRepository {
 
     for (final row in issuanceResult) {
       final purchaseRequest =
-      await PurchaseRequestRepository(_conn).getPurchaseRequestById(
+          await PurchaseRequestRepository(_conn).getPurchaseRequestById(
         id: row[3] as String,
       );
 
@@ -271,28 +332,207 @@ class IssuanceRepository {
       );
 
       final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[9] as String,
+        id: row[10] as String,
       );
 
       return PropertyAcknowledgementReceipt.fromJson({
         'id': row[0],
-        'par_id': row[7],
-        'property_number': row[8],
-        'items': issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
+        'par_id': row[8],
+        'property_number': row[9],
+        'items':
+            issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
         'issued_date': row[1],
         'return_date': row[2],
         'purchase_request': purchaseRequest?.toJson(),
         'receiving_officer': receivingOfficer?.toJson(),
-        'qr_code_image_data': row[5],
-        'is_archived': row[6],
         'sending_officer': sendingOfficer?.toJson(),
+        'qr_code_image_data': row[5],
+        'is_received': row[6],
+        'is_archived': row[7],
       });
     }
 
     return null;
   }
 
-  Future<List<Map<String, dynamic>>> matchingItemFromPurchaseRequest({
+  Future<int> getIssuancesCount({
+    String? searchQuery,
+    DateTime? issueDateStart,
+    DateTime? issueDateEnd,
+    String? type,
+    bool isArchived = false,
+  }) async {
+    try {
+      final params = <String, dynamic>{};
+
+      final baseQuery = '''
+      SELECT COUNT(*)
+      FROM Issuances iss
+      LEFT JOIN InventoryCustodianSlips ics ON iss.id = ics.issuance_id
+      LEFT JOIN PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
+      ''';
+
+      final whereClause = StringBuffer('WHERE iss.is_archived = @is_archived');
+      params['is_archived'] = isArchived;
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        whereClause.write(
+            ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
+        params['search_query'] = '%$searchQuery%';
+      }
+
+      if (issueDateStart != null) {
+        whereClause.write(' AND iss.issued_date >= @issue_date_start');
+        params['issue_date_start'] = issueDateStart.toIso8601String();
+      }
+      if (issueDateEnd != null) {
+        whereClause.write(' AND iss.issued_date <= @issue_date_end');
+        params['issue_date_end'] = issueDateEnd.toIso8601String();
+      } else {
+        // Default the end date to today if it's null
+        whereClause.write(' AND iss.issued_date <= @issue_date_end');
+        params['issue_date_end'] = DateTime.now().toIso8601String();
+      }
+
+      if (type != null && type.isNotEmpty) {
+        whereClause.write(' AND (ics.id IS NOT NULL OR par.id IS NOT NULL)');
+        if (type == 'ics') {
+          whereClause.write(' AND ics.id IS NOT NULL');
+        } else if (type == 'par') {
+          whereClause.write(' AND par.id IS NOT NULL');
+        }
+      }
+
+      final finalQuery = '''
+      $baseQuery
+      $whereClause
+      ''';
+
+      final result = await _conn.execute(
+        Sql.named(finalQuery),
+        parameters: params,
+      );
+
+      print(finalQuery);
+      print(params);
+
+      if (result.isNotEmpty) {
+        final count = result.first[0] as int;
+        print('Total no. of filtered issuances: $count');
+        return count;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      print('Error counting filtered issuances: $e');
+      throw Exception('Failed to count filtered issuances.');
+    }
+  }
+
+  Future<List<Issuance>?> getIssuances({
+    required int page,
+    required int pageSize,
+    String? searchQuery,
+    DateTime? issueDateStart,
+    DateTime? issueDateEnd,
+    String? type,
+    bool isArchived = false,
+  }) async {
+    try {
+      final offset = (page - 1) * pageSize;
+      final issuances = <Issuance>[];
+      final params = <String, dynamic>{};
+
+      final baseQuery = '''
+      SELECT
+        iss.*,
+        ics.id AS ics_id,
+        ics.sending_officer_id,
+        par.id AS par_id,
+        par.property_number,
+        par.sending_officer_id
+      FROM
+        Issuances iss
+      LEFT JOIN
+        InventoryCustodianSlips ics ON iss.id = ics.issuance_id
+      LEFT JOIN
+        PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
+      ''';
+
+      final whereClause = StringBuffer('WHERE iss.is_archived = @is_archived');
+      params['is_archived'] = isArchived;
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        whereClause.write(
+            ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
+        params['search_query'] = '%$searchQuery%';
+      }
+
+      if (issueDateStart != null) {
+        whereClause.write(' AND iss.issued_date >= @issue_date_start');
+        params['issue_date_start'] = issueDateStart.toIso8601String();
+      }
+      if (issueDateEnd != null) {
+        whereClause.write(' AND iss.issued_date <= @issue_date_end');
+        params['issue_date_end'] = issueDateEnd.toIso8601String();
+      } else {
+        // Default the end date to today if it's null
+        whereClause.write(' AND iss.issued_date <= @issue_date_end');
+        params['issue_date_end'] = DateTime.now().toIso8601String();
+      }
+
+      if (type != null && type.isNotEmpty) {
+        whereClause.write(' AND (ics.id IS NOT NULL OR par.id IS NOT NULL)');
+        if (type == 'ics') {
+          whereClause.write(' AND ics.id IS NOT NULL');
+        } else if (type == 'par') {
+          whereClause.write(' AND par.id IS NOT NULL');
+        }
+      }
+
+      final finalQuery = '''
+      $baseQuery
+      ${whereClause.toString()}
+      ORDER BY iss.issued_date DESC
+      LIMIT @page_size OFFSET @offset
+      ''';
+
+      params['page_size'] = pageSize;
+      params['offset'] = offset;
+
+      print(finalQuery);
+      print(params);
+
+      final results = await _conn.execute(
+        Sql.named(finalQuery),
+        parameters: params,
+      );
+
+      print(results);
+
+      for (final row in results) {
+        final isICS = row[8] != null;
+        final isPAR = row[10] != null;
+
+        if (isICS) {
+          final ics = await getIcsById(id: row[0] as String);
+          issuances.add(ics!);
+        }
+
+        if (isPAR) {
+          final par = await getParById(id: row[0] as String);
+          issuances.add(par!);
+        }
+      }
+
+      return issuances;
+    } catch (e) {
+      print('Error fetching issuances: $e');
+      throw Exception('Failed to fetch issuances.');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> matchingItemFromPurchaseRequest({
     required String purchaseRequestId,
     required int requestedQuantity,
   }) async {
@@ -482,7 +722,7 @@ class IssuanceRepository {
     required String receivingOfficerId,
     required String sendingOfficerId,
   }) async {
-    final icsId = await _generateUniqueParId();
+    final icsId = await _generateUniqueIcsId();
 
     final concreteIssuanceEntityQuery = '''
     INSERT INTO InventoryCustodianSlips (id, issuance_id, sending_officer_id)

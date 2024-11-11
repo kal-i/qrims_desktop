@@ -20,6 +20,7 @@ class CustomDropdownField<T> extends StatelessWidget {
     this.onMenuStateChange,
     this.validator,
     this.valueToStringConverter,
+    this.fillColor,
   });
 
   final void Function(T?)? onChanged;
@@ -30,6 +31,7 @@ class CustomDropdownField<T> extends StatelessWidget {
   final void Function(bool)? onMenuStateChange;
   final String? Function(T?)? validator;
   final String Function(T?)? valueToStringConverter;
+  final Color? fillColor;
 
   @override
   Widget build(BuildContext context) {
@@ -56,9 +58,9 @@ class CustomDropdownField<T> extends StatelessWidget {
           value: value,
           decoration: InputDecoration(
             filled: true,
-            fillColor: context.watch<ThemeBloc>().state == AppTheme.light
+            fillColor: fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
                 ? AppColor.lightBackground
-                : AppColor.darkBackground,
+                : AppColor.darkBackground),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide.none,
               // borderSide: BorderSide(

@@ -1,22 +1,27 @@
 import '../../../officer/domain/entities/officer.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
+import 'issuance_item.dart';
 
 abstract class IssuanceEntity {
   const IssuanceEntity({
     required this.id,
     required this.items,
     required this.purchaseRequestEntity,
-    required this.officerEntity,
+    required this.receivingOfficerEntity,
     required this.issuedDate,
-    required this.returnDate,
-    required this.isArchived,
+    this.returnDate,
+    required this.qrCodeImageData,
+    this.isReceived = false,
+    this.isArchived = false,
   });
 
   final String id;
-  final List<IssuanceEntity> items;
+  final List<IssuanceItemEntity> items;
   final PurchaseRequestEntity purchaseRequestEntity;
-  final OfficerEntity officerEntity;
+  final OfficerEntity receivingOfficerEntity;
   final DateTime issuedDate;
   final DateTime? returnDate;
+  final String qrCodeImageData;
+  final bool isReceived;
   final bool isArchived;
 }

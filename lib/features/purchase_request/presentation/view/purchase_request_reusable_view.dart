@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
+import '../../../../config/themes/app_theme.dart';
+import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
@@ -81,6 +83,15 @@ class _PurchaseRequestReusableViewState
     _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
     //_officeScrollController.addListener(_loadMoreOffices);
+
+    _quantityController.addListener(() {
+      final newQuantity = int.tryParse(_quantityController.text) ?? 0;
+      _quantity.value = newQuantity;
+    });
+
+    _quantity.addListener(() {
+      _quantityController.text = _quantity.value.toString();
+    });
   }
 
   void _savePurchaseRequest() {
@@ -152,33 +163,44 @@ class _PurchaseRequestReusableViewState
       body: BlocListener<PurchaseRequestsBloc, PurchaseRequestsState>(
         listener: (context, state) async {
           if (state is PurchaseRequestRegistered) {
+            print('triggered');
             DelightfulToastUtils.showDelightfulToast(
               icon: HugeIcons.strokeRoundedCheckmarkCircle02,
               context: context,
               title: 'Success',
               subtitle: 'Purchase Request registered successfully.',
             );
+            await Future.delayed(const Duration(seconds: 3));
+            context.pop();
           }
 
           if (state is PurchaseRequestsError) {
             DelightfulToastUtils.showDelightfulToast(
               icon: HugeIcons.strokeRoundedCheckmarkCircle02,
               context: context,
-              title: 'Success',
-              subtitle: 'Purchase Request registered successfully.',
+              title: 'Error',
+              subtitle: 'Failed to register Purchase Request: ${state.message}.',
             );
           }
         },
         child: BlocBuilder<PurchaseRequestsBloc, PurchaseRequestsState>(
           builder: (context, state) {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (state is PurchaseRequestsLoading)
-                    const ReusableLinearProgressIndicator(),
-                  _buildForm(),
-                ],
-              ),
+            return Column(
+              children: [
+                if (state is PurchaseRequestsLoading)
+                  const ReusableLinearProgressIndicator(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 30.0,
+                      ),
+                      child: _buildForm(),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -187,111 +209,99 @@ class _PurchaseRequestReusableViewState
   }
 
   Widget _buildForm() {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 100.0,
-        vertical: 20.0,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 30.0,
-        vertical: 30.0,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.darkPrimary.withOpacity(0.25),
-            blurRadius: 4.0,
-            spreadRadius: 0.0,
-            offset: const Offset(0.0, 4.0),
-          )
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          // _buildHeader(),
+          // const SizedBox(
+          //   height: 50.0,
+          // ),
+          _buildPurchaseRequestInitialInformationFields(),
+          const SizedBox(
+            height: 50.0,
+          ),
+          _buildItemInformationFields(),
+          const SizedBox(
+            height: 50.0,
+          ),
+          _buildRequestingOfficerInformationFields(),
+          const SizedBox(
+            height: 50.0,
+          ),
+          _buildApprovingOfficerInformationFields(),
+          const SizedBox(
+            height: 80.0,
+          ),
+          _buildActionsRow(),
         ],
-        color: Theme.of(context).cardColor, //AppColor.lightPrimary,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildPurchaseRequestInitialInformationFields(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildItemInformationFields(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildRequestingOfficerInformationFields(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildApprovingOfficerInformationFields(),
-            const SizedBox(
-              height: 80.0,
-            ),
-            _buildActionsRow(),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Purchase Request',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(
-            HugeIcons.strokeRoundedCancel01,
-            size: 20.0,
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHeader() {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       Text(
+  //         'Purchase Request',
+  //         style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //               fontSize: 18.0,
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //       ),
+  //       IconButton(
+  //         onPressed: () => context.pop(),
+  //         icon: const Icon(
+  //           HugeIcons.strokeRoundedCancel01,
+  //           size: 20.0,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildPurchaseRequestInitialInformationFields() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'General Information',
+          'Purchase Request',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        Divider(
-          color: Theme.of(context).dividerColor,
-          thickness: 2.5,
+            fontSize: 24.0,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(
-          height: 15.0,
+          height: 5.0,
+        ),
+        Text(
+          'Initial information for the request.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        // Divider(
+        //   color: Theme.of(context).dividerColor,
+        //   thickness: 2.5,
+        // ),
+        const SizedBox(
+          height: 20.0,
         ),
         IntrinsicHeight(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: CustomFormTextField(
-                  label: 'PR No.',
-                  controller: _prIdController,
-                ),
-              ),
-              const SizedBox(
-                width: 50.0,
-              ),
+              // Expanded(
+              //   child: CustomFormTextField(
+              //     label: 'PR No.',
+              //     controller: _prIdController,
+              //   ),
+              // ),
+              // const SizedBox(
+              //   width: 50.0,
+              // ),
               Expanded(
                 child: _buildOfficeSuggestionField(),
               ),
@@ -327,6 +337,10 @@ class _PurchaseRequestReusableViewState
                 child: CustomFormTextField(
                   label: 'Responsibility Center Code',
                   controller: _responsibilityCenterCodeController,
+                  placeholderText: 'Enter responsibility center code',
+                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                      ? AppColor.lightCustomTextBox
+                      : AppColor.darkCustomTextBox),
                 ),
               ),
             ],
@@ -339,6 +353,10 @@ class _PurchaseRequestReusableViewState
           label: 'Purpose',
           controller: _purposeController,
           maxLines: 4,
+          placeholderText: 'Enter reqeust\'s purpose',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         ),
       ],
     );
@@ -351,13 +369,19 @@ class _PurchaseRequestReusableViewState
         Text(
           'Item Information',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
-              ),
+            fontSize: 24.0,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        Divider(
-          color: Theme.of(context).dividerColor,
-          thickness: 2.5,
+        const SizedBox(
+          height: 5.0,
+        ),
+        Text(
+          'Requested Item Information.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+          ),
         ),
         const SizedBox(
           height: 15.0,
@@ -393,10 +417,7 @@ class _PurchaseRequestReusableViewState
                 width: 50.0,
               ),
               Expanded(
-                child: QuantityCounterField(
-                  quantity: _quantity,
-                  controller: _quantityController,
-                ),
+                child: _buildQuantityCounterField(),
                 // CustomFormTextField(
                 //   label: 'Quantity',
                 // ),
@@ -408,6 +429,10 @@ class _PurchaseRequestReusableViewState
                 child: CustomFormTextField(
                   label: 'Unit Cost',
                   controller: _unitCostController,
+                  placeholderText: 'Enter item\'s unit cost',
+                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                      ? AppColor.lightCustomTextBox
+                      : AppColor.darkCustomTextBox),
                 ),
               ),
             ],
@@ -422,15 +447,24 @@ class _PurchaseRequestReusableViewState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Requesting Officer Information',
+          'Associated Officers',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
-              ),
+            fontSize: 24.0,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        Divider(
-          color: Theme.of(context).dividerColor,
-          thickness: 2.5,
+        const SizedBox(
+          height: 5.0,
+        ),
+        Text(
+          'Officers involved with the request.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(
+          height: 20.0,
         ),
         IntrinsicHeight(
           child: Row(
@@ -461,17 +495,6 @@ class _PurchaseRequestReusableViewState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Approving Officer Information',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        Divider(
-          color: Theme.of(context).dividerColor,
-          thickness: 2.5,
-        ),
         IntrinsicHeight(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -543,6 +566,10 @@ class _PurchaseRequestReusableViewState
       },
       controller: _officeController,
       label: 'Office',
+      placeHolderText: 'Enter purchase request\'s office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -562,6 +589,9 @@ class _PurchaseRequestReusableViewState
           },
           label: 'Acquired Date',
           dateController: dateController,
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -581,6 +611,10 @@ class _PurchaseRequestReusableViewState
       },
       controller: _entityNameController,
       label: 'Entity',
+      placeHolderText: 'Enter purchase request\'s entity',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -610,7 +644,11 @@ class _PurchaseRequestReusableViewState
                 ),
               )
               .toList(),
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
+          placeholderText: 'Enter purchase request\'s fund cluster',
         );
       },
     );
@@ -638,6 +676,10 @@ class _PurchaseRequestReusableViewState
       },
       controller: _itemNameController,
       label: 'Product Name',
+      placeHolderText: 'Enter product name',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -664,6 +706,10 @@ class _PurchaseRequestReusableViewState
           },
           controller: _itemDescriptionController,
           label: 'Product Description',
+          placeHolderText: 'Enter product description',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
           maxLines: 4,
         );
       },
@@ -697,6 +743,54 @@ class _PurchaseRequestReusableViewState
               )
               .toList(),
           label: 'Unit',
+          placeholderText: 'Enter item\'s unit',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuantityCounterField() {
+    return ValueListenableBuilder(
+      valueListenable: _quantity,
+      builder: (BuildContext context, int value, Widget? child) {
+        return CustomFormTextField(
+          label: 'Quantity',
+          placeholderText: 'Enter item\'s quantity',
+          controller: _quantityController,
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+          isNumeric: true,
+          suffixWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              InkWell(
+                onTap: () {
+                  _quantity.value++;
+                  _quantityController.text == _quantity.value.toString();
+                },
+                child: const Icon(
+                  Icons.keyboard_arrow_up,
+                  size: 18.0,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  if (value != 0) {
+                    _quantity.value--;
+                    _quantityController.text == _quantity.value.toString();
+                  }
+                },
+                child: const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18.0,
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -728,7 +822,11 @@ class _PurchaseRequestReusableViewState
         _selectedRequestingOfficerPosition.value = null;
       },
       controller: _requestingOfficerOfficeController,
-      label: 'Office',
+      label: 'Requesting Officer Office',
+      placeHolderText: 'Enter requesting officer\'s office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -758,7 +856,11 @@ class _PurchaseRequestReusableViewState
         _selectedApprovingOfficerPosition.value = null;
       },
       controller: _approvingOfficerOfficeController,
-      label: 'Office',
+      label: 'Approving Officer Office',
+      placeHolderText: 'Enter approving officer\'s office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -791,7 +893,11 @@ class _PurchaseRequestReusableViewState
             _selectedRequestingOfficerPosition.value = value;
           },
           controller: _requestingOfficerPositionController,
-          label: 'Position',
+          label: 'Requesting Officer Position',
+          placeHolderText: 'Enter requesting officer\'s position',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -826,7 +932,11 @@ class _PurchaseRequestReusableViewState
             _selectedApprovingOfficerPosition.value = value;
           },
           controller: _approvingOfficerPositionController,
-          label: 'Position',
+          label: 'Approving Officer Position',
+          placeHolderText: 'Enter approving officer\'s position',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -861,7 +971,11 @@ class _PurchaseRequestReusableViewState
                 _requestingOfficerNameController.text = value;
               },
               controller: _requestingOfficerNameController,
-              label: 'Full Name',
+              label: 'Requesting Officer Name',
+              placeHolderText: 'Enter requesting officer\'s name',
+              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                  ? AppColor.lightCustomTextBox
+                  : AppColor.darkCustomTextBox),
             );
           },
         );
@@ -898,7 +1012,11 @@ class _PurchaseRequestReusableViewState
                 _approvingOfficerNameController.text = value;
               },
               controller: _approvingOfficerNameController,
-              label: 'Full Name',
+              label: 'Approving Officer Name',
+              placeHolderText: 'Enter approving officer\'s name',
+              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                  ? AppColor.lightCustomTextBox
+                  : AppColor.darkCustomTextBox),
             );
           },
         );
@@ -913,8 +1031,8 @@ class _PurchaseRequestReusableViewState
         CustomOutlineButton(
           onTap: () => context.pop(),
           text: 'Cancel',
-          width: 130.0,
-          height: 50.0,
+          width: 180.0,
+          height: 40.0,
         ),
         const SizedBox(
           width: 10.0,
@@ -924,8 +1042,8 @@ class _PurchaseRequestReusableViewState
             _savePurchaseRequest();
           },
           text: 'Save',
-          width: 130.0,
-          height: 50.0,
+          width: 180.0,
+          height: 40.0,
         ),
       ],
     );

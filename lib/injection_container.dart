@@ -57,6 +57,15 @@ import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_suggestions/item_suggestions_bloc.dart';
 
 // Navigation
+import 'features/item_issuance/data/data_sources/remote/issuance_remote_data_source.dart';
+import 'features/item_issuance/data/data_sources/remote/issuance_remote_data_source_impl.dart';
+import 'features/item_issuance/data/repository/issuance_repository_impl.dart';
+import 'features/item_issuance/domain/repository/issuance_repository.dart';
+import 'features/item_issuance/domain/usecases/create_ics.dart';
+import 'features/item_issuance/domain/usecases/create_par.dart';
+import 'features/item_issuance/domain/usecases/get_paginated_issuances.dart';
+import 'features/item_issuance/domain/usecases/match_item_with_pr.dart';
+import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
 import 'features/navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
 
 // Officers Management
@@ -105,6 +114,7 @@ Future<void> initializeDependencies() async {
   _registerDashboardDependencies();
   _registerItemInventoryDependencies();
   _registerPurchaseRequestsDependencies();
+  _registerItemIssuanceDependencies();
   _registerUsersManagementDependencies();
   _registerOfficersManagementDependencies();
   _registerArchiveManagementDependencies();
@@ -251,6 +261,7 @@ void _registerItemInventoryDependencies() {
   );
 }
 
+/// Purchase Request
 void _registerPurchaseRequestsDependencies() {
   serviceLocator.registerFactory<PurchaseRequestRemoteDataSource>(
     () => PurchaseRequestRemoteDataSourceImpl(httpService: serviceLocator()),
@@ -274,6 +285,42 @@ void _registerPurchaseRequestsDependencies() {
     () => PurchaseRequestsBloc(
       getPaginatedPurchaseRequests: serviceLocator(),
       registerPurchaseRequest: serviceLocator(),
+    ),
+  );
+}
+
+/// Item Issuance
+void _registerItemIssuanceDependencies() {
+  serviceLocator.registerFactory<IssuanceRemoteDataSource>(
+    () => IssuanceRemoteDataSourceImpl(httpService: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<IssuanceRepository>(
+    () => IssuanceRepositoryImpl(issuanceRemoteDataSource: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<GetPaginatedIssuances>(
+    () => GetPaginatedIssuances(issuanceRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<MatchItemWithPr>(
+        () => MatchItemWithPr(issuanceRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<CreateICS>(
+        () => CreateICS(issuanceRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<CreatePAR>(
+        () => CreatePAR(issuanceRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<IssuancesBloc>(
+    () => IssuancesBloc(
+      getPaginatedIssuances: serviceLocator(),
+      matchItemWithPr: serviceLocator(),
+      createICS: serviceLocator(),
+      createPAR: serviceLocator(),
     ),
   );
 }

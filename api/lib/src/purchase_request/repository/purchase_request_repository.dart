@@ -13,7 +13,7 @@ class PurchaseRequestRepository {
     final now = DateTime.now();
     final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
-    print('curr ym - $yearMonth');
+    print('Current year-month: $yearMonth');
 
     final result = await _conn.execute(
       Sql.named(
@@ -31,15 +31,16 @@ class PurchaseRequestRepository {
 
     int? n; // represent the no. of record
     if (result.isNotEmpty) {
-      n = int.parse(result.first[0]
-          .toString()
-          .split('-')
-          .last) + 1;
+      n = int.parse(result.first[0].toString().split('-').last) + 1;
     } else {
       n = 1;
     }
 
-    return '$yearMonth-$n';
+    // pad left adds leading zeros if n has fewer than 3 digits
+    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+
+    print('Generated ID: $uniqueId');
+    return uniqueId;
   }
 
   Future<String> registerPurchaseRequest({
@@ -81,19 +82,13 @@ class PurchaseRequestRepository {
         parameters: {
           'id': prId,
           'entity_id': entityId,
-          'fund_cluster': fundCluster
-              .toString()
-              .split('.')
-              .last,
+          'fund_cluster': fundCluster.toString().split('.').last,
           'office_id': officeId,
           'responsibility_center_code': responsibilityCenterCode,
           'date': date,
           'product_name_id': productNameId,
           'product_description_id': productDescriptionId,
-          'unit': unit
-              .toString()
-              .split('.')
-              .last,
+          'unit': unit.toString().split('.').last,
           'quantity': quantity,
           'unit_cost': unitCost,
           'total_cost': unitCost * quantity,
@@ -107,14 +102,35 @@ class PurchaseRequestRepository {
 
       return prId;
     } catch (e) {
+      print('err reg pr: $e');
       throw Exception('Error registering pr: $e');
     }
+  }
+
+  Future<int> getReceivingOfficerPurchaseRequestsCountBasedOnStatus({
+    required String receivingOfficerId,
+    required PurchaseRequestStatus status,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT COUNT(*) FROM PurchaseRequests 
+        WHERE requesting_officer_id = @requesting_officer_id
+        AND status = @status;
+        ''',
+      ),
+      parameters: {
+        'requesting_officer_id': receivingOfficerId,
+        'status': status.toString().split('.').last,
+      },
+    );
+
+    return result.first[0] as int;
   }
 
   Future<PurchaseRequest?> getPurchaseRequestById({
     required String id,
   }) async {
-    // todo: I need to re-check this one because it doesn't return the officers' ids
     final result = await _conn.execute(
       Sql.named(
         '''
@@ -183,7 +199,7 @@ class PurchaseRequestRepository {
         LEFT JOIN
           Offices app_ofc ON app_pos.office_id = app_ofc.id
         WHERE
-          pr.id = @pr_id;
+          pr.id LIKE @pr_id;
         ''',
       ),
       parameters: {
@@ -235,6 +251,7 @@ class PurchaseRequestRepository {
 
   Future<int> getPurchaseRequestsFilteredCount({
     String? prId,
+    String? receivingOfficerId,
     double? unitCost,
     DateTime? date,
     PurchaseRequestStatus? prStatus,
@@ -288,8 +305,14 @@ class PurchaseRequestRepository {
 
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.id = @pr_id');
+        whereClause.write('pr.id ILIKE @pr_id');
         params['pr_id'] = '%$prId%';
+      }
+
+      if (receivingOfficerId != null && receivingOfficerId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('pr.receiving_officer_id LIKE @receiving_officer_id');
+        params['receiving_officer_id'] = '$receivingOfficerId';
       }
 
       if (unitCost != null) {
@@ -308,19 +331,19 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
 
         if (prStatus == PurchaseRequestStatus.cancelled) {
-          whereClause.write('pr.status = cancelled');
+          whereClause.write('pr.status = \'cancelled\'');
         }
 
         if (prStatus == PurchaseRequestStatus.pending) {
-          whereClause.write('pr.status = pending');
+          whereClause.write('pr.status = \'pending\'');
         }
 
         if (prStatus == PurchaseRequestStatus.partiallyFulfilled) {
-          whereClause.write('pr.status = partiallyFulfilled');
+          whereClause.write('pr.status = \'partiallyFulfilled\'');
         }
 
         if (prStatus == PurchaseRequestStatus.fulfilled) {
-          whereClause.write('pr.status = fulfilled');
+          whereClause.write('pr.status = \'fulfilled\'');
         }
       }
 
@@ -352,6 +375,7 @@ class PurchaseRequestRepository {
     required int page,
     required int pageSize,
     String? prId,
+    String? receivingOfficerId,
     double? unitCost,
     DateTime? date,
     PurchaseRequestStatus? prStatus,
@@ -433,8 +457,14 @@ class PurchaseRequestRepository {
 
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.id = @pr_id');
+        whereClause.write('pr.id ILIKE @pr_id');
         params['pr_id'] = '%$prId%';
+      }
+
+      if (receivingOfficerId != null && receivingOfficerId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('pr.receiving_officer_id LIKE @receiving_officer_id');
+        params['receiving_officer_id'] = '$receivingOfficerId';
       }
 
       if (unitCost != null) {
@@ -453,19 +483,19 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
 
         if (prStatus == PurchaseRequestStatus.cancelled) {
-          whereClause.write('pr.status = cancelled');
+          whereClause.write('pr.status = \'cancelled\'');
         }
 
         if (prStatus == PurchaseRequestStatus.pending) {
-          whereClause.write('pr.status = pending');
+          whereClause.write('pr.status = \'pending\'');
         }
 
         if (prStatus == PurchaseRequestStatus.partiallyFulfilled) {
-          whereClause.write('pr.status = partiallyFulfilled');
+          whereClause.write('pr.status = \'partiallyFulfilled\'');
         }
 
         if (prStatus == PurchaseRequestStatus.fulfilled) {
-          whereClause.write('pr.status = fulfilled');
+          whereClause.write('pr.status = \'fulfilled\'');
         }
       }
 
@@ -547,10 +577,10 @@ class PurchaseRequestRepository {
       SELECT COUNT(id) FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer();
+      final whereClause = StringBuffer('WHERE status != \'fulfilled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('id ZXZDXSA ;LFG?         WSSSSLIKE @id');
+        whereClause.write('id LIKE @id');
         params['id'] = '%$prId%';
       }
 
@@ -601,7 +631,7 @@ class PurchaseRequestRepository {
       SELECT id FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer();
+      final whereClause = StringBuffer('WHERE status != \'fulfilled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('id LIKE @id');

@@ -23,6 +23,7 @@ class CustomFormTextField extends StatefulWidget {
     this.enabled,
     this.isNumeric = false,
     this.isCurrency = false,
+    this.fillColor,
   });
 
   final TextEditingController? controller;
@@ -38,6 +39,7 @@ class CustomFormTextField extends StatefulWidget {
   final bool? enabled;
   final bool isNumeric;
   final bool isCurrency;
+  final Color? fillColor;
 
   @override
   State<CustomFormTextField> createState() => _CustomFormTextFieldState();
@@ -94,9 +96,17 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               filled: true,
-              fillColor: context.watch<ThemeBloc>().state == AppTheme.light
+              fillColor: widget.fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
                   ? AppColor.lightBackground
-                  : AppColor.darkBackground,
+                  : AppColor.darkBackground),
+              disabledBorder: OutlineInputBorder(
+                borderSide: BorderSide.none,
+                // borderSide: BorderSide(
+                //   color: Theme.of(context).dividerColor,
+                //   width: 1.5,
+                // ),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide.none,
                 // borderSide: BorderSide(

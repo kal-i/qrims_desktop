@@ -28,6 +28,7 @@ Future<Response> _matchPrItemWithInventory(
   final purchaseRequest = await prRepository.getPurchaseRequestById(
     id: prId,
   );
+  print(purchaseRequest);
 
   final items = await issuanceRepository.matchingItemFromPurchaseRequest(
     purchaseRequestId: prId,

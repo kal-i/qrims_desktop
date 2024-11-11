@@ -36,7 +36,7 @@ class PurchaseRequestRemoteDataSourceImpl
         if (prId != null && prId.isNotEmpty) 'pr_id': prId,
         if (unitCost != null) 'unit_cost': unitCost,
         if (date != null) 'date': date,
-        if (prStatus != null) 'pr_status': prStatus,
+        if (prStatus != null) 'pr_status': prStatus.toString().split('.').last,
         if (isArchived != null) 'is_archived': isArchived,
       };
 

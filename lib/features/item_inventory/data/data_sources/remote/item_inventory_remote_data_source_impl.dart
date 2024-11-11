@@ -56,6 +56,8 @@ class ItemInventoryRemoteDataSourceImpl
           'asset_sub_class': subClassFilter.toString().split('.').last,
       };
 
+      print(queryParams);
+
       final response = await httpService.get(
         endpoint: itemsEP,
         queryParams: queryParams,

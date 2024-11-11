@@ -20,6 +20,7 @@ class CustomSearchField extends StatelessWidget {
     this.maxLines = 1,
     this.enabled,
     this.scrollController,
+    this.fillColor,
   });
 
   final FutureOr<List<String>?> Function(String) suggestionsCallback;
@@ -30,6 +31,7 @@ class CustomSearchField extends StatelessWidget {
   final int? maxLines;
   final bool? enabled;
   final ScrollController? scrollController;
+  final Color? fillColor;
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +59,17 @@ class CustomSearchField extends StatelessWidget {
               focusNode: focusNode,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: context.watch<ThemeBloc>().state == AppTheme.light
+                fillColor: fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightBackground
-                    : AppColor.darkBackground,
+                    : AppColor.darkBackground),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  // borderSide: BorderSide(
+                  //   color: Theme.of(context).dividerColor,
+                  //   width: 1.5,
+                  // ),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide.none,
                   // borderSide: BorderSide(

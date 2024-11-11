@@ -93,9 +93,13 @@ class PurchaseRequestsBloc
           message: l.message,
         ),
       ),
-      (r) => PurchaseRequestRegistered(
-        purchaseRequest: r,
-      ),
+      (r) {
+        emit(
+          PurchaseRequestRegistered(
+            purchaseRequest: r,
+          ),
+        );
+      },
     );
   }
 }

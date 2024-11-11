@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/enums/issuance_purpose.dart';
+import '../../core/enums/issuance_type.dart';
 import '../../core/enums/verification_purpose.dart';
 
 import '../../features/archive/presentation/views/archive_users_view.dart';
@@ -17,6 +18,7 @@ import '../../features/item_inventory/presentation/views/item_inventory_view.dar
 import '../../features/item_inventory/presentation/views/reusable_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
+import '../../features/item_issuance/presentation/views/view_issuance_information.dart';
 import '../../features/navigation/presentation/views/navigation_view.dart';
 import '../../features/officer/presentation/views/officers_management_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_reusable_view.dart';
@@ -219,12 +221,29 @@ class AppRoutingConfig {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
                   final purpose = extras['purpose'] as IssuancePurpose;
+                  final type = extras['type'] as IssuanceType;
                   final prId = extras['pr_id'] as String;
 
                   return MaterialPage(
                     child: ReusableItemIssuanceView(
                       issuancePurpose: purpose,
+                      issuanceType: type,
                       prId: prId,
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.viewItemIssuanceRouteName,
+                path: RoutingConstants.viewItemIssuanceRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final issuanceId = extras['issuance_id'] as String;
+
+                  return MaterialPage(
+                    child: ViewIssuanceInformation(
+                      issuanceId: issuanceId,
                     ),
                   );
                 },
@@ -316,7 +335,7 @@ class RouteChangeManager {
       '/purchaseRequest': 'Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',
       '/itemIssuance': 'Item Issuance Management',
-      RoutingConstants.nestedRegisterItemIssuanceViewRouteName: 'Register Item Issuance',
+      '/itemIssuance/registerItemIssuance': 'Create Issuance',
       '/usersManagement': 'User Management',
       '/officersManagement': 'Officers Management',
       '/archiveUserView': 'Archive Management',

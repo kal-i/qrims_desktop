@@ -80,7 +80,7 @@ class NotificationRepository {
     final results = await _conn.execute(
       Sql.named(
         '''
-        SELECT * Notifications
+        SELECT * FROM Notifications
         WHERE recipient_id = @recipient_id
         ORDER BY created_at DESC;
         ''',
@@ -89,6 +89,8 @@ class NotificationRepository {
         'recipient_id': recipientId,
       },
     );
+
+    print(results);
 
     if (results.isNotEmpty) {
       for (final row in results) {

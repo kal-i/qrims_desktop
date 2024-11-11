@@ -48,6 +48,7 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../injection_container.dart';
 import '../bloc/item_inventory_bloc.dart';
+import '../components/filter_item_modal.dart';
 
 class ItemInventoryView extends StatefulWidget {
   const ItemInventoryView({super.key});
@@ -58,17 +59,12 @@ class ItemInventoryView extends StatefulWidget {
 
 class _ItemInventoryViewState extends State<ItemInventoryView> {
   late ItemInventoryBloc _itemInventoryBloc;
-  late ItemSuggestionsService _itemSuggestionsService;
   late String _selectedSortValue = 'acquired_date';
+
+  late String? _selectedManufacturer;
+  late String? _selectedBrand;
   late AssetClassification? _selectedClassificationFilter;
   late AssetSubClass? _selectedSubClassFilter;
-
-  final _manufacturerController = TextEditingController();
-  final _brandController = TextEditingController();
-  final _assetClassificationController = TextEditingController();
-  final _assetSubClassController = TextEditingController();
-
-  final ValueNotifier<String?> _selectedManufacturer = ValueNotifier(null);
 
   final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
   final ValueNotifier<String> _selectedFilterNotifier =
@@ -102,17 +98,16 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   ];
   late List<TableData> _tableRows = [];
 
-  final ValueNotifier<bool> _isFilterModalVisible = ValueNotifier(false);
-  final ValueNotifier<bool> _isSortModalVisible = ValueNotifier(false);
-
   @override
   void initState() {
     super.initState();
     _itemInventoryBloc = context.read<ItemInventoryBloc>();
-    _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
 
+    _selectedManufacturer = null;
+    _selectedBrand = null;
     _selectedClassificationFilter = null;
     _selectedSubClassFilter = null;
+
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_onFilterChanged);
     _initializeTableConfig();
@@ -136,8 +131,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         filter: _selectedFilterNotifier.value,
         sortBy: _selectedSortValue,
         sortAscending: _selectedSortOrder.value == 'Ascending',
-        manufacturerName: _manufacturerController.text,
-        brandName: _brandController.text,
+        manufacturerName: _selectedManufacturer,
+        brandName: _selectedBrand,
         classificationFilter: _selectedClassificationFilter,
         subClassFilter: _selectedSubClassFilter,
       ),
@@ -147,14 +142,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   void _refreshItemList() {
     _searchController.clear();
     _currentPage = 1;
+
+    _selectedManufacturer = null;
+    _selectedBrand = null;
     _selectedClassificationFilter = null;
     _selectedSubClassFilter = null;
-
-    _selectedManufacturer.value = null;
-    _manufacturerController.clear();
-    _brandController.clear();
-    _assetClassificationController.clear();
-    _assetSubClassController.clear();
 
     _selectedFilterNotifier.value = 'in_stock';
     _selectedSortValue = '';
@@ -176,53 +168,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     });
   }
 
-  List<String> _assetClassificationSuggestionCallback(
-      String? assetClassification) {
-    final assetClassifications = AssetClassification.values
-        .map((classification) => readableEnumConverter(classification))
-        .toList();
-
-    if (assetClassification != null && assetClassification.isNotEmpty) {
-      final filteredClassifications =
-          assetClassifications.where((classification) {
-        return classification
-            .toLowerCase()
-            .contains(assetClassification.toLowerCase());
-      }).toList();
-
-      return filteredClassifications;
-    }
-    return assetClassifications;
-  }
-
-  List<String> _assetSubClassSuggestionCallback(String? assetSubClass) {
-    final assetSubClasses = AssetSubClass.values
-        .map((subClass) => readableEnumConverter(subClass))
-        .toList();
-
-    if (assetSubClass != null && assetSubClass.isNotEmpty) {
-      final filteredSubClass = assetSubClasses.where((subClass) {
-        return subClass.toLowerCase().contains(assetSubClass.toLowerCase());
-      }).toList();
-
-      return filteredSubClass;
-    }
-    return assetSubClasses;
-  }
-
-  void _onAssetClassificationSelected(String value) {
-    _assetClassificationController.text = value;
-    _selectedClassificationFilter = AssetClassification.values.firstWhere(
-        (assetClassification) =>
-            readableEnumConverter(assetClassification) == value);
-  }
-
-  void _onAssetSubClassSelected(String value) {
-    _assetSubClassController.text = value;
-    _selectedSubClassFilter = AssetSubClass.values.firstWhere(
-        (assetSubClass) => readableEnumConverter(assetSubClass) == value);
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -230,40 +175,32 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _selectedSortOrder.dispose();
     _selectedFilterNotifier.dispose();
     _totalItemsCount.dispose();
-
-    _isFilterModalVisible.dispose();
-    _isSortModalVisible.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(
-              height: 20.0,
-            ),
-            _buildHeaderRow(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            _buildSummaryRow(),
-            const SizedBox(
-              height: 40.0,
-            ),
-            _buildTableRelatedActionsRow(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            Expanded(
-              child: _buildDataTable(),
-            ),
-          ],
+        const SizedBox(
+          height: 20.0,
         ),
-        _buildFilterModal(),
+        _buildHeaderRow(),
+        const SizedBox(
+          height: 20.0,
+        ),
+        _buildSummaryRow(),
+        const SizedBox(
+          height: 40.0,
+        ),
+        _buildTableRelatedActionsRow(),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Expanded(
+          child: _buildDataTable(),
+        ),
       ],
     );
   }
@@ -372,11 +309,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
             const SizedBox(
               width: 10.0,
             ),
-            _buildSortButton(),
+            _buildFilterButton(),
             const SizedBox(
               width: 10.0,
             ),
-            _buildFilterButton(),
+            _buildSortButton(),
           ],
         ),
       ],
@@ -425,7 +362,24 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   Widget _buildFilterButton() {
     return CustomIconButton(
       tooltip: 'Filter',
-      onTap: () => _isFilterModalVisible.value = true,
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => FilterItemModal(
+          onApplyFilters:
+              (String? manufacturer, String? brand, AssetClassification? classification, AssetSubClass? subClass) {
+            _selectedManufacturer = manufacturer;
+            _selectedBrand = brand;
+            _selectedClassificationFilter = classification;
+            _selectedSubClassFilter = subClass;
+            print('selected: $manufacturer-$brand');
+            _fetchItems();
+          },
+          selectedManufacturer: _selectedManufacturer,
+          selectedBrand: _selectedBrand,
+          selectedClassificationFilter: _selectedClassificationFilter,
+          selectedSubClassFilter: _selectedSubClassFilter,
+        ),
+      ),
       isOutlined: true,
       icon: FluentIcons.filter_add_20_regular,
     );
@@ -434,112 +388,10 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   Widget _buildSortButton() {
     return CustomIconButton(
       tooltip: 'Sort',
-      onTap: () => _isSortModalVisible.value = true,
+      onTap: () {}, // _isSortModalVisible.value = true,
       isOutlined: true,
       icon: FluentIcons.text_sort_ascending_20_regular,
     );
-  }
-
-  // Widget _buildSortButton() {
-  //   return ValueListenableBuilder(
-  //       valueListenable: _selectedSortOrder,
-  //       builder: (BuildContext context, String value, Widget? child) {
-  //         return ReusablePopupMenuButton(
-  //           onSelected: _onSortSelected,
-  //           tooltip: 'Sort',
-  //           icon: const CustomIconButton(
-  //             icon: FluentIcons.text_sort_ascending_20_regular,
-  //             isOutlined: true,
-  //           ),
-  //           popupMenuItems: _buildSortMenuItems(),
-  //         );
-  //       });
-  // }
-
-  List<PopupMenuEntry<String>> _buildSortMenuItems() {
-    return [
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        title: 'Sort by:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-          context: context,
-          value: 'id',
-          title: 'Item Id',
-          icon: Icons.discount_outlined),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'quantity',
-        title: 'Quantity',
-        icon: CupertinoIcons.cube_box,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'unit_cost',
-        title: 'Unit Cost',
-        icon: CupertinoIcons.money_dollar_circle,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'estimated_useful_life',
-        title: 'Estimated Useful Life',
-        icon: CupertinoIcons.heart,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        value: 'acquired_date',
-        title: 'Acquired Date',
-        icon: CupertinoIcons.calendar,
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        title: 'Sort order:',
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        leading: RadioMenuButton<String>(
-          value: 'Ascending',
-          groupValue: _selectedSortOrder.value,
-          onChanged: (value) {
-            if (value != null) {
-              _selectedSortOrder.value = value;
-              _fetchItems();
-              // todo: temp sol is to close after picking a sort order val since ui changes do not reflect
-              context.pop();
-            }
-          },
-          child: Text(
-            'Ascending',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ), // widget instead
-      ),
-      ReusablePopupMenuButton.reusableListTilePopupMenuItem(
-        context: context,
-        leading: RadioMenuButton(
-          value: 'Descending',
-          groupValue: _selectedSortOrder.value,
-          onChanged: (value) {
-            if (value != null) {
-              _selectedSortOrder.value = value;
-              _fetchItems();
-              context.pop();
-            }
-          },
-          child: Text(
-            'Descending',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ),
-    ];
-  }
-
-  void _onSortSelected(String? value) {
-    if (value != null && value.isNotEmpty) {
-      _selectedSortValue = value;
-      _fetchItems();
-    }
   }
 
   Widget _buildDataTable() {
@@ -582,49 +434,49 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                         capitalizeWord(
                             item.productStockEntity.productName.name),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       Text(
                         item.productStockEntity.productDescription
                                 ?.description ??
                             '',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.manufacturerBrandEntity.manufacturer.name,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         item.manufacturerBrandEntity.brand.name,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.modelEntity.modelName,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         item.itemEntity.quantity.toString(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       Text(
                         item.itemEntity.unitCost.toString(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       SizedBox(
                         width: 50.0,
@@ -740,226 +592,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   Widget _buildStatusHighlighter(int quantity) {
     return HighlightStatusContainer(
       statusStyle: _quantityStatusStyler(quantity: quantity),
-    );
-  }
-
-  Widget _buildItemManufacturersSuggestionField() {
-    return CustomSearchBox(
-      suggestionsCallback: (manufacturerName) async {
-        final manufacturerNames = await _itemSuggestionsService
-            .fetchManufacturers(manufacturerName: manufacturerName);
-
-        if (manufacturerNames == []) {
-          _brandController.clear();
-          _selectedManufacturer.value = '';
-        }
-
-        return manufacturerNames;
-      },
-      onSelected: (value) {
-        _manufacturerController.text = value;
-        _brandController.clear();
-        _selectedManufacturer.value = value;
-      },
-      controller: _manufacturerController,
-      label: 'Manufacturer',
-    );
-  }
-
-  Widget _buildItemBrandsSuggestionField() {
-    return ValueListenableBuilder(
-      valueListenable: _selectedManufacturer,
-      builder: (context, selectedManufacturer, child) {
-        return CustomSearchBox(
-          key: ValueKey(selectedManufacturer),
-          suggestionsCallback: (brandName) async {
-            if (selectedManufacturer != null &&
-                selectedManufacturer.isNotEmpty) {
-              final brandNames = await _itemSuggestionsService.fetchBrands(
-                  manufacturerName: selectedManufacturer, brandName: brandName);
-
-              return brandNames;
-            } else {
-              return Future.value([]);
-            }
-          },
-          onSelected: (value) {
-            _brandController.text = value;
-          },
-          controller: _brandController,
-          label: 'Brand',
-        );
-      },
-    );
-  }
-
-  Widget _buildAssetClassificationsSuggestionField() {
-    return CustomSearchBox(
-      suggestionsCallback: _assetClassificationSuggestionCallback,
-      onSelected: _onAssetClassificationSelected,
-      controller: _assetClassificationController,
-      label: 'Asset Classification',
-    );
-  }
-
-  Widget _buildAssetSubClassesSuggestionField() {
-    return CustomSearchBox(
-      suggestionsCallback: _assetSubClassSuggestionCallback,
-      onSelected: _onAssetSubClassSelected,
-      controller: _assetSubClassController,
-      label: 'Asset Sub Class',
-    );
-  }
-
-  Widget _buildFilterModal() {
-    return ValueListenableBuilder(
-      valueListenable: _isFilterModalVisible,
-      builder: (context, isModalVisible, child) {
-        return SlideableContainer(
-          width: 400.0,
-          content: isModalVisible
-              ? _buildFilterModalContent()
-              : const SizedBox.shrink(),
-          isVisible: isModalVisible,
-          onClose: () {
-            _isFilterModalVisible.value = false;
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterModalContent() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-            color: (context.watch<ThemeBloc>().state == AppTheme.light
-                ? AppColor.lightSecondary
-                : AppColor.darkSecondary),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Filter Items',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Icon(
-                HugeIcons.strokeRoundedCancel01,
-                size: 16.0,
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // const Text(
-                //   'Manufacturer',
-                //   style: TextStyle(
-                //     fontFamily: 'Inter',
-                //     fontSize: 12.0,
-                //     fontWeight: FontWeight.w500,
-                //   ),
-                // ),
-                // const SizedBox(
-                //   height: 5.0,
-                // ),
-                _buildItemManufacturersSuggestionField(),
-                // const SizedBox(
-                //   height: 20.0,
-                // ),
-                // const Text(
-                //   'Brand',
-                //   style: TextStyle(
-                //     fontFamily: 'Inter',
-                //     fontSize: 12.0,
-                //     fontWeight: FontWeight.w500,
-                //   ),
-                // ),
-                const SizedBox(
-                  height: 5.0,
-                ),
-                _buildItemBrandsSuggestionField(),
-                const SizedBox(
-                  height: 20.0,
-                ),
-                const Text(
-                  'Asset Classification',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(
-                  height: 5.0,
-                ),
-                _buildAssetClassificationsSuggestionField(),
-                const SizedBox(
-                  height: 20.0,
-                ),
-                const Text(
-                  'Asset Sub Class',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(
-                  height: 5.0,
-                ),
-                _buildAssetSubClassesSuggestionField(),
-              ],
-            ),
-          ),
-        ),
-        _modalActionsRow(),
-      ],
-    );
-  }
-
-  Widget _modalActionsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Expanded(
-            child: CustomOutlineButton(
-              onTap: () {
-                _isFilterModalVisible.value = false;
-              },
-              height: 40.0,
-              text: 'Cancel',
-            ),
-          ),
-          const SizedBox(
-            width: 15.0,
-          ),
-          Expanded(
-            child: CustomFilledButton(
-              onTap: () {
-                _fetchItems();
-                _isFilterModalVisible.value = false;
-              },
-              height: 40.0,
-              text: 'Apply',
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
