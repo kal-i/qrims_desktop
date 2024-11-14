@@ -251,10 +251,11 @@ class PurchaseRequestRepository {
 
   Future<int> getPurchaseRequestsFilteredCount({
     String? prId,
-    String? receivingOfficerId,
+    String? requestingOfficerId,
     double? unitCost,
     DateTime? date,
     PurchaseRequestStatus? prStatus,
+    String? filter,
     bool isArchived = false,
   }) async {
     try {
@@ -309,10 +310,10 @@ class PurchaseRequestRepository {
         params['pr_id'] = '%$prId%';
       }
 
-      if (receivingOfficerId != null && receivingOfficerId.isNotEmpty) {
+      if (requestingOfficerId != null && requestingOfficerId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.receiving_officer_id LIKE @receiving_officer_id');
-        params['receiving_officer_id'] = '$receivingOfficerId';
+        whereClause.write('pr.requesting_officer_id LIKE @requesting_officer_id');
+        params['requesting_officer_id'] = '$requestingOfficerId';
       }
 
       if (unitCost != null) {
@@ -344,6 +345,18 @@ class PurchaseRequestRepository {
 
         if (prStatus == PurchaseRequestStatus.fulfilled) {
           whereClause.write('pr.status = \'fulfilled\'');
+        }
+      }
+
+      if (filter != null && filter.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+
+        if (filter == 'ongoing') {
+          whereClause.write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
+        }
+
+        if (filter == 'history') {
+          whereClause.write('pr.status IN (\'fulfilled\', \'cancelled\')');
         }
       }
 
@@ -379,6 +392,7 @@ class PurchaseRequestRepository {
     double? unitCost,
     DateTime? date,
     PurchaseRequestStatus? prStatus,
+    String? filter,
     bool isArchived = false,
   }) async {
     try {
@@ -463,8 +477,8 @@ class PurchaseRequestRepository {
 
       if (receivingOfficerId != null && receivingOfficerId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.receiving_officer_id LIKE @receiving_officer_id');
-        params['receiving_officer_id'] = '$receivingOfficerId';
+        whereClause.write('pr.requesting_officer_id LIKE @requesting_officer_id');
+        params['requesting_officer_id'] = '$receivingOfficerId';
       }
 
       if (unitCost != null) {
@@ -499,6 +513,18 @@ class PurchaseRequestRepository {
         }
       }
 
+      if (filter != null && filter.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+
+        if (filter == 'ongoing') {
+          whereClause.write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
+        }
+
+        if (filter == 'history') {
+          whereClause.write('pr.status IN (\'fulfilled\', \'cancelled\')');
+        }
+      }
+
       params['is_archived'] = isArchived;
       params['page_size'] = pageSize;
       params['offset'] = offset;
@@ -510,6 +536,8 @@ class PurchaseRequestRepository {
         pr.date DESC
       LIMIT @page_size OFFSET @offset
       ''';
+
+      print(finalQuery);
 
       final results = await _conn.execute(
         Sql.named(

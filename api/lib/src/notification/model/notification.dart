@@ -18,7 +18,7 @@ class Notification extends Equatable {
   const Notification({
     required this.id,
     required this.recipientId,
-    required this.senderId,
+    required this.sender,
     required this.message,
     this.type,
     this.referenceId,
@@ -28,7 +28,7 @@ class Notification extends Equatable {
 
   final String id;
   final String recipientId;
-  final String senderId;
+  final User sender;
   final String message;
   final NotificationType? type;
   final String? referenceId;
@@ -36,14 +36,23 @@ class Notification extends Equatable {
   final DateTime? createdAt;
 
   factory Notification.fromJson(Map<String, dynamic> json) {
+    final senderMap = json['sender'] as Map<String, dynamic>;
+    User sender;
+
+    if (senderMap.containsKey('supp_dept_emp_id')) {
+      sender = SupplyDepartmentEmployee.fromJson(senderMap);
+    } else {
+      sender = MobileUser.fromJson(senderMap);
+    }
+
     final type = NotificationType.values.firstWhere(
-      (e) => e.toString().split('.').last == json['type'] as String,
+          (e) => e.toString().split('.').last == json['type'] as String,
     );
 
     return Notification(
       id: json['notification_id'] as String,
       recipientId: json['recipient_id'] as String,
-      senderId: json['sender_id'] as String,
+      sender: sender,
       message: json['message'] as String,
       type: type,
       referenceId: json['reference_id'] as String?,
@@ -58,7 +67,7 @@ class Notification extends Equatable {
     return {
       'notification_id': id,
       'recipient_id': recipientId,
-      'sender_id': senderId,
+      'sender': sender,
       'message': message,
       'type': type.toString().split('.').last,
       'reference_id': referenceId,
@@ -71,7 +80,7 @@ class Notification extends Equatable {
   List<Object?> get props => [
         id,
         recipientId,
-        senderId,
+        sender,
         message,
         type,
         referenceId,

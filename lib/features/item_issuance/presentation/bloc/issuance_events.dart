@@ -80,3 +80,11 @@ final class CreatePAREvent extends IssuancesEvent {
   final String sendingOfficerPosition;
   final String sendingOfficerName;
 }
+
+final class GetIssuanceByIdEvent extends IssuancesEvent {
+  const GetIssuanceByIdEvent({
+    required this.id,
+  });
+
+  final String id;
+}

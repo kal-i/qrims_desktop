@@ -5,6 +5,7 @@ import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
 import '../../models/inventory_custodian_slip.dart';
+import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
 import '../../models/paginated_issuance_result.dart';
 import '../../models/property_acknowledgement_receipt.dart';
@@ -96,12 +97,6 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   }
 
   @override
-  Future<InventoryCustodianSlipModel?> getIcsById({required String id}) {
-    // TODO: implement getIcsById
-    throw UnimplementedError();
-  }
-
-  @override
   Future<PaginatedIssuanceResultModel> getIssuances({
     required int page,
     required int pageSize,
@@ -147,13 +142,6 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   }
 
   @override
-  Future<PropertyAcknowledgementReceiptModel?> getParById(
-      {required String id}) {
-    // TODO: implement getParById
-    throw UnimplementedError();
-  }
-
-  @override
   Future<MatchedItemWithPrModel> matchItemWithPr({
     required String prId,
   }) async {
@@ -173,6 +161,29 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
       } else {
         throw const ServerException(
             'Failed to load match item with purchase request.');
+      }
+    } on DioException catch (e) {
+      final formattedError = formatDioError(e);
+      throw ServerException(formattedError);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<IssuanceModel?> getIssuanceById({
+    required String id,
+  }) async {
+    try {
+      final response = await httpService.get(
+        endpoint: '$issuancesIdEP/$id',
+      );
+
+      print('irds impl: $response');
+      if (response.statusCode == 200) {
+        return IssuanceModel.fromJson(response.data['issuance']);
+      } else {
+        throw const ServerException('Failed to load issuance.');
       }
     } on DioException catch (e) {
       final formattedError = formatDioError(e);

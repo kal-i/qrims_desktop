@@ -24,18 +24,33 @@ Future<Response> _getUserNotifications(
 ) async {
   try {
     final headers = await context.request.headers;
+    final queryParams = await context.request.uri.queryParameters;
+
     final bearerToken = headers['Authorization']?.substring(7) as String;
     final session = await sessionRepository.sessionFromToken(bearerToken);
     final recipientId = session!.userId;
 
+    final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
+    final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
+
     final notifications = await notificationRepository.getNotifications(
+      page: page,
+      pageSize: pageSize,
+      recipientId: recipientId,
+    );
+
+    final notificationsCount =
+        await notificationRepository.getNotificationsCount(
       recipientId: recipientId,
     );
 
     return Response.json(
       statusCode: 200,
       body: {
-        'notifications': notifications?.map((notification) => notification.toJson()).toList(),
+        'total_item_count': notificationsCount,
+        'notifications': notifications
+            ?.map((notification) => notification.toJson())
+            .toList(),
       },
     );
   } catch (e) {

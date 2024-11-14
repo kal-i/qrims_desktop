@@ -250,7 +250,7 @@ Future<Response> _registerPurchaseRequest(
     print('pr id: $purchaseRequestId');
 
     final recipientOfficer = await officerRepository.getOfficerById(
-      id: requestingOfficerId,
+      officerId: requestingOfficerId,
     );
     print('recipient officer: $recipientOfficer');
 

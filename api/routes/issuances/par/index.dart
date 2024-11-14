@@ -25,31 +25,31 @@ Future<Response> onRequest(RequestContext context) async {
 
   return switch (context.request.method) {
     HttpMethod.post => _createPAR(
-      context,
-      notifRepository,
-      issuanceRepository,
-      officeRepository,
-      officerRepository,
-      positionRepository,
-      prRepository,
-      userRepository,
-      sessionRepository,
-    ),
+        context,
+        notifRepository,
+        issuanceRepository,
+        officeRepository,
+        officerRepository,
+        positionRepository,
+        prRepository,
+        userRepository,
+        sessionRepository,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
 
 Future<Response> _createPAR(
-    RequestContext context,
-    NotificationRepository notifRepository,
-    IssuanceRepository issuanceRepository,
-    OfficeRepository officeRepository,
-    OfficerRepository officerRepository,
-    PositionRepository positionRepository,
-    PurchaseRequestRepository prRepository,
-    UserRepository userRepository,
-    SessionRepository sessionRepository,
-    ) async {
+  RequestContext context,
+  NotificationRepository notifRepository,
+  IssuanceRepository issuanceRepository,
+  OfficeRepository officeRepository,
+  OfficerRepository officerRepository,
+  PositionRepository positionRepository,
+  PurchaseRequestRepository prRepository,
+  UserRepository userRepository,
+  SessionRepository sessionRepository,
+) async {
   try {
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
@@ -62,13 +62,20 @@ Future<Response> _createPAR(
       id: responsibleUserId,
     );
 
-    final prId = json['pr_id'] as String;
+    final prId = json['pr_id'] as String?;
     final propertyNumber = json['property_number'] as String?;
-    final issuanceItems = json['issuance_items'] as List<dynamic>;
+    final issuanceItems = json['issuance_items'] as List<dynamic>?;
+
+    if (prId == null || issuanceItems == null) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {'message': 'Missing required fields: pr_id or issuance_items.'},
+      );
+    }
 
     final receivingOfficerOffice = json['receiving_officer_office'] as String;
     final receivingOfficerPosition =
-    json['receiving_officer_position'] as String;
+        json['receiving_officer_position'] as String;
     final receivingOfficerName = json['receiving_officer_name'] as String;
 
     final sendingOfficerOffice = json['sending_officer_office'] as String;
@@ -83,14 +90,14 @@ Future<Response> _createPAR(
       officeName: receivingOfficerOffice,
     );
     final receivingOfficerPositionId =
-    await positionRepository.checkIfPositionExist(
+        await positionRepository.checkIfPositionExist(
       officeId: receivingOfficerOfficeId,
       positionName: receivingOfficerPosition,
     );
     final receivingOfficerId = await officerRepository.checkOfficerIfExist(
-      name: receivingOfficerName,
-      positionId: receivingOfficerPositionId,
-    ) ??
+          name: receivingOfficerName,
+          positionId: receivingOfficerPositionId,
+        ) ??
         await officerRepository.registerOfficer(
           name: receivingOfficerName,
           positionId: receivingOfficerPositionId,
@@ -100,31 +107,38 @@ Future<Response> _createPAR(
       officeName: sendingOfficerOffice,
     );
     final sendingOfficerPositionId =
-    await positionRepository.checkIfPositionExist(
+        await positionRepository.checkIfPositionExist(
       officeId: sendingOfficerOfficeId,
       positionName: sendingOfficerPosition,
     );
     final sendingOfficerId = await officerRepository.checkOfficerIfExist(
-      name: sendingOfficerName,
-      positionId: sendingOfficerPositionId,
-    ) ??
+          name: sendingOfficerName,
+          positionId: sendingOfficerPositionId,
+        ) ??
         await officerRepository.registerOfficer(
           name: sendingOfficerName,
           positionId: sendingOfficerPositionId,
         );
 
     final recipientOfficer = await officerRepository.getOfficerById(
-      id: receivingOfficerId,
+      officerId: receivingOfficerId,
     );
 
-    final purchaseRequest = await prRepository.getPurchaseRequestById(
+    final initPurchaseRequestData = await prRepository.getPurchaseRequestById(
       id: prId,
     );
 
+    if (initPurchaseRequestData == null) {
+      return Response.json(
+        statusCode: HttpStatus.notFound,
+        body: {'message': 'Purchase request not found.'},
+      );
+    }
+
     final issuanceId = await issuanceRepository.createPAR(
       propertyNumber: propertyNumber,
-      purchaseRequestId: purchaseRequest!.id,
-      requestedQuantity: purchaseRequest.quantity,
+      purchaseRequestId: initPurchaseRequestData.id,
+      requestedQuantity: initPurchaseRequestData.quantity,
       issuanceItems: issuanceItems,
       receivingOfficerId: receivingOfficerId,
       sendingOfficerId: sendingOfficerId,
@@ -135,14 +149,25 @@ Future<Response> _createPAR(
       id: issuanceId,
     );
 
+    final postIssuancePurchaseRequestData =
+    await prRepository.getPurchaseRequestById(
+      id: prId,
+    );
+
+    int issuedQuantity = par?.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
+
+    String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
+        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${par?.parId}."
+        : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${par?.id}.";
+
+    /// reference will always refer to the pr id to build a tracking
     if (recipientOfficer?.userId != null) {
       await notifRepository.sendNotification(
         recipientId: recipientOfficer!.userId!,
         senderId: responsibleUserId,
-        message:
-        'Your purchase request #$prId is now issued with a tracking ID ${par?.parId}.',
+        message: message,
         type: NotificationType.issuanceCreated,
-        referenceId: par!.parId,
+        referenceId: prId,
       );
     }
 

@@ -38,19 +38,19 @@ class OfficerRepository {
       final officerId = await _generateUniqueOfficerId();
 
       //final nameExistResult = await _conn.execute(
-        //Sql.named(
-          //'''
-          //SELECT id FROM Users WHERE name ILIKE @name;
-         // ''',
-        //),
-        //parameters: {
-          //'name': name,
-        //},
+      //Sql.named(
+      //'''
+      //SELECT id FROM Users WHERE name ILIKE @name;
+      // ''',
+      //),
+      //parameters: {
+      //'name': name,
+      //},
       //);
 
       //String? userId;
       //if (nameExistResult.isNotEmpty) {
-        //userId = nameExistResult.first[0] as String;
+      //userId = nameExistResult.first[0] as String;
       //}
 
       await _conn.execute(
@@ -73,7 +73,7 @@ class OfficerRepository {
     }
   }
 
-  Future<String?>   checkOfficerIfExist({
+  Future<String?> checkOfficerIfExist({
     required String name,
     required String positionId,
   }) async {
@@ -98,49 +98,66 @@ class OfficerRepository {
   }
 
   Future<Officer?> getOfficerById({
-    required String id,
+    String? officerId,
+    String? userId,
   }) async {
     try {
+      final Map<String, dynamic> params = {};
+      final whereClause = StringBuffer();
+
+      final baseQuery = '''
+      SELECT 
+        Officers.id AS officer_id,
+        Officers.user_id AS user_id,
+        Officers.name AS officer_name,
+        Positions.id AS position_id,
+        -- Positions.office_id AS office_id,
+        Offices.name AS office_name,
+        Positions.position_name AS position_name,
+        Officers.is_archived AS is_archived
+      FROM 
+        Officers
+      JOIN 
+        Positions ON Officers.position_id = Positions.id
+      JOIN 
+        Offices ON Positions.office_id = Offices.id
+      ''';
+
+      if (officerId != null && officerId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('Officers.id = @officer_id');
+        params['officer_id'] = officerId;
+      }
+
+      if (userId != null && userId.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write('Officers.user_id = @user_id');
+        params['user_id'] = userId;
+      }
+
+      final finalQuery = '''
+      $baseQuery
+      $whereClause
+      ''';
+
       final result = await _conn.execute(
         Sql.named(
-          '''
-          SELECT 
-            Officers.id AS officer_id,
-            Officers.user_id AS user_id,
-            Officers.name AS officer_name,
-            Positions.id AS position_id,
-            -- Positions.office_id AS office_id,
-            Offices.name AS office_name,
-            Positions.position_name AS position_name,
-            Officers.is_archived AS is_archived
-          FROM 
-            Officers
-          JOIN 
-            Positions ON Officers.position_id = Positions.id
-          JOIN 
-            Offices ON Positions.office_id = Offices.id
-          WHERE 
-            Officers.id = @id;
-        ''',
+          finalQuery,
         ),
-        parameters: {
-          'id': id,
-        },
+        parameters: params,
       );
 
       if (result.isNotEmpty) {
-        for (final row in result) {
-          final officerMap = {
-            'id': row[0],
-            'user_id': row[1],
-            'name': row[2],
-            'position_id': row[3],
-            'office_name': row[4],
-            'position_name': row[5],
-            'is_archived': row[6],
-          };
-          return Officer.fromJson(officerMap);
-        }
+        final row = result.first;
+        return Officer.fromJson({
+          'id': row[0],
+          'user_id': row[1],
+          'name': row[2],
+          'position_id': row[3],
+          'office_name': row[4],
+          'position_name': row[5],
+          'is_archived': row[6],
+        });
       }
 
       return null;

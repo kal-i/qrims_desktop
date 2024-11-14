@@ -267,11 +267,11 @@ class IssuanceRepository {
       );
 
       final receivingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[4] as String,
+        officerId: row[4] as String,
       );
 
       final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[9] as String,
+        officerId: row[9] as String,
       );
 
       return InventoryCustodianSlip.fromJson({
@@ -328,11 +328,11 @@ class IssuanceRepository {
       );
 
       final receivingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[4] as String,
+        officerId: row[4] as String,
       );
 
       final sendingOfficer = await OfficerRepository(_conn).getOfficerById(
-        id: row[10] as String,
+        officerId: row[10] as String,
       );
 
       return PropertyAcknowledgementReceipt.fromJson({

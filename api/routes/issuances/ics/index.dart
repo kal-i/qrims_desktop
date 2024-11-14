@@ -62,8 +62,15 @@ Future<Response> _createICS(
       id: responsibleUserId,
     );
 
-    final prId = json['pr_id'] as String;
-    final issuanceItems = json['issuance_items'] as List<dynamic>;
+    final prId = json['pr_id'] as String?;
+    final issuanceItems = json['issuance_items'] as List<dynamic>?;
+
+    if (prId == null || issuanceItems == null) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {'message': 'Missing required fields: pr_id or issuance_items.'},
+      );
+    }
 
     final receivingOfficerOffice = json['receiving_officer_office'] as String;
     final receivingOfficerPosition =
@@ -113,16 +120,23 @@ Future<Response> _createICS(
         );
 
     final recipientOfficer = await officerRepository.getOfficerById(
-      id: receivingOfficerId,
+      officerId: receivingOfficerId,
     );
 
-    final purchaseRequest = await prRepository.getPurchaseRequestById(
+    final initPurchaseRequestData = await prRepository.getPurchaseRequestById(
       id: prId,
     );
 
+    if (initPurchaseRequestData == null) {
+      return Response.json(
+        statusCode: HttpStatus.notFound,
+        body: {'message': 'Purchase request not found.'},
+      );
+    }
+
     final issuanceId = await issuanceRepository.createICS(
-      purchaseRequestId: purchaseRequest!.id,
-      requestedQuantity: purchaseRequest.quantity,
+      purchaseRequestId: initPurchaseRequestData.id,
+      requestedQuantity: initPurchaseRequestData.quantity,
       issuanceItems: issuanceItems,
       receivingOfficerId: receivingOfficerId,
       sendingOfficerId: sendingOfficerId,
@@ -133,14 +147,28 @@ Future<Response> _createICS(
       id: issuanceId,
     );
 
+    final postIssuancePurchaseRequestData =
+        await prRepository.getPurchaseRequestById(
+      id: prId,
+    );
+
+    int issuedQuantity =
+        ics?.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
+
+    print('base ics id: ${ics?.id}');
+
+    String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
+        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${ics?.icsId}."
+        : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${ics?.id}.";
+
+    /// reference will always refer to the pr id to build a tracking
     if (recipientOfficer?.userId != null) {
       await notifRepository.sendNotification(
         recipientId: recipientOfficer!.userId!,
         senderId: responsibleUserId,
-        message:
-        'Your purchase request #$prId is now issued with a tracking ID ${ics?.icsId}.',
+        message: message,
         type: NotificationType.issuanceCreated,
-        referenceId: ics!.icsId,
+        referenceId: prId,
       );
     }
 

@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../config/routes/app_router.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/base_container.dart';
 import '../../../../core/common/components/custom_data_table.dart';
+import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/readable_enum_converter.dart';
+import '../../../officer/domain/entities/officer.dart';
+import '../../data/models/inventory_custodian_slip.dart';
+import '../../data/models/property_acknowledgement_receipt.dart';
+import '../../domain/entities/inventory_custodian_slip.dart';
+import '../../domain/entities/issuance.dart';
+import '../../domain/entities/issuance_item.dart';
+import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../bloc/issuances_bloc.dart';
 
 class ViewIssuanceInformation extends StatefulWidget {
@@ -23,7 +37,6 @@ class ViewIssuanceInformation extends StatefulWidget {
 
 class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
   late IssuancesBloc _issuancesBloc;
-  late String _issuanceId;
 
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
@@ -37,6 +50,12 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
+
+    _issuancesBloc.add(
+      GetIssuanceByIdEvent(
+        id: widget.issuanceId,
+      ),
+    );
 
     _tableRows = [];
     _initializeTableConfig();
@@ -61,63 +80,158 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: BlocBuilder<IssuancesBloc, IssuancesState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              if (state is IssuancesLoading) _buildLoadingStateView(),
+              if (state is IssuancesError)
+                CustomMessageBox.error(
+                  message: state.message,
+                ),
+              if (state is IssuanceLoaded)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 30.0,
+                      ),
+                      child: Column(
+                        children: [
+                          _buildIssuanceInformationContent(
+                            issuanceId: state.issuance.id,
+                            prId: state.issuance.purchaseRequestEntity.id,
+                            entity: state.issuance.purchaseRequestEntity.entity.name,
+                            fundCluster: state.issuance.purchaseRequestEntity.fundCluster,
+                            items: state.issuance.items,
+                            issuedDate: state.issuance.issuedDate,
+                            receivingOfficer: state.issuance.receivingOfficerEntity,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoadingStateView() {
+    return Center(
+      child: Column(
         children: [
-          // if (state is IssuancesLoading)
-          //   const ReusableLinearProgressIndicator(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                  vertical: 30.0,
+          const ReusableLinearProgressIndicator(),
+          Text(
+            'Fetching issuance information...',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w400,
                 ),
-                child: Column(
-                  //crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildIssuanceInformationContent(),
-                  ],
-                ),
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildIssuanceInformationContent() {
+  Widget _buildIssuanceInformationContent({
+    required String issuanceId,
+    // String? icsId,
+    // String? parId,
+    required String prId,
+    // String? propertyNumber,
+    required String entity,
+    required FundCluster fundCluster,
+    required DateTime issuedDate,
+    DateTime? returnDate,
+    List<IssuanceItemEntity>? items,
+    required OfficerEntity receivingOfficer,
+    //required OfficerEntity sendingOfficer,
+    //required bool isReceived,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeaderSection(),
+        _buildHeaderSection(
+          issuanceId: issuanceId,
+          // icsId: icsId,
+          // parId: parId,
+          prId: prId,
+          // propertyNumber: propertyNumber,
+          entity: entity,
+          fundCluster: fundCluster,
+          issuedDate: issuedDate,
+          returnDate: returnDate,
+        ),
         const SizedBox(
           height: 50.0,
         ),
-        SizedBox(height: 300.0,child: _buildIssuanceItemInformationSection()),
-         _buildAssociatedOfficersSection(),
+        SizedBox(
+          height: 300.0,
+          child: _buildIssuanceItemInformationSection(
+            items: items,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomOutlineButton(
+              onTap: () => context.pop(),
+              text: 'Back',
+              height: 40.0,
+              width: 160.0,
+            ),
+          ],
+        ),
+        //_buildAssociatedOfficersSection(),
       ],
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection({
+    required String issuanceId,
+    String? icsId,
+    String? parId,
+    required String prId,
+    String? propertyNumber,
+    required String entity,
+    required FundCluster fundCluster,
+    required DateTime issuedDate,
+    DateTime? returnDate,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        _buildInitialInformation(),
-        _buildQrContainer(),
+        _buildInitialInformation(
+          issuanceId: issuanceId,
+          icsId: icsId,
+          parId: parId,
+          prId: prId,
+          propertyNumber: propertyNumber,
+          entity: entity,
+          fundCluster: fundCluster,
+          issuedDate: issuedDate,
+          returnDate: returnDate,
+        ),
+        _buildQrContainer(
+          issuanceId: issuanceId,
+        ),
       ],
     );
   }
 
-  Widget _buildQrContainer() {
+  Widget _buildQrContainer({
+    required String issuanceId,
+  }) {
     return BaseContainer(
       width: 160.0,
       height: 160.0,
       padding: 5.0,
       child: QrImageView(
-        data: 'ISS-2024-11-001', // _issuanceId,
+        data: issuanceId,
         eyeStyle: const QrEyeStyle(
           eyeShape: QrEyeShape.circle,
           color: AppColor.darkPrimary,
@@ -130,64 +244,109 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
     );
   }
 
-  Widget _buildInitialInformation() {
+  Widget _buildInitialInformation({
+    required String issuanceId,
+    String? icsId,
+    String? parId,
+    required String prId,
+    String? propertyNumber,
+    required String entity,
+    required FundCluster fundCluster,
+    required DateTime issuedDate,
+    DateTime? returnDate,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _reusableRichText(
-          title: 'ICS No:',
-          value: 'SPHV-2024-11-001',
+          title: 'Issuance No: ',
+          value: issuanceId,
+        ),
+        if (icsId != null && icsId.isNotEmpty)
+          _reusableRichText(
+            title: 'ICS No:',
+            value: icsId,
+          ),
+        if (parId != null && parId.isNotEmpty)
+          _reusableRichText(
+            title: 'PAR No:',
+            value: parId,
+          ),
+        const SizedBox(
+          height: 15.0,
+        ),
+        _reusableRichText(
+          title: 'PR No: ',
+          value: prId,
         ),
         const SizedBox(
           height: 15.0,
         ),
         _reusableRichText(
-          title: 'Entity Name:',
-          value: 'SDO LEGAZPI CITY - OAsDS',
+          title: 'Entity Name: ',
+          value: entity,
         ),
         const SizedBox(
           height: 15.0,
         ),
         _reusableRichText(
-          title: 'Fund Cluster:',
-          value: 'DIVISION MOOE',
+          title: 'Fund Cluster: ',
+          value: readableEnumConverter(fundCluster),
         ),
+        const SizedBox(
+          height: 15.0,
+        ),
+        _reusableRichText(
+          title: 'Issued Date: ',
+          value: dateFormatter(issuedDate),
+        ),
+        const SizedBox(
+          height: 15.0,
+        ),
+        if (returnDate != null)
+          _reusableRichText(
+            title: 'Return Date: ',
+            value: dateFormatter(returnDate),
+          ),
       ],
     );
   }
 
-  Widget _buildIssuanceItemInformationSection() {
+  Widget _buildIssuanceItemInformationSection({
+    required List<IssuanceItemEntity>? items,
+  }) {
     return CustomDataTable(
       config: _tableConfig.copyWith(
-        rows: [
-          // will delete soon
-          TableData(
-            id: 'Laptop-2024-11-001(1)',
-            columns: [
-              Text(
-                'Laptop-2024-11-001(1)',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
+        rows: items
+            ?.map(
+              (issuedItem) => TableData(
+                id: issuedItem.itemEntity.itemEntity.id,
+                columns: [
+                  Text(
+                    issuedItem.itemEntity.itemEntity.id,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  Text(
+                    issuedItem.quantity.toString(),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  Text(
+                    issuedItem.itemEntity.itemEntity.unitCost.toString(),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
               ),
-              Text(
-                '1',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-              Text(
-                '60000.00',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ],
-          ),
-        ], // _tableRows,
+            )
+            .toList(),
       ),
     );
   }

@@ -32,7 +32,7 @@ Future<Response> _getPositionInformation(
     }
 
     final officer = await repository.getOfficerById(
-      id: id,
+      officerId: id,
     );
 
     if (officer == null) {

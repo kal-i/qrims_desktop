@@ -4,11 +4,6 @@ import 'package:api/src/notification/repository/notification_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
-// get notif
-// notif are returns, we will use the getUserINfo method to get info about that particular user id
-// update notif
-
-// send update notif
 Future<Response> onRequest(
   RequestContext context,
   String id,
@@ -37,8 +32,12 @@ Future<Response> _markedNotificationAsRead(
   String id,
 ) async {
   try {
+    final json = await context.request.json();
+    final read = json['read'] as bool;
+
     final result = await notificationRepository.markAsRead(
       notificationId: id,
+      read: read,
     );
 
     if (result == true) {

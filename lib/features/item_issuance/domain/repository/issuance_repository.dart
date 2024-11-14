@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failure.dart';
 import '../entities/inventory_custodian_slip.dart';
+import '../entities/issuance.dart';
 import '../entities/matched_item_with_pr.dart';
 import '../entities/paginated_issuance_result.dart';
 import '../entities/property_acknowledgement_receipt.dart';
@@ -44,11 +45,7 @@ abstract interface class IssuanceRepository {
     required String sendingOfficerName,
   });
 
-  Future<Either<Failure, InventoryCustodianSlipEntity?>> getIcsById({
-    required String id,
-  });
-
-  Future<Either<Failure, PropertyAcknowledgementReceiptEntity?>> getParById({
+  Future<Either<Failure, IssuanceEntity?>> getIssuanceById({
     required String id,
   });
 }

@@ -90,7 +90,7 @@ Future<Response> _registerOfficer(
           positionId: positionId,
         );
 
-    final officer = await officerRepository.getOfficerById(id: officerId,);
+    final officer = await officerRepository.getOfficerById(officerId: officerId,);
 
     return Response.json(
       statusCode: 200,

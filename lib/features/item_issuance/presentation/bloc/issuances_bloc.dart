@@ -7,6 +7,7 @@ import '../../domain/entities/matched_item_with_pr.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/usecases/create_ics.dart';
 import '../../domain/usecases/create_par.dart';
+import '../../domain/usecases/get_issuance_by_id.dart';
 import '../../domain/usecases/get_paginated_issuances.dart';
 import '../../domain/usecases/match_item_with_pr.dart';
 
@@ -15,25 +16,49 @@ part 'issuance_states.dart';
 
 class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   IssuancesBloc({
+    required GetIssuanceById getIssuanceById,
     required GetPaginatedIssuances getPaginatedIssuances,
     required MatchItemWithPr matchItemWithPr,
     required CreateICS createICS,
     required CreatePAR createPAR,
-  })  : _getPaginatedIssuances = getPaginatedIssuances,
+  })  : _getIssuanceById = getIssuanceById,
+        _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
         _createICS = createICS,
         _createPar = createPAR,
         super(IssuancesInitial()) {
+    on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
     on<MatchItemWithPrEvent>(_onMatchItemWithPrEvent);
     on<CreateICSEvent>(_onCreateICS);
     on<CreatePAREvent>(_onCreatePAR);
   }
 
+  final GetIssuanceById _getIssuanceById;
   final GetPaginatedIssuances _getPaginatedIssuances;
   final MatchItemWithPr _matchItemWithPr;
   final CreateICS _createICS;
   final CreatePAR _createPar;
+
+  void _onGetIssuanceByIdEvent(
+    GetIssuanceByIdEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getIssuanceById(event.id);
+
+    response.fold(
+      (l) => emit(
+        IssuancesError(message: l.message),
+      ),
+      (r) => emit(
+        IssuanceLoaded(
+          issuance: r!,
+        ),
+      ),
+    );
+  }
 
   void _onGetPaginatedIssuancesEvent(
     GetPaginatedIssuancesEvent event,

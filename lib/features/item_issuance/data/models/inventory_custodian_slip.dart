@@ -5,7 +5,8 @@ import '../../domain/entities/inventory_custodian_slip.dart';
 import 'issuance.dart';
 import 'issuance_item.dart';
 
-class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity implements IssuanceModel {
+class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
+    implements IssuanceModel {
   const InventoryCustodianSlipModel({
     required super.id,
     required super.icsId,
@@ -22,7 +23,8 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity implement
 
   factory InventoryCustodianSlipModel.fromJson(Map<String, dynamic> json) {
     print('ics model: $json');
-    final purchaseRequest = PurchaseRequestModel.fromJson(json['purchase_request']);
+    final purchaseRequest =
+        PurchaseRequestModel.fromJson(json['purchase_request']);
     print('converted pr -----');
 
     final items = (json['items'] as List<dynamic>).map((item) {
@@ -42,8 +44,14 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity implement
       icsId: json['ics_id'] as String,
       items: items,
       purchaseRequestEntity: purchaseRequest,
-      issuedDate: json['issued_date'] is String ? DateTime.parse(json['issued_date'] as String) : json['issued_date'] as DateTime,
-      returnDate: json['return_date'] != null ? json['return_date'] is String ? DateTime.parse(json['return_date'] as String) : json['return_date'] as DateTime : null,
+      issuedDate: json['issued_date'] is String
+          ? DateTime.parse(json['issued_date'] as String)
+          : json['issued_date'] as DateTime,
+      returnDate: json['return_date'] != null
+          ? json['return_date'] is String
+              ? DateTime.parse(json['return_date'] as String)
+              : json['return_date'] as DateTime
+          : null,
       receivingOfficerEntity: receivingOfficer,
       sendingOfficerEntity: sendingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
@@ -55,15 +63,31 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity implement
     return ics;
   }
 
+  factory InventoryCustodianSlipModel.fromEntity(
+      InventoryCustodianSlipEntity inventoryCustodianSlipEntity) {
+    return InventoryCustodianSlipModel(
+      id: inventoryCustodianSlipEntity.id,
+      icsId: inventoryCustodianSlipEntity.icsId,
+      items: inventoryCustodianSlipEntity.items,
+      purchaseRequestEntity: inventoryCustodianSlipEntity.purchaseRequestEntity,
+      issuedDate: inventoryCustodianSlipEntity.issuedDate,
+      receivingOfficerEntity: inventoryCustodianSlipEntity.receivingOfficerEntity,
+      sendingOfficerEntity: inventoryCustodianSlipEntity.sendingOfficerEntity,
+      qrCodeImageData: inventoryCustodianSlipEntity.qrCodeImageData,
+    );
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'ics_id': icsId,
-      'items': items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
+      'items':
+          items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
-      'purchase_request': (purchaseRequestEntity as PurchaseRequestModel).toJson(),
+      'purchase_request':
+          (purchaseRequestEntity as PurchaseRequestModel).toJson(),
       'receiving_officer': (receivingOfficerEntity as OfficerModel).toJson(),
       'sending_officer': (sendingOfficerEntity as OfficerModel).toJson(),
       'qr_code_image_data': qrCodeImageData,

@@ -325,7 +325,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           _errorMessage = null;
         }
 
-        if (state is MatchedItemWithPr) {
+        if (state is MatchedItemWithPr || state is IssuanceLoaded) {
           _isLoading = false;
           _errorMessage = null;
         }

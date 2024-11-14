@@ -20,6 +20,7 @@ class AdminApprovalModal extends StatefulWidget {
   State<AdminApprovalModal> createState() => _AdminApprovalModalState();
 }
 
+/// todo: add a loading indicator and maybe a msg feedback
 class _AdminApprovalModalState extends State<AdminApprovalModal> {
   late UsersManagementBloc _usersManagementBloc;
 
@@ -103,10 +104,13 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
         return Column(
           children: [
             _pendingUsers.isEmpty
-                ? Expanded(child: _buildEmptyState())
+                ? Expanded(
+                    child: _buildEmptyState(),
+                  )
                 : Column(
                     children: [
-                      Expanded(
+                      SizedBox(
+                        height: 500.0,
                         child: ListView.builder(
                           itemCount: _pendingUsers.length,
                           itemBuilder: (context, index) {

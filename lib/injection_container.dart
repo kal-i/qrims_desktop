@@ -41,20 +41,13 @@ import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.da
 // Item Inventory
 import 'features/item_inventory/data/data_sources/remote/item_inventory_remote_data_source_impl.dart';
 import 'features/item_inventory/data/data_sources/remote/item_inventory_remote_date_source.dart';
-import 'features/item_inventory/data/data_sources/remote/item_suggestion_data_source/item_suggestion_remote_data_source.dart';
-import 'features/item_inventory/data/data_sources/remote/item_suggestion_data_source/item_suggestion_remote_data_source_impl.dart';
 import 'features/item_inventory/data/repository/item_inventory_repository_impl.dart';
-import 'features/item_inventory/data/repository/item_suggestion_repository_impl.dart';
 import 'features/item_inventory/domain/repository/item_inventory_repository.dart';
-import 'features/item_inventory/domain/repository/item_suggestion_repository.dart';
 import 'features/item_inventory/domain/usecases/get_item_by_id.dart';
-import 'features/item_inventory/domain/usecases/get_item_suggestion_descriptions.dart';
-import 'features/item_inventory/domain/usecases/get_item_suggestion_names.dart';
 import 'features/item_inventory/domain/usecases/get_items.dart';
 import 'features/item_inventory/domain/usecases/register_item.dart';
 import 'features/item_inventory/domain/usecases/update_item.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
-import 'features/item_inventory/presentation/bloc/item_suggestions/item_suggestions_bloc.dart';
 
 // Navigation
 import 'features/item_issuance/data/data_sources/remote/issuance_remote_data_source.dart';
@@ -63,6 +56,7 @@ import 'features/item_issuance/data/repository/issuance_repository_impl.dart';
 import 'features/item_issuance/domain/repository/issuance_repository.dart';
 import 'features/item_issuance/domain/usecases/create_ics.dart';
 import 'features/item_issuance/domain/usecases/create_par.dart';
+import 'features/item_issuance/domain/usecases/get_issuance_by_id.dart';
 import 'features/item_issuance/domain/usecases/get_paginated_issuances.dart';
 import 'features/item_issuance/domain/usecases/match_item_with_pr.dart';
 import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
@@ -299,6 +293,10 @@ void _registerItemIssuanceDependencies() {
     () => IssuanceRepositoryImpl(issuanceRemoteDataSource: serviceLocator()),
   );
 
+  serviceLocator.registerFactory<GetIssuanceById>(
+        () => GetIssuanceById(issuanceRepository: serviceLocator()),
+  );
+
   serviceLocator.registerFactory<GetPaginatedIssuances>(
     () => GetPaginatedIssuances(issuanceRepository: serviceLocator()),
   );
@@ -317,6 +315,7 @@ void _registerItemIssuanceDependencies() {
 
   serviceLocator.registerFactory<IssuancesBloc>(
     () => IssuancesBloc(
+      getIssuanceById: serviceLocator(),
       getPaginatedIssuances: serviceLocator(),
       matchItemWithPr: serviceLocator(),
       createICS: serviceLocator(),

@@ -22,9 +22,11 @@ class PropertyAcknowledgementReceiptModel
     super.isArchived,
   });
 
-  factory PropertyAcknowledgementReceiptModel.fromJson(Map<String, dynamic> json) {
+  factory PropertyAcknowledgementReceiptModel.fromJson(
+      Map<String, dynamic> json) {
     print('par model: $json');
-    final purchaseRequest = PurchaseRequestModel.fromJson(json['purchase_request']);
+    final purchaseRequest =
+        PurchaseRequestModel.fromJson(json['purchase_request']);
     print('converted pr -----');
 
     final items = (json['items'] as List<dynamic>).map((item) {
@@ -45,8 +47,12 @@ class PropertyAcknowledgementReceiptModel
       propertyNumber: json['property_number'] as String?,
       items: items,
       purchaseRequestEntity: purchaseRequest,
-      issuedDate: json['issued_date'] is String ? DateTime.parse(json['issued_date'] as String) : json['issued_date'] as DateTime,
-      returnDate: json['return_date'] != null && json['return_date'] is String ? DateTime.parse(json['return_date'] as String) : json['return_date'] as DateTime?,
+      issuedDate: json['issued_date'] is String
+          ? DateTime.parse(json['issued_date'] as String)
+          : json['issued_date'] as DateTime,
+      returnDate: json['return_date'] != null && json['return_date'] is String
+          ? DateTime.parse(json['return_date'] as String)
+          : json['return_date'] as DateTime?,
       receivingOfficerEntity: receivingOfficer,
       sendingOfficerEntity: sendingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
@@ -59,16 +65,32 @@ class PropertyAcknowledgementReceiptModel
     return par;
   }
 
+  factory PropertyAcknowledgementReceiptModel.fromEntity(
+      PropertyAcknowledgementReceiptEntity propertyAcknowledgementReceipt) {
+    return PropertyAcknowledgementReceiptModel(
+      id: propertyAcknowledgementReceipt.id,
+      parId: propertyAcknowledgementReceipt.parId,
+      items: propertyAcknowledgementReceipt.items,
+      purchaseRequestEntity: propertyAcknowledgementReceipt.purchaseRequestEntity,
+      issuedDate: propertyAcknowledgementReceipt.issuedDate,
+      receivingOfficerEntity: propertyAcknowledgementReceipt.receivingOfficerEntity,
+      sendingOfficerEntity: propertyAcknowledgementReceipt.sendingOfficerEntity,
+      qrCodeImageData: propertyAcknowledgementReceipt.qrCodeImageData,
+    );
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'par_id': parId,
       'property_number': propertyNumber,
-      'items': items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
+      'items':
+          items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
-      'purchase_request': (purchaseRequestEntity as PurchaseRequestModel).toJson(),
+      'purchase_request':
+          (purchaseRequestEntity as PurchaseRequestModel).toJson(),
       'receiving_officer': (receivingOfficerEntity as OfficerModel).toJson(),
       'sending_officer': (sendingOfficerEntity as OfficerModel).toJson(),
       'qr_code_image_data': qrCodeImageData,

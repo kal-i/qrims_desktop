@@ -266,7 +266,6 @@ class AppRoutingConfig {
             pageBuilder: (context, state) => const MaterialPage(
               child: OfficersManagementView(),
             ),
-            routes: [],
           ),
 
           /// archive management
@@ -335,6 +334,7 @@ class RouteChangeManager {
       '/purchaseRequest': 'Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',
       '/itemIssuance': 'Item Issuance Management',
+      '/itemIssuance/viewItemIssuance': 'View Item Issuance',
       '/itemIssuance/registerItemIssuance': 'Create Issuance',
       '/usersManagement': 'User Management',
       '/officersManagement': 'Officers Management',

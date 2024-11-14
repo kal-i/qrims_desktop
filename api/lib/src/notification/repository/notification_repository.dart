@@ -1,3 +1,5 @@
+import 'package:api/src/user/models/user.dart';
+import 'package:api/src/user/repository/user_repository.dart';
 import 'package:postgres/postgres.dart';
 
 import '../../utils/generate_id.dart';
@@ -72,9 +74,41 @@ class NotificationRepository {
     }
   }
 
-  Future<List<notif.Notification>?> getNotifications({
+  Future<int> getNotificationsCount({
     required String recipientId,
   }) async {
+    try {
+      final result = await _conn.execute(
+        Sql.named(
+          '''
+        SELECT COUNT(*) FROM Notifications
+        WHERE recipient_id = @recipient_id;
+        ''',
+        ),
+        parameters: {
+          'recipient_id': recipientId,
+        },
+      );
+
+      if (result.isNotEmpty) {
+        final count = result.first[0] as int;
+        print('Total no. of filtered issuances: $count');
+        return count;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      print('Error counting notifications: $e');
+      throw Exception('Failed to count notifications.');
+    }
+  }
+
+  Future<List<notif.Notification>?> getNotifications({
+    required int page,
+    required int pageSize,
+    required String recipientId,
+  }) async {
+    final offset = (page - 1) * pageSize;
     final notifications = <notif.Notification>[];
 
     final results = await _conn.execute(
@@ -82,22 +116,31 @@ class NotificationRepository {
         '''
         SELECT * FROM Notifications
         WHERE recipient_id = @recipient_id
-        ORDER BY created_at DESC;
+        ORDER BY created_at DESC
+        LIMIT @page_size OFFSET @offset;
         ''',
       ),
       parameters: {
         'recipient_id': recipientId,
+        'page_size': pageSize,
+        'offset': offset,
       },
     );
 
-    print(results);
-
     if (results.isNotEmpty) {
       for (final row in results) {
+        final sender = await UserRepository(_conn).getUserInformation(
+          id: row[2] as String,
+        );
+
         final notificationMap = {
           'notification_id': row[0],
           'recipient_id': row[1],
-          'sender_id': row[2],
+          'sender': sender is SupplyDepartmentEmployee
+              ? sender.toJson()
+              : sender is MobileUser
+                  ? sender.toJson()
+                  : null,
           'message': row[3],
           'type': row[4],
           'reference_id': row[5],
@@ -113,20 +156,62 @@ class NotificationRepository {
 
   Future<bool?> markAsRead({
     required String notificationId,
+    required bool read,
   }) async {
     final result = await _conn.execute(
       Sql.named(
         '''
       UPDATE Notifications
-      SET read = TRUE
+      SET read = @read
       WHERE id = @id,
       ''',
       ),
       parameters: {
         'id': notificationId,
+        'read': read,
       },
     );
 
     return result.affectedRows == 1;
+  }
+
+  Future<List<notif.Notification>?> getNotificationTimelineTrail({
+    required String referenceId, // refers to pr
+  }) async {
+    final notifications = <notif.Notification>[];
+
+    final results = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT * FROM Notifications
+        WHERE reference_id = @reference_id
+        ORDER BY created_at ASC;
+        ''',
+      ),
+      parameters: {
+        'reference_id': referenceId,
+      },
+    );
+
+    print(results);
+
+    if (results.isNotEmpty) {
+      for (final row in results) {
+        notifications.add(
+          notif.Notification.fromJson({
+            'notification_id': row[0],
+            'recipient_id': row[1],
+            'sender_id': row[2],
+            'message': row[3],
+            'type': row[4],
+            'reference_id': row[5],
+            'read': row[6],
+            'created_at': row[7],
+          }),
+        );
+      }
+    }
+
+    return notifications;
   }
 }

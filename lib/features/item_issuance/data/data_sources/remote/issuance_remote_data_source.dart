@@ -1,4 +1,5 @@
 import '../../models/inventory_custodian_slip.dart';
+import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
 import '../../models/paginated_issuance_result.dart';
 import '../../models/property_acknowledgement_receipt.dart';
@@ -41,11 +42,7 @@ abstract interface class IssuanceRemoteDataSource {
     required String sendingOfficerName,
   });
 
-  Future<InventoryCustodianSlipModel?> getIcsById({
-    required String id,
-  });
-
-  Future<PropertyAcknowledgementReceiptModel?> getParById({
+  Future<IssuanceModel?> getIssuanceById({
     required String id,
   });
 }

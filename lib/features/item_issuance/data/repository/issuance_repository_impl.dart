@@ -1,6 +1,7 @@
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
+import '../../domain/entities/issuance.dart';
 import '../../domain/entities/matched_item_with_pr.dart';
 import '../../domain/entities/paginated_issuance_result.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
@@ -77,13 +78,6 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
   }
 
   @override
-  Future<Either<Failure, InventoryCustodianSlipEntity?>> getIcsById(
-      {required String id}) {
-    // TODO: implement getIcsById
-    throw UnimplementedError();
-  }
-
-  @override
   Future<Either<Failure, PaginatedIssuanceResultEntity>> getIssuances({
     required int page,
     required int pageSize,
@@ -115,19 +109,27 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
   }
 
   @override
-  Future<Either<Failure, PropertyAcknowledgementReceiptEntity?>> getParById(
-      {required String id}) {
-    // TODO: implement getParById
-    throw UnimplementedError();
-  }
-
-  @override
   Future<Either<Failure, MatchedItemWithPrEntity>> matchItemWithPr({
     required String prId,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.matchItemWithPr(
         prId: prId,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, IssuanceEntity?>> getIssuanceById({
+    required String id,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.getIssuanceById(
+        id: id,
       );
 
       return right(response);

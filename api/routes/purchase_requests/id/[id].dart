@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/notification/repository/notification_repository.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -9,16 +10,18 @@ Future<Response> onRequest(
   String id,
 ) async {
   final connection = context.read<Connection>();
+  final notifRepository = NotificationRepository(connection);
   final prRepository = PurchaseRequestRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getPurchaseRequestInformation(context, prRepository, id),
+    HttpMethod.get => _getPurchaseRequestInformation(context, notifRepository, prRepository, id),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
 
 Future<Response> _getPurchaseRequestInformation(
   RequestContext context,
+  NotificationRepository notifRepository,
   PurchaseRequestRepository prRepository,
   String id,
 ) async {
@@ -27,11 +30,14 @@ Future<Response> _getPurchaseRequestInformation(
       id: id,
     );
 
+    final notifications = await notifRepository.getNotificationTimelineTrail(referenceId: id,);
+
     if (purchaseRequest != null) {
       return Response.json(
         statusCode: 200,
         body: {
           'purchase_request': purchaseRequest.toJson(),
+          'notifications': notifications?.map((notification) => notification.toJson()).toList(),
         },
       );
     }

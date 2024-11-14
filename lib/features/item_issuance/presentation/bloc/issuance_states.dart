@@ -11,6 +11,19 @@ final class IssuancesInitial extends IssuancesState {}
 
 final class IssuancesLoading extends IssuancesState {}
 
+final class IssuanceLoaded extends IssuancesState {
+  const IssuanceLoaded({
+    required this.issuance,
+  });
+
+  final IssuanceEntity issuance;
+
+  @override
+  List<Object?> get props => [
+    issuance,
+  ];
+}
+
 final class IssuancesLoaded extends IssuancesState {
   const IssuancesLoaded({
     required this.issuances,

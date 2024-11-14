@@ -34,26 +34,42 @@ Future<Response> _getReceivingOfficerPurchaseRequests(
 ) async {
   try {
     final headers = await context.request.headers;
+    final queryParams = await context.request.uri.queryParameters;
+    final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
+    final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
+    final prId = queryParams['pr_id'];
+    final prStatusString = queryParams['pr_status'];
+    final filter = queryParams['filter'];
+
     final bearerToken = headers['Authorization']?.substring(7) as String;
     final session = await sessionRepository.sessionFromToken(bearerToken);
     final userId = session!.userId;
 
     final officer = await officerRepository.getOfficerById(
-      id: userId,
+      userId: userId,
     );
+    print(officer);
+    print('retrieved officer id: ${officer?.id}');
 
-    final queryParams = await context.request.uri.queryParameters;
-    final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
-    final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
+    final prStatus = prStatusString != null
+        ? PurchaseRequestStatus.values
+        .firstWhere((e) => e.toString().split('.').last == prStatusString)
+        : null;
 
     final purchaseRequests = await prRepository.getPurchaseRequests(
       page: page,
       pageSize: pageSize,
+      prId: prId,
+      prStatus: prStatus,
+      filter: filter,
       receivingOfficerId: officer?.id,
     );
 
     final prFilteredCount = await prRepository.getPurchaseRequestsFilteredCount(
-      receivingOfficerId: officer?.id,
+      prId: prId,
+      prStatus: prStatus,
+      filter: filter,
+      requestingOfficerId: officer?.id,
     );
 
     final pendingPurchaseRequestCount = await prRepository
