@@ -8,4 +8,5 @@ enum FundCluster {
   assetIsOwnedByLGU,
   assetIsOwnedByOtherEntity,
   assetIsLeased,
+  unknown,
 }

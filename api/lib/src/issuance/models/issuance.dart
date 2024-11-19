@@ -13,6 +13,7 @@ enum FundCluster {
   assetIsOwnedByLGU,
   assetIsOwnedByOtherEntity,
   assetIsLeased,
+  unknown,
 }
 
 class IssuanceItem {

@@ -13,20 +13,18 @@ Future<Response> onRequest(
   final repository = ItemRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getItemById(context, repository, id),
+    HttpMethod.get => _getItemByEncryptedId(context, repository, id),
     HttpMethod.patch => _updateItemInformation(context, repository, id),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
 
-Future<Response> _getItemById(
+Future<Response> _getItemByEncryptedId(
     RequestContext context,
     ItemRepository repository,
     String id,
     ) async {
   try {
-    //final item = await repository.getItemById(id: id);
-
     final item = await repository.getItemByEncryptedId(encryptedId: id);
     if (item != null) {
       return Response.json(
@@ -44,7 +42,9 @@ Future<Response> _getItemById(
       },
     );
   } catch (e) {
+    print(e);
     return Response.json(
+      statusCode: HttpStatus.internalServerError,
       body: {
         'message': e.toString(),
       },

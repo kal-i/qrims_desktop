@@ -14,7 +14,8 @@ Future<Response> onRequest(
   final prRepository = PurchaseRequestRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getPurchaseRequestInformation(context, notifRepository, prRepository, id),
+    HttpMethod.get => _getPurchaseRequestInformation(
+        context, notifRepository, prRepository, id),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
@@ -30,14 +31,22 @@ Future<Response> _getPurchaseRequestInformation(
       id: id,
     );
 
-    final notifications = await notifRepository.getNotificationTimelineTrail(referenceId: id,);
+    print('pr info');
+
+    final notifications = await notifRepository.getNotificationTimelineTrail(
+      referenceId: id,
+    );
+
+    print('notif info: $notifications');
 
     if (purchaseRequest != null) {
       return Response.json(
         statusCode: 200,
         body: {
           'purchase_request': purchaseRequest.toJson(),
-          'notifications': notifications?.map((notification) => notification.toJson()).toList(),
+          'notifications': notifications
+              ?.map((notification) => notification.toJson())
+              .toList(),
         },
       );
     }

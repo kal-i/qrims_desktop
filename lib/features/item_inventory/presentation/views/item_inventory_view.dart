@@ -77,7 +77,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
-  Timer? _denounce;
+  Timer? _debounce;
 
   int _currentPage = 1;
   int _pageSize = 10;
@@ -161,8 +161,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   }
 
   void _onSearchChanged() {
-    if (_denounce?.isActive ?? false) _denounce?.cancel();
-    _denounce = Timer(_searchDelay, () {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(_searchDelay, () {
       _currentPage = 1;
       _fetchItems();
     });
@@ -171,7 +171,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   @override
   void dispose() {
     _searchController.dispose();
-    _denounce?.cancel();
+    _debounce?.cancel();
     _selectedSortOrder.dispose();
     _selectedFilterNotifier.dispose();
     _totalItemsCount.dispose();

@@ -158,21 +158,26 @@ class NotificationRepository {
     required String notificationId,
     required bool read,
   }) async {
-    final result = await _conn.execute(
-      Sql.named(
-        '''
+    try {
+      final result = await _conn.execute(
+        Sql.named(
+          '''
       UPDATE Notifications
       SET read = @read
-      WHERE id = @id,
+      WHERE id = @id;
       ''',
-      ),
-      parameters: {
-        'id': notificationId,
-        'read': read,
-      },
-    );
+        ),
+        parameters: {
+          'id': notificationId,
+          'read': read,
+        },
+      );
 
-    return result.affectedRows == 1;
+      return result.affectedRows == 1;
+    } catch (e) {
+      print(e);
+      throw ('Error processing markAsRead notification: $e');
+    }
   }
 
   Future<List<notif.Notification>?> getNotificationTimelineTrail({
@@ -184,12 +189,13 @@ class NotificationRepository {
       Sql.named(
         '''
         SELECT * FROM Notifications
-        WHERE reference_id = @reference_id
+        WHERE reference_id = @reference_id AND type != @type
         ORDER BY created_at ASC;
         ''',
       ),
       parameters: {
         'reference_id': referenceId,
+        'type': notif.NotificationType.prFollowUp.toString().split('.').last,
       },
     );
 
@@ -197,11 +203,19 @@ class NotificationRepository {
 
     if (results.isNotEmpty) {
       for (final row in results) {
+        final sender = await UserRepository(_conn).getUserInformation(
+          id: row[2] as String,
+        );
+
         notifications.add(
           notif.Notification.fromJson({
             'notification_id': row[0],
             'recipient_id': row[1],
-            'sender_id': row[2],
+            'sender': sender is SupplyDepartmentEmployee
+                ? sender.toJson()
+                : sender is MobileUser
+                    ? sender.toJson()
+                    : null,
             'message': row[3],
             'type': row[4],
             'reference_id': row[5],

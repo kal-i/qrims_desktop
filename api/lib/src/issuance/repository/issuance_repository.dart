@@ -775,6 +775,40 @@ class IssuanceRepository {
     );
   }
 
+  Future<bool> receiveIssuance({
+    required String issuanceId,
+    required String receivingOfficerId,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        UPDATE 
+          Issuances
+        SET 
+          is_received = TRUE
+        WHERE 
+          id = @id
+        AND 
+          receiving_officer_id = @receiving_officer_id; 
+        ''',
+      ),
+      parameters: {
+        'id': issuanceId,
+        'receiving_officer_id': receivingOfficerId,
+      },
+    );
+
+    print(result);
+    print(issuanceId);
+    print(receivingOfficerId);
+
+    if (result.affectedRows == 0) {
+      throw Exception('You are not the receiving officer for this issuance.');
+    }
+
+    return true;
+  }
+
   // choose a pr
   // check for items in db then automatically fill
   // Future<String> createICS({

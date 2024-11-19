@@ -246,14 +246,13 @@ class UserRepository {
           throw ArgumentError('Invalid role: $role.');
         }
       } else {
-        whereClause.write(
-            ''' AND (
+        whereClause.write(''' AND (
           (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status)
           OR
           m.id IS NULL
-          )'''
-        );
-        params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
+          )''');
+        params['admin_approval_status'] =
+            adminApprovalStatus.toString().split('.').last;
       }
 
       final finalQuery = '''
@@ -372,14 +371,13 @@ class UserRepository {
           throw ArgumentError('Invalid role: $role.');
         }
       } else {
-        whereClause.write(
-          ''' AND (
+        whereClause.write(''' AND (
           (m.id IS NOT NULL AND m.admin_approval_status = @admin_approval_status)
           OR
           m.id IS NULL
-          )'''
-        );
-        params['admin_approval_status'] = adminApprovalStatus.toString().split('.').last;
+          )''');
+        params['admin_approval_status'] =
+            adminApprovalStatus.toString().split('.').last;
       }
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
@@ -655,7 +653,7 @@ class UserRepository {
     final isMobileUser = row[13] != null;
 
     if (isSupplyDepartmentEmployee) {
-      print('returning supp emp');
+      //print('returning supp emp');
       return SupplyDepartmentEmployee.fromJson({
         'user_id': row[0],
         'name': row[1],
@@ -674,7 +672,7 @@ class UserRepository {
     }
 
     if (isMobileUser) {
-      print('returning mobile user: ${row[13]}');
+      //print('returning mobile user: ${row[13]}');
       //if (row[21] == AdminApprovalStatus.accepted)
       final mobileUserMap = {
         'user_id': row[0],
@@ -1061,7 +1059,6 @@ class UserRepository {
       print('Error creating user: $e');
       throw Exception('Database connection error.');
     }
-    return null;
   }
 
   Future<bool> updateUserInformation({
@@ -1381,5 +1378,51 @@ class UserRepository {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  Future<SupplyDepartmentEmployee?> getCurrentSupplyCustodian() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          u.*,
+          supp_dept_emp.id,
+          supp_dept_emp.role
+        FROM
+          Users u
+        JOIN
+          SupplyDepartmentEmployees supp_dept_emp
+        ON
+          u.id = supp_dept_emp.user_id
+        WHERE
+          role = @role
+        LIMIT 1;
+        ''',
+      ),
+      parameters: {
+        'role': Role.supplyCustodian.toString(),
+      },
+    );
+
+    if (result.isNotEmpty) {
+      final row = result.first;
+      return SupplyDepartmentEmployee.fromJson({
+        'user_id': row[0],
+        'name': row[1],
+        'email': row[2],
+        'password': row[3],
+        'created_at': row[4].toString(),
+        'updated_at': row[5]?.toString(),
+        'auth_status': row[6],
+        'is_archived': row[7],
+        'otp': row[8],
+        'otp_expiry': row[9]?.toString(),
+        'profile_image': row[10],
+        'supp_dept_emp_id': row[11],
+        'role': row[12],
+      });
+    }
+
+    return null;
   }
 }

@@ -83,12 +83,8 @@ class ItemRepository {
 
     int cumulativeCount;
     if (monthResult.isNotEmpty) {
-      final extractedResult = monthResult.first[0]
-          .toString()
-          .split('-')
-          .last
-          .split('(')
-          .first;
+      final extractedResult =
+          monthResult.first[0].toString().split('-').last.split('(').first;
       print('month result is not empty: ${monthResult.first[0]}');
       print('extracted result: $extractedResult');
       print('extracted result after + 1: ${int.parse(extractedResult) + 1}');
@@ -753,36 +749,37 @@ class ItemRepository {
       },
     );
 
-    print('results: ${result.first[0]}');
-
-    for (final row in result) {
-      final itemWithStockMap = {
-        'item_id': row[0],
-        'product_name_id': row[1],
-        'product_description_id': row[2],
-        'manufacturer_id': row[3],
-        'brand_id': row[4],
-        'model_id': row[5],
-        'serial_no': row[6],
-        'specification': row[7],
-        'asset_classification': row[8],
-        'asset_sub_class': row[9],
-        'unit': row[10],
-        'quantity': row[11],
-        'unit_cost': row[12],
-        'estimated_useful_life': row[13],
-        'acquired_date': row[14],
-        'encrypted_id': row[15],
-        'qr_code_image_data': row[16],
-        'product_name': row[17],
-        'product_description': row[18],
-        'manufacturer_name': row[19],
-        'brand_name': row[20],
-        'model_name': row[21],
-      };
-      return ItemWithStock.fromJson(itemWithStockMap);
+    if (result.isEmpty) {
+      return null;
     }
-    return null;
+
+    final row = result.first;
+    final itemWithStockMap = {
+      'item_id': row[0],
+      'product_name_id': row[1],
+      'product_description_id': row[2],
+      'manufacturer_id': row[3],
+      'brand_id': row[4],
+      'model_id': row[5],
+      'serial_no': row[6],
+      'specification': row[7],
+      'asset_classification': row[8],
+      'asset_sub_class': row[9],
+      'unit': row[10],
+      'quantity': row[11],
+      'unit_cost': row[12],
+      'estimated_useful_life': row[13],
+      'acquired_date': row[14],
+      'encrypted_id': row[15],
+      'qr_code_image_data': row[16],
+      'product_name': row[17],
+      'product_description': row[18],
+      'manufacturer_name': row[19],
+      'brand_name': row[20],
+      'model_name': row[21],
+    };
+
+    return ItemWithStock.fromJson(itemWithStockMap);
   }
 
   Future<int> getItemsFilteredCount({

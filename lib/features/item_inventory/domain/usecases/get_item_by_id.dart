@@ -13,9 +13,9 @@ class GetItemById implements UseCase<ItemWithStockEntity?, String> {
   final ItemInventoryRepository itemInventoryRepository;
 
   @override
-  Future<Either<Failure, ItemWithStockEntity?>> call(String params) async {
+  Future<Either<Failure, ItemWithStockEntity?>> call(String param) async {
     return await itemInventoryRepository.getItemById(
-      id: params,
+      id: param,
     );
   }
 }

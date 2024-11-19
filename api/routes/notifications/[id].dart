@@ -45,7 +45,7 @@ Future<Response> _markedNotificationAsRead(
         statusCode: 200,
         body: {
           'message':
-          'Notification $id marked as read.',
+          'Notification $id marked read as $result.',
         },
       );
     } else {
