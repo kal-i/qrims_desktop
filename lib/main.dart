@@ -15,10 +15,13 @@ import 'core/common/components/search_button/bloc/search_button_bloc.dart';
 import 'features/archive/presentation/bloc/archive_user_bloc/archive_users_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/components/custom_auth_password_text_box/bloc/custom_auth_password_text_box_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_suggestions/item_suggestions_bloc.dart';
 import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
+import 'features/navigation/presentation/bloc/notifications_bloc.dart';
 import 'features/navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
 import 'features/officer/presentation/bloc/officers_bloc.dart';
 import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
@@ -103,7 +106,16 @@ class MyApp extends StatelessWidget {
             create: (_) => serviceLocator<SideNavigationDrawerBloc>(),
           ),
           BlocProvider(
+            create: (_) => serviceLocator<InventorySummaryBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<RequestsSummaryBloc>(),
+          ),
+          BlocProvider(
             create: (_) => serviceLocator<UsersManagementBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<NotificationsBloc>(),
           ),
           BlocProvider(
             create: (_) => serviceLocator<UserActivityBloc>(),

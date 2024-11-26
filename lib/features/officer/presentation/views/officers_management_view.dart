@@ -9,6 +9,7 @@ import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/common/components/custom_dropdown_button.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
+import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_labeled_text_box.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
@@ -44,7 +45,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
-    'Officer Id',
+    //'Officer Id',
     'Name',
     'Office Name',
     'Position',
@@ -76,7 +77,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
       headers: _tableHeaders,
       rows: _tableRows,
       columnFlex: [
-        1,
+        //1,
         2,
         2,
         2,
@@ -185,9 +186,10 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   Widget _buildTableActionsRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end, // MainAxisAlignment.spaceBetween,
+      mainAxisAlignment:
+          MainAxisAlignment.end, // MainAxisAlignment.spaceBetween,
       children: [
-       // _buildFilterTableRow(),
+        // _buildFilterTableRow(),
         Row(
           children: [
             ExpandableSearchButton(
@@ -199,24 +201,65 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
             ReusableCustomRefreshOutlineButton(
               onTap: _refreshOfficerList,
             ),
+            const SizedBox(
+              width: 10.0,
+            ),
+            _buildMoreButton(),
           ],
         ),
       ],
     );
   }
 
-  // Widget _buildFilterTableRow() {
-  //   final Map<String, String> filterMapping = {
-  //     'View All': '',
-  //     'Supply': 'supply',
-  //     'Others': 'others',
-  //   };
-  //
-  //   return FilterTableRow(
-  //     selectedFilterNotifier: _selectedFilterNotifier,
-  //     filterMapping: filterMapping,
-  //   );
-  // }
+  Widget _buildMoreButton() {
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      //elevation: 8.0,
+      icon: const CustomIconButton(
+        tooltip: 'More',
+        icon: HugeIcons.strokeRoundedMoreHorizontal,
+        isOutlined: true,
+      ),
+      onSelected: (action) {
+        if (action != null) {
+        }
+      },
+      itemBuilder: (context) {
+        return [
+          PopupMenuItem(
+            child: ListTile(
+              leading: const Icon(
+                HugeIcons.strokeRoundedOffice,
+                size: 16.0,
+              ),
+              title: Text(
+                'Offices',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w400,
+                    ),
+              ),
+            ),
+          ),
+          PopupMenuItem(
+            child: ListTile(
+              leading: const Icon(
+                HugeIcons.strokeRoundedOffice,
+                size: 16.0,
+              ),
+              title: Text(
+                'Positions',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ];
+      },
+    );
+  }
 
   Widget _buildDataTable() {
     return BlocConsumer<OfficersBloc, OfficersState>(
@@ -234,33 +277,33 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
             return TableData(
               id: officer.id,
               columns: [
-                Text(
-                  officer.id,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // Text(
+                //   officer.id,
+                //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                //     fontSize: 14.0,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
                 Text(
                   capitalizeWord(officer.name),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 Text(
                   capitalizeWord(officer.officeName),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 Text(
                   capitalizeWord(officer.positionName),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ],
               menuItems: [

@@ -11,9 +11,10 @@ Future<Response> onRequest(
     ) async {
   final connection = context.read<Connection>();
   final repository = ItemRepository(connection);
+  final decodedId = Uri.decodeComponent(id);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getItemByEncryptedId(context, repository, id),
+    HttpMethod.get => _getItemByEncryptedId(context, repository, decodedId),
     HttpMethod.patch => _updateItemInformation(context, repository, id),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
@@ -25,6 +26,7 @@ Future<Response> _getItemByEncryptedId(
     String id,
     ) async {
   try {
+    print(id);
     final item = await repository.getItemByEncryptedId(encryptedId: id);
     if (item != null) {
       return Response.json(

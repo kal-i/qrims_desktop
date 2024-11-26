@@ -3,14 +3,14 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../config/themes/app_color.dart';
 
-class SlideableContainer extends StatefulWidget {
+class SlidableContainer extends StatefulWidget {
   final Widget content; // The content to display inside the modal
   final bool isVisible; // Whether the modal is visible or not
   final Duration animationDuration; // Duration of the slide animation
   final double width; // Width of the modal container
   final VoidCallback? onClose; // Callback when the modal is closed
 
-  const SlideableContainer({
+  const SlidableContainer({
     super.key,
     required this.content,
     required this.isVisible,
@@ -20,14 +20,29 @@ class SlideableContainer extends StatefulWidget {
   });
 
   @override
-  _SlideableContainerState createState() => _SlideableContainerState();
+  _SlidableContainerState createState() => _SlidableContainerState();
 }
 
-class _SlideableContainerState extends State<SlideableContainer> {
+class _SlidableContainerState extends State<SlidableContainer> {
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // Detect taps outside the modal to close it
+        if (widget.isVisible)
+          GestureDetector(
+            onTap: () {
+              if (widget.onClose != null) {
+                widget.onClose!();
+              }
+            },
+            behavior: HitTestBehavior.translucent, // Ensure taps go through empty spaces
+            child: Container(
+              color: Colors.transparent, // Transparent overlay
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
         // The container slides in/out based on widget.isVisible
         AnimatedPositioned(
           duration: widget.animationDuration,

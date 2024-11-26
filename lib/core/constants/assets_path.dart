@@ -2,13 +2,24 @@ const String _rootFolder = 'assets';
 
 class FontPath {
   static const String _folder = '$_rootFolder/fonts';
+
+  static const String calibriRegular = '$_folder/Calibri-Regular.ttf';
+  static const String calibriBold = '$_folder/Calibri-Bold.ttf';
+  static const String calibriItalic = '$_folder/Calibri-Italic.ttf';
+  static const String calibriBoldItalic = '$_folder/Calibri-Bold-Italic.ttf';
+
   static const String oldEnglish = '$_folder/Old-Eng.ttf';
-  static const String trajanProRegular = '$_folder/Trajan-Pro-Regular.ttf';
-  static const String trajanProBold = '$_folder/Trajan-Bold.ttf';
+
+  static const String popvlvs = '$_folder/Popvlvs.ttf';
+
   static const String tahomaRegular = '$_folder/Tahoma.ttf';
   static const String tahomaBold = '$_folder/Tahoma-Bold.ttf';
+
   static const String timesNewRomanRegular = '$_folder/Times-New-Roman.ttf';
   static const String timesNewRomanBold = '$_folder/Times-New-Roman-Bold.ttf';
+
+  static const String trajanProRegular = '$_folder/Trajan-Pro-Regular.ttf';
+  static const String trajanProBold = '$_folder/Trajan-Bold.ttf';
 }
 
 class IconPath {

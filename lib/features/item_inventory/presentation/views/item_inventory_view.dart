@@ -239,7 +239,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageAdd,
                   title: 'Total Items',
                   data: totalItemsCount.toString(),
-                  baseColor: Colors.transparent,
+                 // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -254,7 +254,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageDelivered,
                   title: 'In stock',
                   data: inStockCount.toString(),
-                  baseColor: Colors.transparent,
+                 // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -269,7 +269,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageProcess,
                   title: 'Low stock',
                   data: lowStockCount.toString(),
-                  baseColor: Colors.transparent,
+                 // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -284,7 +284,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageRemove,
                   title: 'Out of stock',
                   data: outOfStockCount.toString(),
-                  baseColor: Colors.transparent,
+                  //baseColor: Colors.transparent,
                 );
               }),
         ),

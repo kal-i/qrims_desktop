@@ -67,6 +67,7 @@ dependencies:
   pretty_qr_code: ^3.3.0
   qr_flutter: ^4.1.0
   flutter_spinkit: ^5.2.1
+  fl_chart: ^0.69.2
 
 dev_dependencies:
   flutter_test:
@@ -116,14 +117,23 @@ flutter:
          - asset: assets/fonts/Inter-SemiBold.ttf
          - asset: assets/fonts/Inter-Bold.ttf
          - asset: assets/fonts/Inter-Black.ttf
+     - family: Calibri
+       fonts:
+         - asset: assets/fonts/Calibri-Regular.ttf
+         - asset: assets/fonts/Calibri-Bold.ttf
+         - asset: assets/fonts/Calibri-Italic.ttf
+         - asset: assets/fonts/Calibri-Bold-Italic.ttf
      - family: OldEnglishTextMT
        fonts:
          - asset: assets/fonts/Old-Eng.ttf
-     - family: TrojanPro
+     - family: TrajanPro
        fonts:
          - asset: assets/fonts/Trajan-Pro-Regular.ttf
          - asset: assets/fonts/Trajan-Pro-Bold.otf
          - asset: assets/fonts/Trajan-Bold.ttf
+     - family: Popvlvs
+       fonts:
+         - asset: assets/fonts/Popvlvs.ttf
      - family: Tahoma
        fonts:
          - asset: assets/fonts/Tahoma.ttf

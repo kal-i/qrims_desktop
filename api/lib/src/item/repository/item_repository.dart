@@ -1820,4 +1820,107 @@ class ItemRepository {
     }
     return null;
   }
+
+  Future<int> getInStocksCount() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          COUNT(*) AS in_stock_count
+        FROM (
+          SELECT 
+            pn.name AS product_name,
+            SUM(i.quantity) AS total_quantity
+          FROM 
+            Items i
+          JOIN 
+            ProductNames pn ON i.product_name_id = pn.id
+          GROUP BY 
+            pn.name
+          HAVING 
+            SUM(i.quantity) > 0
+        ) AS in_stock_count;
+        ''',
+      ),
+    );
+
+    return result.first[0] as int;
+  }
+
+  Future<int> getLowStocksCount() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          COUNT(*) AS low_stock_count
+        FROM (
+          SELECT 
+            pn.name AS product_name,
+            SUM(i.quantity) AS total_quantity
+          FROM 
+            Items i
+          JOIN 
+            ProductNames pn ON i.product_name_id = pn.id
+          GROUP BY 
+            pn.name
+          HAVING 
+            SUM(i.quantity) > 0 AND SUM(i.quantity) <= 5
+        ) AS low_stock_count;
+        ''',
+      ),
+    );
+
+    return result.first[0] as int;
+  }
+
+  Future<int> getOutOfStocksCount() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          COUNT(*) AS out_of_stock_count
+        FROM (
+          SELECT 
+            pn.name AS product_name,
+            SUM(i.quantity) AS total_quantity
+          FROM 
+            Items i
+          JOIN 
+            ProductNames pn ON i.product_name_id = pn.id
+          GROUP BY 
+            pn.name
+          HAVING 
+            SUM(i.quantity) = 0
+        ) AS out_of_stock_count;
+        ''',
+      ),
+    );
+
+    return result.first[0] as int;
+  }
+
+  Future<List<Map<String, dynamic>>> getCategoricalInventory() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          i.asset_classification AS category_name,
+          SUM(i.quantity) AS total_stock
+        FROM 
+          Items i
+        GROUP BY 
+          i.asset_classification
+        ORDER BY 
+          total_stock DESC;
+        ''',
+      ),
+    );
+
+    return result
+        .map((row) => {
+              'category_name': row[0],
+              'total_stock': row[1],
+            })
+        .toList();
+  }
 }

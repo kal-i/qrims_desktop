@@ -15,7 +15,11 @@ Future<Response> onRequest(
 
   return switch (context.request.method) {
     HttpMethod.get => _getPurchaseRequestInformation(
-        context, notifRepository, prRepository, id),
+        context,
+        notifRepository,
+        prRepository,
+        id,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }

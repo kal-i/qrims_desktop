@@ -157,7 +157,7 @@ Future<Response> _createPAR(
     int issuedQuantity = par?.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
 
     String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
-        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${par?.parId}."
+        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${par?.id}."
         : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${par?.id}.";
 
     /// reference will always refer to the pr id to build a tracking

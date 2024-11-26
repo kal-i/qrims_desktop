@@ -158,7 +158,7 @@ Future<Response> _createICS(
     print('base ics id: ${ics?.id}');
 
     String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
-        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${ics?.icsId}."
+        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${ics?.id}."
         : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${ics?.id}.";
 
     /// reference will always refer to the pr id to build a tracking

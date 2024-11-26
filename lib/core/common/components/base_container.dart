@@ -11,6 +11,7 @@ class BaseContainer extends StatelessWidget {
     this.child,
     this.width,
     this.height,
+    this.marginBottom,
     this.padding,
     this.borderRadius,
     this.color,
@@ -20,6 +21,7 @@ class BaseContainer extends StatelessWidget {
   final Widget? child;
   final double? width;
   final double? height;
+  final double? marginBottom;
   final double? padding;
   final double? borderRadius;
   final Color? color;
@@ -30,6 +32,9 @@ class BaseContainer extends StatelessWidget {
     final currentTheme = Theme.of(context);
 
     return Container(
+      margin: EdgeInsets.only(
+        bottom: marginBottom ?? 0.0,
+      ),
       padding: EdgeInsets.all(padding ?? 20.0),
       width: width,
       height: height ?? 160.0,

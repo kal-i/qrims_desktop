@@ -4,23 +4,21 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
-import '../../../../config/themes/app_theme.dart';
-import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
-import '../../../../core/common/components/reusable_filter_custom_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
+import '../../../../core/enums/document_type.dart';
+import '../../../../core/services/document_service.dart';
 import '../../../../core/utils/capitalizer.dart';
-import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../bloc/issuances_bloc.dart';
 import '../components/create_ics_modal.dart';
@@ -151,10 +149,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New Issuance',
             icon: CupertinoIcons.folder,
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) => const CreateIssuanceModal(),
-            ),
+            onTap: () {},
           ),
         ),
         const SizedBox(
@@ -168,16 +163,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
               context: context,
               builder: (context) => const CreateIcsModal(),
             ),
-          ),
-        ),
-        const SizedBox(
-          width: 15.0,
-        ),
-        Expanded(
-          child: CustomInteractableCard(
-            name: 'New RIS',
-            icon: CupertinoIcons.doc,
-            onTap: () {},
           ),
         ),
         const SizedBox(
@@ -218,8 +203,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           children: [
             Expanded(
                 child: DocumentCard(
-              onTap: () => showCustomDocumentPreview(context),
-            )),
+              onTap: () {
+                // showCustomDocumentPreview(context, {},);
+              },
+              ),
+            ),
             const SizedBox(
               width: 15.0,
             ),
@@ -288,7 +276,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     final Map<String, String> filterMapping = {
       'View All': '',
       'ICS': 'ics',
-      'RIS': 'ris',
       'PAR': 'par',
     };
     return FilterTableRow(
@@ -299,7 +286,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
 
   Widget _buildRefreshButton() {
     return ReusableCustomRefreshOutlineButton(
-      onTap: () {},
+      onTap: _refreshIssuanceList,
     );
   }
 
@@ -376,8 +363,32 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                 ),
               ],
               menuItems: [
-                {'text': 'View', 'icon': FluentIcons.eye_12_regular},
+                {
+                  'text': 'View',
+                  'icon': FluentIcons.eye_12_regular,
+                },
+                {
+                  'text': 'Manual Receive',
+                  'icon': HugeIcons.strokeRoundedPackageReceive,
+                },
+                // {
+                //   'text': 'Return',
+                //   'icon': HugeIcons.strokeRoundedPackageReceive,
+                // },
+                {
+                  'text': 'Generate Issuance Document',
+                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                },
+                {
+                  'text': 'Generate RIS Document',
+                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                },
+                {
+                  'text': 'Generate Sticker',
+                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                },
               ],
+              object: issuance,
             );
           }).toList());
         }
@@ -409,14 +420,39 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
 
                         if (action.isNotEmpty) {
                           if (action.contains('View')) {
-                            path = RoutingConstants.nestedViewItemIssuanceViewRoutePath;
+                            path = RoutingConstants
+                                .nestedViewItemIssuanceViewRoutePath;
+
+                            context.go(
+                              path,
+                              extra: extras,
+                            );
+                          }
+
+                          if (action.contains('Generate Issuance Document')) {
+                            showCustomDocumentPreview(
+                              context: context,
+                              documentObject: _tableRows[index].object,
+                              docType: DocumentType.issuance
+                            );
+                          }
+
+                          if (action.contains('Generate RIS Document')) {
+                            showCustomDocumentPreview(
+                              context: context,
+                              documentObject: _tableRows[index].object,
+                              docType: DocumentType.ris,
+                            );
+                          }
+
+                          if (action.contains('Generate Sticker')) {
+                            showCustomDocumentPreview(
+                              context: context,
+                              documentObject: _tableRows[index].object,
+                              docType: DocumentType.sticker,
+                            );
                           }
                         }
-
-                        context.go(
-                          path!,
-                          extra: extras,
-                        );
                       },
                     ),
                   ),

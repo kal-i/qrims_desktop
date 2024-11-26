@@ -19,6 +19,10 @@ const sendOtpEP = '$otpEP/send_otp';
 const verifyOtpEP = '$otpEP/verify_otp';
 const unAuth = '/logout';
 
+const dashboardEP = '/dashboard';
+const inventorySummaryEP = '$dashboardEP/inventory_summary';
+const mostRequestedItemsEP = '$dashboardEP/most_requested_items';
+
 /// user acts endpoint
 const userActsEP = '/user_activities';
 
@@ -45,3 +49,5 @@ const issuancesIdEP = '$issuancesEP/id';
 const matchPurchaseRequestWithInventoryItemEP = '$issuancesEP/match';
 const icsEP = '$issuancesEP/ics';
 const parEP = '$issuancesEP/par';
+
+const notificationsEP = '/notifications';

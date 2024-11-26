@@ -354,7 +354,16 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                     ),
                   ),
                 ],
-                menuItems: [],
+                menuItems: [
+                  {
+                    'text': 'View',
+                    'icon': FluentIcons.eye_12_regular,
+                  },
+                  {
+                    'text': 'Cancel Request',
+                    'icon': HugeIcons.strokeRoundedTaskRemove01,
+                  },
+                ],
               ),
             ),
           );

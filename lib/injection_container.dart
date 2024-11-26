@@ -31,11 +31,19 @@ import 'features/auth/domain/usecases/user_verify_otp.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 // Dashboard
+import 'features/dashboard/data/data_sources/remote/dashboard_remote_data_source.dart';
+import 'features/dashboard/data/data_sources/remote/dashboard_remote_data_source_impl.dart';
 import 'features/dashboard/data/data_sources/remote/user_activity_remote_data_source.dart';
 import 'features/dashboard/data/data_sources/remote/user_activity_remote_data_source_impl.dart';
+import 'features/dashboard/data/repository/dashboard_repository_impl.dart';
 import 'features/dashboard/data/repository/user_activity_repository_impl.dart';
+import 'features/dashboard/domain/repository/dashboard_repository.dart';
 import 'features/dashboard/domain/repository/user_activity_repository.dart';
+import 'features/dashboard/domain/usecases/get_inventory_summary.dart';
+import 'features/dashboard/domain/usecases/get_most_requested_items.dart';
 import 'features/dashboard/domain/usecases/get_user_activities.dart';
+import 'features/dashboard/presentation/bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 
 // Item Inventory
@@ -60,6 +68,13 @@ import 'features/item_issuance/domain/usecases/get_issuance_by_id.dart';
 import 'features/item_issuance/domain/usecases/get_paginated_issuances.dart';
 import 'features/item_issuance/domain/usecases/match_item_with_pr.dart';
 import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
+import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source.dart';
+import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source_impl.dart';
+import 'features/navigation/data/data/repository/notification_repository_impl.dart';
+import 'features/navigation/domain/domain/repository/notification_repository.dart';
+import 'features/navigation/domain/domain/usecases/get_notifications.dart';
+import 'features/navigation/domain/domain/usecases/read_notification.dart';
+import 'features/navigation/presentation/bloc/notifications_bloc.dart';
 import 'features/navigation/presentation/components/side_navigation_drawer/bloc/side_navigation_drawer_bloc.dart';
 
 // Officers Management
@@ -106,6 +121,7 @@ Future<void> initializeDependencies() async {
   _registerAuthDependencies();
   _registerNavigationDependencies();
   _registerDashboardDependencies();
+  _registerNotificationDependencies();
   _registerItemInventoryDependencies();
   _registerPurchaseRequestsDependencies();
   _registerItemIssuanceDependencies();
@@ -195,7 +211,41 @@ void _registerNavigationDependencies() {
 
 /// Dashboard
 void _registerDashboardDependencies() {
+  serviceLocator.registerFactory<DashboardRemoteDataSource>(
+        () => DashboardRemoteDataSourceImpl(httpService: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<DashboardRepository>(
+        () => DashboardRepositoryImpl(dashboardRemoteDataSource: serviceLocator()),
+  );
+
+  _registerInventorySummaryDependencies();
+  _registerRequestsSummaryDependencies();
   _registerUserActivityDependencies();
+}
+
+void _registerInventorySummaryDependencies() {
+  serviceLocator.registerFactory<GetInventorySummary>(
+        () => GetInventorySummary(dashboardRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<InventorySummaryBloc>(
+        () => InventorySummaryBloc(
+      getInventorySummary: serviceLocator(),
+    ),
+  );
+}
+
+void _registerRequestsSummaryDependencies() {
+  serviceLocator.registerFactory<GetMostRequestedItems>(
+        () => GetMostRequestedItems(dashboardRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<RequestsSummaryBloc>(
+        () => RequestsSummaryBloc(
+          getMostRequestedItems: serviceLocator(),
+    ),
+  );
 }
 
 /// User Activity
@@ -294,7 +344,7 @@ void _registerItemIssuanceDependencies() {
   );
 
   serviceLocator.registerFactory<GetIssuanceById>(
-        () => GetIssuanceById(issuanceRepository: serviceLocator()),
+    () => GetIssuanceById(issuanceRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<GetPaginatedIssuances>(
@@ -302,15 +352,15 @@ void _registerItemIssuanceDependencies() {
   );
 
   serviceLocator.registerFactory<MatchItemWithPr>(
-        () => MatchItemWithPr(issuanceRepository: serviceLocator()),
+    () => MatchItemWithPr(issuanceRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<CreateICS>(
-        () => CreateICS(issuanceRepository: serviceLocator()),
+    () => CreateICS(issuanceRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<CreatePAR>(
-        () => CreatePAR(issuanceRepository: serviceLocator()),
+    () => CreatePAR(issuanceRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<IssuancesBloc>(
@@ -422,6 +472,33 @@ void _registerArchiveUsersDependencies() {
     () => ArchiveUsersBloc(
       getArchivedUsers: serviceLocator(),
       updateUserArchiveStatus: serviceLocator(),
+    ),
+  );
+}
+
+/// Notification
+void _registerNotificationDependencies() {
+  serviceLocator.registerFactory<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(httpService: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+        notificationRemoteDataSource: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<GetNotifications>(
+    () => GetNotifications(notificationRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<ReadNotification>(
+    () => ReadNotification(notificationRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<NotificationsBloc>(
+    () => NotificationsBloc(
+      getNotifications: serviceLocator(),
+      readNotification: serviceLocator(),
     ),
   );
 }

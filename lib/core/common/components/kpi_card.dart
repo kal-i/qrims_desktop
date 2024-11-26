@@ -12,17 +12,20 @@ class KPICard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.data,
-    this.baseColor,
+    this.iconBackgroundColor,
+    this.outlineColor,
+    this.foregroundColor,
   });
 
   final IconData icon;
   final String title;
   final String data;
-  final Color? baseColor;
+  final Color? iconBackgroundColor;
+  final Color? outlineColor;
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
-    final currentTheme = Theme.of(context);
 
     return BaseContainer(
       child: Row(
@@ -32,12 +35,13 @@ class KPICard extends StatelessWidget {
             padding: const EdgeInsets.all(10.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.0),
-              color: (context.watch<ThemeBloc>().state == AppTheme.light
+              color: iconBackgroundColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
                   ? AppColor.lightTertiary
                   : AppColor.darkTertiary),
             ),
             child: Icon(
               icon,
+              color: outlineColor,
               //color: AppColor.accent,
             ),
           ),
@@ -50,8 +54,9 @@ class KPICard extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w900,
+                  color: foregroundColor,
                 ),
               ),
               Text(
@@ -59,6 +64,7 @@ class KPICard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: 32.0,
                   fontWeight: FontWeight.w900,
+                  color: foregroundColor,
                 ),
               ),
             ],

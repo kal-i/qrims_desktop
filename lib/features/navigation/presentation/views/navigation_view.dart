@@ -10,6 +10,7 @@ import '../../../../config/routes/app_router.dart';
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_drag_to_move_area.dart';
+import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/common/components/window_buttons.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
@@ -33,6 +34,7 @@ class NavigationView extends StatefulWidget {
 
 class _NavigationViewState extends State<NavigationView> {
   final ValueNotifier<bool> _isAdmin = ValueNotifier(false);
+  final ValueNotifier<bool> _isNotificationTabVisible = ValueNotifier(false);
 
   @override
   void dispose() {
@@ -93,24 +95,43 @@ class _NavigationViewState extends State<NavigationView> {
                       return _buildSideNavigationDrawer(isAdmin);
                     }),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 10.0,
-                      right: 20.0,
-                      bottom: 20.0,
-                      left: 10.0,
-                    ),
-                    child: Column(
-                      children: [
-                        _buildHeader(),
-                        if (state is AuthLoading)
-                          LinearProgressIndicator(
-                            backgroundColor: Theme.of(context).dividerColor,
-                            color: AppColor.accent,
-                          ),
-                        _buildContent(),
-                      ],
-                    ),
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 10.0,
+                          right: 20.0,
+                          bottom: 20.0,
+                          left: 10.0,
+                        ),
+                        child: Column(
+                          children: [
+                            _buildHeader(),
+                            if (state is AuthLoading)
+                              LinearProgressIndicator(
+                                backgroundColor: Theme.of(context).dividerColor,
+                                color: AppColor.accent,
+                              ),
+                            _buildContent(),
+                          ],
+                        ),
+                      ),
+
+                      // Notification Tab
+                      ValueListenableBuilder(
+                        valueListenable: _isNotificationTabVisible,
+                        builder: (context, isVisible, child) {
+                          return SlidableContainer(
+                            width: 500.0,
+                            content: isVisible ? const NotificationWindow() : const SizedBox.shrink(),
+                            isVisible: isVisible,
+                            onClose: () {
+                              _isNotificationTabVisible.value = false;
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -145,13 +166,12 @@ class _NavigationViewState extends State<NavigationView> {
                 badges.Badge(
                   position: badges.BadgePosition.topEnd(top: 8, end: 0),
                   child: IconButton(
-                    onPressed: () {},
-                    // => showDialog(
-                    //   context: context,
-                    //   builder: (context) => Dialog(
-                    //     child: NotificationWindow(),
-                    //   )
-                    //),
+                    onPressed: () {
+                      Future.microtask(() {
+                        _isNotificationTabVisible.value =
+                            !_isNotificationTabVisible.value;
+                      });
+                    },
                     icon: const Icon(
                       HugeIcons.strokeRoundedNotification03,
                       size: 20.0,
@@ -160,13 +180,6 @@ class _NavigationViewState extends State<NavigationView> {
                 ),
                 const SizedBox(
                   width: 10.0,
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    CupertinoIcons.ellipsis_vertical,
-                    size: 20.0,
-                  ),
                 ),
                 const WindowButtons(),
               ],

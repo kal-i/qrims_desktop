@@ -1,0 +1,4 @@
+enum ReusablePurpose {
+  register,
+  update,
+}

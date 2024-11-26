@@ -312,7 +312,8 @@ class PurchaseRequestRepository {
 
       if (requestingOfficerId != null && requestingOfficerId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.requesting_officer_id LIKE @requesting_officer_id');
+        whereClause
+            .write('pr.requesting_officer_id LIKE @requesting_officer_id');
         params['requesting_officer_id'] = '$requestingOfficerId';
       }
 
@@ -352,7 +353,8 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
 
         if (filter == 'ongoing') {
-          whereClause.write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
+          whereClause
+              .write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
         }
 
         if (filter == 'history') {
@@ -477,7 +479,8 @@ class PurchaseRequestRepository {
 
       if (receivingOfficerId != null && receivingOfficerId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.requesting_officer_id LIKE @requesting_officer_id');
+        whereClause
+            .write('pr.requesting_officer_id LIKE @requesting_officer_id');
         params['requesting_officer_id'] = '$receivingOfficerId';
       }
 
@@ -517,7 +520,8 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
 
         if (filter == 'ongoing') {
-          whereClause.write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
+          whereClause
+              .write('pr.status IN (\'pending\', \'partiallyFulfilled\')');
         }
 
         if (filter == 'history') {
@@ -705,5 +709,88 @@ class PurchaseRequestRepository {
       print('Error fetching pr ids: $e');
       throw Exception('Failed to fetch pr id');
     }
+  }
+
+  Future<List<Map<String, dynamic>>> getTopRequestedItemsByPeriod(
+    int limit,
+    String period, // 'day', 'week', 'month', or 'year'
+  ) async {
+    DateTime now = DateTime.now();
+    DateTime startDate;
+    DateTime endDate = now;
+
+    // Calculate startDate based on the period
+    switch (period) {
+      case 'day':
+        startDate = DateTime(now.year, now.month, now.day); // Start of the day
+        break;
+      case 'week':
+        startDate = now.subtract(Duration(
+            days: now.weekday - 1)); // Start of the current week (Monday)
+        break;
+      case 'month':
+        startDate =
+            DateTime(now.year, now.month, 1); // Start of the current month
+        break;
+      case 'year':
+        startDate = DateTime(now.year, 1, 1); // Start of the current year
+        break;
+      default:
+        throw ArgumentError(
+            'Invalid period parameter. Use "week", "month", or "year".');
+    }
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          pn.name AS product_name, 
+          DATE_TRUNC(@period, pr.date) AS request_date,
+          SUM(pr.quantity) AS total_requested_quantity
+        FROM 
+          PurchaseRequests pr
+        JOIN 
+          ProductNames pn ON pr.product_name_id = pn.id
+        WHERE 
+          pr.status IN ('pending', 'partiallyFulfilled', 'fulfilled') 
+          AND pr.is_archived = FALSE
+          AND pr.date >= @startDate AND pr.date <= @endDate
+        GROUP BY 
+          pn.name, DATE_TRUNC(@period, pr.date)
+        ORDER BY 
+          total_requested_quantity DESC
+        LIMIT @limit;
+      ''',
+      ),
+      parameters: {
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
+        'limit': limit,
+        'period': period,
+      },
+    );
+
+    // Map the results into a format suitable for a line graph
+    Map<String, List<Map<String, dynamic>>> groupedData = {};
+
+    for (final row in result) {
+      final productName = row[0] as String;
+      final requestDate = row[1] as DateTime;
+      final totalRequestedQuantity = row[2] as int;
+
+      groupedData.putIfAbsent(productName, () => []);
+
+      groupedData[productName]!.add({
+        'date': requestDate.toIso8601String(),
+        'quantity': totalRequestedQuantity,
+      });
+    }
+
+    return groupedData.entries.map((entry) {
+      return {
+        'product_name': entry.key,
+        'data': entry.value,
+      };
+    }).toList();
   }
 }
