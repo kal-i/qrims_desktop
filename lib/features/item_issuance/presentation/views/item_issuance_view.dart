@@ -17,9 +17,13 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/enums/document_type.dart';
+import '../../../../core/enums/role.dart';
+import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/services/document_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
+import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/issuances_bloc.dart';
 import '../components/create_ics_modal.dart';
 import '../components/create_issuance_modal.dart';
@@ -120,29 +124,38 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildClickableCardsRow(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildRecentlyGeneratedDocumentsRow(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildActionsRow(),
-          const SizedBox(
-            height: 20.0,
-          ),
-          Expanded(
-            child: _buildDataTable(),
-          ),
-        ],
-      ),
+      body: BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+        bool isAdmin = false;
+
+        if (state is AuthSuccess) {
+          isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+              Role.admin;
+        }
+
+        return Column(
+          children: [
+            _buildClickableCardsRow(isAdmin),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildRecentlyGeneratedDocumentsRow(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildActionsRow(),
+            const SizedBox(
+              height: 20.0,
+            ),
+            Expanded(
+              child: _buildDataTable(isAdmin),
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildClickableCardsRow() {
+  Widget _buildClickableCardsRow(bool isAdmin) {
     return Row(
       children: [
         Expanded(
@@ -159,10 +172,15 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New ICS',
             icon: Icons.note_outlined,
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) => const CreateIcsModal(),
-            ),
+            onTap: () => isAdmin
+                ? DelightfulToastUtils.showDelightfulToast(
+                    context: context,
+                    title: 'Information',
+                    subtitle: 'You cannot perform this activity.')
+                : showDialog(
+                    context: context,
+                    builder: (context) => const CreateIcsModal(),
+                  ),
           ),
         ),
         const SizedBox(
@@ -172,10 +190,15 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New PAR',
             icon: CupertinoIcons.folder,
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) => const CreateParModal(),
-            ),
+            onTap: () => isAdmin
+                ? DelightfulToastUtils.showDelightfulToast(
+                    context: context,
+                    title: 'Information',
+                    subtitle: 'You cannot perform this activity.')
+                : showDialog(
+                    context: context,
+                    builder: (context) => const CreateParModal(),
+                  ),
           ),
         ),
       ],
@@ -202,10 +225,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         Row(
           children: [
             Expanded(
-                child: DocumentCard(
-              onTap: () {
-                // showCustomDocumentPreview(context, {},);
-              },
+              child: DocumentCard(
+                onTap: () {
+                  // showCustomDocumentPreview(context, {},);
+                },
               ),
             ),
             const SizedBox(
@@ -267,7 +290,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         const SizedBox(
           width: 10.0,
         ),
-        _buildSortButton(),
+        //_buildSortButton(),
       ],
     );
   }
@@ -304,7 +327,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     );
   }
 
-  Widget _buildDataTable() {
+  Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<IssuancesBloc, IssuancesState>(
       listener: (context, state) {
         if (state is IssuancesLoading) {
@@ -321,6 +344,37 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();
+        }
+
+        // if (state is IssuanceArchiveStatusUpdated &&
+        //     state.isSuccessful == true) {
+        //   _isLoading = false;
+        //   _errorMessage = null;
+        //   _refreshIssuanceList();
+        //   DelightfulToastUtils.showDelightfulToast(
+        //     context: context,
+        //     title: 'Issuance Archived!',
+        //     subtitle: 'Issuance was archived successfully.',
+        //   );
+        // }
+
+        if (state is IssuanceArchiveStatusUpdated) {
+          if (state.isSuccessful == true) {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.check_circle_outline,
+              title: 'Success',
+              subtitle: 'Issuance archive status updated successfully.',
+            );
+            _refreshIssuanceList();
+          } else {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.error_outline,
+              title: 'Failed',
+              subtitle: 'Failed to update issuance authentication status.',
+            );
+          }
         }
 
         if (state is IssuancesLoaded) {
@@ -367,26 +421,34 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                   'text': 'View',
                   'icon': FluentIcons.eye_12_regular,
                 },
-                {
-                  'text': 'Manual Receive',
-                  'icon': HugeIcons.strokeRoundedPackageReceive,
-                },
+                // {
+                //   'text': 'Manual Receive',
+                //   'icon': HugeIcons.strokeRoundedPackageReceive,
+                // },
                 // {
                 //   'text': 'Return',
                 //   'icon': HugeIcons.strokeRoundedPackageReceive,
                 // },
-                {
-                  'text': 'Generate Issuance Document',
-                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
-                },
-                {
-                  'text': 'Generate RIS Document',
-                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
-                },
-                {
-                  'text': 'Generate Sticker',
-                  'icon': HugeIcons.strokeRoundedDocumentAttachment,
-                },
+                if (isAdmin)
+                  {
+                    'text': 'Archive',
+                    'icon': HugeIcons.strokeRoundedArchive,
+                  },
+                if (!isAdmin)
+                  {
+                    'text': 'Generate Issuance Document',
+                    'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                  },
+                if (!isAdmin)
+                  {
+                    'text': 'Generate RIS Document',
+                    'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                  },
+                if (!isAdmin)
+                  {
+                    'text': 'Generate Sticker',
+                    'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                  },
               ],
               object: issuance,
             );
@@ -429,12 +491,20 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                             );
                           }
 
+                          if (action.contains('Archive')) {
+                            _issuancesBloc.add(
+                              UpdateIssuanceArchiveStatusEvent(
+                                id: issuanceId,
+                                isArchived: true,
+                              ),
+                            );
+                          }
+
                           if (action.contains('Generate Issuance Document')) {
                             showCustomDocumentPreview(
-                              context: context,
-                              documentObject: _tableRows[index].object,
-                              docType: DocumentType.issuance
-                            );
+                                context: context,
+                                documentObject: _tableRows[index].object,
+                                docType: DocumentType.issuance);
                           }
 
                           if (action.contains('Generate RIS Document')) {

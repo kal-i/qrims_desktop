@@ -43,11 +43,45 @@ class PurchaseRequestRepository {
     return uniqueId;
   }
 
+  Future<String> _generateUniqueResponsibilityCenterCode() async {
+    final now = DateTime.now();
+    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+    print('Current year-month for RCC: $yearMonth');
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT responsibility_center_code FROM PurchaseRequests
+        WHERE responsibility_center_code LIKE 'RCC' || '-' || @year_month || '-%'
+        ORDER BY responsibility_center_code DESC
+        LIMIT 1
+        ''',
+      ),
+      parameters: {
+        'year_month': yearMonth,
+      },
+    );
+
+    int? n; // represent the no. of record
+    if (result.isNotEmpty) {
+      //print(int.parse(result.first.toString())); // whole
+      //print(int.parse(result.first.toString().split('-').last)); // 21]
+      //print('resu: ${int.parse(result.first[0].toString().split(' - ').last)}');
+      n = int.parse(result.first[0].toString().split('-').last) + 1;
+    } else {
+      n = 1;
+    }
+
+    final uniqueId = 'RCC-$yearMonth-${n.toString().padLeft(3, '0')}';
+    print('Generated RCC: $uniqueId');
+    return uniqueId;
+  }
+
   Future<String> registerPurchaseRequest({
     required String entityId,
     required FundCluster fundCluster,
     required String officeId,
-    String? responsibilityCenterCode,
     required DateTime date,
     required String productNameId,
     required String productDescriptionId,
@@ -61,6 +95,7 @@ class PurchaseRequestRepository {
     try {
       print('triggered');
       final prId = await _generateUniquePurchaseRequestId();
+      final rcc = await _generateUniqueResponsibilityCenterCode();
       print('pr id: $prId');
 
       await _conn.execute(
@@ -84,7 +119,7 @@ class PurchaseRequestRepository {
           'entity_id': entityId,
           'fund_cluster': fundCluster.toString().split('.').last,
           'office_id': officeId,
-          'responsibility_center_code': responsibilityCenterCode,
+          'responsibility_center_code': rcc,
           'date': date,
           'product_name_id': productNameId,
           'product_description_id': productDescriptionId,
@@ -105,6 +140,24 @@ class PurchaseRequestRepository {
       print('err reg pr: $e');
       throw Exception('Error registering pr: $e');
     }
+  }
+
+  Future<int> getPurchaseRequestsCountBasedOnStatus({
+    required PurchaseRequestStatus status,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT COUNT(*) FROM PurchaseRequests 
+        WHERE status = @status;
+        ''',
+      ),
+      parameters: {
+        'status': status.toString().split('.').last,
+      },
+    );
+
+    return result.first[0] as int;
   }
 
   Future<int> getReceivingOfficerPurchaseRequestsCountBasedOnStatus({
@@ -609,7 +662,7 @@ class PurchaseRequestRepository {
       SELECT COUNT(id) FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer('WHERE status != \'fulfilled\'');
+      final whereClause = StringBuffer('WHERE status != \'fulfilled\' AND status != \'cancelled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('id LIKE @id');
@@ -663,7 +716,7 @@ class PurchaseRequestRepository {
       SELECT id FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer('WHERE status != \'fulfilled\'');
+      final whereClause = StringBuffer('WHERE status != \'fulfilled\' AND status != \'cancelled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('id LIKE @id');
@@ -792,5 +845,144 @@ class PurchaseRequestRepository {
         'data': entry.value,
       };
     }).toList();
+  }
+
+  Future<Map<String, int>> fetchPRCounts(
+      DateTime startDate, DateTime endDate) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT 
+        status, 
+        COUNT(*) AS count
+      FROM 
+        PurchaseRequests
+      WHERE 
+        date >= @startDate AND date < @endDate
+        AND is_archived = FALSE
+      GROUP BY 
+        status;
+      ''',
+      ),
+      parameters: {
+        'startDate': startDate,
+        'endDate': endDate,
+      },
+    );
+
+    // Convert result to a Map<String, int> for easy processing
+    final counts = <String, int>{};
+    for (final row in result) {
+      counts[row[0] as String] = row[1] as int;
+    }
+    return counts;
+  }
+
+  // Function to generate feedback based on counts
+  Map<String, dynamic> generateFeedback(
+      String prType, int currentCount, int previousCount) {
+    if (previousCount == 0) {
+      if (currentCount > 0) {
+        return {
+          'feedback':
+              'There has been a significant rise in $prType purchase requests this month, up from none last month.',
+          'is_increase': true,
+          'percentage': 100.0,
+        };
+      } else {
+        return {
+          'feedback':
+              'There were no $prType purchase requests this month or last month.',
+          'is_increase': null, // No increase or decrease
+          'percentage': 0.0,
+        };
+      }
+    }
+
+    final difference = currentCount - previousCount;
+    final percentageChange = (difference / previousCount) * 100;
+
+    if (difference > 0) {
+      return {
+        'feedback':
+            'There has been a ${percentageChange.toStringAsFixed(1)}% increase in $prType purchase requests this month.',
+        'is_increase': true,
+        'percentage': percentageChange,
+      };
+    } else if (difference < 0) {
+      return {
+        'feedback':
+            'There has been a ${percentageChange.abs().toStringAsFixed(1)}% decrease in $prType purchase requests this month.',
+        'is_increase': false,
+        'percentage': percentageChange,
+      };
+    } else {
+      return {
+        'feedback':
+            'There has been no change in $prType purchase requests compared to last month.',
+        'is_increase': null, // No increase or decrease
+        'percentage': percentageChange,
+      };
+    }
+  }
+
+// Function to generate feedback for all statuses
+  Future<Map<String, Map<String, dynamic>>>
+      generateFeedbackForAllStatuses() async {
+    final now = DateTime.now();
+    final currentMonthStart = DateTime(now.year, now.month, 1);
+    final previousMonthStart = DateTime(now.year, now.month - 1, 1);
+    final currentMonthEnd = DateTime(now.year, now.month + 1, 1);
+    final previousMonthEnd = currentMonthStart;
+
+    // Fetch counts for current and previous months
+    final currentCounts =
+        await fetchPRCounts(currentMonthStart, currentMonthEnd);
+    final previousCounts =
+        await fetchPRCounts(previousMonthStart, previousMonthEnd);
+
+    // Generate feedback for each status
+    final feedbacks = <String, Map<String, dynamic>>{};
+    final statuses = {
+      'pending',
+      'partiallyFulfilled',
+      'fulfilled',
+      'cancelled'
+    };
+
+    for (final status in statuses) {
+      final currentCount = currentCounts[status] ?? 0;
+      final previousCount = previousCounts[status] ?? 0;
+      feedbacks[status] = generateFeedback(status, currentCount, previousCount);
+    }
+
+    return feedbacks;
+  }
+
+  /// toggle between cancelled and pending status
+  /// can only set pending status to cancelled and non others
+  Future<bool> updatePurchaseRequestStatus({
+    required String id,
+    required PurchaseRequestStatus status,
+  }) async {
+    print(id);
+    print(status);
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+    UPDATE PurchaseRequests
+    SET status = @status
+    WHERE id = @id;
+    ''',
+      ),
+      parameters: {
+        'id': id,
+        'status': status.toString().split('.').last,
+      },
+    );
+
+    print(result);
+
+    return result.affectedRows == 1;
   }
 }

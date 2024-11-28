@@ -1153,10 +1153,10 @@ class DocumentService {
                 ),
                 _buildRISFooterTableRow(
                   title: 'Designation:',
-                  dataRowColumnOne: requestingOfficerPosition,
-                  dataRowColumnTwo: approvingOfficerPosition,
-                  dataRowColumnThree: issuingOfficerPosition,
-                  dataRowColumnFour: receivingOfficerPosition,
+                  dataRowColumnOne: formatPosition(requestingOfficerPosition),
+                  dataRowColumnTwo: formatPosition(approvingOfficerPosition),
+                  dataRowColumnThree: formatPosition(issuingOfficerPosition),
+                  dataRowColumnFour: formatPosition(receivingOfficerPosition),
                 ),
                 _buildRISFooterTableRow(
                   title: 'Date:',
@@ -1435,34 +1435,44 @@ class DocumentService {
           ),
           build: (context) => _buildContainer(
             width: 225.0,
-            height: 400.0,
-            borderWidthTop: 2.0,
-            borderWidthRight: 2.0,
-            borderWidthBottom: 2.0,
-            borderWidthLeft: 2.0,
+            borderTop: false,
+            borderRight: false,
+            borderBottom: false,
+            borderLeft: false,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
-                _buildStickerHeader(),
-                pw.SizedBox(
-                  height: 5.0,
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(3.0),
-                  color: PdfColors.lightBlue,
-                  child: pw.Text(
-                    'PHYSICAL PROPERTY INVENTORY',
-                    style: pw.TextStyle(
-                      font: calibriBold,
-                      fontSize: 12.0,
-                      color: PdfColors.white,
-                      //fontWeight: pw.FontWeight.bold,
-                    ),
-                    textAlign: pw.TextAlign.center,
+                _buildContainer(
+                  borderWidthTop: 2.0,
+                  borderWidthRight: 2.0,
+                  borderWidthBottom: 2.0,
+                  borderWidthLeft: 0.0,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                    children: [
+                      _buildStickerHeader(),
+                      pw.SizedBox(
+                        height: 5.0,
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(3.0),
+                        color: PdfColors.lightBlue,
+                        child: pw.Text(
+                          'PHYSICAL PROPERTY INVENTORY',
+                          style: pw.TextStyle(
+                            font: calibriBold,
+                            fontSize: 12.0,
+                            color: PdfColors.white,
+                            //fontWeight: pw.FontWeight.bold,
+                          ),
+                          textAlign: pw.TextAlign.center,
+                        ),
+                      ),
+                      pw.SizedBox(
+                        height: 10.0,
+                      ),
+                    ],
                   ),
-                ),
-                pw.SizedBox(
-                  height: 10.0,
                 ),
                 pw.Table(
                   columnWidths: {
@@ -1475,64 +1485,72 @@ class DocumentService {
                           ? 'SEMI-EXPENDABLE \nPROPERTY NUMBER'
                           : '\nPROPERTY NUMBER',
                       value: mappableData[i * 8 + 0],
-                      borderRight: false,
+                      height: rowHeights[i * 8 + 0],
                     ),
                     _buildStickerTableRow(
                       title: 'ASSET CLASSIFICATION',
                       value: mappableData[i * 8 + 1],
+                      height: rowHeights[i * 8 + 1],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'FUND SOURCE',
                       value: mappableData[i * 8 + 2],
+                      height: rowHeights[i * 8 + 2],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'ITEM/BRAND/MODEL',
                       value: mappableData[i * 8 + 3],
+                      height: rowHeights[i * 8 + 3],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'SERIAL NUMBER',
                       value: mappableData[i * 8 + 4],
+                      height: rowHeights[i * 8 + 4],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'ACQUISITION COST',
                       value: mappableData[i * 8 + 5],
+                      height: rowHeights[i * 8 + 5],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'ACQUISITION DATE',
                       value: mappableData[i * 8 + 6],
+                      height: rowHeights[i * 8 + 6],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: 'PERSON ACCOUNTABLE',
                       value: mappableData[i * 8 + 7],
+                      height: rowHeights[i * 8 + 7],
                       borderTop: false,
-                      borderRight: false,
                     ),
                     _buildStickerTableRow(
                       title: '\nVALIDATION/SIGNATURE',
                       value: '\n\n', // This row doesn't depend on the list
+                      height: rowHeights[i],
                       borderTop: false,
-                      borderRight: false,
                     ),
-                    if (withQR)
-                      pw.TableRow(
-                        children: [
-                          _buildQrContainer(data: item.itemEntity.itemEntity.encryptedId)
-                        ],
-                      ),
                   ],
                 ),
+                if (withQR)
+                  _buildContainer(
+                    horizontalPadding: 10.0,
+                    verticalPadding: 10.0,
+                    borderTop: false,
+                    borderWidthRight: 2.0,
+                    borderWidthBottom: 2.0,
+                    borderWidthLeft: 2.0,
+                    child: pw.Align(
+                      alignment: pw.AlignmentDirectional.bottomEnd,
+                      child: _buildQrContainer(
+                          data: item.itemEntity.itemEntity.encryptedId),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1559,9 +1577,8 @@ class DocumentService {
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
           borderTop: borderTop,
-          borderRight: borderRight,
+          borderRight: false,
           borderBottom: borderBottom,
-          borderLeft: false,
           child: pw.Text(
             title,
             style: pw.TextStyle(

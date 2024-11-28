@@ -46,8 +46,12 @@ class RoutingConstants {
   /// purchase request route paths
   static const purchaseRequestViewRouteName = 'purchaseRequestView';
   static const purchaseRequestViewRoutePath = '/purchaseRequest';
+  static const viewPurchaseRequestRouteName = 'viewPurchaseRequest';
+  static const viewPurchaseRequestRoutePath = 'viewPurchaseRequest';
   static const registerPurchaseRequestViewRouteName = 'registerPurchaseRequestView';
   static const registerPurchaseRequestViewRoutePath = 'registerPurchaseRequest';
+  static const nestedViewPurchaseRequestRouteName = '$purchaseRequestViewRouteName/$viewPurchaseRequestRouteName';
+  static const nestedViewPurchaseRequestRoutePath = '$purchaseRequestViewRoutePath/$viewPurchaseRequestRoutePath';
   static const nestedRegisterPurchaseRequestViewRouteName = '$purchaseRequestViewRouteName/$registerPurchaseRequestViewRouteName';
   static const nestedRegisterPurchaseRequestViewRoutePath = '$purchaseRequestViewRoutePath/$registerPurchaseRequestViewRoutePath';
 
@@ -76,8 +80,12 @@ class RoutingConstants {
   static const officersManagementViewRoutePath = '/officersManagement';
 
   /// archive management route path
-  static const archiveUserViewRouteName = 'archiveUserViewRouteName';
-  static const archiveUserViewRoutePath = '/archiveUserView';
+  static const archiveUserViewRouteName = 'archiveUserView';
+  static const archiveUserViewRoutePath = '/archiveUser';
+  static const archiveOfficerViewRouteName = 'archiveOfficeView';
+  static const archiveOfficerViewRoutePath = '/archiveOfficer';
+  static const archiveIssuanceViewRouteName = 'archiveIssuanceView';
+  static const archiveIssuanceViewRoutePath = '/archiveIssuance';
 
   /// settings route paths
   static const settingsViewRouteName = 'settingsView';

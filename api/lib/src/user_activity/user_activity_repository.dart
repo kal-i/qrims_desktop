@@ -11,7 +11,7 @@ class UserActivityRepository {
     required String userId,
     required String description,
     required Action actionType,
-    String? targetUserId,
+    String? targetId,
   }) async {
     try {
       Map<String, dynamic> parameters = {
@@ -25,15 +25,15 @@ class UserActivityRepository {
         INSERT INTO UserActivities (user_id, description, action_type, created_at
       ''';
 
-      if (targetUserId != null) {
+      if (targetId != null) {
         baseQuery += ', target_id';
-        parameters['target_id'] = targetUserId;
+        parameters['target_id'] = targetId;
       }
 
       baseQuery +=
           ') VALUES (@user_id, @description, @action_type, @created_at';
 
-      if (targetUserId != null) {
+      if (targetId != null) {
         baseQuery += ', @target_id';
       }
 

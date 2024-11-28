@@ -2,16 +2,26 @@ import 'dart:io';
 
 import 'package:api/src/item/models/item.dart';
 import 'package:api/src/item/repository/item_repository.dart';
+import 'package:api/src/session/session_repository.dart';
+import 'package:api/src/user_activity/user_activity.dart';
+import 'package:api/src/user_activity/user_activity_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   final connection = context.read<Connection>();
   final repository = ItemRepository(connection);
+  final userActivityRepository = UserActivityRepository(connection);
+  final sessionRepository = SessionRepository(connection);
 
   return switch (context.request.method) {
     HttpMethod.get => _getItems(context, repository),
-    HttpMethod.post => _registerItem(context, repository),
+    HttpMethod.post => _registerItem(
+        context,
+        repository,
+        userActivityRepository,
+        sessionRepository,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
@@ -80,9 +90,9 @@ Future<Response> _getItems(
       subClassFilter: assetSubClass,
     );
 
-    final inStockCount = await repository.getInStockItemsCount();
-    final lowStockCount = await repository.getLowItemStocksCount();
-    final outOfStockCount = await repository.getOutOfStockItemsCount();
+    final inStockCount = await repository.getInStocksCount();
+    final lowStockCount = await repository.getLowStocksCount();
+    final outOfStockCount = await repository.getOutOfStocksCount();
 
     final itemJsonList = itemList?.map((item) => item.toJson()).toList();
 
@@ -112,18 +122,27 @@ Future<Response> _getItems(
 Future<Response> _registerItem(
   RequestContext context,
   ItemRepository itemRepository,
+  UserActivityRepository userActivityRepository,
+  SessionRepository sessionRepository,
 ) async {
   try {
-    //final headers = await context.request.headers;
-    //final bearerToken = headers['Authorization']?.substring(7) as String;
+    final headers = context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
+    // get user (the one performing this ope) through the bearer token passed
+    // based on that, then we will check if they are authorized to perform the ope
+    // if it is, record as well in act db
+    // final bearerToken = headers['Authorization']?.substring(7) as String;
+    // final session = await sessionRepository.sessionFromToken(bearerToken);
+    // final responsibleUserId = session!.userId;
+
+    // Extract and validate inputs
     final productName = json['product_name'] as String;
     final description = json['description'] as String?;
     final manufacturerName = json['manufacturer_name'] as String;
     final brandName = json['brand_name'] as String;
     final modelName = json['model_name'] as String;
-    final serialNo = json['serial_no'] as String?;
+    final serialNoInput = json['serial_no'] as String?;
     final specification = json['specification'] as String;
 
     AssetClassification? assetClassification;
@@ -131,8 +150,6 @@ Future<Response> _registerItem(
     Unit? unit;
 
     try {
-      // if not null, we'll iterate through each elem in the enums to check if
-      // matches the query params
       assetClassification = json['asset_classification'] != null
           ? AssetClassification.values.firstWhere((e) =>
               e.toString().split('.').last == json['asset_classification'])
@@ -151,71 +168,204 @@ Future<Response> _registerItem(
       return Response.json(
         statusCode: HttpStatus.badRequest,
         body: {
-          'message': 'Invalid asset classification or sub class.',
+          'message': 'Invalid asset classification, sub class, or unit.',
         },
       );
     }
 
     final quantity = json['quantity'] as int;
     final unitCost = json['unit_cost'] as double;
-    final estimatedUsefulLife = json['estimated_useful_life'] as int;
+    final estimatedUsefulLife = json['estimated_useful_life'] as int?;
     final acquiredDate = json['acquired_date'] is String
         ? DateTime.parse(json['acquired_date'] as String)
-        : json['acquired_date'] as DateTime;
+        : json['acquired_date'] as DateTime?;
 
-    print(
-      '''
-      $productName
-      $description
-      $manufacturerName
-      $brandName
-      $modelName
-      $serialNo
-      $specification
-      $assetClassification
-      $assetSubClass
-      $unit
-      $quantity
-      $unitCost
-      $estimatedUsefulLife
-      $acquiredDate
-      '''
-    );
+    // Split the serial number input if provided
+    final serialNos =
+        serialNoInput?.split(' - ').map((s) => s.trim()).toList() ?? [];
 
-    final encryptedItemId = await itemRepository.registerItemWithStock(
-      productName: productName,
-      description: description,
-      manufacturerName: manufacturerName,
-      brandName: brandName,
-      modelName: modelName,
-      serialNo: serialNo,
-      specification: specification,
-      assetClassification: assetClassification,
-      assetSubClass: assetSubClass,
-      unit: unit,
-      quantity: quantity,
-      unitCost: unitCost,
-      estimatedUsefulLife: estimatedUsefulLife,
-      acquiredDate: acquiredDate,
-    );
+    if (serialNos.isEmpty) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {
+          'message': 'At least one serial number must be provided.',
+        },
+      );
+    }
 
-    final item = await itemRepository.getItemByEncryptedId(
-      encryptedId: encryptedItemId,
-    );
+    // Register each item separately
+    final List<Map<String, dynamic>> registeredItems = [];
 
-    print(item);
+    for (final serialNo in serialNos) {
+      try {
+        final encryptedItemId = await itemRepository.registerItemWithStock(
+          productName: productName,
+          description: description,
+          manufacturerName: manufacturerName,
+          brandName: brandName,
+          modelName: modelName,
+          serialNo: serialNo,
+          specification: specification,
+          assetClassification: assetClassification,
+          assetSubClass: assetSubClass,
+          unit: unit,
+          quantity: 1, // Each serial number corresponds to a single item
+          unitCost: unitCost,
+          estimatedUsefulLife: estimatedUsefulLife,
+          acquiredDate: acquiredDate,
+        );
+
+        final item = await itemRepository.getItemByEncryptedId(
+          encryptedId: encryptedItemId,
+        );
+
+        if (item != null) {
+          registeredItems.add(item.toJson());
+
+          // await userActivityRepository.logUserActivity(
+          //   userId: responsibleUserId,
+          //   description:
+          //       'Registered item with a tracking id of ${item.item.id}.',
+          //   actionType: Action.create,
+          //   targetId: item.item.id,
+          // );
+        }
+      } catch (e) {
+        if (e.toString().contains('Serial no. already exists.')) {
+          return Response.json(
+            statusCode: HttpStatus.conflict,
+            body: {
+              'message': 'Duplicate serial number: $serialNo.',
+            },
+          );
+        }
+        rethrow;
+      }
+    }
 
     return Response.json(
       statusCode: 200,
       body: {
-        'item': item?.toJson(),
+        'items': registeredItems,
       },
     );
   } catch (e) {
-    return Response.json(statusCode: 500, body: {
-      'message': e.toString().contains('Serial no. already exists.')
-          ? 'Serial no. already exists.'
-          : 'Error registering item(s): $e.',
-    });
+    return Response.json(
+      statusCode: 500,
+      body: {
+        'message': 'Error registering item(s): $e.',
+      },
+    );
   }
 }
+
+// Future<Response> _registerItem(
+//   RequestContext context,
+//   ItemRepository itemRepository,
+// ) async {
+//   try {
+//     //final headers = await context.request.headers;
+//     //final bearerToken = headers['Authorization']?.substring(7) as String;
+//     final json = await context.request.json() as Map<String, dynamic>;
+//
+//     final productName = json['product_name'] as String;
+//     final description = json['description'] as String?;
+//     final manufacturerName = json['manufacturer_name'] as String;
+//     final brandName = json['brand_name'] as String;
+//     final modelName = json['model_name'] as String;
+//     final serialNo = json['serial_no'] as String?;
+//     final specification = json['specification'] as String;
+//
+//     AssetClassification? assetClassification;
+//     AssetSubClass? assetSubClass;
+//     Unit? unit;
+//
+//     try {
+//       // if not null, we'll iterate through each elem in the enums to check if
+//       // matches the query params
+//       assetClassification = json['asset_classification'] != null
+//           ? AssetClassification.values.firstWhere((e) =>
+//               e.toString().split('.').last == json['asset_classification'])
+//           : AssetClassification.unknown;
+//
+//       assetSubClass = json['asset_sub_class'] != null
+//           ? AssetSubClass.values.firstWhere(
+//               (e) => e.toString().split('.').last == json['asset_sub_class'])
+//           : AssetSubClass.unknown;
+//
+//       unit = json['unit'] != null
+//           ? Unit.values
+//               .firstWhere((e) => e.toString().split('.').last == json['unit'])
+//           : Unit.undetermined;
+//     } catch (e) {
+//       return Response.json(
+//         statusCode: HttpStatus.badRequest,
+//         body: {
+//           'message': 'Invalid asset classification or sub class.',
+//         },
+//       );
+//     }
+//
+//     final quantity = json['quantity'] as int;
+//     final unitCost = json['unit_cost'] as double;
+//     final estimatedUsefulLife = json['estimated_useful_life'] as int;
+//     final acquiredDate = json['acquired_date'] is String
+//         ? DateTime.parse(json['acquired_date'] as String)
+//         : json['acquired_date'] as DateTime;
+//
+//     print(
+//       '''
+//       $productName
+//       $description
+//       $manufacturerName
+//       $brandName
+//       $modelName
+//       $serialNo
+//       $specification
+//       $assetClassification
+//       $assetSubClass
+//       $unit
+//       $quantity
+//       $unitCost
+//       $estimatedUsefulLife
+//       $acquiredDate
+//       '''
+//     );
+//
+//     final encryptedItemId = await itemRepository.registerItemWithStock(
+//       productName: productName,
+//       description: description,
+//       manufacturerName: manufacturerName,
+//       brandName: brandName,
+//       modelName: modelName,
+//       serialNo: serialNo,
+//       specification: specification,
+//       assetClassification: assetClassification,
+//       assetSubClass: assetSubClass,
+//       unit: unit,
+//       quantity: quantity,
+//       unitCost: unitCost,
+//       estimatedUsefulLife: estimatedUsefulLife,
+//       acquiredDate: acquiredDate,
+//     );
+//
+//     final item = await itemRepository.getItemByEncryptedId(
+//       encryptedId: encryptedItemId,
+//     );
+//
+//     print(item);
+//
+//     return Response.json(
+//       statusCode: 200,
+//       body: {
+//         'item': item?.toJson(),
+//       },
+//     );
+//   } catch (e) {
+//     return Response.json(statusCode: 500, body: {
+//       'message': e.toString().contains('Serial no. already exists.')
+//           ? 'Serial no. already exists.'
+//           : 'Error registering item(s): $e.',
+//     });
+//   }
+// }

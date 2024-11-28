@@ -101,144 +101,147 @@ class _AdminApprovalModalState extends State<AdminApprovalModal> {
       },
       child: BlocBuilder<UsersManagementBloc, UsersManagementState>(
           builder: (context, state) {
-        return Column(
-          children: [
-            _pendingUsers.isEmpty
-                ? Expanded(
-                    child: _buildEmptyState(),
-                  )
-                : Column(
-                    children: [
-                      SizedBox(
-                        height: 500.0,
-                        child: ListView.builder(
-                          itemCount: _pendingUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = _pendingUsers[index];
+        return RefreshIndicator(
+          onRefresh: () async => _fetchUsers(),
+          child: Column(
+            children: [
+              _pendingUsers.isEmpty
+                  ? Expanded(
+                      child: _buildEmptyState(),
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(
+                          height: 500.0,
+                          child: ListView.builder(
+                            itemCount: _pendingUsers.length,
+                            itemBuilder: (context, index) {
+                              final user = _pendingUsers[index];
 
-                            return Container(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10.0),
-                                      width: 80.0,
-                                      height: 80.0,
-                                      decoration: const BoxDecoration(
-                                        color: AppColor.lightYellow,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        HugeIcons.strokeRoundedUser,
-                                        color: AppColor.lightYellowOutline,
+                              return Container(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10.0),
+                                        width: 80.0,
+                                        height: 80.0,
+                                        decoration: const BoxDecoration(
+                                          color: AppColor.lightYellow,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          HugeIcons.strokeRoundedUser,
+                                          color: AppColor.lightYellowOutline,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    width: 20.0,
-                                  ),
-                                  Expanded(
-                                    flex: 5,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Text(
-                                          capitalizeWord(user.name),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                        const SizedBox(
-                                          height: 5.0,
-                                        ),
-                                        Text(
-                                          capitalizeWord(
-                                              '${user.officerEntity.officeName} - ${user.officerEntity.positionName}'),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontSize: 11.0,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                        ),
-                                        const SizedBox(
-                                          height: 5.0,
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                                child: CustomFilledButton(
-                                              onTap: () =>
-                                                  _updateAdminApprovalStatus(
-                                                id: user.id,
-                                                status: AdminApprovalStatus
-                                                    .accepted,
-                                              ),
-                                              text: 'Accept',
-                                              height: 40.0,
-                                            )),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
-                                            Expanded(
-                                                child: CustomOutlineButton(
-                                              onTap: () =>
-                                                  _updateAdminApprovalStatus(
-                                                id: user.id,
-                                                status: AdminApprovalStatus
-                                                    .rejected,
-                                              ),
-                                              text: 'Delete',
-                                              height: 40.0,
-                                            )),
-                                          ],
-                                        ),
-                                      ],
+                                    const SizedBox(
+                                      width: 20.0,
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    width: 20.0,
-                                  ),
-                                  Text(
-                                    timeAgo(user.createdAt),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            );
+                                    Expanded(
+                                      flex: 5,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Text(
+                                            capitalizeWord(user.name),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                          const SizedBox(
+                                            height: 5.0,
+                                          ),
+                                          Text(
+                                            capitalizeWord(
+                                                '${user.officerEntity.officeName} - ${user.officerEntity.positionName}'),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontSize: 11.0,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          const SizedBox(
+                                            height: 5.0,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                  child: CustomFilledButton(
+                                                onTap: () =>
+                                                    _updateAdminApprovalStatus(
+                                                  id: user.id,
+                                                  status: AdminApprovalStatus
+                                                      .accepted,
+                                                ),
+                                                text: 'Accept',
+                                                height: 40.0,
+                                              )),
+                                              const SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              Expanded(
+                                                  child: CustomOutlineButton(
+                                                onTap: () =>
+                                                    _updateAdminApprovalStatus(
+                                                  id: user.id,
+                                                  status: AdminApprovalStatus
+                                                      .rejected,
+                                                ),
+                                                text: 'Delete',
+                                                height: 40.0,
+                                              )),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 20.0,
+                                    ),
+                                    Text(
+                                      timeAgo(user.createdAt),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalRecords: _totalRecords.value,
+                          pageSize: _pageSize,
+                          onPageChanged: (page) {
+                            _currentPage = page;
+                            _fetchUsers();
+                          },
+                          onPageSizeChanged: (size) {
+                            _pageSize = size;
+                            _fetchUsers();
                           },
                         ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalRecords: _totalRecords.value,
-                        pageSize: _pageSize,
-                        onPageChanged: (page) {
-                          _currentPage = page;
-                          _fetchUsers();
-                        },
-                        onPageSizeChanged: (size) {
-                          _pageSize = size;
-                          _fetchUsers();
-                        },
-                      ),
-                    ],
-                  ),
-          ],
+                      ],
+                    ),
+            ],
+          ),
         );
       }),
     );

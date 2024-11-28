@@ -20,8 +20,8 @@ final class IssuanceLoaded extends IssuancesState {
 
   @override
   List<Object?> get props => [
-    issuance,
-  ];
+        issuance,
+      ];
 }
 
 final class IssuancesLoaded extends IssuancesState {
@@ -75,4 +75,12 @@ final class PARRegistered extends IssuancesState {
   });
 
   final PropertyAcknowledgementReceiptEntity par;
+}
+
+final class IssuanceArchiveStatusUpdated extends IssuancesState {
+  const IssuanceArchiveStatusUpdated({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
 }

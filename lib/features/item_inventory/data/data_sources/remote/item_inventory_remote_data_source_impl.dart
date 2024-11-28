@@ -77,7 +77,7 @@ class ItemInventoryRemoteDataSourceImpl
   }
 
   @override
-  Future<ItemWithStockModel> registerItem({
+  Future<List<ItemWithStockModel>> registerItem({
     required String itemName,
     required String description,
     required String manufacturerName,
@@ -122,7 +122,7 @@ class ItemInventoryRemoteDataSourceImpl
 
       if (response.statusCode == 200) {
         print(response.data);
-        return ItemWithStockModel.fromJson(response.data['item']);
+        return (response.data['items'] as List<dynamic>).map((item) => ItemWithStockModel.fromJson(item)).toList();
       } else {
         throw const ServerException('Item registration failed.');
       }

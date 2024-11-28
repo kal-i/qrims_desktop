@@ -88,17 +88,12 @@ class OfficerRemoteDataSourceImpl implements OfficerRemoteDataSource {
     required bool isArchived,
   }) async {
     try {
-      final Map<String, dynamic> queryParam = {
-        'id': id,
-      };
-
       final Map<String, dynamic> param = {
         'is_archived': isArchived,
       };
 
       final response = await httpService.patch(
-        endpoint: officersEP,
-        queryParams: queryParam,
+        endpoint: '$updateOfficerArchiveStatusEP/$id',
         params: param,
       );
 

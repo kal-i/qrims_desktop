@@ -16,12 +16,12 @@ class GeneralSettingView extends StatelessWidget {
     return const Column(
       children: [
         _Appearance(),
-        SizedBox(
-          height: 50.0,
-        ),
-        Expanded(
-          child: _FileDirectory(),
-        ),
+        // SizedBox(
+        //   height: 50.0,
+        // ),
+        // Expanded(
+        //   child: _FileDirectory(),
+        // ),
       ],
     );
   }

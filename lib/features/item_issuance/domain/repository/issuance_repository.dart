@@ -48,4 +48,9 @@ abstract interface class IssuanceRepository {
   Future<Either<Failure, IssuanceEntity?>> getIssuanceById({
     required String id,
   });
+
+  Future<Either<Failure, bool>> updateIssuanceArchiveStatus({
+    required String id,
+    required bool isArchived,
+  });
 }

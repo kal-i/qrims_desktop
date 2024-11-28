@@ -16,6 +16,7 @@ import 'features/archive/presentation/bloc/archive_user_bloc/archive_users_bloc.
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/components/custom_auth_password_text_box/bloc/custom_auth_password_text_box_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/low_stock/low_stock_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
@@ -110,6 +111,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (_) => serviceLocator<RequestsSummaryBloc>(),
+          ),
+          BlocProvider(
+            create: (_) => serviceLocator<LowStockBloc>(),
           ),
           BlocProvider(
             create: (_) => serviceLocator<UsersManagementBloc>(),

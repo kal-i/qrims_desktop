@@ -7,6 +7,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/paginated_purchase_request_result.dart';
 import '../../domain/entities/purchase_request.dart';
+import '../../domain/entities/purchase_request_with_notification_trail.dart';
 import '../../domain/repository/purchase_request_repository.dart';
 import '../data_sources/remote/purchase_request_remote_data_source.dart';
 
@@ -51,7 +52,6 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
     required String entityName,
     required FundCluster fundCluster,
     required String officeName,
-    String? responsibilityCenterCode,
     required DateTime date,
     required String productName,
     required String productDescription,
@@ -72,7 +72,6 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
         entityName: entityName,
         fundCluster: fundCluster,
         officeName: officeName,
-        responsibilityCenterCode: responsibilityCenterCode,
         date: date,
         productName: productName,
         productDescription: productDescription,
@@ -91,6 +90,41 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
       return right(response);
     } on ServerException catch (e) {
       return left(Failure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updatePurchaseRequestStatus({
+    required String id,
+    required PurchaseRequestStatus status,
+  }) async {
+    try {
+      final response =
+          await purchaseRequestRemoteDataSource.updatePurchaseRequestStatus(
+        id: id,
+        status: status,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PurchaseRequestWithNotificationTrailEntity>>
+  getPurchaseRequestById({
+    required String prId,
+  }) async {
+    try {
+      final response =
+      await purchaseRequestRemoteDataSource.getPurchaseRequestById(
+        prId: prId,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
     }
   }
 }

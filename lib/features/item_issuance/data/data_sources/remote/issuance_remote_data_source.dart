@@ -45,4 +45,9 @@ abstract interface class IssuanceRemoteDataSource {
   Future<IssuanceModel?> getIssuanceById({
     required String id,
   });
+
+  Future<bool> updateIssuanceArchiveStatus({
+    required String id,
+    required bool isArchived,
+  });
 }

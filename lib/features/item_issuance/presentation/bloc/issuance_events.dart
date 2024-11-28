@@ -88,3 +88,13 @@ final class GetIssuanceByIdEvent extends IssuancesEvent {
 
   final String id;
 }
+
+final class UpdateIssuanceArchiveStatusEvent extends IssuancesEvent {
+  const UpdateIssuanceArchiveStatusEvent({
+    required this.id,
+    required this.isArchived,
+  });
+
+  final String id;
+  final bool isArchived;
+}

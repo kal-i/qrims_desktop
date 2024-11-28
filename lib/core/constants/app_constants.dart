@@ -39,14 +39,18 @@ const officesEP = '/offices';
 const positionsEP = '/positions';
 const officersEP = '/officers';
 const officerNamesEP = '$officersEP/names';
+const updateOfficerArchiveStatusEP = '$officersEP/update_archive_status';
 
 const entitiesEP = '/entities';
 const purchaseRequestsEP = '/purchase_requests';
+const purchaseRequestIdEP = '$purchaseRequestsEP/id';
 const purchaseRequestIdsEP = '$purchaseRequestsEP/ids';
+const updatePurchaseRequestStatusEP = '$purchaseRequestsEP/update_status';
 
 const issuancesEP = '/issuances';
 const issuancesIdEP = '$issuancesEP/id';
 const matchPurchaseRequestWithInventoryItemEP = '$issuancesEP/match';
+const updateIssuanceArchiveStatusEP = '$issuancesEP/update_archive_status';
 const icsEP = '$issuancesEP/ics';
 const parEP = '$issuancesEP/par';
 

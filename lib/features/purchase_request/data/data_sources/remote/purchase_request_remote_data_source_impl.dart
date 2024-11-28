@@ -9,6 +9,7 @@ import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
 import '../../models/paginated_purchase_request_result.dart';
 import '../../models/purchase_request.dart';
+import '../../models/purchase_request_with_notification_trail.dart';
 import 'purchase_request_remote_data_source.dart';
 
 class PurchaseRequestRemoteDataSourceImpl
@@ -60,7 +61,6 @@ class PurchaseRequestRemoteDataSourceImpl
     required String entityName,
     required FundCluster fundCluster,
     required String officeName,
-    String? responsibilityCenterCode,
     required DateTime date,
     required String productName,
     required String productDescription,
@@ -80,9 +80,6 @@ class PurchaseRequestRemoteDataSourceImpl
         'entity_name': entityName,
         'fund_cluster': fundCluster.toString().split('.').last,
         'office_name': officeName,
-        if (responsibilityCenterCode != null &&
-            responsibilityCenterCode.isNotEmpty)
-          'responsibility_center_code': responsibilityCenterCode,
         'date': date.toIso8601String(),
         'product_name': productName,
         'product_description': productDescription,
@@ -111,6 +108,53 @@ class PurchaseRequestRemoteDataSourceImpl
         return PurchaseRequestModel.fromJson(response.data['purchase_request']);
       } else {
         throw const ServerException('Failed to register purchase request.');
+      }
+    } on DioException catch (e) {
+      final formattedError = formatDioError(e);
+      throw ServerException(formattedError);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updatePurchaseRequestStatus({
+    required String id,
+    required PurchaseRequestStatus status,
+  }) async {
+    try {
+      final Map<String, dynamic> param = {
+        'pr_status': status.toString().split('.').last,
+      };
+
+      final response = await httpService.patch(
+        endpoint: '$updatePurchaseRequestStatusEP/$id',
+        params: param,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<PurchaseRequestWithNotificationTrailModel> getPurchaseRequestById({
+    required String prId,
+  }) async {
+    try {
+      final response = await httpService.get(
+        endpoint: '$purchaseRequestIdEP/$prId',
+      );
+
+      if (response.statusCode == 200) {
+        return PurchaseRequestWithNotificationTrailModel.fromJson(
+            response.data);
+      } else {
+        throw const ServerException('Failed to fetch purchase request by id.');
       }
     } on DioException catch (e) {
       final formattedError = formatDioError(e);

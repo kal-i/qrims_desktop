@@ -22,9 +22,13 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/enums/purchase_request_status.dart';
+import '../../../../core/enums/role.dart';
+import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/components/custom_container.dart';
+import '../../data/models/feedback.dart';
 import '../bloc/purchase_requests_bloc.dart';
 import '../components/purchase_request_kpi_card.dart';
 
@@ -38,10 +42,23 @@ class PurchaseRequestView extends StatefulWidget {
 class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   late PurchaseRequestsBloc _purchaseRequestsBloc;
 
-  //final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
   Timer? _debounce;
+
+  final ValueNotifier<int> _pendingRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _incompleteRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _completeRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _cancelledRequestsCount = ValueNotifier(0);
+
+  final ValueNotifier<FeedbackModel?> _pendingFeedbackModel =
+      ValueNotifier(null);
+  final ValueNotifier<FeedbackModel?> _incompleteFeedbackModel =
+      ValueNotifier(null);
+  final ValueNotifier<FeedbackModel?> _completeFeedbackModel =
+      ValueNotifier(null);
+  final ValueNotifier<FeedbackModel?> _cancelledFeedbackModel =
+      ValueNotifier(null);
 
   final ValueNotifier<String> _selectedFilterNotifier =
       ValueNotifier('pending');
@@ -62,20 +79,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   ];
   late List<TableData> _tableRows = [];
 
-  final ValueNotifier<int> _pendingPurchaseRequestsCount = ValueNotifier(0);
-  final ValueNotifier<int> _semiFulfilledPurchaseRequestsCount =
-      ValueNotifier(0);
-  final ValueNotifier<int> _fulfilledPurchaseRequestsCount = ValueNotifier(0);
-  final ValueNotifier<int> _cancelledPurchaseRequestsCount = ValueNotifier(0);
-
-  final PurchaseRequestKPI _samplePRKPI = const PurchaseRequestKPI(
-    title: 'Pending Requests',
-    number: 359,
-    percentage: 2.5,
-    feedback:
-        'There has been a 15% increase in pending purchase requests this month.',
-  );
-
   @override
   void initState() {
     super.initState();
@@ -84,7 +87,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     _selectedFilterNotifier.addListener(_fetchPurchaseRequests);
     _initializeTableConfig();
     _fetchPurchaseRequests();
-    //_scrollController.addListener(_loadMoreData);
   }
 
   void _initializeTableConfig() {
@@ -143,14 +145,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     }
   }
 
-  // Future<void> _loadMoreData() async {
-  //   if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-  //     _isLoading = true;
-  //     _currentPage++;
-  //     _fetchPurchaseRequests();
-  //   }
-  // }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -161,31 +155,40 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildHeaderRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildSummaryRow(),
-        const SizedBox(
-          height: 40.0,
-        ),
-        _buildTableRelatedActionsRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Expanded(
-          child: _buildDataTable(),
-        ),
-      ],
-    );
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      bool isAdmin = false;
+
+      if (state is AuthSuccess) {
+        isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+            Role.admin;
+      }
+
+      return Column(
+        children: [
+          const SizedBox(
+            height: 20.0,
+          ),
+          _buildHeaderRow(isAdmin),
+          const SizedBox(
+            height: 20.0,
+          ),
+          _buildSummaryRow(),
+          const SizedBox(
+            height: 40.0,
+          ),
+          _buildTableRelatedActionsRow(),
+          const SizedBox(
+            height: 20.0,
+          ),
+          Expanded(
+            child: _buildDataTable(isAdmin),
+          ),
+        ],
+      );
+    });
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow(bool isAdmin) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -200,26 +203,15 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         Row(
           children: [
-            //_buildKPIFilterSelection(),
-            const SizedBox(
-              width: 10.0,
-            ),
-            _buildRegisterButton(),
+            if (isAdmin)
+              const CustomMessageBox.info(
+                message: 'You can only view.',
+              )
+            else
+              _buildRegisterButton(),
           ],
         ),
       ],
-    );
-  }
-
-  // Widget _buildKPIFilterSelection() {
-  //   return CustomDropdownField(
-  //     onChanged: (value) {},
-  //   );
-  // }
-
-  Widget _purchaseRequestKPICard() {
-    return PurchaseRequestKPICard(
-      purchaseRequestKPI: _samplePRKPI,
     );
   }
 
@@ -229,9 +221,18 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
       children: [
         Expanded(
           child: ValueListenableBuilder(
-            valueListenable: _pendingPurchaseRequestsCount,
+            valueListenable: _pendingRequestsCount,
             builder: (context, pendingPurchaseRequestsCount, child) {
-              return _purchaseRequestKPICard();
+              return ValueListenableBuilder(
+                valueListenable: _pendingFeedbackModel,
+                builder: (context, pendingFeedback, child) {
+                  return PurchaseRequestKPICard(
+                    title: 'Pending',
+                    count: pendingPurchaseRequestsCount,
+                    feedback: pendingFeedback,
+                  );
+                },
+              );
             },
           ),
         ),
@@ -240,9 +241,18 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         Expanded(
           child: ValueListenableBuilder(
-            valueListenable: _pendingPurchaseRequestsCount,
-            builder: (context, pendingPurchaseRequestsCount, child) {
-              return _purchaseRequestKPICard();
+            valueListenable: _incompleteRequestsCount,
+            builder: (context, incompletePurchaseRequestsCount, child) {
+              return ValueListenableBuilder(
+                valueListenable: _incompleteFeedbackModel,
+                builder: (context, incompleteFeedback, child) {
+                  return PurchaseRequestKPICard(
+                    title: 'Incomplete',
+                    count: incompletePurchaseRequestsCount,
+                    feedback: incompleteFeedback,
+                  );
+                },
+              );
             },
           ),
         ),
@@ -251,9 +261,18 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         Expanded(
           child: ValueListenableBuilder(
-            valueListenable: _pendingPurchaseRequestsCount,
-            builder: (context, pendingPurchaseRequestsCount, child) {
-              return _purchaseRequestKPICard();
+            valueListenable: _completeRequestsCount,
+            builder: (context, completePurchaseRequestsCount, child) {
+              return ValueListenableBuilder(
+                valueListenable: _completeFeedbackModel,
+                builder: (context, completeFeedback, child) {
+                  return PurchaseRequestKPICard(
+                    title: 'Complete',
+                    count: completePurchaseRequestsCount,
+                    feedback: completeFeedback,
+                  );
+                },
+              );
             },
           ),
         ),
@@ -262,9 +281,18 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         ),
         Expanded(
           child: ValueListenableBuilder(
-            valueListenable: _pendingPurchaseRequestsCount,
-            builder: (context, pendingPurchaseRequestsCount, child) {
-              return _purchaseRequestKPICard();
+            valueListenable: _cancelledRequestsCount,
+            builder: (context, cancelledPurchaseRequestsCount, child) {
+              return ValueListenableBuilder(
+                valueListenable: _cancelledFeedbackModel,
+                builder: (context, cancelledFeedback, child) {
+                  return PurchaseRequestKPICard(
+                    title: 'Cancelled',
+                    count: cancelledPurchaseRequestsCount,
+                    feedback: cancelledFeedback,
+                  );
+                },
+              );
             },
           ),
         ),
@@ -290,17 +318,17 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
               width: 10.0,
             ),
             _buildFilterButton(),
-            const SizedBox(
-              width: 10.0,
-            ),
-            _buildSortButton(),
+            // const SizedBox(
+            //   width: 10.0,
+            // ),
+            // _buildSortButton(),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildDataTable() {
+  Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<PurchaseRequestsBloc, PurchaseRequestsState>(
       listener: (context, state) {
         if (state is PurchaseRequestsLoading) {
@@ -308,14 +336,35 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
           _errorMessage = null;
         }
 
-        if (state is PurchaseRequestRegistered) {
+        if (state is PurchaseRequestRegistered ||
+            state is PurchaseRequestStatusUpdated &&
+                state.isSuccessful == true) {
           _isLoading = false;
           _refreshPurchaseRequestList();
+        }
+
+        if (state is PurchaseRequestLoaded) {
+          _isLoading = false;
         }
 
         if (state is PurchaseRequestsLoaded) {
           _isLoading = false;
           _totalRecords = state.totalPurchaseRequestsCount;
+
+          _pendingRequestsCount.value = state.pendingRequestsCount;
+          _incompleteRequestsCount.value = state.incompleteRequestCount;
+          _completeRequestsCount.value = state.completeRequestsCount;
+          _cancelledRequestsCount.value = state.cancelledRequestsCount;
+
+          _pendingFeedbackModel.value =
+              state.feedbacks.pending as FeedbackModel;
+          _incompleteFeedbackModel.value =
+              state.feedbacks.partiallyFulfilled as FeedbackModel;
+          _completeFeedbackModel.value =
+              state.feedbacks.fulfilled as FeedbackModel;
+          _cancelledFeedbackModel.value =
+              state.feedbacks.cancelled as FeedbackModel;
+
           _tableRows.clear();
           _tableRows.addAll(
             state.purchaseRequests.map(
@@ -359,10 +408,20 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                     'text': 'View',
                     'icon': FluentIcons.eye_12_regular,
                   },
-                  {
-                    'text': 'Cancel Request',
-                    'icon': HugeIcons.strokeRoundedTaskRemove01,
-                  },
+                  if (!isAdmin)
+                    if (purchaseRequest.purchaseRequestStatus ==
+                        PurchaseRequestStatus.pending)
+                      {
+                        'text': 'Cancel Request',
+                        'icon': HugeIcons.strokeRoundedTaskRemove01
+                      },
+                  if (!isAdmin)
+                    if (purchaseRequest.purchaseRequestStatus ==
+                        PurchaseRequestStatus.cancelled)
+                      {
+                        'text': 'Set to Pending',
+                        'icon': HugeIcons.strokeRoundedTaskAdd01
+                      },
                 ],
               ),
             ),
@@ -387,7 +446,41 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                       config: _tableConfig.copyWith(
                         rows: _tableRows,
                       ),
-                      onActionSelected: (index, action) {},
+                      onActionSelected: (index, action) {
+                        final selectedRequest = _tableRows[index].id;
+
+                        if (action.isNotEmpty) {
+                          if (action.contains('View')) {
+                            final Map<String, dynamic> extra = {
+                              'pr_id': selectedRequest,
+                            };
+
+                            context.go(
+                              RoutingConstants
+                                  .nestedViewPurchaseRequestRoutePath,
+                              extra: extra,
+                            );
+                          }
+
+                          if (action.contains('Cancel Request')) {
+                            _purchaseRequestsBloc.add(
+                              UpdatePurchaseRequestEvent(
+                                id: selectedRequest,
+                                status: PurchaseRequestStatus.cancelled,
+                              ),
+                            );
+                          }
+
+                          if (action.contains('Set to Pending')) {
+                            _purchaseRequestsBloc.add(
+                              UpdatePurchaseRequestEvent(
+                                id: selectedRequest,
+                                status: PurchaseRequestStatus.pending,
+                              ),
+                            );
+                          }
+                        }
+                      },
                     ),
 
                     // GridView.builder(

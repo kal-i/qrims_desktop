@@ -137,4 +137,22 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
       return left(Failure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> updateIssuanceArchiveStatus({
+    required String id,
+    required bool isArchived,
+  }) async {
+    try {
+      final response =
+          await issuanceRemoteDataSource.updateIssuanceArchiveStatus(
+        id: id,
+        isArchived: isArchived,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
 }

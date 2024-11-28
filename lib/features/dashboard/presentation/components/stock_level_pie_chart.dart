@@ -42,7 +42,9 @@ class StockLevelPieChart extends StatelessWidget {
                 .titleSmall
                 ?.copyWith(fontSize: 15.0),
           ),
-          const SizedBox(height: 20.0,),
+          const SizedBox(
+            height: 20.0,
+          ),
           Expanded(
             child: Row(
               children: [
@@ -104,11 +106,11 @@ class StockLevelPieChart extends StatelessWidget {
       value: count.toDouble(),
       title: '${percentage.toStringAsFixed(1)}%',
       titleStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColor.accent,
+            //color: AppColor.accent,
             fontSize: 13.5,
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
           ),
-      radius: 5.0,
+      radius: 20.0,
     );
   }
 
@@ -148,7 +150,7 @@ class StockLevelPieChart extends StatelessWidget {
             '${percentage.toStringAsFixed(1)}%',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w600,
                 ),
           ),
         ],

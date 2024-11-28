@@ -245,11 +245,13 @@ class _RegisterItemViewState extends State<ReusableItemView> {
       body: BlocListener<ItemInventoryBloc, ItemInventoryState>(
         listener: (context, state) async {
           if (state is ItemRegistered) {
+            final itemCount = state.itemEntities.length;
+
             DelightfulToastUtils.showDelightfulToast(
               context: context,
               icon: Icons.check_circle_outline,
               title: 'Success',
-              subtitle: 'Item registered successfully.',
+              subtitle: itemCount > 1 ? '$itemCount items registered successfully.' : 'Item registered successfully.',
             );
             await Future.delayed(const Duration(seconds: 3));
             context.pop();
@@ -457,7 +459,7 @@ class _RegisterItemViewState extends State<ReusableItemView> {
           height: 5.0,
         ),
         Text(
-          'Item to be stored in the inventory.',
+          'Items to be stored in the inventory. To list multiple items of the same type, use a \' - \' symbol as a separator in the serial numbers. Apply the same approach to specifications to ensure proper formatting in the document.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w400,

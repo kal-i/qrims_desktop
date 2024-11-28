@@ -18,7 +18,7 @@ abstract interface class ItemInventoryRemoteDateSource {
     AssetSubClass? subClassFilter,
   });
 
-  Future<ItemWithStockModel> registerItem({
+  Future<List<ItemWithStockModel>> registerItem({
     required String itemName,
     required String description,
     required String manufacturerName,

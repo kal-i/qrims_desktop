@@ -43,10 +43,13 @@ import '../../../../core/common/components/search_button/expandable_search_butto
 import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/role.dart';
+import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../injection_container.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/item_inventory_bloc.dart';
 import '../components/filter_item_modal.dart';
 
@@ -180,32 +183,41 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildHeaderRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildSummaryRow(),
-        const SizedBox(
-          height: 40.0,
-        ),
-        _buildTableRelatedActionsRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Expanded(
-          child: _buildDataTable(),
-        ),
-      ],
-    );
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      bool isAdmin = false;
+
+      if (state is AuthSuccess) {
+        isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+            Role.admin;
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(
+            height: 20.0,
+          ),
+          _buildHeaderRow(isAdmin),
+          const SizedBox(
+            height: 20.0,
+          ),
+          _buildSummaryRow(),
+          const SizedBox(
+            height: 40.0,
+          ),
+          _buildTableRelatedActionsRow(),
+          const SizedBox(
+            height: 20.0,
+          ),
+          Expanded(
+            child: _buildDataTable(isAdmin),
+          ),
+        ],
+      );
+    });
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow(bool isAdmin) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -220,7 +232,12 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         ),
         Row(
           children: [
-            _buildRegisterButton(),
+            if (isAdmin)
+              const CustomMessageBox.info(
+                message: 'You can only view.',
+              )
+            else
+              _buildRegisterButton(),
           ],
         ),
       ],
@@ -239,7 +256,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageAdd,
                   title: 'Total Items',
                   data: totalItemsCount.toString(),
-                 // baseColor: Colors.transparent,
+                  // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -254,7 +271,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageDelivered,
                   title: 'In stock',
                   data: inStockCount.toString(),
-                 // baseColor: Colors.transparent,
+                  // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -269,7 +286,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                   icon: HugeIcons.strokeRoundedPackageProcess,
                   title: 'Low stock',
                   data: lowStockCount.toString(),
-                 // baseColor: Colors.transparent,
+                  // baseColor: Colors.transparent,
                 );
               }),
         ),
@@ -310,10 +327,10 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
               width: 10.0,
             ),
             _buildFilterButton(),
-            const SizedBox(
-              width: 10.0,
-            ),
-            _buildSortButton(),
+            // const SizedBox(
+            //   width: 10.0,
+            // ),
+            // _buildSortButton(),
           ],
         ),
       ],
@@ -322,7 +339,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
-      'In Stock': 'in_stock',
+      'High': 'in_stock',
       'Low': 'low',
       'Out': 'out',
     };
@@ -365,8 +382,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       onTap: () => showDialog(
         context: context,
         builder: (context) => FilterItemModal(
-          onApplyFilters:
-              (String? manufacturer, String? brand, AssetClassification? classification, AssetSubClass? subClass) {
+          onApplyFilters: (String? manufacturer, String? brand,
+              AssetClassification? classification, AssetSubClass? subClass) {
             _selectedManufacturer = manufacturer;
             _selectedBrand = brand;
             _selectedClassificationFilter = classification;
@@ -394,7 +411,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     );
   }
 
-  Widget _buildDataTable() {
+  Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<ItemInventoryBloc, ItemInventoryState>(
       listener: (context, state) {
         if (state is ItemsLoading) {
@@ -490,7 +507,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                     ],
                     menuItems: [
                       {'text': 'View', 'icon': FluentIcons.eye_12_regular},
-                      {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
+                      if (!isAdmin) {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
                     ],
                   ),
                 )

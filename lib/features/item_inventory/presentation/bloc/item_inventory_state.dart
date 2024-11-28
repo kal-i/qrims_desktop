@@ -37,10 +37,10 @@ final class ItemsError extends ItemInventoryState {
 
 final class ItemRegistered extends ItemInventoryState {
   const ItemRegistered({
-    required this.itemEntity,
+    required this.itemEntities,
   });
 
-  final ItemWithStockEntity itemEntity;
+  final List<ItemWithStockEntity> itemEntities;
 }
 
 final class ItemFetched extends ItemInventoryState {

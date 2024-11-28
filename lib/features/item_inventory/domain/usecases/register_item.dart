@@ -8,7 +8,7 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/item_with_stock.dart';
 import '../repository/item_inventory_repository.dart';
 
-class RegisterItem implements UseCase<ItemWithStockEntity, RegisterItemParams> {
+class RegisterItem implements UseCase<List<ItemWithStockEntity>, RegisterItemParams> {
   const RegisterItem({
     required this.itemInventoryRepository,
   });
@@ -16,7 +16,7 @@ class RegisterItem implements UseCase<ItemWithStockEntity, RegisterItemParams> {
   final ItemInventoryRepository itemInventoryRepository;
 
   @override
-  Future<Either<Failure, ItemWithStockEntity>> call(RegisterItemParams params) async {
+  Future<Either<Failure, List<ItemWithStockEntity>>> call(RegisterItemParams params) async {
     return await itemInventoryRepository.registerItem(
       specification: params.specification,
       itemName: params.itemName,

@@ -28,7 +28,7 @@ class InventorySummaryPieChart extends StatelessWidget {
         color: _getColorForCategory(data.categoryName),
         value: data.totalStock.toDouble(),
         title: '',
-        radius: 5.0,
+        radius: 20.0,
       );
     }).toList();
 

@@ -10,6 +10,7 @@ import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/get_issuance_by_id.dart';
 import '../../domain/usecases/get_paginated_issuances.dart';
 import '../../domain/usecases/match_item_with_pr.dart';
+import '../../domain/usecases/update_issuance_archive_status.dart';
 
 part 'issuance_events.dart';
 part 'issuance_states.dart';
@@ -21,17 +22,20 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required MatchItemWithPr matchItemWithPr,
     required CreateICS createICS,
     required CreatePAR createPAR,
+    required UpdateIssuanceArchiveStatus updateIssuanceArchiveStatus,
   })  : _getIssuanceById = getIssuanceById,
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
         _createICS = createICS,
         _createPar = createPAR,
+        _updateIssuanceArchiveStatus = updateIssuanceArchiveStatus,
         super(IssuancesInitial()) {
     on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
     on<MatchItemWithPrEvent>(_onMatchItemWithPrEvent);
     on<CreateICSEvent>(_onCreateICS);
     on<CreatePAREvent>(_onCreatePAR);
+    on<UpdateIssuanceArchiveStatusEvent>(_onUpdateIssuanceArchiveStatus);
   }
 
   final GetIssuanceById _getIssuanceById;
@@ -39,6 +43,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final MatchItemWithPr _matchItemWithPr;
   final CreateICS _createICS;
   final CreatePAR _createPar;
+  final UpdateIssuanceArchiveStatus _updateIssuanceArchiveStatus;
 
   void _onGetIssuanceByIdEvent(
     GetIssuanceByIdEvent event,
@@ -173,6 +178,29 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         PARRegistered(
           par: r,
+        ),
+      ),
+    );
+  }
+
+  void _onUpdateIssuanceArchiveStatus(
+    UpdateIssuanceArchiveStatusEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _updateIssuanceArchiveStatus(
+      UpdateIssuanceArchiveStatusParams(
+        id: event.id,
+        isArchived: event.isArchived,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        IssuanceArchiveStatusUpdated(
+          isSuccessful: r,
         ),
       ),
     );

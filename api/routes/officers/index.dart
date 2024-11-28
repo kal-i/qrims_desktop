@@ -31,12 +31,14 @@ Future<Response> _getOfficers(
     final searchQuery = queryParams['search_query']?.trim() ?? '';
     final sortAscending =
         bool.tryParse(queryParams['sort_ascending'] ?? 'true') ?? true;
+    final isArchived = bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
 
     final officers = await repository.getOfficers(
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
       sortAscending: sortAscending,
+      isArchived: isArchived,
     );
 
     final officersCount = await repository.getOfficersFilteredCount(

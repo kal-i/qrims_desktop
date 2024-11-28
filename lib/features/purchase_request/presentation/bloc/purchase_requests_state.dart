@@ -13,12 +13,22 @@ final class PurchaseRequestsLoading extends PurchaseRequestsState {}
 
 final class PurchaseRequestsLoaded extends PurchaseRequestsState {
   const PurchaseRequestsLoaded({
-    required this.purchaseRequests,
     required this.totalPurchaseRequestsCount,
+    required this.pendingRequestsCount,
+    required this.incompleteRequestCount,
+    required this.completeRequestsCount,
+    required this.cancelledRequestsCount,
+    required this.feedbacks,
+    required this.purchaseRequests,
   });
 
-  final List<PurchaseRequestEntity> purchaseRequests;
   final int totalPurchaseRequestsCount;
+  final int pendingRequestsCount;
+  final int incompleteRequestCount;
+  final int completeRequestsCount;
+  final int cancelledRequestsCount;
+  final FeedbacksEntity feedbacks;
+  final List<PurchaseRequestEntity> purchaseRequests;
 
   @override
   List<Object?> get props => [
@@ -41,4 +51,20 @@ final class PurchaseRequestsError extends PurchaseRequestsState {
   });
 
   final String message;
+}
+
+final class PurchaseRequestStatusUpdated extends PurchaseRequestsState {
+  const PurchaseRequestStatusUpdated({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+}
+
+final class PurchaseRequestLoaded extends PurchaseRequestsState {
+  const PurchaseRequestLoaded({
+    required this.purchaseRequestWithNotificationTrailEntity,
+  });
+
+  final PurchaseRequestWithNotificationTrailEntity purchaseRequestWithNotificationTrailEntity;
 }

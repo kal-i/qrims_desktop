@@ -60,8 +60,30 @@ Future<Response> _getPurchaseRequests(
 
     final prStatus = prStatusString != null
         ? PurchaseRequestStatus.values
-            .firstWhere((e) => e.toString().split('.').last == prStatusString)
+        .firstWhere((e) => e.toString().split('.').last == prStatusString)
         : null;
+
+    final feedbacks = await prRepository.generateFeedbackForAllStatuses();
+
+    final pendingRequestCount =
+        await prRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.pending,
+    );
+
+    final partiallyFulfilledRequestCount =
+    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.partiallyFulfilled,
+    );
+
+    final fulfilledRequestCount =
+    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.fulfilled,
+    );
+
+    final cancelledRequestCount =
+    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.cancelled,
+    );
 
     final prFilteredCount = await prRepository.getPurchaseRequestsFilteredCount(
       prId: prId,
@@ -81,6 +103,11 @@ Future<Response> _getPurchaseRequests(
       statusCode: 200,
       body: {
         'totalItemCount': prFilteredCount,
+        'pending_count': pendingRequestCount,
+        'partially_fulfilled_count': partiallyFulfilledRequestCount,
+        'fulfilled_count': fulfilledRequestCount,
+        'cancelled_count': cancelledRequestCount,
+        'feedbacks': feedbacks,
         'purchase_requests':
             purchaseRequests?.map((pr) => pr.toJson()).toList(),
       },
@@ -89,7 +116,7 @@ Future<Response> _getPurchaseRequests(
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {
-        'message': 'Error processing the get purchase requests.',
+        'message': 'Error processing the get purchase requests. $e',
       },
     );
   }
@@ -122,8 +149,6 @@ Future<Response> _registerPurchaseRequest(
     final entityName = json['entity_name'] as String;
     final fundClusterString = json['fund_cluster'] as String;
     final officeName = json['office_name'] as String;
-    final responsibilityCenterCode =
-        json['responsibility_center_code'] as String?;
     final date = json['date'] is String
         ? DateTime.parse(json['date'] as String)
         : json['date'] as DateTime;
@@ -235,7 +260,6 @@ Future<Response> _registerPurchaseRequest(
       entityId: entityId,
       fundCluster: fundCluster,
       officeId: officeId,
-      responsibilityCenterCode: responsibilityCenterCode,
       date: date,
       productNameId: productNameId,
       productDescriptionId: productDescriptionId,

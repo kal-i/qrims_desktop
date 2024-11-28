@@ -40,9 +40,11 @@ import 'features/dashboard/data/repository/user_activity_repository_impl.dart';
 import 'features/dashboard/domain/repository/dashboard_repository.dart';
 import 'features/dashboard/domain/repository/user_activity_repository.dart';
 import 'features/dashboard/domain/usecases/get_inventory_summary.dart';
+import 'features/dashboard/domain/usecases/get_low_stock_items.dart';
 import 'features/dashboard/domain/usecases/get_most_requested_items.dart';
 import 'features/dashboard/domain/usecases/get_user_activities.dart';
 import 'features/dashboard/presentation/bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/low_stock/low_stock_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 
@@ -67,6 +69,7 @@ import 'features/item_issuance/domain/usecases/create_par.dart';
 import 'features/item_issuance/domain/usecases/get_issuance_by_id.dart';
 import 'features/item_issuance/domain/usecases/get_paginated_issuances.dart';
 import 'features/item_issuance/domain/usecases/match_item_with_pr.dart';
+import 'features/item_issuance/domain/usecases/update_issuance_archive_status.dart';
 import 'features/item_issuance/presentation/bloc/issuances_bloc.dart';
 import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source.dart';
 import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source_impl.dart';
@@ -93,7 +96,9 @@ import 'features/purchase_request/data/data_sources/remote/purchase_request_remo
 import 'features/purchase_request/data/repository/purchase_request_repository_impl.dart';
 import 'features/purchase_request/domain/repository/purchase_request_repository.dart';
 import 'features/purchase_request/domain/usecases/get_paginated_purchase_requests.dart';
+import 'features/purchase_request/domain/usecases/get_purchase_request_by_id.dart';
 import 'features/purchase_request/domain/usecases/register_purchase_request.dart';
+import 'features/purchase_request/domain/usecases/update_purchase_request_status.dart';
 import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
 
 /// Users Management
@@ -212,25 +217,26 @@ void _registerNavigationDependencies() {
 /// Dashboard
 void _registerDashboardDependencies() {
   serviceLocator.registerFactory<DashboardRemoteDataSource>(
-        () => DashboardRemoteDataSourceImpl(httpService: serviceLocator()),
+    () => DashboardRemoteDataSourceImpl(httpService: serviceLocator()),
   );
 
   serviceLocator.registerFactory<DashboardRepository>(
-        () => DashboardRepositoryImpl(dashboardRemoteDataSource: serviceLocator()),
+    () => DashboardRepositoryImpl(dashboardRemoteDataSource: serviceLocator()),
   );
 
   _registerInventorySummaryDependencies();
   _registerRequestsSummaryDependencies();
+  _registerLowStockDependencies();
   _registerUserActivityDependencies();
 }
 
 void _registerInventorySummaryDependencies() {
   serviceLocator.registerFactory<GetInventorySummary>(
-        () => GetInventorySummary(dashboardRepository: serviceLocator()),
+    () => GetInventorySummary(dashboardRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<InventorySummaryBloc>(
-        () => InventorySummaryBloc(
+    () => InventorySummaryBloc(
       getInventorySummary: serviceLocator(),
     ),
   );
@@ -238,12 +244,24 @@ void _registerInventorySummaryDependencies() {
 
 void _registerRequestsSummaryDependencies() {
   serviceLocator.registerFactory<GetMostRequestedItems>(
-        () => GetMostRequestedItems(dashboardRepository: serviceLocator()),
+    () => GetMostRequestedItems(dashboardRepository: serviceLocator()),
   );
 
   serviceLocator.registerFactory<RequestsSummaryBloc>(
-        () => RequestsSummaryBloc(
-          getMostRequestedItems: serviceLocator(),
+    () => RequestsSummaryBloc(
+      getMostRequestedItems: serviceLocator(),
+    ),
+  );
+}
+
+void _registerLowStockDependencies() {
+  serviceLocator.registerFactory<GetLowStockItems>(
+    () => GetLowStockItems(dashboardRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<LowStockBloc>(
+    () => LowStockBloc(
+      getLowStockItems: serviceLocator(),
     ),
   );
 }
@@ -325,10 +343,21 @@ void _registerPurchaseRequestsDependencies() {
     () => RegisterPurchaseRequest(purchaseRequestRepository: serviceLocator()),
   );
 
+  serviceLocator.registerFactory<UpdatePurchaseRequestStatus>(
+    () => UpdatePurchaseRequestStatus(
+        purchaseRequestRepository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<GetPurchaseRequestById>(
+    () => GetPurchaseRequestById(purchaseRequestRepository: serviceLocator()),
+  );
+
   serviceLocator.registerFactory<PurchaseRequestsBloc>(
     () => PurchaseRequestsBloc(
       getPaginatedPurchaseRequests: serviceLocator(),
       registerPurchaseRequest: serviceLocator(),
+      updatePurchaseRequestStatus: serviceLocator(),
+      getPurchaseRequestById: serviceLocator(),
     ),
   );
 }
@@ -363,6 +392,10 @@ void _registerItemIssuanceDependencies() {
     () => CreatePAR(issuanceRepository: serviceLocator()),
   );
 
+  serviceLocator.registerFactory<UpdateIssuanceArchiveStatus>(
+        () => UpdateIssuanceArchiveStatus(issuanceRepository: serviceLocator()),
+  );
+
   serviceLocator.registerFactory<IssuancesBloc>(
     () => IssuancesBloc(
       getIssuanceById: serviceLocator(),
@@ -370,6 +403,7 @@ void _registerItemIssuanceDependencies() {
       matchItemWithPr: serviceLocator(),
       createICS: serviceLocator(),
       createPAR: serviceLocator(),
+      updateIssuanceArchiveStatus: serviceLocator(),
     ),
   );
 }

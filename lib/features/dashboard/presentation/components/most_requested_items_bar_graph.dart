@@ -18,7 +18,7 @@ class MostRequestedItemsBarChart extends StatelessWidget {
     return BaseContainer(
       color: Theme.of(context).primaryColor,
       padding: 20.0,
-      height: 300.0,
+      height: 400.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -40,7 +40,22 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                 barGroups: _generateBarGroups(),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // Disable right-side numbers
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // Disable numbers above bars
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -54,10 +69,51 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                   show: false,
                 ),
                 gridData: FlGridData(
-                  show: false,
+                  show: true,
+                  drawVerticalLine: true,
+                  verticalInterval: 1, // Spacing between vertical grid lines
+                  horizontalInterval: _getMaxY() / 5, // Divide the y-axis into 5 grid intervals
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.5), // Grid line color
+                      strokeWidth: 1, // Thickness of grid lines
+                      dashArray: [4, 4], // Dashed grid lines (optional)
+                    );
+                  },
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.5),
+                      strokeWidth: 1,
+                    );
+                  },
                 ),
               ),
             ),
+            // BarChart(
+            //   BarChartData(
+            //     alignment: BarChartAlignment.spaceAround,
+            //     maxY: _getMaxY(),
+            //     barGroups: _generateBarGroups(),
+            //     titlesData: FlTitlesData(
+            //       leftTitles: AxisTitles(
+            //         sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+            //       ),
+            //       bottomTitles: AxisTitles(
+            //         sideTitles: SideTitles(
+            //           showTitles: true,
+            //           getTitlesWidget: _buildBottomTitles,
+            //           reservedSize: 40,
+            //         ),
+            //       ),
+            //     ),
+            //     borderData: FlBorderData(
+            //       show: false,
+            //     ),
+            //     gridData: FlGridData(
+            //       show: false,
+            //     ),
+            //   ),
+            // ),
           ),
         ],
       ),

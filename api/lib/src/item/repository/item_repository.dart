@@ -362,8 +362,8 @@ class ItemRepository {
           qr_code_image_data
         ) VALUES (
           @id, @product_name_id, @product_description_id, @manufacturer_id, @brand_id, @model_id, @serial_no, @specification,
-          @asset_classification, @asset_sub_class, @unit, @quantity, 
-          @unit_cost, @estimated_useful_life, @acquired_date, @encrypted_id, 
+          @asset_classification, @asset_sub_class, @unit, @quantity,
+          @unit_cost, @estimated_useful_life, @acquired_date, @encrypted_id,
           @qr_code_image_data
         );
         ''',
@@ -402,6 +402,145 @@ class ItemRepository {
       throw Exception('Error registering item: $e');
     }
   }
+
+  // Future<List<String>> registerItemsWithStock({
+  //   required String productName,
+  //   String? description,
+  //   required String manufacturerName,
+  //   required String brandName,
+  //   required String modelName,
+  //   required String serialNo,
+  //   required String specification,
+  //   AssetClassification? assetClassification,
+  //   AssetSubClass? assetSubClass,
+  //   required Unit unit,
+  //   required int quantity,
+  //   required double unitCost,
+  //   int? estimatedUsefulLife,
+  //   DateTime? acquiredDate,
+  // }) async {
+  //   try {
+  //     // Split the serial numbers by the separator
+  //     final serialNumbers = serialNo.split(' - ').map((s) => s.trim()).toList();
+  //
+  //     List<String> encryptedIds = [];
+  //
+  //     for (var serial in serialNumbers) {
+  //       // Generate a unique item ID for each serial number
+  //       final itemId = await _generateUniqueItemId(productName);
+  //       print('item id: $itemId');
+  //
+  //       // Generate encrypted ID
+  //       final encryptedId = await EncryptionUtils.encryptId(itemId);
+  //       print('encrypted id: $encryptedId');
+  //
+  //       // Generate QR code image data
+  //       final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
+  //       print('qr data id: $qrCodeImageData');
+  //
+  //       String? productNameId;
+  //       String? productDescriptionId;
+  //       String? manufacturerId;
+  //       String? brandId;
+  //       String? modelId;
+  //
+  //       // Fetch or create product name
+  //       final productNameResult = await checkProductNameIfExist(productName: productName);
+  //       productNameId = productNameResult ?? await registerProductName(productName: productName);
+  //
+  //       // Fetch or create product description
+  //       final productDescriptionResult = await checkProductDescriptionIfExist(productDescription: description);
+  //       productDescriptionId = productDescriptionResult ?? await registerProductDescription(productDescription: description);
+  //
+  //       // Ensure product stock exists
+  //       final productStockResult = await checkProductStockIfExist(
+  //         productNameId: productNameId,
+  //         productDescriptionId: productDescriptionId,
+  //       );
+  //       if (productStockResult == 0) {
+  //         await registerProductStock(productNameId: productNameId, productDescriptionId: productDescriptionId);
+  //       }
+  //
+  //       // Fetch or create manufacturer
+  //       final manufacturerResult = await checkManufacturerIfExist(manufacturerName: manufacturerName);
+  //       manufacturerId = manufacturerResult ?? await registerManufacturer(manufacturerName: manufacturerName);
+  //
+  //       // Fetch or create brand
+  //       final brandResult = await checkBrandIfExist(brandName: brandName);
+  //       brandId = brandResult ?? await registerBrand(brandName: brandName);
+  //
+  //       // Ensure manufacturer-brand relationship exists
+  //       final manufacturerBrandResult = await checkManufacturerBrandIfExist(
+  //         manufacturerId: manufacturerId,
+  //         brandId: brandId,
+  //       );
+  //       if (manufacturerBrandResult == 0) {
+  //         await registerManufacturerBrand(manufacturerId: manufacturerId, brandId: brandId);
+  //       }
+  //
+  //       // Fetch or create model
+  //       final modelResult = await checkModelIfExist(
+  //         productNameId: productNameId,
+  //         brandId: brandId,
+  //         modelName: modelName,
+  //       );
+  //       modelId = modelResult ?? await registerModel(
+  //         productNameId: productNameId,
+  //         brandId: brandId,
+  //         modelName: modelName,
+  //       );
+  //
+  //       // Insert item record
+  //       await _conn.execute(
+  //         Sql.named(
+  //           '''
+  //         INSERT INTO Items (
+  //           id, product_name_id, product_description_id, manufacturer_id, brand_id, model_id, serial_no, specification,
+  //           asset_classification, asset_sub_class, unit, quantity,
+  //           unit_cost, estimated_useful_life, acquired_date, encrypted_id,
+  //           qr_code_image_data
+  //         ) VALUES (
+  //           @id, @product_name_id, @product_description_id, @manufacturer_id, @brand_id, @model_id, @serial_no, @specification,
+  //           @asset_classification, @asset_sub_class, @unit, @quantity,
+  //           @unit_cost, @estimated_useful_life, @acquired_date, @encrypted_id,
+  //           @qr_code_image_data
+  //         );
+  //         ''',
+  //         ),
+  //         parameters: {
+  //           'id': itemId,
+  //           'product_name_id': productNameId,
+  //           'product_description_id': productDescriptionId,
+  //           'manufacturer_id': manufacturerId,
+  //           'brand_id': brandId,
+  //           'model_id': modelId,
+  //           'serial_no': serial,
+  //           'specification': specification,
+  //           'asset_classification': assetClassification?.toString().split('.').last,
+  //           'asset_sub_class': assetSubClass?.toString().split('.').last,
+  //           'unit': unit.toString().split('.').last,
+  //           'quantity': quantity,
+  //           'unit_cost': unitCost,
+  //           'estimated_useful_life': estimatedUsefulLife,
+  //           'acquired_date': acquiredDate,
+  //           'encrypted_id': encryptedId,
+  //           'qr_code_image_data': qrCodeImageData,
+  //         },
+  //       );
+  //
+  //       encryptedIds.add(encryptedId);
+  //     }
+  //
+  //     return encryptedIds; // Return all encrypted IDs for registered items
+  //   } catch (e) {
+  //     print(e);
+  //     if (e.toString().contains('duplicate key value violates unique constraint')) {
+  //       print('Serial no. already exists');
+  //       throw Exception('Serial no. already exists.');
+  //     }
+  //     throw Exception('Error registering items: $e');
+  //   }
+  // }
 
   Future<String> registerProductName({
     required String productName,
@@ -1922,5 +2061,89 @@ class ItemRepository {
               'total_stock': row[1],
             })
         .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getLowStockItems({
+    required int page,
+    required int pageSize,
+  }) async {
+    final offset = (page - 1) * pageSize;
+    final lowStockItems = <Map<String, dynamic>>[];
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          pn.name AS product_name,
+          SUM(i.quantity) AS total_quantity
+        FROM
+          Items i
+        JOIN
+          ProductNames pn ON i.product_name_id = pn.id
+        GROUP BY
+          pn.name
+        HAVING
+          SUM(i.quantity) > 0 AND SUM(i.quantity) <= 5
+        ORDER BY
+          name ASC 
+        LIMIT @page_size OFFSET @offset;
+        ''',
+      ),
+      parameters: {
+        'page_size': pageSize,
+        'offset': offset,
+      },
+    );
+
+    for (var row in result) {
+      lowStockItems.add({
+        'product_name': row[0],  // pn.name
+        'total_quantity': row[1], // SUM(i.quantity)
+      });
+    }
+
+    return lowStockItems;
+  }
+
+  Future<List<Map<String, dynamic>>> getOutOfStockItems({
+    required int page,
+    required int pageSize,
+  }) async {
+    final offset = (page - 1) * pageSize;
+    final outOfStockItems = <Map<String, dynamic>>[];
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          pn.name AS product_name,
+          SUM(i.quantity) AS total_quantity
+        FROM
+          Items i
+        JOIN
+          ProductNames pn ON i.product_name_id = pn.id
+        GROUP BY
+          pn.name
+        HAVING
+          SUM(i.quantity) = 0
+        ORDER BY
+          name ASC 
+        LIMIT @page_size OFFSET @offset;
+        ''',
+      ),
+      parameters: {
+        'page_size': pageSize,
+        'offset': offset,
+      },
+    );
+
+    for (var row in result) {
+      outOfStockItems.add({
+        'product_name': row[0],  // pn.name
+        'total_quantity': row[1], // SUM(i.quantity)
+      });
+    }
+
+    return outOfStockItems;
   }
 }

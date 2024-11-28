@@ -385,18 +385,22 @@ class OfficerRepository {
       );
 
       if (checkIfUserExist.isNotEmpty) {
-        final userId = checkIfUserExist.first[0] as String;
-        await _conn.execute(
-          Sql.named('''
-        UPDATE Users
-        SET is_archived = @is_archived
-        WHERE id LIKE @user_id;
-        '''),
-          parameters: {
-            'id': userId,
-            'is_archived': isArchived,
-          },
-        );
+        final userId = checkIfUserExist.first[0] as String?;
+        if (userId != null) {
+          await _conn.execute(
+            Sql.named('''
+          UPDATE Users
+          SET is_archived = @is_archived
+          WHERE id LIKE @user_id;
+          '''),
+            parameters: {
+              'user_id': userId,
+              'is_archived': isArchived,
+            },
+          );
+        } else {
+          print('No associated user_id found for officer id: $id');
+        }
       }
 
       return true;

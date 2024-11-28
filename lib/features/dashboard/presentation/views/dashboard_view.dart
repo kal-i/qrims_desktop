@@ -5,12 +5,17 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/base_container.dart';
+import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/pagination_controls_2.dart';
 import '../../data/models/inventory_summary.dart';
+import '../../data/models/item.dart';
 import '../../data/models/most_requested_items.dart';
 import '../bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
+import '../bloc/dashboard/low_stock/low_stock_bloc.dart';
 import '../bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import '../../../../core/common/components/kpi_card.dart';
 import '../components/inventory_summary_pie_chart.dart';
+import '../components/item_card.dart';
 import '../components/most_requested_items_bar_graph.dart';
 import '../components/stock_level_pie_chart.dart';
 
@@ -24,18 +29,23 @@ class DashboardView extends StatefulWidget {
 class _DashboardViewState extends State<DashboardView> {
   late InventorySummaryBloc _inventorySummaryBloc;
   late RequestsSummaryBloc _requestsSummaryBloc;
+  late LowStockBloc _lowStockBloc;
 
   final ValueNotifier<int> _inStocksCount = ValueNotifier(0);
   final ValueNotifier<int> _lowStocksCount = ValueNotifier(0);
   final ValueNotifier<int> _outOfStocksCount = ValueNotifier(0);
+
+  final List<ItemModel> _lowStockItems = [];
 
   @override
   void initState() {
     super.initState();
     _inventorySummaryBloc = context.read<InventorySummaryBloc>();
     _requestsSummaryBloc = context.read<RequestsSummaryBloc>();
+    _lowStockBloc = context.read<LowStockBloc>();
     _fetchInventorySummary();
     _fetchMostRequestedItems();
+    //_fetchLowStockItems();
   }
 
   void _fetchInventorySummary() {
@@ -44,6 +54,10 @@ class _DashboardViewState extends State<DashboardView> {
 
   void _fetchMostRequestedItems() {
     _requestsSummaryBloc.add(const GetMostRequestedItemsEvent());
+  }
+
+  void _fetchLowStockItems() {
+    _lowStockBloc.add(const GetLowStockEvent(page: 1, pageSize: 10));
   }
 
   @override
@@ -64,9 +78,12 @@ class _DashboardViewState extends State<DashboardView> {
               flex: 3,
               child: _buildMainContentSection(),
             ),
-            Expanded(
-              child: _buildSidePanelSection(),
-            ),
+            // const SizedBox(
+            //   width: 20.0,
+            // ),
+            // Expanded(
+            //   child: _buildSidePanelSection(),
+            // ),
           ],
         ),
       ),
@@ -86,88 +103,98 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildInventorySummarySection() {
-    return BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
-      builder: (context, state) {
-        return Column(
-          children: [
-            _buildCardsSection(),
-            const SizedBox(
-              height: 30.0,
-            ),
-            if (state is InventorySummaryLoaded)
-              Row(
-                children: [
-                  Expanded(
-                      child: StockLevelPieChart(
-                        inStocksCount: state.inventorySummaryEntity.inStocksCount,
-                        lowStocksCount: state.inventorySummaryEntity.lowStocksCount,
-                        outOfStocksCount:
-                        state.inventorySummaryEntity.outOfStocksCount,
-                      )),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: InventorySummaryPieChart(
-                      inventoryData:
-                      state.inventorySummaryEntity as InventorySummaryModel,
-                    ),
-                  ),
-                ],
-              ),
-
-            if (state is InventorySummaryLoading)
-              Row(
-                children: [
-                  Expanded(
-                    child: BaseContainer(
-                      color: Theme.of(context).primaryColor,
-                      child: Column(
-                        children: [
-                          Text(
-                            'Loading graph...',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const SpinKitFadingCircle(
-                            color: AppColor.accent,
-                            size: 50.0,
-                          ),
-                        ],
+    return BlocListener<InventorySummaryBloc, InventorySummaryState>(
+      listener: (context, state) {
+        if (state is InventorySummaryLoaded) {
+          _inStocksCount.value = state.inventorySummaryEntity.inStocksCount;
+          _lowStocksCount.value = state.inventorySummaryEntity.lowStocksCount;
+          _outOfStocksCount.value = state.inventorySummaryEntity.outOfStocksCount;
+        }
+      },
+      child: BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
+          builder: (context, state) {
+            return Column(
+              children: [
+                _buildCardsSection(),
+                const SizedBox(
+                  height: 30.0,
+                ),
+                if (state is InventorySummaryLoaded)
+                  Row(
+                    children: [
+                      Expanded(
+                          child: StockLevelPieChart(
+                            inStocksCount: state.inventorySummaryEntity.inStocksCount,
+                            lowStocksCount: state.inventorySummaryEntity.lowStocksCount,
+                            outOfStocksCount:
+                            state.inventorySummaryEntity.outOfStocksCount,
+                          )),
+                      const SizedBox(
+                        width: 20.0,
                       ),
-                    ),
+                      Expanded(
+                        child: InventorySummaryPieChart(
+                          inventoryData:
+                          state.inventorySummaryEntity as InventorySummaryModel,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: BaseContainer(
-                      color: Theme.of(context).primaryColor,
-                      child: Column(
-                        children: [
-                          Text(
-                            'Loading graph...',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                if (state is InventorySummaryLoading)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: BaseContainer(
+                          color: Theme.of(context).primaryColor,
+                          child: Column(
+                            children: [
+                              Text(
+                                'Loading graph...',
+                                style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
                                   fontSize: 13.0,
                                   fontWeight: FontWeight.w400,
                                 ),
+                              ),
+                              const SpinKitFadingCircle(
+                                color: AppColor.accent,
+                                size: 50.0,
+                              ),
+                            ],
                           ),
-                          const SpinKitFadingCircle(
-                            color: AppColor.accent,
-                            size: 50.0,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: BaseContainer(
+                          color: Theme.of(context).primaryColor,
+                          child: Column(
+                            children: [
+                              Text(
+                                'Loading graph...',
+                                style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SpinKitFadingCircle(
+                                color: AppColor.accent,
+                                size: 50.0,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-          ],
-        );
-      }
+              ],
+            );
+          }),
     );
+    //cdreturn ;
   }
 
   Widget _buildMostRequestedItemsSection() {
@@ -204,30 +231,35 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildCardsSection() {
     return Row(
       children: [
-        BaseContainer(
-          width: 200.0,
-          height: 200.0,
+        Expanded(
+          child: KPICard(
+            bgColor: Theme.of(context).primaryColor,
+            icon: HugeIcons.strokeRoundedPackageAdd,
+            title: 'In Stocks',
+            data: _inStocksCount.value.toString(),
+          ),
         ),
         const SizedBox(
           width: 20.0,
         ),
-        BaseContainer(
-          width: 200.0,
-          height: 200.0,
+        Expanded(
+          child: KPICard(
+            bgColor: Theme.of(context).primaryColor,
+            icon: HugeIcons.strokeRoundedPackageProcess,
+            title: 'Low Stocks',
+            data: _lowStocksCount.value.toString(),
+          ),
         ),
         const SizedBox(
           width: 20.0,
         ),
-        BaseContainer(
-          width: 200.0,
-          height: 200.0,
-        ),
-        const SizedBox(
-          width: 20.0,
-        ),
-        BaseContainer(
-          width: 200.0,
-          height: 200.0,
+        Expanded(
+          child: KPICard(
+            bgColor: Theme.of(context).primaryColor,
+            icon: HugeIcons.strokeRoundedPackageRemove,
+            title: 'Out of Stocks',
+            data: _outOfStocksCount.value.toString(),
+          ),
         ),
       ],
     );
@@ -238,7 +270,173 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildSidePanelSection() {
-    return Column();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BaseContainer(
+          height: 500.0,
+          color: Theme.of(context).primaryColor,
+          child: _buildLowStockSection(),
+        ),
+        SizedBox(
+          height: 20.0,
+        ),
+        BaseContainer(
+          height: 400.0,
+          color: Theme.of(context).primaryColor,
+          child: _buildOutOfStockSection(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLowStockSection() {
+    return BlocListener<LowStockBloc, LowStockState>(
+      listener: (context, state) {
+        if (state is LowStockLoaded) {
+          _lowStockItems.clear();
+          _lowStockItems
+              .addAll(state.items.map((item) => item as ItemModel).toList());
+        }
+      },
+      child: BlocBuilder<LowStockBloc, LowStockState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              _buildLowStockHeader(),
+              const SizedBox(
+                height: 30.0,
+              ),
+              if (state is LowStockLoading)
+                const SpinKitFadingCircle(
+                  color: AppColor.accent,
+                  size: 10.0,
+                ),
+              if (state is LowStockError)
+                CustomMessageBox.error(
+                  message: state.message,
+                ),
+              Expanded(
+                child: _buildLowStockListView(),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLowStockHeader() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Low Stock Items',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            PaginationControls2(
+              currentPage: 1,
+              totalRecords: 10,
+              pageSize: 10,
+              onPageChanged: (page) {
+                // _currentPage = page;
+                // _fetchNotifications();
+              },
+              onPageSizeChanged: (size) {
+                // _pageSize = size;
+                // _fetchNotifications();
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOutOfStockSection() {
+    return BlocListener<LowStockBloc, LowStockState>(
+      listener: (context, state) {
+        if (state is LowStockLoaded) {
+          _lowStockItems.clear();
+          _lowStockItems
+              .addAll(state.items.map((item) => item as ItemModel).toList());
+        }
+      },
+      child: BlocBuilder<LowStockBloc, LowStockState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              _buildOutOfStockHeader(),
+              const SizedBox(
+                height: 30.0,
+              ),
+              if (state is LowStockLoading)
+                const SpinKitFadingCircle(
+                  color: AppColor.accent,
+                  size: 10.0,
+                ),
+              if (state is LowStockError)
+                CustomMessageBox.error(
+                  message: state.message,
+                ),
+              Expanded(
+                child: _buildLowStockListView(),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOutOfStockHeader() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Out of Stock Items',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            PaginationControls2(
+              currentPage: 1,
+              totalRecords: 10,
+              pageSize: 10,
+              onPageChanged: (page) {
+                // _currentPage = page;
+                // _fetchNotifications();
+              },
+              onPageSizeChanged: (size) {
+                // _pageSize = size;
+                // _fetchNotifications();
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLowStockListView() {
+    return RefreshIndicator(
+      color: AppColor.accent,
+      onRefresh: () async {},
+      child: ListView.builder(
+        itemCount: _lowStockItems.length,
+        itemBuilder: (context, index) => ItemCard(
+          item: _lowStockItems[index],
+        ),
+      ),
+    );
   }
 
   Widget _buildInventorySummaryCardsSection() {
@@ -274,8 +472,6 @@ class _DashboardViewState extends State<DashboardView> {
       ],
     );
   }
-
-
 
   // Row(
   // children: [

@@ -376,8 +376,10 @@ class IssuanceRepository {
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
+        // whereClause.write(
+        //     ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
         whereClause.write(
-            ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
+            ' AND iss.id ILIKE @search_query');
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -463,8 +465,10 @@ class IssuanceRepository {
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        whereClause.write(
-            ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
+        // whereClause.write(
+        //     ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
+         whereClause.write(
+             ' AND iss.id ILIKE @search_query');
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -807,6 +811,27 @@ class IssuanceRepository {
     }
 
     return true;
+  }
+
+  Future<bool> updateIssuanceArchiveStatus({
+    required String id,
+    required bool isArchived,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        UPDATE Issuances
+        SET is_archived = @is_archived
+        WHERE id = @id;
+        ''',
+      ),
+      parameters: {
+        'id': id,
+        'is_archived': isArchived,
+      },
+    );
+
+    return result.affectedRows == 1;
   }
 
   // choose a pr

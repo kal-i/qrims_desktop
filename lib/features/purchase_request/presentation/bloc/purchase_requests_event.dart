@@ -43,7 +43,6 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
     required this.entityName,
     required this.fundCluster,
     required this.officeName,
-    required this.responsibilityCenterCode,
     required this.date,
     required this.productName,
     required this.productDescription,
@@ -62,7 +61,6 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
   final String entityName;
   final FundCluster fundCluster;
   final String officeName;
-  final String? responsibilityCenterCode;
   final DateTime date;
   final String productName;
   final String productDescription;
@@ -82,7 +80,6 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
         entityName,
         fundCluster,
         officeName,
-        responsibilityCenterCode,
         date,
         productName,
         productDescription,
@@ -97,4 +94,22 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
         approvingOfficerPosition,
         approvingOfficerName,
       ];
+}
+
+final class UpdatePurchaseRequestEvent extends PurchaseRequestsEvent {
+  const UpdatePurchaseRequestEvent({
+    required this.id,
+    required this.status,
+  });
+
+  final String id;
+  final PurchaseRequestStatus status;
+}
+
+final class GetPurchaseRequestByIdEvent extends PurchaseRequestsEvent {
+  const GetPurchaseRequestByIdEvent({
+    required this.prId,
+  });
+
+  final String prId;
 }

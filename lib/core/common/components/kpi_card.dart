@@ -12,6 +12,7 @@ class KPICard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.data,
+    this.bgColor,
     this.iconBackgroundColor,
     this.outlineColor,
     this.foregroundColor,
@@ -20,6 +21,7 @@ class KPICard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String data;
+  final Color? bgColor;
   final Color? iconBackgroundColor;
   final Color? outlineColor;
   final Color? foregroundColor;
@@ -28,6 +30,7 @@ class KPICard extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return BaseContainer(
+      color: bgColor,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

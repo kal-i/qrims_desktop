@@ -5,6 +5,8 @@ import '../../core/enums/issuance_purpose.dart';
 import '../../core/enums/issuance_type.dart';
 import '../../core/enums/verification_purpose.dart';
 
+import '../../features/archive/presentation/views/archive_issuances_view.dart';
+import '../../features/archive/presentation/views/archive_officers_view.dart';
 import '../../features/archive/presentation/views/archive_users_view.dart';
 import '../../features/archive/presentation/views/archive_view.dart';
 import '../../features/auth/presentation/views/base_auth_view.dart';
@@ -23,6 +25,7 @@ import '../../features/navigation/presentation/views/navigation_view.dart';
 import '../../features/officer/presentation/views/officers_management_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_reusable_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_view.dart';
+import '../../features/purchase_request/presentation/view/view_purchase_request.dart';
 import '../../features/settings/presentation/views/account_profile_view.dart';
 import '../../features/settings/presentation/views/general_setting_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
@@ -203,6 +206,21 @@ class AppRoutingConfig {
                   );
                 },
               ),
+              GoRoute(
+                name: RoutingConstants.viewPurchaseRequestRouteName,
+                path: RoutingConstants.viewPurchaseRequestRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final prId = extras['pr_id'] as String;
+
+                  return MaterialPage(
+                    child: ViewPurchaseRequest(
+                      prId: prId,
+                    ),
+                  );
+                },
+              ),
             ],
           ),
 
@@ -284,6 +302,20 @@ class AppRoutingConfig {
                   child: ArchiveUsersView(),
                 ),
               ),
+              GoRoute(
+                name: RoutingConstants.archiveOfficerViewRouteName,
+                path: RoutingConstants.archiveOfficerViewRoutePath,
+                pageBuilder: (context, state) => const MaterialPage(
+                  child: ArchiveOfficersView(),
+                ),
+              ),
+              GoRoute(
+                name: RoutingConstants.archiveIssuanceViewRouteName,
+                path: RoutingConstants.archiveIssuanceViewRoutePath,
+                pageBuilder: (context, state) => const MaterialPage(
+                  child: ArchiveIssuancesView(),
+                ),
+              ),
             ],
           ),
 
@@ -332,13 +364,16 @@ class RouteChangeManager {
       '/itemInventory/registerItem': 'Register Item',
       '/itemInventory/updateItem': 'Update Item',
       '/purchaseRequest': 'Purchase Request',
+      '/purchaseRequest/viewPurchaseRequest': 'View Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',
       '/itemIssuance': 'Item Issuance Management',
       '/itemIssuance/viewItemIssuance': 'View Item Issuance',
       '/itemIssuance/registerItemIssuance': 'Create Issuance',
       '/usersManagement': 'User Management',
       '/officersManagement': 'Officers Management',
-      '/archiveUserView': 'Archive Management',
+      '/archiveUser': 'Archive Management',
+      '/archiveOfficer': 'Archive Management',
+      '/archiveIssuance': 'Archive Management',
       '/general': 'General Settings',
       '/accountProfile': 'Account Profile Settings',
     };

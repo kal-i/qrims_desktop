@@ -2,6 +2,7 @@ enum NotificationType {
   prCreated, // When a purchase request is created
   prApproved, // When a purchase request is approved
   prFollowUp,
+  prPending,
   prPartiallyFulfilled, // When part of the requested items are issued
   prFulfilled, // When the PR is fully fulfilled
   prCancelled, // When a PR is cancelled

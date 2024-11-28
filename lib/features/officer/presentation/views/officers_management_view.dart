@@ -20,10 +20,13 @@ import '../../../../core/common/components/reusable_custom_refresh_outline_butto
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/common/components/slideable_container.dart';
+import '../../../../core/enums/role.dart';
+import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../injection_container.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../bloc/officers_bloc.dart';
 import '../components/dropdown_action_button.dart';
@@ -120,25 +123,36 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildHeader(),
-        const SizedBox(
-          height: 50.0,
-        ),
-        _buildActionsRow(),
-        const SizedBox(
-          height: 30.0,
-        ),
-        _buildTableActionsRow(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Expanded(
-          child: _buildDataTable(),
-        ),
-      ],
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        bool isAdmin = false;
+
+        if (state is AuthSuccess) {
+          isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+              Role.admin;
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeader(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildActionsRow(),
+            const SizedBox(
+              height: 30.0,
+            ),
+            _buildTableActionsRow(),
+            const SizedBox(
+              height: 20.0,
+            ),
+            Expanded(
+              child: _buildDataTable(isAdmin),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -221,8 +235,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
         isOutlined: true,
       ),
       onSelected: (action) {
-        if (action != null) {
-        }
+        if (action != null) {}
       },
       itemBuilder: (context) {
         return [
@@ -250,9 +263,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
               title: Text(
                 'Positions',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w400,
-                ),
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w400,
+                    ),
               ),
             ),
           ),
@@ -261,7 +274,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     );
   }
 
-  Widget _buildDataTable() {
+  Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<OfficersBloc, OfficersState>(
       listener: (context, state) {
         if (state is OfficersLoading) {
@@ -307,14 +320,16 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                 ),
               ],
               menuItems: [
-                {
-                  'text': 'Edit',
-                  'icon': FluentIcons.eye_20_regular,
-                },
-                {
-                  'text': 'Archive',
-                  'icon': HugeIcons.strokeRoundedArchive02,
-                },
+                if (!isAdmin)
+                  {
+                    'text': 'Edit',
+                    'icon': FluentIcons.eye_20_regular,
+                  },
+                if (isAdmin)
+                  {
+                    'text': 'Archive',
+                    'icon': HugeIcons.strokeRoundedArchive02,
+                  },
               ],
             );
           }).toList();
@@ -338,7 +353,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
               context: context,
               icon: Icons.check_circle_outline,
               title: 'Success',
-              subtitle: 'User authentication status updated successfully.',
+              subtitle: 'Officer archive status updated successfully.',
             );
             _refreshOfficerList();
           } else {
@@ -346,7 +361,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
               context: context,
               icon: Icons.error_outline,
               title: 'Failed',
-              subtitle: 'Failed to update officer authentication status.',
+              subtitle: 'Failed to update officer archive status.',
             );
           }
         }
@@ -364,6 +379,20 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                       config: _tableConfig.copyWith(
                         rows: _tableRows,
                       ),
+                      onActionSelected: (index, action) {
+                        final officerId = _tableRows[index].id;
+
+                        if (action.isNotEmpty) {
+                          if (action.contains('Archive')) {
+                            _officersBloc.add(
+                              UpdateOfficerArchiveStatusEvent(
+                                id: officerId,
+                                isArchived: true,
+                              ),
+                            );
+                          }
+                        }
+                      },
                     ),
                   ),
                   if (_isLoading) const ReusableLinearProgressIndicator(),

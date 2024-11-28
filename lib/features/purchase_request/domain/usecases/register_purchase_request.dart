@@ -21,9 +21,7 @@ class RegisterPurchaseRequest
     return purchaseRequestRepository.registerPurchaseRequest(
       entityName: params.entityName,
       fundCluster: params.fundCluster,
-      officeName: params.officeName,
-      responsibilityCenterCode: params.responsibilityCenterCode,
-      date: params.date,
+      officeName: params.officeName, date: params.date,
       productName: params.productName,
       productDescription: params.productDescription,
       unit: params.unit,
@@ -45,7 +43,6 @@ class RegisterPurchaseRequestParams {
     required this.entityName,
     required this.fundCluster,
     required this.officeName,
-    required this.responsibilityCenterCode,
     required this.date,
     required this.productName,
     required this.productDescription,
@@ -64,7 +61,6 @@ class RegisterPurchaseRequestParams {
   final String entityName;
   final FundCluster fundCluster;
   final String officeName;
-  final String? responsibilityCenterCode;
   final DateTime date;
   final String productName;
   final String productDescription;

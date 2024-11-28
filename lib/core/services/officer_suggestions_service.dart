@@ -1,4 +1,5 @@
 import '../constants/app_constants.dart';
+import '../utils/capitalizer.dart';
 import 'http_service.dart';
 
 class OfficerSuggestionsService {
@@ -25,7 +26,7 @@ class OfficerSuggestionsService {
     );
 
     final officeNames = (response.data['offices'] as List<dynamic>?)
-        ?.map((officeName) => officeName.toString().toLowerCase())
+        ?.map((officeName) => capitalizeWord(officeName))
         .toList();
 
     return officeNames;
@@ -47,7 +48,7 @@ class OfficerSuggestionsService {
     );
 
     final positionNames = (response.data['positions'] as List<dynamic>?)
-        ?.map((position) => position.toString().toLowerCase())
+        ?.map((position) => capitalizeWord(position))
         .toList();
 
     return positionNames;
@@ -71,7 +72,7 @@ class OfficerSuggestionsService {
     );
 
     final officerNames = (response.data['officers'] as List<dynamic>?)
-        ?.map((position) => position.toString().toLowerCase())
+        ?.map((position) => capitalizeWord(position))
         .toList();
 
     return officerNames;

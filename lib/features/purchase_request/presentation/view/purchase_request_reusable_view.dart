@@ -10,7 +10,6 @@ import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/common/components/quantity_counter_field.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
@@ -45,7 +44,6 @@ class _PurchaseRequestReusableViewState
   final _officeController = TextEditingController();
   final _dateController = TextEditingController();
   final _entityNameController = TextEditingController();
-  final _responsibilityCenterCodeController = TextEditingController();
   final _purposeController = TextEditingController();
 
   final _itemNameController = TextEditingController();
@@ -101,8 +99,6 @@ class _PurchaseRequestReusableViewState
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value!,
               officeName: _officeController.text,
-              responsibilityCenterCode:
-                  _responsibilityCenterCodeController.text,
               date: _pickedDate.value,
               productName: _itemNameController.text,
               productDescription: _itemDescriptionController.text,
@@ -129,7 +125,6 @@ class _PurchaseRequestReusableViewState
     _officeController.dispose();
     _dateController.dispose();
     _entityNameController.dispose();
-    _responsibilityCenterCodeController.dispose();
     _purposeController.dispose();
 
     _itemNameController.dispose();
@@ -330,19 +325,6 @@ class _PurchaseRequestReusableViewState
               Expanded(
                 child: _buildFundClusterSelection(),
               ),
-              const SizedBox(
-                width: 50.0,
-              ),
-              Expanded(
-                child: CustomFormTextField(
-                  label: 'Responsibility Center Code',
-                  controller: _responsibilityCenterCodeController,
-                  placeholderText: 'Enter responsibility center code',
-                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                      ? AppColor.lightCustomTextBox
-                      : AppColor.darkCustomTextBox),
-                ),
-              ),
             ],
           ),
         ),
@@ -353,7 +335,7 @@ class _PurchaseRequestReusableViewState
           label: 'Purpose',
           controller: _purposeController,
           maxLines: 4,
-          placeholderText: 'Enter reqeust\'s purpose',
+          placeholderText: 'Enter request\'s purpose',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
@@ -587,7 +569,7 @@ class _PurchaseRequestReusableViewState
               _pickedDate.value = date;
             }
           },
-          label: 'Acquired Date',
+          label: 'Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox

@@ -23,16 +23,16 @@ class _BaseArchiveViewState extends State<BaseArchiveView> {
     ),
     const NavigationItem(
       text: 'Officers',
-      path: '',
+      path: RoutingConstants.archiveOfficerViewRoutePath,
     ),
     const NavigationItem(
       text: 'Issuance',
-      path: '',
+      path: RoutingConstants.archiveIssuanceViewRoutePath,
     ),
-    const NavigationItem(
-      text: 'Reports',
-      path: '',
-    ),
+    // const NavigationItem(
+    //   text: 'Reports',
+    //   path: '',
+    // ),
   ];
 
   @override

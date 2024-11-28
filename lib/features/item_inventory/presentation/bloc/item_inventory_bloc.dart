@@ -101,7 +101,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
       ),
       (r) => emit(
         ItemRegistered(
-          itemEntity: r,
+          itemEntities: r,
         ),
       ),
     );

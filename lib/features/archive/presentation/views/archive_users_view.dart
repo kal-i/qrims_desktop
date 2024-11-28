@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_data_table.dart';
@@ -46,7 +47,7 @@ class _ArchiveUsersViewState extends State<ArchiveUsersView> {
 
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
-    'User Id',
+    //'User Id',
     'Name',
     'Email Address',
     'Created At',
@@ -69,7 +70,7 @@ class _ArchiveUsersViewState extends State<ArchiveUsersView> {
       headers: _tableHeaders,
       rows: _tableRows,
       columnFlex: [
-        1,
+        //1,
         2,
         2,
         1,
@@ -225,13 +226,13 @@ class _ArchiveUsersViewState extends State<ArchiveUsersView> {
                 (user) => TableData(
                   id: user.id,
                   columns: [
-                    Text(
-                      user.id.toString(),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    // Text(
+                    //   user.id.toString(),
+                    //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    //     fontSize: 14.0,
+                    //     fontWeight: FontWeight.w500,
+                    //   ),
+                    // ),
                     Text(
                       capitalizeWord(user.name),
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -266,7 +267,7 @@ class _ArchiveUsersViewState extends State<ArchiveUsersView> {
                   menuItems: [
                     {
                       'text': 'Unarchive',
-                      'icon': FluentIcons.shield_keyhole_16_regular
+                      'icon': HugeIcons.strokeRoundedArchive
                     }
                   ],
                 ),

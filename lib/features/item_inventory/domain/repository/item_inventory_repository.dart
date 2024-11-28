@@ -21,7 +21,7 @@ abstract interface class ItemInventoryRepository {
     AssetSubClass? subClassFilter,
   });
 
-  Future<Either<Failure, ItemWithStockEntity>> registerItem({
+  Future<Either<Failure, List<ItemWithStockEntity>>> registerItem({
     required String itemName,
     required String description,
     required String manufacturerName,

@@ -71,7 +71,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     try {
       final Map<String, dynamic> params = {
         'pr_id': prId,
-        if (propertyNumber != null && propertyNumber.isNotEmpty) 'property_number': propertyNumber,
+        if (propertyNumber != null && propertyNumber.isNotEmpty)
+          'property_number': propertyNumber,
         'issuance_items': issuanceItems,
         "receiving_officer_office": receivingOfficerOffice,
         "receiving_officer_position": receivingOfficerPosition,
@@ -87,7 +88,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        return PropertyAcknowledgementReceiptModel.fromJson(response.data['par']);
+        return PropertyAcknowledgementReceiptModel.fromJson(
+            response.data['par']);
       } else {
         throw const ServerException('PAR registration failed.');
       }
@@ -188,6 +190,30 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     } on DioException catch (e) {
       final formattedError = formatDioError(e);
       throw ServerException(formattedError);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updateIssuanceArchiveStatus({
+    required String id,
+    required bool isArchived,
+  }) async {
+    try {
+      final Map<String, dynamic> param = {
+        'is_archived': isArchived,
+      };
+
+      final response = await httpService.patch(
+        endpoint: '$updateIssuanceArchiveStatusEP/$id',
+        params: param,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
     } catch (e) {
       throw ServerException(e.toString());
     }

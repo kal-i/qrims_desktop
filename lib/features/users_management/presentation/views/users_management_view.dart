@@ -54,7 +54,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
 
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
-    'User Id',
+    //'User Id',
     'Name',
     'Email Address',
     'Created At',
@@ -82,7 +82,7 @@ class _UsersManagementViewState extends State<UsersManagementView> {
       headers: _tableHeaders,
       rows: _tableRows,
       columnFlex: [
-        2,
+        //2,
         2,
         2,
         2,
@@ -247,10 +247,10 @@ class _UsersManagementViewState extends State<UsersManagementView> {
             ),
             //_buildFilterButton(),
             _buildFilterStatusButton(),
-            const SizedBox(
-              width: 10,
-            ),
-            _buildSortOrderButton(),
+            // const SizedBox(
+            //   width: 10,
+            // ),
+            // _buildSortOrderButton(),
           ],
         ),
       ],
@@ -357,13 +357,13 @@ class _UsersManagementViewState extends State<UsersManagementView> {
             return TableData(
               id: user.id,
               columns: [
-                Text(
-                  user.id,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // Text(
+                //   user.id,
+                //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                //     fontSize: 14.0,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
                 Text(
                   capitalizeWord(user.name),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
