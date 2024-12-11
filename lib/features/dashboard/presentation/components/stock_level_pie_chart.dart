@@ -29,7 +29,6 @@ class StockLevelPieChart extends StatelessWidget {
     ];
 
     return BaseContainer(
-      color: Theme.of(context).primaryColor,
       padding: 20.0,
       height: 300.0,
       child: Column(
@@ -39,8 +38,8 @@ class StockLevelPieChart extends StatelessWidget {
             'Stock Levels',
             style: Theme.of(context)
                 .textTheme
-                .titleSmall
-                ?.copyWith(fontSize: 15.0),
+                .titleMedium
+                ?.copyWith(fontSize: 15.0,),
           ),
           const SizedBox(
             height: 20.0,
@@ -70,21 +69,22 @@ class StockLevelPieChart extends StatelessWidget {
                         'In Stocks',
                         inStocksCount,
                         totalCount,
-                        const Color(0xFF0BA293),
-                      ),
+                        AppColor.accent,
+                      //const Color(0xFFB6C9FF),
+                ),
                       _buildLegendItem(
                         context,
                         'Low Stocks',
                         lowStocksCount,
                         totalCount,
-                        const Color(0xFFFFC641),
+                        const Color(0xFFBFBAED),
                       ),
                       _buildLegendItem(
                         context,
                         'Out of Stocks',
                         outOfStocksCount,
                         totalCount,
-                        const Color(0xFFFF474D),
+                        const Color(0xFFECEBF8),
                       ),
                     ],
                   ),
@@ -162,11 +162,12 @@ class StockLevelPieChart extends StatelessWidget {
   Color _getColorForCategory(String category) {
     switch (category) {
       case 'In Stocks':
-        return const Color(0xFF0BA293);
+        return AppColor.accent;
+        return const Color(0xFFB6C9FF);
       case 'Low Stocks':
-        return const Color(0xFFFFC641);
+        return const Color(0xFFBFBAED);
       case 'Out of Stocks':
-        return const Color(0xFFFF474D);
+        return const Color(0xFFECEBF8);
       default:
         return AppColor.accentDisable;
     }

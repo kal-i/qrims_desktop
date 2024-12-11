@@ -433,6 +433,7 @@ class SideNavigationDrawer extends StatelessWidget {
       RoutingConstants.dashboardViewRoutePath,
       RoutingConstants.itemInventoryViewRoutePath,
       RoutingConstants.purchaseRequestViewRoutePath,
+      //RoutingConstants.purchaseOrderViewRoutePath,
       RoutingConstants.itemIssuanceViewRoutePath,
       RoutingConstants.officersManagementViewRoutePath,
       if (isAdmin) RoutingConstants.usersManagementViewRoutePath,

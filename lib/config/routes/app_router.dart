@@ -23,6 +23,8 @@ import '../../features/item_issuance/presentation/views/reusable_item_issuance_v
 import '../../features/item_issuance/presentation/views/view_issuance_information.dart';
 import '../../features/navigation/presentation/views/navigation_view.dart';
 import '../../features/officer/presentation/views/officers_management_view.dart';
+import '../../features/purchase_order/presentation/view/purchase_order_view.dart';
+import '../../features/purchase_request/presentation/view/create_purchase_order_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_reusable_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_view.dart';
 import '../../features/purchase_request/presentation/view/view_purchase_request.dart';
@@ -221,8 +223,31 @@ class AppRoutingConfig {
                   );
                 },
               ),
+              GoRoute(
+                name: RoutingConstants.registerPurchaseOrderViewRouteName,
+                path: RoutingConstants.registerPurchaseOrderViewRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                  state.extra as Map<String, dynamic>;
+                  final prId = extras['pr_id'] as String;
+
+                  return MaterialPage(
+                    child: CreatePurchaseOrderView(
+                      prId: prId,
+                    ),
+                  );
+                },
+              ),
             ],
           ),
+
+          /// purchase order
+          // GoRoute(
+          //   name: RoutingConstants.purchaseOrderViewRouteName,
+          //   path: RoutingConstants.purchaseOrderViewRoutePath,
+          //   pageBuilder: (context, state) =>
+          //   const MaterialPage(child: PurchaseOrderView()),
+          // ),
 
           /// item issuance management
           GoRoute(
@@ -366,6 +391,7 @@ class RouteChangeManager {
       '/purchaseRequest': 'Purchase Request',
       '/purchaseRequest/viewPurchaseRequest': 'View Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',
+      //'/purchaseOrder': 'Purchase Order',
       '/itemIssuance': 'Item Issuance Management',
       '/itemIssuance/viewItemIssuance': 'View Item Issuance',
       '/itemIssuance/registerItemIssuance': 'Create Issuance',

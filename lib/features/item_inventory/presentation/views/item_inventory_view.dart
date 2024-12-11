@@ -339,8 +339,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
-      'High': 'in_stock',
-      'Low': 'low',
+      'In Stock': 'in_stock',
       'Out': 'out',
     };
     return FilterTableRow(

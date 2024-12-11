@@ -19,6 +19,7 @@ class PurchaseRequestKPICard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('percentage: ${feedback?.percentage}');
     return BaseContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,14 +46,14 @@ class PurchaseRequestKPICard extends StatelessWidget {
               const SizedBox(
                 width: 10.0,
               ),
-              if (feedback != null)
+              if (feedback?.isIncrease != null)
                 Icon(
-                  feedback?.isIncrease != null ? HugeIcons.strokeRoundedTradeUp : HugeIcons.strokeRoundedTradeDown,
-                  color: feedback?.isIncrease != null ? AppColor.green : AppColor.red,
+                  feedback!.isIncrease! ? HugeIcons.strokeRoundedTradeUp : HugeIcons.strokeRoundedTradeDown,
+                  color: feedback!.isIncrease! ? AppColor.green : AppColor.red,
                   size: 24.0,
                 ),
               Text(
-                '${feedback?.percentage ?? 0.0}%',
+                '${feedback?.percentage.toStringAsFixed(1) ?? 0.0}%',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: 13.0,
                   fontWeight: FontWeight.w700,

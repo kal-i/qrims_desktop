@@ -57,8 +57,8 @@ class KPICard extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700,
                   color: foregroundColor,
                 ),
               ),

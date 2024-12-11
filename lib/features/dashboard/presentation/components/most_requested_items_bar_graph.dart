@@ -3,31 +3,32 @@ import 'package:flutter/material.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/base_container.dart';
+import '../../../../core/constants/assets_path.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../data/models/most_requested_items.dart';
 
 class MostRequestedItemsBarChart extends StatelessWidget {
   final MostRequestedItemsModel mostRequestedItems;
 
-  const MostRequestedItemsBarChart(
-      {super.key, required this.mostRequestedItems});
+  const MostRequestedItemsBarChart({
+    super.key,
+    required this.mostRequestedItems,
+  });
 
   @override
   Widget build(BuildContext context) {
     print('passed data: $mostRequestedItems');
     return BaseContainer(
-      color: Theme.of(context).primaryColor,
       padding: 20.0,
       height: 400.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Most Requested Items',
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontSize: 15.0),
+            'Most Requested Items Overview',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 15.0,
+                ),
           ),
           const SizedBox(
             height: 20.0,
@@ -46,16 +47,23 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: const TextStyle(fontSize: 10),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         );
                       },
                     ),
                   ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false), // Disable right-side numbers
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: false,
+                    ), // Disable right-side numbers
                   ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false), // Disable numbers above bars
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: false,
+                    ), // Disable numbers above bars
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -72,7 +80,8 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: true,
                   verticalInterval: 1, // Spacing between vertical grid lines
-                  horizontalInterval: _getMaxY() / 5, // Divide the y-axis into 5 grid intervals
+                  horizontalInterval:
+                      _getMaxY() / 5, // Divide the y-axis into 5 grid intervals
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: Colors.grey.withOpacity(0.5), // Grid line color
@@ -89,31 +98,6 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                 ),
               ),
             ),
-            // BarChart(
-            //   BarChartData(
-            //     alignment: BarChartAlignment.spaceAround,
-            //     maxY: _getMaxY(),
-            //     barGroups: _generateBarGroups(),
-            //     titlesData: FlTitlesData(
-            //       leftTitles: AxisTitles(
-            //         sideTitles: SideTitles(showTitles: true, reservedSize: 40),
-            //       ),
-            //       bottomTitles: AxisTitles(
-            //         sideTitles: SideTitles(
-            //           showTitles: true,
-            //           getTitlesWidget: _buildBottomTitles,
-            //           reservedSize: 40,
-            //         ),
-            //       ),
-            //     ),
-            //     borderData: FlBorderData(
-            //       show: false,
-            //     ),
-            //     gridData: FlGridData(
-            //       show: false,
-            //     ),
-            //   ),
-            // ),
           ),
         ],
       ),
@@ -138,14 +122,15 @@ class MostRequestedItemsBarChart extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: totalQuantity.toDouble(),
-            gradient: LinearGradient(
-              colors: [
-                AppColor.accent.withOpacity(0.7),
-                AppColor.accent,
-              ],
-            ),
+            color: AppColor.accent,
+            // gradient: LinearGradient(
+            //   colors: [
+            //     AppColor.accent.withOpacity(0.7),
+            //     AppColor.accent,
+            //   ],
+            // ),
             width: 30.0,
-            borderRadius: BorderRadius.circular(0),
+            borderRadius: BorderRadius.circular(10.0),
           ),
         ],
       );
@@ -171,18 +156,15 @@ class MostRequestedItemsBarChart extends StatelessWidget {
         child: Text(
           capitalizeWord(
               mostRequestedItems.mostRequestedItems[value.toInt()].productName),
-          style: const TextStyle(fontSize: 10),
+          style: TextStyle(
+            color: AppColor.darkDescriptionText,
+            fontFamily: 'Inter',
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       );
     }
     return const SizedBox.shrink();
   }
-
-  /// Get the maximum Y value for the graph.
-  // double _getMaxY() {
-  //   return mostRequestedItems.mostRequestedItems
-  //       .map((item) => item.requestedItemData.fold<int>(0, (sum, current) => sum + current.quantity))
-  //       .reduce((a, b) => a > b ? a : b)
-  //       .toDouble();
-  // }
 }

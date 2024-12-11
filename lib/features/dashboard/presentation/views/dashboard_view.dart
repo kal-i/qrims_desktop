@@ -14,6 +14,7 @@ import '../bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
 import '../bloc/dashboard/low_stock/low_stock_bloc.dart';
 import '../bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import '../../../../core/common/components/kpi_card.dart';
+import '../components/dashboard_kpi_card.dart';
 import '../components/inventory_summary_pie_chart.dart';
 import '../components/item_card.dart';
 import '../components/most_requested_items_bar_graph.dart';
@@ -108,91 +109,90 @@ class _DashboardViewState extends State<DashboardView> {
         if (state is InventorySummaryLoaded) {
           _inStocksCount.value = state.inventorySummaryEntity.inStocksCount;
           _lowStocksCount.value = state.inventorySummaryEntity.lowStocksCount;
-          _outOfStocksCount.value = state.inventorySummaryEntity.outOfStocksCount;
+          _outOfStocksCount.value =
+              state.inventorySummaryEntity.outOfStocksCount;
         }
       },
       child: BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
           builder: (context, state) {
-            return Column(
-              children: [
-                _buildCardsSection(),
-                const SizedBox(
-                  height: 30.0,
-                ),
-                if (state is InventorySummaryLoaded)
-                  Row(
-                    children: [
-                      Expanded(
-                          child: StockLevelPieChart(
-                            inStocksCount: state.inventorySummaryEntity.inStocksCount,
-                            lowStocksCount: state.inventorySummaryEntity.lowStocksCount,
-                            outOfStocksCount:
-                            state.inventorySummaryEntity.outOfStocksCount,
-                          )),
-                      const SizedBox(
-                        width: 20.0,
-                      ),
-                      Expanded(
-                        child: InventorySummaryPieChart(
-                          inventoryData:
+        return Column(
+          children: [
+            _buildCardsSection(),
+            const SizedBox(
+              height: 30.0,
+            ),
+            if (state is InventorySummaryLoaded)
+              Row(
+                children: [
+                  Expanded(
+                      child: StockLevelPieChart(
+                    inStocksCount: state.inventorySummaryEntity.inStocksCount,
+                    lowStocksCount: state.inventorySummaryEntity.lowStocksCount,
+                    outOfStocksCount:
+                        state.inventorySummaryEntity.outOfStocksCount,
+                  )),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: InventorySummaryPieChart(
+                      inventoryData:
                           state.inventorySummaryEntity as InventorySummaryModel,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                if (state is InventorySummaryLoading)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: BaseContainer(
-                          color: Theme.of(context).primaryColor,
-                          child: Column(
-                            children: [
-                              Text(
-                                'Loading graph...',
-                                style:
+                ],
+              ),
+            if (state is InventorySummaryLoading)
+              Row(
+                children: [
+                  Expanded(
+                    child: BaseContainer(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Loading graph...',
+                            style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              const SpinKitFadingCircle(
-                                color: AppColor.accent,
-                                size: 50.0,
-                              ),
-                            ],
+                                      fontSize: 13.0,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 20.0,
-                      ),
-                      Expanded(
-                        child: BaseContainer(
-                          color: Theme.of(context).primaryColor,
-                          child: Column(
-                            children: [
-                              Text(
-                                'Loading graph...',
-                                style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              const SpinKitFadingCircle(
-                                color: AppColor.accent,
-                                size: 50.0,
-                              ),
-                            ],
+                          const SpinKitFadingCircle(
+                            color: AppColor.accent,
+                            size: 50.0,
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-              ],
-            );
-          }),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: BaseContainer(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Loading graph...',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 13.0,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                          ),
+                          const SpinKitFadingCircle(
+                            color: AppColor.accent,
+                            size: 50.0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        );
+      }),
     );
     //cdreturn ;
   }
@@ -232,33 +232,40 @@ class _DashboardViewState extends State<DashboardView> {
     return Row(
       children: [
         Expanded(
-          child: KPICard(
-            bgColor: Theme.of(context).primaryColor,
-            icon: HugeIcons.strokeRoundedPackageAdd,
+          child: DashboardKPICard(
             title: 'In Stocks',
-            data: _inStocksCount.value.toString(),
+            count: _inStocksCount.value,
+            change: 4.8,
           ),
         ),
         const SizedBox(
           width: 20.0,
         ),
         Expanded(
-          child: KPICard(
-            bgColor: Theme.of(context).primaryColor,
-            icon: HugeIcons.strokeRoundedPackageProcess,
-            title: 'Low Stocks',
-            data: _lowStocksCount.value.toString(),
-          ),
-        ),
-        const SizedBox(
-          width: 20.0,
-        ),
-        Expanded(
-          child: KPICard(
-            bgColor: Theme.of(context).primaryColor,
-            icon: HugeIcons.strokeRoundedPackageRemove,
+          child: DashboardKPICard(
             title: 'Out of Stocks',
-            data: _outOfStocksCount.value.toString(),
+            count: _outOfStocksCount.value,
+            change: -1.8,
+          ),
+        ),
+        const SizedBox(
+          width: 20.0,
+        ),
+        Expanded(
+          child: DashboardKPICard(
+            title: 'Ongoing Requests',
+            count: 10, // add pending and ongoing
+            change: 5.8,
+          ),
+        ),
+        const SizedBox(
+          width: 20.0,
+        ),
+        Expanded(
+          child: DashboardKPICard(
+            title: 'Fulfilled Requests',
+            count: 10, // get fulfilled req count
+            change: 5.8,
           ),
         ),
       ],

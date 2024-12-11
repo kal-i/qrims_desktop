@@ -251,7 +251,9 @@ class _RegisterItemViewState extends State<ReusableItemView> {
               context: context,
               icon: Icons.check_circle_outline,
               title: 'Success',
-              subtitle: itemCount > 1 ? '$itemCount items registered successfully.' : 'Item registered successfully.',
+              subtitle: itemCount > 1
+                  ? '$itemCount items registered successfully.'
+                  : 'Item registered successfully.',
             );
             await Future.delayed(const Duration(seconds: 3));
             context.pop();
@@ -455,15 +457,24 @@ class _RegisterItemViewState extends State<ReusableItemView> {
                 fontWeight: FontWeight.w700,
               ),
         ),
+        if (_isViewOnlyMode()) _buildInstruction(),
+      ],
+    );
+  }
+
+  Widget _buildInstruction() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         const SizedBox(
           height: 5.0,
         ),
         Text(
           'Items to be stored in the inventory. To list multiple items of the same type, use a \' - \' symbol as a separator in the serial numbers. Apply the same approach to specifications to ensure proper formatting in the document.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w400,
-              ),
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );

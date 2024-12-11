@@ -37,22 +37,6 @@ class OfficerRepository {
     try {
       final officerId = await _generateUniqueOfficerId();
 
-      //final nameExistResult = await _conn.execute(
-      //Sql.named(
-      //'''
-      //SELECT id FROM Users WHERE name ILIKE @name;
-      // ''',
-      //),
-      //parameters: {
-      //'name': name,
-      //},
-      //);
-
-      //String? userId;
-      //if (nameExistResult.isNotEmpty) {
-      //userId = nameExistResult.first[0] as String;
-      //}
-
       await _conn.execute(
         Sql.named('''
         INSERT INTO Officers (id, user_id, name, position_id)
@@ -495,5 +479,32 @@ class OfficerRepository {
       print('Error fetching officer names: $e');
       throw Exception('Failed to fetch officer names');
     }
+  }
+
+  Future<String?> getCurrentSchoolDivisionSuperintendent() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          off.id 
+        FROM 
+          Officers off
+        JOIN
+          Positions pos ON off.position_id = pos.id
+        WHERE 
+          pos.position_name ILIKE @name AND is_archived = @is_archived
+        LIMIT 1;
+        ''',
+      ),
+      parameters: {
+        'name': 'superintendent',
+        'is_archived': false,
+      },
+    );
+
+    if (result.isNotEmpty) {
+      return result.first[0] as String;
+    }
+    return null;
   }
 }

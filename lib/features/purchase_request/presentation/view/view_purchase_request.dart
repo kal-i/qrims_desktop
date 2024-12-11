@@ -78,17 +78,19 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
                     horizontal: 20.0,
                     vertical: 30.0,
                   ),
-                  child: BlocBuilder<PurchaseRequestsBloc, PurchaseRequestsState>(
-                      builder: (context, state) {
-                        return _buildMainView(
-                          state,
-                        );
-                      }
-                  ),
+                  child:
+                      BlocBuilder<PurchaseRequestsBloc, PurchaseRequestsState>(
+                          builder: (context, state) {
+                    return _buildMainView(
+                      state,
+                    );
+                  }),
                 ),
               ),
             ),
-            const SizedBox(height: 20.0,),
+            const SizedBox(
+              height: 20.0,
+            ),
             _buildBackButton(),
           ],
         ),
@@ -102,11 +104,15 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
     }
 
     if (state is PurchaseRequestsError) {
-      return CustomMessageBox.error(message: state.message,);
+      return CustomMessageBox.error(
+        message: state.message,
+      );
     }
 
     if (state is PurchaseRequestLoaded) {
-      return _buildRequestDetails(state,);
+      return _buildRequestDetails(
+        state,
+      );
     }
 
     return const SizedBox.shrink();
@@ -125,44 +131,54 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
         const SizedBox(
           height: 10.0,
         ),
-        _buildPurchaseRequestInfo(
-          purchaseRequest as PurchaseRequestModel,
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildRequestedItemSection(
-          purchaseRequest,
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildPurposeSection(
-          purchaseRequest.purpose,
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildOfficerSection(
-          'Requesting Officer',
-          requestingOfficer as OfficerModel,
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildOfficerSection(
-          'Approving Officer',
-          approvingOfficer as OfficerModel,
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        SizedBox(
-          height: 500.0,
-          child: _buildTimeline(
-            state.purchaseRequestWithNotificationTrailEntity
-                .notificationEntities,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  _buildPurchaseRequestInfo(
+                    purchaseRequest as PurchaseRequestModel,
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  _buildRequestedItemSection(
+                    purchaseRequest,
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  _buildPurposeSection(
+                    purchaseRequest.purpose,
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  _buildOfficerSection(
+                    'Requesting Officer',
+                    requestingOfficer as OfficerModel,
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  _buildOfficerSection(
+                    'Approving Officer',
+                    approvingOfficer as OfficerModel,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SizedBox(
+                height: 800.0,
+                child: _buildTimeline(
+                  state.purchaseRequestWithNotificationTrailEntity
+                      .notificationEntities,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -172,9 +188,9 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
     return Text(
       'Purchase Request',
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontSize: 24.0,
-        fontWeight: FontWeight.w700,
-      ),
+            fontSize: 24.0,
+            fontWeight: FontWeight.w700,
+          ),
     );
   }
 
@@ -217,9 +233,9 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w400,
-        ),
+              fontSize: 14.5,
+              fontWeight: FontWeight.w400,
+            ),
       ),
     );
   }
@@ -260,9 +276,9 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
     return Text(
       title,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-        fontSize: 18.0,
-        fontWeight: FontWeight.w600,
-      ),
+            fontSize: 18.0,
+            fontWeight: FontWeight.w600,
+          ),
     );
   }
 
@@ -339,10 +355,10 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
           Text(
             'Fetching purchase request...',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w400,
-              overflow: TextOverflow.ellipsis,
-            ),
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w400,
+                  overflow: TextOverflow.ellipsis,
+                ),
           ),
         ],
       ),

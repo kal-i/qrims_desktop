@@ -139,7 +139,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
             const SizedBox(
               height: 50.0,
             ),
-            _buildActionsRow(),
+            _buildActionsRow(isAdmin),
             const SizedBox(
               height: 30.0,
             ),
@@ -166,7 +166,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     );
   }
 
-  Widget _buildActionsRow() {
+  Widget _buildActionsRow(bool isAdmin) {
     final actionTexts = [
       'Add Officer',
       'Add Office',
@@ -180,20 +180,25 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
         //   actionTexts: actionTexts,
         //   onActionSelected: _handleActionSelection,
         // ),
-        CustomFilledButton(
-          width: 160.0,
-          height: 40.0,
-          onTap: () => showDialog(
-            context: context,
-            builder: (context) => const ReusableOfficerModal(),
+        if (isAdmin)
+          const CustomMessageBox.info(
+            message: 'You can only view.',
+          )
+        else
+          CustomFilledButton(
+            width: 160.0,
+            height: 40.0,
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const ReusableOfficerModal(),
+            ),
+            prefixWidget: const Icon(
+              HugeIcons.strokeRoundedUserAdd01,
+              size: 15.0,
+              color: AppColor.lightPrimary,
+            ),
+            text: 'Add Officer',
           ),
-          prefixWidget: const Icon(
-            HugeIcons.strokeRoundedUserAdd01,
-            size: 15.0,
-            color: AppColor.lightPrimary,
-          ),
-          text: 'Add Officer',
-        ),
       ],
     );
   }

@@ -993,11 +993,7 @@ class ItemRepository {
       if (filter != null && filter.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
         if (filter == 'in_stock') {
-          whereClause.write('i.quantity > 5');
-        }
-
-        if (filter == 'low') {
-          whereClause.write('i.quantity > 0 AND i.quantity <= 5');
+          whereClause.write('i.quantity > 0');
         }
 
         if (filter == 'out') {
@@ -1157,11 +1153,7 @@ class ItemRepository {
       if (filter != null && filter.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
         if (filter == 'in_stock') {
-          whereClause.write('i.quantity > 5');
-        }
-
-        if (filter == 'low') {
-          whereClause.write('i.quantity > 0 AND i.quantity <= 5');
+          whereClause.write('i.quantity > 0');
         }
 
         if (filter == 'out') {

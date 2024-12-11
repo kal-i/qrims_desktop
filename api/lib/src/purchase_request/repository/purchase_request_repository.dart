@@ -907,14 +907,14 @@ class PurchaseRequestRepository {
         'feedback':
             'There has been a ${percentageChange.toStringAsFixed(1)}% increase in $prType purchase requests this month.',
         'is_increase': true,
-        'percentage': percentageChange,
+        'percentage': percentageChange.abs(),
       };
     } else if (difference < 0) {
       return {
         'feedback':
             'There has been a ${percentageChange.abs().toStringAsFixed(1)}% decrease in $prType purchase requests this month.',
         'is_increase': false,
-        'percentage': percentageChange,
+        'percentage': percentageChange.abs(),
       };
     } else {
       return {

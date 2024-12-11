@@ -55,6 +55,12 @@ class RoutingConstants {
   static const nestedRegisterPurchaseRequestViewRouteName = '$purchaseRequestViewRouteName/$registerPurchaseRequestViewRouteName';
   static const nestedRegisterPurchaseRequestViewRoutePath = '$purchaseRequestViewRoutePath/$registerPurchaseRequestViewRoutePath';
 
+  /// purchase order route paths
+  static const registerPurchaseOrderViewRouteName = 'registerPurchaseOrderView';
+  static const registerPurchaseOrderViewRoutePath = 'registerPurchaseOrder';
+  static const nestedRegisterPurchaseOrderViewRouteName = '$purchaseRequestViewRouteName/$registerPurchaseOrderViewRouteName';
+  static const nestedRegisterPurchaseOrderViewRoutePath = '$purchaseRequestViewRoutePath/$registerPurchaseOrderViewRoutePath';
+
   /// item issuance route paths
   static const itemIssuanceViewRouteName = 'itemIssuanceView';
   static const itemIssuanceViewRoutePath = '/itemIssuance';

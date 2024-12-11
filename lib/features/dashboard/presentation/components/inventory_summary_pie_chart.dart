@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/base_container.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
@@ -33,7 +34,6 @@ class InventorySummaryPieChart extends StatelessWidget {
     }).toList();
 
     return BaseContainer(
-      color: Theme.of(context).primaryColor,
       padding: 20.0,
       height: 300.0,
       child: Column(
@@ -41,15 +41,13 @@ class InventorySummaryPieChart extends StatelessWidget {
         children: [
           Text(
             'Categorical Inventory Data',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontSize: 15.0,
-            ),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 15.0,
+                ),
           ),
-
           const SizedBox(
             height: 20.0,
           ),
-
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -76,7 +74,8 @@ class InventorySummaryPieChart extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: inventoryData.categoricalInventoryData.map((data) {
+                      children:
+                          inventoryData.categoricalInventoryData.map((data) {
                         final percentage = (data.totalStock / totalValue) * 100;
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -90,8 +89,9 @@ class InventorySummaryPieChart extends StatelessWidget {
                                       width: 10,
                                       height: 10,
                                       decoration: BoxDecoration(
-                                        color:
-                                            _getColorForCategory(data.categoryName),
+                                        color: _getColorForCategory(
+                                          data.categoryName,
+                                        ),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -101,7 +101,8 @@ class InventorySummaryPieChart extends StatelessWidget {
                                     // Category name
                                     Expanded(
                                       child: Text(
-                                        readableEnumConverter(data.categoryName),
+                                        readableEnumConverter(
+                                            data.categoryName),
                                         overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
@@ -122,11 +123,13 @@ class InventorySummaryPieChart extends StatelessWidget {
                               Text(
                                 '${percentage.toStringAsFixed(1)}%',
                                 overflow: TextOverflow.ellipsis,
-                                style:
-                                    Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ],
                           ),
@@ -149,16 +152,17 @@ class InventorySummaryPieChart extends StatelessWidget {
         (e) => e.toString().split('.').last == category,
         orElse: () => AssetClassification.unknown)) {
       case AssetClassification.buildingsAndStructure:
-        return const Color(0xFF0BA293);
+        return const Color(0xFFECEBF8);
       case AssetClassification.furnitureFixturesAndBooks:
-        return const Color(0xFFFF474D);
+        return const Color(0xFFBFBAED);
       case AssetClassification.machineryAndEquipment:
-        return const Color(0xFFFFC641);
+        return AppColor.accent;
+        return const Color(0xFFB6C9FF);
       case AssetClassification.transportation:
-        return const Color(0xFFFFE3A1);
+        return const Color(0xFFA4BCFF);
       case AssetClassification.unknown:
       default:
-        return const Color(0xFF85D0C9);
+        return const Color(0xFF8377D0);
     }
   }
 }

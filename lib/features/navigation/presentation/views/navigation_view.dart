@@ -204,6 +204,10 @@ class _NavigationViewState extends State<NavigationView> {
         iconSelected: HugeIcons.strokeRoundedInvoice01,
         text: 'Purchase Requests',
       ),
+      // const SideBarItem(
+      //   iconSelected: HugeIcons.strokeRoundedInvoice02,
+      //   text: 'Purchase Orders',
+      // ),
       const SideBarItem(
         iconSelected: HugeIcons.strokeRoundedSent,
         text: 'Item Issuance',

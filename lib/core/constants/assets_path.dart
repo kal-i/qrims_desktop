@@ -3,6 +3,10 @@ const String _rootFolder = 'assets';
 class FontPath {
   static const String _folder = '$_rootFolder/fonts';
 
+  static const String algeria = '$_folder/Algeria.ttf';
+
+  static const String arial = '$_folder/Arial.ttf';
+
   static const String calibriRegular = '$_folder/Calibri-Regular.ttf';
   static const String calibriBold = '$_folder/Calibri-Bold.ttf';
   static const String calibriItalic = '$_folder/Calibri-Italic.ttf';
@@ -38,5 +42,6 @@ class IconPath {
 class ImagePath {
   static const String _folder = '$_rootFolder/images';
   static const String depedSeal = '$_folder/deped_seal.png';
+  static const String sdoLogo = '$_folder/sdo_logo.png';
   static const String profile = '$_folder/profile.jpg';
 }

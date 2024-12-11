@@ -118,6 +118,12 @@ flutter:
          - asset: assets/fonts/Inter-SemiBold.ttf
          - asset: assets/fonts/Inter-Bold.ttf
          - asset: assets/fonts/Inter-Black.ttf
+     - family: Algeria
+       fonts:
+         - asset: assets/fonts/Algeria.ttf
+     - family: Arial
+       fonts:
+         - asset: assets/fonts/Arial.ttf
      - family: Calibri
        fonts:
          - asset: assets/fonts/Calibri-Regular.ttf
