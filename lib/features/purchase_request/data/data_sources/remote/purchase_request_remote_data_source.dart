@@ -30,7 +30,8 @@ abstract interface class PurchaseRequestRemoteDataSource {
     required int pageSize,
     String? prId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     bool? isArchived,
   });

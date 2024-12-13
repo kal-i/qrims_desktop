@@ -34,7 +34,8 @@ abstract interface class PurchaseRequestRepository {
     required int pageSize,
     String? prId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     bool? isArchived,
   });

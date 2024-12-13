@@ -13,7 +13,8 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
     required this.pageSize,
     this.prId,
     this.unitCost,
-    this.date,
+    this.startDate,
+    this.endDate,
     this.prStatus,
     this.isArchived,
   });
@@ -22,7 +23,8 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
   final int pageSize;
   final String? prId;
   final double? unitCost;
-  final DateTime? date;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final PurchaseRequestStatus? prStatus;
   final bool? isArchived;
 
@@ -32,7 +34,8 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
         pageSize,
         prId,
         unitCost,
-        date,
+        startDate,
+        endDate,
         prStatus,
         isArchived,
       ];

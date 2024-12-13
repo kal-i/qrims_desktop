@@ -25,7 +25,8 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
     required int pageSize,
     String? prId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     bool? isArchived,
   }) async {
@@ -36,7 +37,8 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
         pageSize: pageSize,
         prId: prId,
         unitCost: unitCost,
-        date: date,
+        startDate: startDate,
+        endDate: endDate,
         prStatus: prStatus,
         isArchived: isArchived,
       );

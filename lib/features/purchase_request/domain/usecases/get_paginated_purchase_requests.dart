@@ -24,7 +24,8 @@ class GetPaginatedPurchaseRequests
       pageSize: params.pageSize,
       prId: params.prId,
       unitCost: params.unitCost,
-      date: params.date,
+      startDate: params.startDate,
+      endDate: params.endDate,
       prStatus: params.prStatus,
       isArchived: params.isArchived,
     );
@@ -37,7 +38,8 @@ class GetPaginatedPurchaseRequestsParams {
     required this.pageSize,
     required this.prId,
     required this.unitCost,
-    required this.date,
+    required this.startDate,
+    required this.endDate,
     required this.prStatus,
     required this.isArchived,
   });
@@ -46,7 +48,8 @@ class GetPaginatedPurchaseRequestsParams {
   final int pageSize;
   final String? prId;
   final double? unitCost;
-  final DateTime? date;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final PurchaseRequestStatus? prStatus;
   final bool? isArchived;
 }

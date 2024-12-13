@@ -26,7 +26,8 @@ class PurchaseRequestRemoteDataSourceImpl
     required int pageSize,
     String? prId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     bool? isArchived,
   }) async {
@@ -36,7 +37,8 @@ class PurchaseRequestRemoteDataSourceImpl
         'page_size': pageSize,
         if (prId != null && prId.isNotEmpty) 'pr_id': prId,
         if (unitCost != null) 'unit_cost': unitCost,
-        if (date != null) 'date': date,
+        if (startDate != null) 'start_date': startDate,
+        if (endDate != null) 'end_date': endDate,
         if (prStatus != null) 'pr_status': prStatus.toString().split('.').last,
         if (isArchived != null) 'is_archived': isArchived,
       };

@@ -306,7 +306,8 @@ class PurchaseRequestRepository {
     String? prId,
     String? requestingOfficerId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     String? filter,
     bool isArchived = false,
@@ -376,11 +377,15 @@ class PurchaseRequestRepository {
         params['unit_cost'] = unitCost;
       }
 
-      if (date != null) {
+      if (startDate != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.date = @date');
-        params['date'] = date;
+        whereClause.write('pr.date >= @start_date');
+        params['start_date'] = startDate;
       }
+
+      final effectiveEndDate = endDate ?? DateTime.now();
+      whereClause.write(' AND pr.date <= @end_date');
+      params['end_date'] = effectiveEndDate;
 
       if (prStatus != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
@@ -445,7 +450,8 @@ class PurchaseRequestRepository {
     String? prId,
     String? receivingOfficerId,
     double? unitCost,
-    DateTime? date,
+    DateTime? startDate,
+    DateTime? endDate,
     PurchaseRequestStatus? prStatus,
     String? filter,
     bool isArchived = false,
@@ -543,11 +549,16 @@ class PurchaseRequestRepository {
         params['unit_cost'] = unitCost;
       }
 
-      if (date != null) {
+      if (startDate != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-        whereClause.write('pr.date = @date');
-        params['date'] = date;
+        whereClause.write('pr.date >= @start_date');
+        params['start_date'] = startDate;
       }
+
+      final effectiveEndDate = endDate ?? DateTime.now();
+      whereClause.write(' AND pr.date <= @end_date');
+      params['end_date'] = effectiveEndDate;
+
 
       if (prStatus != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');

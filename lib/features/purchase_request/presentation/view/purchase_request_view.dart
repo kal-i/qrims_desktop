@@ -32,6 +32,7 @@ import '../../../auth/presentation/components/custom_container.dart';
 import '../../../item_issuance/presentation/components/custom_document_preview.dart';
 import '../../data/models/feedback.dart';
 import '../bloc/purchase_requests_bloc.dart';
+import '../components/filter_request_modal.dart';
 import '../components/purchase_request_kpi_card.dart';
 
 class PurchaseRequestView extends StatefulWidget {
@@ -43,6 +44,9 @@ class PurchaseRequestView extends StatefulWidget {
 
 class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   late PurchaseRequestsBloc _purchaseRequestsBloc;
+
+  late DateTime? _selectedStartDate;
+  late DateTime? _selectedEndDate;
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -87,6 +91,10 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     _purchaseRequestsBloc = context.read<PurchaseRequestsBloc>();
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_fetchPurchaseRequests);
+
+    _selectedStartDate = null;
+    _selectedEndDate = null;
+
     _initializeTableConfig();
     _fetchPurchaseRequests();
   }
@@ -110,6 +118,8 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         prStatus: _selectedPrStatus(
           selectedPrStatus: _selectedFilterNotifier.value,
         ),
+        startDate: _selectedStartDate,
+        endDate: _selectedEndDate,
         // isArchived: isArchived,
       ),
     );
@@ -119,6 +129,8 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
     _searchController.clear();
     _currentPage = 1;
     _selectedFilterNotifier.value = 'pending';
+    _selectedStartDate = null;
+    _selectedEndDate = null;
     _fetchPurchaseRequests();
   }
 
@@ -598,9 +610,20 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   }
 
   Widget _buildFilterButton() {
-    return const CustomIconButton(
+    return CustomIconButton(
       tooltip: 'Filter',
-      //onTap: () => _isFilterModalVisible.value = true,
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => FilterRequestModal(
+          onApplyFilters: (DateTime? startDate, DateTime? endDate,) {
+            _selectedStartDate = startDate;
+            _selectedEndDate = endDate;
+            _fetchPurchaseRequests();
+          },
+          startDate: _selectedStartDate,
+          endDate: _selectedEndDate,
+        ),
+      ),
       isOutlined: true,
       icon: FluentIcons.filter_add_20_regular,
     );
