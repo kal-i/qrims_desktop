@@ -18,12 +18,14 @@ import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
+import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/purchase_request_status.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../item_issuance/presentation/components/custom_document_preview.dart';
 import '../../data/models/feedback.dart';
 import '../bloc/purchase_requests_bloc.dart';
 import '../components/purchase_request_kpi_card.dart';
@@ -426,7 +428,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                       },
                   if (!isAdmin)
                     {
-                      'text': 'Create PO',
+                      'text': 'Generate PO',
                       'icon': HugeIcons.strokeRoundedDocumentAttachment,
                     },
                 ],
@@ -488,21 +490,21 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                             );
                           }
 
-                          if (action.contains('Create PO')) {
+                          if (action.contains('Generate PO')) {
                             final Map<String, dynamic> extra = {
                               'pr_id': selectedRequest,
                             };
 
-                            context.go(
-                              RoutingConstants
-                                  .nestedRegisterPurchaseOrderViewRoutePath,
-                              extra: extra,
-                            );
-                            // showCustomDocumentPreview(
-                            //   context: context,
-                            //   documentObject: _tableRows[index].object,
-                            //   docType: DocumentType.po,
+                            // context.go(
+                            //   RoutingConstants
+                            //       .nestedRegisterPurchaseOrderViewRoutePath,
+                            //   extra: extra,
                             // );
+                            showCustomDocumentPreview(
+                              context: context,
+                              documentObject: _tableRows[index].object,
+                              docType: DocumentType.po,
+                            );
                           }
                         }
                       },
