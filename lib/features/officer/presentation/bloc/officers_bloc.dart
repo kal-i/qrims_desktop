@@ -38,6 +38,7 @@ class OfficersBloc extends Bloc<OfficersEvent, OfficersState> {
         page: event.page,
         pageSize: event.pageSize,
         searchQuery: event.searchQuery,
+        office: event.office,
         sortBy: event.sortBy,
         sortAscending: event.sortAscending,
         isArchived: event.isArchived,

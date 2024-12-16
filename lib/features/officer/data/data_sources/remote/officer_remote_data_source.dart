@@ -6,6 +6,7 @@ abstract interface class OfficerRemoteDataSource {
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? office,
     String? sortBy,
     bool? sortAscending,
     bool? isArchived,

@@ -121,6 +121,7 @@ class _FilterItemModalState extends State<FilterItemModal> {
 
   @override
   void dispose() {
+    _selectedManufacturer.dispose();
     super.dispose();
   }
 

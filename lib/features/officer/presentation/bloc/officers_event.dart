@@ -12,6 +12,7 @@ final class GetPaginatedOfficersEvent extends OfficersEvent {
     required this.page,
     required this.pageSize,
     this.searchQuery,
+    this.office,
     this.sortBy,
     this.sortAscending,
     this.isArchived,
@@ -20,6 +21,7 @@ final class GetPaginatedOfficersEvent extends OfficersEvent {
   final int page;
   final int pageSize;
   final String? searchQuery;
+  final String? office;
   final String? sortBy;
   final bool? sortAscending;
   final bool? isArchived;
@@ -29,6 +31,7 @@ final class GetPaginatedOfficersEvent extends OfficersEvent {
         page,
         pageSize,
         searchQuery,
+        office,
         sortBy,
         sortAscending,
         isArchived,
@@ -49,7 +52,7 @@ final class RegisterOfficerEvent extends OfficersEvent {
   @override
   List<Object?> get props => [
         name,
-    positionName,
+        positionName,
       ];
 }
 

@@ -30,6 +30,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../bloc/officers_bloc.dart';
 import '../components/dropdown_action_button.dart';
+import '../components/filter_officer_modal.dart';
 import '../components/reusable_officer_modal.dart';
 
 class OfficersManagementView extends StatefulWidget {
@@ -41,6 +42,8 @@ class OfficersManagementView extends StatefulWidget {
 
 class _OfficersManagementViewState extends State<OfficersManagementView> {
   late OfficersBloc _officersBloc;
+
+  late String? _selectedOffice;
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -70,6 +73,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     _officersBloc = context.read<OfficersBloc>();
 
     _searchController.addListener(_onSearchChanged);
+    _selectedOffice = null;
 
     _initializeTableConfig();
     _fetchOfficers();
@@ -94,6 +98,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
         page: _currentPage,
         pageSize: _pageSize,
         searchQuery: _searchController.text,
+        office: _selectedOffice,
       ),
     );
   }
@@ -101,6 +106,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   void _refreshOfficerList() {
     _searchController.clear();
     _currentPage = 1;
+    _selectedOffice = null;
     _fetchOfficers();
   }
 
@@ -223,10 +229,33 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
             const SizedBox(
               width: 10.0,
             ),
-            _buildMoreButton(),
+            _buildFilterButton(),
+            // const SizedBox(
+            //   width: 10.0,
+            // ),
+            // _buildMoreButton(),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildFilterButton() {
+    return CustomIconButton(
+      tooltip: 'Filter',
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => FilterOfficerModal(
+
+          onApplyFilters: (String? office,) {
+            _selectedOffice = office;
+            _fetchOfficers();
+          },
+          office: _selectedOffice,
+        ),
+      ),
+      isOutlined: true,
+      icon: FluentIcons.filter_add_20_regular,
     );
   }
 

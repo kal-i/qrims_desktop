@@ -114,8 +114,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         'page_size': pageSize,
         if (searchQuery != null && searchQuery.isNotEmpty)
           'search_query': searchQuery,
-        if (issueDateStart != null) 'issuance_date_start': issueDateStart,
-        if (issueDateEnd != null) 'issuance_date_end': issueDateEnd,
+        if (issueDateStart != null) 'start_date': issueDateStart,
+        if (issueDateEnd != null) 'end_date': issueDateEnd,
         if (type != null && type.isNotEmpty) 'type': type,
         if (isArchived != null) 'is_archived': isArchived,
       };

@@ -55,13 +55,17 @@ Future<Response> _getPurchaseRequests(
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final prId = queryParams['pr_id'];
-    final startDate = queryParams['start_date'] is String ? DateTime.parse(queryParams['start_date'] as String) : queryParams['start_date'] as DateTime?;
-    final endDate = queryParams['end_date'] is String ? DateTime.parse(queryParams['end_date'] as String) : queryParams['end_date'] as DateTime?;
+    final startDate = queryParams['start_date'] is String
+        ? DateTime.parse(queryParams['start_date'] as String)
+        : queryParams['start_date'] as DateTime?;
+    final endDate = queryParams['end_date'] is String
+        ? DateTime.parse(queryParams['end_date'] as String)
+        : queryParams['end_date'] as DateTime?;
     final prStatusString = queryParams['pr_status'];
 
     final prStatus = prStatusString != null
         ? PurchaseRequestStatus.values
-        .firstWhere((e) => e.toString().split('.').last == prStatusString)
+            .firstWhere((e) => e.toString().split('.').last == prStatusString)
         : null;
 
     final feedbacks = await prRepository.generateFeedbackForAllStatuses();
@@ -72,17 +76,17 @@ Future<Response> _getPurchaseRequests(
     );
 
     final partiallyFulfilledRequestCount =
-    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+        await prRepository.getPurchaseRequestsCountBasedOnStatus(
       status: PurchaseRequestStatus.partiallyFulfilled,
     );
 
     final fulfilledRequestCount =
-    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+        await prRepository.getPurchaseRequestsCountBasedOnStatus(
       status: PurchaseRequestStatus.fulfilled,
     );
 
     final cancelledRequestCount =
-    await prRepository.getPurchaseRequestsCountBasedOnStatus(
+        await prRepository.getPurchaseRequestsCountBasedOnStatus(
       status: PurchaseRequestStatus.cancelled,
     );
 

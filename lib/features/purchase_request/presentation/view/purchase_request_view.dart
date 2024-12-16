@@ -7,32 +7,25 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
-import '../../../../config/sizing/sizing_config.dart';
 import '../../../../config/themes/app_color.dart';
-import '../../../../core/common/components/base_container.dart';
 import '../../../../core/common/components/custom_data_table.dart';
-import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/filter_by_date_modal.dart';
 import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/highlight_status_container.dart';
-import '../../../../core/common/components/kpi_card.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
-import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/purchase_request_status.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/components/custom_container.dart';
-import '../../../item_issuance/presentation/components/custom_document_preview.dart';
 import '../../data/models/feedback.dart';
 import '../bloc/purchase_requests_bloc.dart';
-import '../components/filter_request_modal.dart';
 import '../components/purchase_request_kpi_card.dart';
 
 class PurchaseRequestView extends StatefulWidget {
@@ -331,10 +324,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
               width: 10.0,
             ),
             _buildFilterButton(),
-            // const SizedBox(
-            //   width: 10.0,
-            // ),
-            // _buildSortButton(),
           ],
         ),
       ],
@@ -518,20 +507,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                         }
                       },
                     ),
-
-                    // GridView.builder(
-                    //   padding: EdgeInsets.all(10.0),
-                    //   controller: _scrollController,
-                    //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    //     crossAxisCount: 3, // no. of items in each row
-                    //     mainAxisSpacing: 8.0, // space between rows
-                    //     crossAxisSpacing: 8.0, // space between columns
-                    //   ),
-                    //   itemCount: _pr.length,
-                    //   itemBuilder: (context, index) {
-                    //     return _purchaseRequestCard();
-                    //   },
-                    // ),
                   ),
                   if (_isLoading)
                     LinearProgressIndicator(
@@ -614,7 +589,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
       tooltip: 'Filter',
       onTap: () => showDialog(
         context: context,
-        builder: (context) => FilterRequestModal(
+        builder: (context) => FilterByDateModal(
+          title: 'Filter Request',
+          subtitle: 'Filter requests by the following parameters.',
           onApplyFilters: (DateTime? startDate, DateTime? endDate,) {
             _selectedStartDate = startDate;
             _selectedEndDate = endDate;

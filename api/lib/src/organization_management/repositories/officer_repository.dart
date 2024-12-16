@@ -212,35 +212,37 @@ class OfficerRepository {
 
   Future<int> getOfficersFilteredCount({
     String? searchQuery,
+    String? office,
     bool isArchived = false,
   }) async {
     try {
+      final params = <String, dynamic>{};
+
       final baseQuery = '''
-      SELECT COUNT(*) FROM Officers
-      ''';
+    SELECT COUNT(*) 
+    FROM Officers
+    JOIN Positions ON Officers.position_id = Positions.id
+    JOIN Offices ON Positions.office_id = Offices.id
+    ''';
 
       final whereClause = StringBuffer();
-      whereClause.write('WHERE is_archived = @is_archived');
+      whereClause.write('WHERE Officers.is_archived = @is_archived');
+      params['is_archived'] = isArchived;
+
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        whereClause.write(
-          '''
-        AND
-         Officers.name ILIKE @search_query
-        ''',
-        );
+        whereClause.write(' AND Officers.name ILIKE @search_query');
+        params['search_query'] = '%$searchQuery%';
+      }
+
+      if (office != null && office.isNotEmpty) {
+        whereClause.write(' AND Offices.name ILIKE @office');
+        params['office'] = '%$office%';
       }
 
       final finalQuery = '''
-      $baseQuery
-      $whereClause
-      ''';
-
-      final params = <String, dynamic>{
-        'is_archived': isArchived,
-      };
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        params['search_query'] = '%$searchQuery%';
-      }
+    $baseQuery
+    $whereClause
+    ''';
 
       final result = await _conn.execute(
         Sql.named(finalQuery),
@@ -254,10 +256,12 @@ class OfficerRepository {
     }
   }
 
-  Future<List<Officer>> getOfficers({
+  Future<List<Officer>>
+  getOfficers({
     required int page,
     required int pageSize,
     String? searchQuery,
+    String? office,
     String sortBy = 'Officers.name',
     bool sortAscending = false,
     bool isArchived = false,
@@ -265,6 +269,7 @@ class OfficerRepository {
     try {
       final offset = (page - 1) * pageSize;
       final officerList = <Officer>[];
+      final params = <String, dynamic>{};
 
       final baseQuery = '''
       SELECT 
@@ -286,13 +291,16 @@ class OfficerRepository {
 
       final whereClause = StringBuffer();
       whereClause.write('WHERE Officers.is_archived = @is_archived');
+      params['is_archived'] = isArchived;
+
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        whereClause.write(
-          '''
-        AND
-         Officers.name ILIKE @search_query
-        ''',
-        );
+        whereClause.write(' AND Officers.name ILIKE @search_query');
+        params['search_query'] = '%$searchQuery%';
+      }
+
+      if (office != null && office.isNotEmpty) {
+        whereClause.write(' AND Offices.name ILIKE @office');
+        params['office'] = office;
       }
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
@@ -305,13 +313,6 @@ class OfficerRepository {
       LIMIT
         @page_size OFFSET @offset;
       ''';
-
-      final params = <String, dynamic>{
-        'is_archived': isArchived,
-      };
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        params['search_query'] = '%$searchQuery%';
-      }
 
       params['page_size'] = pageSize;
       params['offset'] = offset;

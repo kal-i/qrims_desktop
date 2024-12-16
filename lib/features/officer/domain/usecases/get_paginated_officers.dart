@@ -22,6 +22,7 @@ class GetPaginatedOfficers
       page: params.page,
       pageSize: params.pageSize,
       searchQuery: params.searchQuery,
+      office: params.office,
       sortBy: params.sortBy,
       sortAscending: params.sortAscending,
       isArchived: params.isArchived,
@@ -34,6 +35,7 @@ class GetPaginatedOfficersParams {
     required this.page,
     required this.pageSize,
     this.searchQuery,
+    this.office,
     this.sortBy,
     this.sortAscending,
     this.isArchived,
@@ -42,6 +44,7 @@ class GetPaginatedOfficersParams {
   final int page;
   final int pageSize;
   final String? searchQuery;
+  final String? office;
   final String? sortBy;
   final bool? sortAscending;
   final bool? isArchived;

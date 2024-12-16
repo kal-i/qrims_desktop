@@ -29,6 +29,7 @@ Future<Response> _getOfficers(
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final searchQuery = queryParams['search_query']?.trim() ?? '';
+    final office = queryParams['office'];
     final sortAscending =
         bool.tryParse(queryParams['sort_ascending'] ?? 'true') ?? true;
     final isArchived = bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
@@ -37,12 +38,14 @@ Future<Response> _getOfficers(
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
+      office: office,
       sortAscending: sortAscending,
       isArchived: isArchived,
     );
 
     final officersCount = await repository.getOfficersFilteredCount(
       searchQuery: searchQuery,
+      office: office,
     );
 
     return Response.json(

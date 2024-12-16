@@ -36,14 +36,12 @@ Future<Response> _getIssuances(
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final searchQuery = queryParams['search_query'];
-    final issueDateStart = queryParams['issue_date_start'] != null &&
-            queryParams['issue_date_start'] is String
-        ? (DateTime.parse(queryParams['issue_date_start'] as String))
-        : queryParams['issue_date_start'] as DateTime?;
-    final issueDateEnd = queryParams['issue_date_start'] != null &&
-            queryParams['issue_date_end'] is String
-        ? (DateTime.parse(queryParams['issue_date_end'] as String))
-        : queryParams['issue_date_end'] as DateTime?;
+    final issueDateStart = queryParams['start_date'] is String
+        ? DateTime.parse(queryParams['start_date'] as String)
+        : queryParams['start_date'] as DateTime?;
+    final issueDateEnd = queryParams['end_date'] is String
+        ? DateTime.parse(queryParams['end_date'] as String)
+        : queryParams['end_date'] as DateTime?;
     final type = queryParams['type'];
     final isArchived =
         bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;

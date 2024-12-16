@@ -11,6 +11,7 @@ import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
+import '../../../../core/common/components/filter_by_date_modal.dart';
 import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
@@ -19,14 +20,12 @@ import '../../../../core/common/components/search_button/expandable_search_butto
 import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
-import '../../../../core/services/document_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/issuances_bloc.dart';
 import '../components/create_ics_modal.dart';
-import '../components/create_issuance_modal.dart';
 import '../components/create_par_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
@@ -41,6 +40,9 @@ class ItemIssuanceView extends StatefulWidget {
 
 class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   late IssuancesBloc _issuancesBloc;
+
+  late DateTime? _selectedStartDate;
+  late DateTime? _selectedEndDate;
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -70,6 +72,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     _issuancesBloc = context.read<IssuancesBloc>();
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_fetchIssuances);
+
+    _selectedStartDate = null;
+    _selectedEndDate = null;
+
     _initializeTableConfig();
     _fetchIssuances();
   }
@@ -88,8 +94,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         page: _currentPage,
         pageSize: _pageSize,
         searchQuery: _searchController.text,
-        //issueDateStart: issueDateStart,
-        //issueDateEnd: issueDateEnd,
+        issueDateStart: _selectedStartDate,
+        issueDateEnd: _selectedEndDate,
         type: _selectedFilterNotifier.value,
         //isArchived: isArchived,
       ),
@@ -99,7 +105,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   void _refreshIssuanceList() {
     _searchController.clear();
     _currentPage = 1;
-
+    _selectedStartDate = null;
+    _selectedEndDate = null;
     _selectedFilterNotifier.value = '';
     _fetchIssuances();
   }
@@ -314,9 +321,24 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   }
 
   Widget _buildFilterButton() {
-    return const CustomIconButton(
-      icon: FluentIcons.filter_add_20_regular,
+    return CustomIconButton(
+      tooltip: 'Filter',
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => FilterByDateModal(
+          title: 'Filter Issuance',
+          subtitle: 'Filter issuances by the following parameters.',
+          onApplyFilters: (DateTime? startDate, DateTime? endDate,) {
+            _selectedStartDate = startDate;
+            _selectedEndDate = endDate;
+            _fetchIssuances();
+          },
+          startDate: _selectedStartDate,
+          endDate: _selectedEndDate,
+        ),
+      ),
       isOutlined: true,
+      icon: FluentIcons.filter_add_20_regular,
     );
   }
 

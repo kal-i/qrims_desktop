@@ -365,6 +365,8 @@ class IssuanceRepository {
     try {
       final params = <String, dynamic>{};
 
+      print(issueDateStart);
+
       final baseQuery = '''
       SELECT COUNT(*)
       FROM Issuances iss
@@ -376,8 +378,6 @@ class IssuanceRepository {
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        // whereClause.write(
-        //     ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
         whereClause.write(
             ' AND iss.id ILIKE @search_query');
         params['search_query'] = '%$searchQuery%';
@@ -385,15 +385,15 @@ class IssuanceRepository {
 
       if (issueDateStart != null) {
         whereClause.write(' AND iss.issued_date >= @issue_date_start');
-        params['issue_date_start'] = issueDateStart.toIso8601String();
+        params['issue_date_start'] = issueDateStart;
       }
       if (issueDateEnd != null) {
         whereClause.write(' AND iss.issued_date <= @issue_date_end');
-        params['issue_date_end'] = issueDateEnd.toIso8601String();
+        params['issue_date_end'] = issueDateEnd;
       } else {
         // Default the end date to today if it's null
         whereClause.write(' AND iss.issued_date <= @issue_date_end');
-        params['issue_date_end'] = DateTime.now().toIso8601String();
+        params['issue_date_end'] = DateTime.now();
       }
 
       if (type != null && type.isNotEmpty) {
@@ -445,6 +445,8 @@ class IssuanceRepository {
       final issuances = <Issuance>[];
       final params = <String, dynamic>{};
 
+      print(issueDateStart);
+
       final baseQuery = '''
       SELECT
         iss.*,
@@ -465,8 +467,6 @@ class IssuanceRepository {
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        // whereClause.write(
-        //     ' AND (ics.id ILIKE @search_query OR par.id ILIKE @search_query)');
          whereClause.write(
              ' AND iss.id ILIKE @search_query');
         params['search_query'] = '%$searchQuery%';
@@ -474,15 +474,15 @@ class IssuanceRepository {
 
       if (issueDateStart != null) {
         whereClause.write(' AND iss.issued_date >= @issue_date_start');
-        params['issue_date_start'] = issueDateStart.toIso8601String();
+        params['issue_date_start'] = issueDateStart;
       }
       if (issueDateEnd != null) {
         whereClause.write(' AND iss.issued_date <= @issue_date_end');
-        params['issue_date_end'] = issueDateEnd.toIso8601String();
+        params['issue_date_end'] = issueDateEnd;
       } else {
         // Default the end date to today if it's null
         whereClause.write(' AND iss.issued_date <= @issue_date_end');
-        params['issue_date_end'] = DateTime.now().toIso8601String();
+        params['issue_date_end'] = DateTime.now();
       }
 
       if (type != null && type.isNotEmpty) {
