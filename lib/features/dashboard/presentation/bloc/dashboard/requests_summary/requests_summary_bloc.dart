@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../../core/enums/period.dart';
-import '../../../../domain/entities/most_requested_items.dart';
+import '../../../../domain/entities/requests_summary.dart';
 import '../../../../domain/usecases/get_most_requested_items.dart';
 
 part 'requests_summary_event.dart';
@@ -36,7 +36,7 @@ class RequestsSummaryBloc extends Bloc<RequestsSummaryEvent, RequestsSummaryStat
       (l) => emit(RequestsSummaryError(message: l.message)),
       (r) => emit(
         RequestsSummaryLoaded(
-          mostRequestedItemsEntity: r,
+          requestsSummaryEntity: r,
         ),
       ),
     );

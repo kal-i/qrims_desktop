@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/base_container.dart';
-import '../../../../core/constants/assets_path.dart';
 import '../../../../core/utils/capitalizer.dart';
-import '../../data/models/most_requested_items.dart';
+import '../../data/models/requested_item.dart';
+import '../../data/models/requests_summary.dart';
 
 class MostRequestedItemsBarChart extends StatelessWidget {
-  final MostRequestedItemsModel mostRequestedItems;
+  final List<RequestedItemModel> mostRequestedItems;
 
   const MostRequestedItemsBarChart({
     super.key,
@@ -47,10 +47,11 @@ class MostRequestedItemsBarChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         );
                       },
                     ),
@@ -105,8 +106,7 @@ class MostRequestedItemsBarChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> _generateBarGroups() {
-    print('Most Requested Items: ${mostRequestedItems.mostRequestedItems}');
-    return mostRequestedItems.mostRequestedItems.asMap().entries.map((entry) {
+    return mostRequestedItems.asMap().entries.map((entry) {
       final index = entry.key;
       final item = entry.value;
 
@@ -138,7 +138,7 @@ class MostRequestedItemsBarChart extends StatelessWidget {
   }
 
   double _getMaxY() {
-    final maxY = mostRequestedItems.mostRequestedItems
+    final maxY = mostRequestedItems
         .map((item) => item.requestedItemData
             .fold<int>(0, (sum, current) => sum + current.quantity))
         .reduce((a, b) => a > b ? a : b)
@@ -149,13 +149,11 @@ class MostRequestedItemsBarChart extends StatelessWidget {
 
   /// Build titles for the bottom axis.
   Widget _buildBottomTitles(double value, TitleMeta meta) {
-    if (value.toInt() >= 0 &&
-        value.toInt() < mostRequestedItems.mostRequestedItems.length) {
+    if (value.toInt() >= 0 && value.toInt() < mostRequestedItems.length) {
       return SideTitleWidget(
         axisSide: meta.axisSide,
         child: Text(
-          capitalizeWord(
-              mostRequestedItems.mostRequestedItems[value.toInt()].productName),
+          capitalizeWord(mostRequestedItems[value.toInt()].productName),
           style: TextStyle(
             color: AppColor.darkDescriptionText,
             fontFamily: 'Inter',

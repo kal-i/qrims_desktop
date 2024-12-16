@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:api/src/item/repository/item_repository.dart';
+import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -27,6 +28,21 @@ Future<Response> _getSummaryInformation(
     final limit = int.tryParse(queryParams['limit'] ?? '10') ?? 10;
     final period = queryParams['period'] ?? 'month';
 
+    final pendingRequestCount =
+        await purchaseRequestRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.pending,
+    );
+    final incompleteRequestCount =
+        await purchaseRequestRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.partiallyFulfilled,
+    );
+    final fulfilledRequestCount =
+        await purchaseRequestRepository.getPurchaseRequestsCountBasedOnStatus(
+      status: PurchaseRequestStatus.fulfilled,
+    );
+
+    final ongoingRequestCount = pendingRequestCount + incompleteRequestCount;
+
     final mostRequestedItemsData =
         await purchaseRequestRepository.getTopRequestedItemsByPeriod(
       limit,
@@ -35,6 +51,8 @@ Future<Response> _getSummaryInformation(
 
     return Response.json(
       body: {
+        'ongoing_request_count': ongoingRequestCount,
+        'fulfilled_request_count': fulfilledRequestCount,
         'most_requested_items_data': mostRequestedItemsData,
       },
     );
@@ -42,7 +60,8 @@ Future<Response> _getSummaryInformation(
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {
-        'message': 'An error occurred while processing the request to fetch most requested items: $e',
+        'message':
+            'An error occurred while processing the request to fetch most requested items: $e',
       },
     );
   }

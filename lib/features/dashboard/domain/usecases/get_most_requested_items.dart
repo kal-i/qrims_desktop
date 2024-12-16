@@ -3,11 +3,11 @@ import 'package:fpdart/src/either.dart';
 import '../../../../core/enums/period.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../entities/most_requested_items.dart';
+import '../entities/requests_summary.dart';
 import '../repository/dashboard_repository.dart';
 
 class GetMostRequestedItems
-    implements UseCase<MostRequestedItemsEntity, GetMostRequestedItemsParams> {
+    implements UseCase<RequestsSummaryEntity, GetMostRequestedItemsParams> {
   const GetMostRequestedItems({
     required this.dashboardRepository,
   });
@@ -15,7 +15,7 @@ class GetMostRequestedItems
   final DashboardRepository dashboardRepository;
 
   @override
-  Future<Either<Failure, MostRequestedItemsEntity>> call(
+  Future<Either<Failure, RequestsSummaryEntity>> call(
       GetMostRequestedItemsParams params) async {
     return await dashboardRepository.getMostRequestedItems(
       limit: params.limit,

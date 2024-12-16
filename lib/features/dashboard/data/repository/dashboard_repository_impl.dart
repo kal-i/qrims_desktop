@@ -2,10 +2,10 @@ import '../../../../core/enums/period.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/inventory_summary.dart';
-import '../../domain/entities/most_requested_items.dart';
 import 'package:fpdart/src/either.dart';
 
 import '../../domain/entities/paginated_item_result.dart';
+import '../../domain/entities/requests_summary.dart';
 import '../../domain/repository/dashboard_repository.dart';
 import '../data_sources/remote/dashboard_remote_data_source.dart';
 
@@ -27,7 +27,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, MostRequestedItemsEntity>> getMostRequestedItems({
+  Future<Either<Failure, RequestsSummaryEntity>> getMostRequestedItems({
     int? limit,
     Period? period,
   }) async {

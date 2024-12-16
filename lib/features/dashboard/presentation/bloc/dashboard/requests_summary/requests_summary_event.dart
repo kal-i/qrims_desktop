@@ -8,14 +8,17 @@ sealed class RequestsSummaryEvent extends Equatable {
 }
 
 final class GetMostRequestedItemsEvent extends RequestsSummaryEvent {
-  const GetMostRequestedItemsEvent({this.limit, this.period,});
+  const GetMostRequestedItemsEvent({
+    this.limit,
+    this.period,
+  });
 
   final int? limit;
   final Period? period;
 
   @override
   List<Object?> get props => [
-    limit,
-    period,
-  ];
+        limit,
+        period,
+      ];
 }

@@ -13,14 +13,14 @@ final class RequestsSummaryLoading extends RequestsSummaryState {}
 
 final class RequestsSummaryLoaded extends RequestsSummaryState {
   const RequestsSummaryLoaded({
-    required this.mostRequestedItemsEntity,
+    required this.requestsSummaryEntity,
   });
 
-  final MostRequestedItemsEntity mostRequestedItemsEntity;
+  final RequestsSummaryEntity requestsSummaryEntity;
 
   @override
   List<Object?> get props => [
-        mostRequestedItemsEntity,
+        requestsSummaryEntity,
       ];
 }
 
@@ -33,6 +33,6 @@ final class RequestsSummaryError extends RequestsSummaryState {
 
   @override
   List<Object?> get props => [
-    message,
-  ];
+        message,
+      ];
 }

@@ -21,7 +21,7 @@ const unAuth = '/logout';
 
 const dashboardEP = '/dashboard';
 const inventorySummaryEP = '$dashboardEP/inventory_summary';
-const mostRequestedItemsEP = '$dashboardEP/most_requested_items';
+const requestsSummary = '$dashboardEP/requests_summary';
 
 /// user acts endpoint
 const userActsEP = '/user_activities';

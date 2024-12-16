@@ -6,8 +6,8 @@ import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
 import '../../models/inventory_summary.dart';
-import '../../models/most_requested_items.dart';
 import '../../models/paginated_item_result.dart';
+import '../../models/requests_summary.dart';
 import 'dashboard_remote_data_source.dart';
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -39,7 +39,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   }
 
   @override
-  Future<MostRequestedItemsModel> getMostRequestedItems({
+  Future<RequestsSummaryModel> getMostRequestedItems({
     int? limit,
     Period? period,
   }) async {
@@ -50,13 +50,13 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
     try {
       final response = await httpService.get(
-        endpoint: mostRequestedItemsEP,
+        endpoint: requestsSummary,
         queryParams: queryParams,
       );
 
       print('dash most req. items impl: $response');
       if (response.statusCode == 200) {
-        return MostRequestedItemsModel.fromJson(response.data);
+        return RequestsSummaryModel.fromJson(response.data);
       } else {
         throw const ServerException('Failed to load most requested items.');
       }

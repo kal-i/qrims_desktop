@@ -9,7 +9,7 @@ import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/pagination_controls_2.dart';
 import '../../data/models/inventory_summary.dart';
 import '../../data/models/item.dart';
-import '../../data/models/most_requested_items.dart';
+import '../../data/models/requested_item.dart';
 import '../bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
 import '../bloc/dashboard/low_stock/low_stock_bloc.dart';
 import '../bloc/dashboard/requests_summary/requests_summary_bloc.dart';
@@ -35,6 +35,9 @@ class _DashboardViewState extends State<DashboardView> {
   final ValueNotifier<int> _inStocksCount = ValueNotifier(0);
   final ValueNotifier<int> _lowStocksCount = ValueNotifier(0);
   final ValueNotifier<int> _outOfStocksCount = ValueNotifier(0);
+
+  final ValueNotifier<int> _ongoingRequestsCount = ValueNotifier(0);
+  final ValueNotifier<int> _fulfilledRequestsCount = ValueNotifier(0);
 
   final List<ItemModel> _lowStockItems = [];
 
@@ -66,6 +69,8 @@ class _DashboardViewState extends State<DashboardView> {
     _inStocksCount.dispose();
     _lowStocksCount.dispose();
     _outOfStocksCount.dispose();
+    _ongoingRequestsCount.dispose();
+    _fulfilledRequestsCount.dispose();
     super.dispose();
   }
 
@@ -198,33 +203,41 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildMostRequestedItemsSection() {
-    return BlocBuilder<RequestsSummaryBloc, RequestsSummaryState>(
-      builder: (context, state) {
+    return BlocListener<RequestsSummaryBloc, RequestsSummaryState>(
+      listener: (context, state) {
         if (state is RequestsSummaryLoaded) {
-          return MostRequestedItemsBarChart(
-            mostRequestedItems:
-                state.mostRequestedItemsEntity as MostRequestedItemsModel,
-          );
+          _ongoingRequestsCount.value = state.requestsSummaryEntity.ongoingRequestCount;
+          _fulfilledRequestsCount.value = state.requestsSummaryEntity.fulfilledRequestCount;
         }
-
-        return BaseContainer(
-          child: Column(
-            children: [
-              Text(
-                'Loading graph...',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-              ),
-              const SpinKitFadingCircle(
-                color: AppColor.accent,
-                size: 50.0,
-              ),
-            ],
-          ),
-        );
       },
+      child: BlocBuilder<RequestsSummaryBloc, RequestsSummaryState>(
+          builder: (context, state) {
+            if (state is RequestsSummaryLoaded) {
+              return MostRequestedItemsBarChart(
+                mostRequestedItems:
+                    state.requestsSummaryEntity.mostRequestedItems as List<RequestedItemModel>,
+              );
+            }
+
+            return BaseContainer(
+              child: Column(
+                children: [
+                  Text(
+                    'Loading graph...',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
+                  const SpinKitFadingCircle(
+                    color: AppColor.accent,
+                    size: 50.0,
+                  ),
+                ],
+              ),
+            );
+          },
+        )
     );
   }
 
@@ -251,20 +264,20 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(
           width: 20.0,
         ),
-        Expanded(
+         Expanded(
           child: DashboardKPICard(
             title: 'Ongoing Requests',
-            count: 10, // add pending and ongoing
+            count: _ongoingRequestsCount.value, // add pending and ongoing
             change: 5.8,
           ),
         ),
         const SizedBox(
           width: 20.0,
         ),
-        Expanded(
+         Expanded(
           child: DashboardKPICard(
             title: 'Fulfilled Requests',
-            count: 10, // get fulfilled req count
+            count: _fulfilledRequestsCount.value, // get fulfilled req count
             change: 5.8,
           ),
         ),
