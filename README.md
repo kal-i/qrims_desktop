@@ -72,7 +72,7 @@ A step-by-step instructions to set up and run the desktop project:
 
 ### **How to Set Up the Local Server for Mobile App**
 
-1. **Find Your Laptop's IP Address**  
+1. **Find Your Computer's IP Address**  
    - Open the **Command Prompt** (press `Win + R`, type `cmd`, and press Enter).
    - Run this command:  
      ```bash
@@ -92,7 +92,7 @@ A step-by-step instructions to set up and run the desktop project:
      ```
 
 3. **Ensure Devices Are on the Same Network**  
-   - Make sure your laptop (server) and mobile device are connected to the **same Wi-Fi network**.
+   - Make sure your computer (server) and mobile device are connected to the **same Wi-Fi network**.
 
 4. **Run the Server and Mobile App**  
    - Run the mobile app:
