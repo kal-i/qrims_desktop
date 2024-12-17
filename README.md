@@ -28,17 +28,17 @@ The QR-Based Inventory Management System is comprised of two systems: **desktop*
 ---
 
 ## **Technologies Used**  
-Specify the tools, languages, and frameworks used in the project. For example:  
-- **Framework**: Flutter  
+Tools, language, and frameworks used in the project:  
+- **Framework**: Flutter / Dart Frog 
 - **Language**: Dart  
-- **Database**: SQLite / Firebase / PostgreSQL  
+- **Database**: PostgreSQL  
 - **Version Control**: Git  
-- **Others**: State Management (e.g., Provider, BLoC), APIs (if applicable)
+- **State Management**: BLoC
 
 ---
 
 ## **Setup & Installation**  
-Provide step-by-step instructions to set up and run your project. For example:
+A step-by-step instructions to set up and run the project:
 
 ### **Prerequisites**  
 - Flutter SDK: [Download Flutter SDK](https://flutter.dev/docs/get-started/install)  
@@ -48,69 +48,26 @@ Provide step-by-step instructions to set up and run your project. For example:
 ### **Steps to Run the Project**  
 1. Clone this repository:  
    ```bash
-   git clone https://github.com/yourusername/your-capstone-project.git
-   cd your-capstone-project
+   git clone https://github.com/kal-i/qrims_desktop.git
+   cd qrims_desktop
    ```  
 2. Get Flutter dependencies:  
    ```bash
    flutter pub get
    ```  
-3. Run the project:  
+3. Navigate to the api directory:  
+   ```bash
+   cd api
+   ```  
+4. Start the Dart Frog server:  
+   ```bash
+   dart_frog dev
+   ```
+5. Run the project:  
    ```bash
    flutter run
-   ```  
-4. For desktop builds, enable desktop support:  
-   ```bash
-   flutter config --enable-macos-desktop
-   flutter run -d macos
    ```
-
----
-
-## **Screenshots**  
-Add visual screenshots of your app to give users an idea of the interface. You can embed images like this:  
-```markdown
-![Dashboard Screenshot](assets/screenshots/dashboard.png)
-```
-
----
-
-## **How to Use**  
-Explain how the app works. If applicable, add:  
-- Step-by-step usage instructions.  
-- Video demo or GIF animations.
-
----
-
-## **Future Improvements**  
-List features you plan to add later. For example:  
-- Payroll integration with banking APIs.  
-- Employee attendance tracking.  
-- Notifications for payroll reminders.  
-
----
-
-## **Contributing** *(Optional)*  
-If you'd like others to contribute:  
-1. Fork the project.  
-2. Create a new branch:  
-   ```bash
-   git checkout -b new-feature
-   ```  
-3. Commit changes and push:  
-   ```bash
-   git commit -m "Add new feature"
-   git push origin new-feature
-   ```  
-4. Create a pull request.
-
----
-
-## **License**  
-State the license for your project. Common licenses include MIT, GPL, or Apache.  
-Example:  
-"This project is licensed under the MIT License. See `LICENSE` for more details."
-
+   
 ---
 
 ## Screenshots  
@@ -118,6 +75,3 @@ Example:
 
 ## How to Use  
 [Download User Manual (PDF)](https://github.com/kal-i/qrims_desktop/raw/main/UserManual.pdf)
-
-## License  
-This project is licensed under the MIT License.  
