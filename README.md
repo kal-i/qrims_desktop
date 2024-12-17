@@ -117,7 +117,7 @@ Example:
 ![Dashboard](assets/screenshots/dashboard.png)  
 
 ## How to Use  
-[Download User Manual (PDF)](https://github.com/kal-i/qrims_desktop.git/UserManual.pdf)
+[Download User Manual (PDF)](https://github.com/kal-i/qrims_desktop/raw/main/UserManual.pdf)
 
 ## License  
 This project is licensed under the MIT License.  
