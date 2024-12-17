@@ -27,21 +27,6 @@ The QR-Based Inventory Management System is comprised of two systems: **desktop*
 
 ---
 
-Certainly! A good **README** file serves as the first point of contact for anyone interacting with your project. It explains what your project is, how it works, and how others can use or contribute to it.
-
-Here’s a general structure you can follow for a **README** file for your capstone project:
-
----
-
-## **Features**  
-List the key features of your project. For example:  
-- [x] Dashboard displaying active employees and total salary data.  
-- [x] Weekly, monthly, and yearly salary reports.  
-- [x] Employees tab to manage employee records.  
-- [x] Payroll processing tab for generating salaries.  
-
----
-
 ## **Technologies Used**  
 Specify the tools, languages, and frameworks used in the project. For example:  
 - **Framework**: Flutter  
@@ -127,52 +112,6 @@ Example:
 "This project is licensed under the MIT License. See `LICENSE` for more details."
 
 ---
-
-## **Contact Information**  
-Include your contact details or portfolio links. Example:  
-- **Email**: yourname@example.com  
-- **GitHub**: [YourUsername](https://github.com/yourusername)  
-- **LinkedIn**: [Your Profile](https://linkedin.com/in/yourprofile)
-
----
-
-## Example Template Markdown:
-
-```markdown
-# Payroll Management App  
-
-## Description  
-A payroll management system built with Flutter to simplify employee salary processing. The app features a dashboard, employee records management, and payroll processing.  
-
-## Features  
-- [x] Dashboard with salary summaries  
-- [x] Employee management tab  
-- [x] Payroll generation for weekly/monthly/yearly salaries  
-
-## Technologies Used  
-- **Framework**: Flutter  
-- **Language**: Dart  
-- **Database**: SQLite  
-
-## Setup & Installation  
-### Prerequisites  
-- Flutter SDK installed  
-- Code editor (VSCode or Android Studio)  
-
-### Steps  
-1. Clone the repository:  
-   ```bash
-   git clone https://github.com/yourusername/payroll-app.git
-   cd payroll-app
-   ```  
-2. Install dependencies:  
-   ```bash
-   flutter pub get
-   ```  
-3. Run the app:  
-   ```bash
-   flutter run
-   ```  
 
 ## Screenshots  
 ![Dashboard](assets/screenshots/dashboard.png)  
