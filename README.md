@@ -117,22 +117,7 @@ Example:
 ![Dashboard](assets/screenshots/dashboard.png)  
 
 ## How to Use  
-1. Add employees under the **Employees Tab**.  
-2. Generate payroll under the **Payroll Tab**.  
-3. View salary summaries on the **Dashboard**.  
-
-## Future Improvements  
-- Attendance tracking  
-- Notifications for payroll reminders  
+[Download User Manual (PDF)](https://link-to-your-pdf-file.com)
 
 ## License  
 This project is licensed under the MIT License.  
-
-## Contact  
-**GitHub**: [YourUsername](https://github.com/yourusername)  
-**Email**: yourname@example.com  
-```
-
----
-
-This structure provides clarity, showcases your hard work, and makes it easy for others to use or contribute to your project. Feel free to modify it based on your capstone project's specifics!
