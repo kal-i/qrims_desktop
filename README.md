@@ -10,7 +10,7 @@ The QR-Based Inventory Management System is comprised of two systems: **desktop*
 
 ### **Desktop Application**
 
-- [x] **Dashboard**: Generate QR codes for each item to simplify tracking.
+- [x] **Dashboard**: Overview of inventory and requests summary.
 - [x] **Inventory Management**: Generate QR codes for each item to simplify tracking.
 - [x] **Purchase Request Management**: Track requests from officers and streamline report generation by extracting information from purchase requests. 
 - [x] **Item Issuance Management**: View and initiate item issuances, and generate issuance reports like **ICS**, **PAR**, **RIS**, and stickers to be attached to the items.
