@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/purchase_request_status.dart';
 import '../../../../../core/enums/unit.dart';

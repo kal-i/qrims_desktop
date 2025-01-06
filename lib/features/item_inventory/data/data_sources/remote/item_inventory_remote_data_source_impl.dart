@@ -2,16 +2,14 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/asset_classification.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
 import '../../../../../core/enums/unit.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
 import '../../models/item_with_stock.dart';
-import '../../models/paginated_item_name.dart';
 import '../../models/paginated_item_result.dart';
-import '../../models/stock.dart';
 import 'item_inventory_remote_date_source.dart';
 
 class ItemInventoryRemoteDataSourceImpl

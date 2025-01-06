@@ -451,3 +451,15 @@ class ItemWithStock {
     };
   }
 }
+
+/// todo: create a base entity for item
+/// todo: implemented by two concrete items [supply, equipment]
+/// todo: update other parts of the code, including frontend
+/// todo: implement a way two register both items
+/// todo: fix the logic for receiving an issuance
+/// todo: create other templates
+abstract class BaseItemModel {}
+
+class Supply extends BaseItemModel {}
+
+class Equipment extends BaseItemModel {}

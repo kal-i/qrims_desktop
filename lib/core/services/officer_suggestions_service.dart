@@ -1,4 +1,4 @@
-import '../constants/app_constants.dart';
+import '../constants/endpoints.dart';
 import '../utils/capitalizer.dart';
 import 'http_service.dart';
 

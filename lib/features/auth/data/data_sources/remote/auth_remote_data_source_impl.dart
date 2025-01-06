@@ -1,9 +1,8 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/auth_status.dart';
 import '../../../../../core/enums/role.dart';
 import '../../../../../core/error/exceptions.dart';

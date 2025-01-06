@@ -339,7 +339,10 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
-      'In Stock': 'in_stock',
+      'View All': '',
+      'Consumable': 'consumable',
+      'Equipment': 'equipment',
+      'In Stock': 'in_stock', // todo: remove this and impl others
       'Out': 'out',
     };
     return FilterTableRow(
@@ -398,15 +401,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       ),
       isOutlined: true,
       icon: FluentIcons.filter_add_20_regular,
-    );
-  }
-
-  Widget _buildSortButton() {
-    return CustomIconButton(
-      tooltip: 'Sort',
-      onTap: () {}, // _isSortModalVisible.value = true,
-      isOutlined: true,
-      icon: FluentIcons.text_sort_ascending_20_regular,
     );
   }
 

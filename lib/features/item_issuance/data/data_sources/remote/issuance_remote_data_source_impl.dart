@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
