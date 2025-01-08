@@ -29,6 +29,7 @@ class Supplier {
   }
 }
 
+// todo: add status []
 class PurchaseOrder {
   const PurchaseOrder({
     required this.id,
@@ -69,8 +70,11 @@ class PurchaseOrder {
   factory PurchaseOrder.fromJson(Map<String, dynamic> json) {
     final supplier =
         Supplier.fromJson(json['supplier'] as Map<String, dynamic>);
-    final purchaseRequest = PurchaseRequest.fromJson(json['purchase_request'] as Map<String, dynamic>);
-    final conformeOfficer = json['conforme_officer'] != null ? Officer.fromJson(json['conforme_officer'] as Map<String, dynamic>) : null;
+    final purchaseRequest = PurchaseRequest.fromJson(
+        json['purchase_request'] as Map<String, dynamic>);
+    final conformeOfficer = json['conforme_officer'] != null
+        ? Officer.fromJson(json['conforme_officer'] as Map<String, dynamic>)
+        : null;
     final superintendentOfficer = Officer.fromJson(
         json['superintendent_officer'] as Map<String, dynamic>);
     final fundsHolderOfficer =

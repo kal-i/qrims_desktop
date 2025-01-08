@@ -151,7 +151,8 @@ class MostRequestedItemsBarChart extends StatelessWidget {
   Widget _buildBottomTitles(double value, TitleMeta meta) {
     if (value.toInt() >= 0 && value.toInt() < mostRequestedItems.length) {
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        //axisSide: meta.axisSide,
+        meta: meta,
         child: Text(
           capitalizeWord(mostRequestedItems[value.toInt()].productName),
           style: TextStyle(

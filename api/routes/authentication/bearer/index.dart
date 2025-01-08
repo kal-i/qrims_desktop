@@ -42,6 +42,8 @@ Future<Response> _createUser(
     /// Extract whatever is passed on the body and convert it to map
     final json = await context.request.json() as Map<String, dynamic>;
 
+    print(json);
+
     /// Extract each value from the map
     final name = json['name'] as String;
     final email = json['email'] as String;
@@ -94,15 +96,15 @@ Future<Response> _createUser(
 
       // the problem is from the logic I've put that if the name exist, it will bind that to that specific officer
       final officerId =
-           // await officerRepository.checkOfficerIfExist(
-            // name: name,
-            // positionId: positionId,
+          // await officerRepository.checkOfficerIfExist(
+          // name: name,
+          // positionId: positionId,
           // ) ??
           await officerRepository.registerOfficer(
-            userId: baseEntityUserId,
-            name: name,
-            positionId: positionId,
-          );
+        userId: baseEntityUserId,
+        name: name,
+        positionId: positionId,
+      );
       print('registered officer: $officerId'); // reached
     }
 

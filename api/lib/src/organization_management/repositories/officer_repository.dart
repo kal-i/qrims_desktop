@@ -155,6 +155,7 @@ class OfficerRepository {
     required String id,
     String? name,
     String? positionId,
+    OfficerStatus? status,
   }) async {
     try {
       // Start a transaction
@@ -172,6 +173,11 @@ class OfficerRepository {
         if (positionId != null) {
           setClauses.add('position_id = @position_id');
           parameters['position_id'] = positionId;
+        }
+
+        if (status != null) {
+          setClauses.add('status = @status');
+          parameters['status'] = status.toString().split('.').last;
         }
 
         // Update the Officers table
@@ -256,8 +262,7 @@ class OfficerRepository {
     }
   }
 
-  Future<List<Officer>>
-  getOfficers({
+  Future<List<Officer>> getOfficers({
     required int page,
     required int pageSize,
     String? searchQuery,

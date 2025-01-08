@@ -103,7 +103,7 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(
           height: 30.0,
         ),
-        _buildMostRequestedItemsSection(),
+        //_buildMostRequestedItemsSection(),
       ],
     );
   }
@@ -204,41 +204,41 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildMostRequestedItemsSection() {
     return BlocListener<RequestsSummaryBloc, RequestsSummaryState>(
-      listener: (context, state) {
+        listener: (context, state) {
+      if (state is RequestsSummaryLoaded) {
+        _ongoingRequestsCount.value =
+            state.requestsSummaryEntity.ongoingRequestCount;
+        _fulfilledRequestsCount.value =
+            state.requestsSummaryEntity.fulfilledRequestCount;
+      }
+    }, child: BlocBuilder<RequestsSummaryBloc, RequestsSummaryState>(
+      builder: (context, state) {
         if (state is RequestsSummaryLoaded) {
-          _ongoingRequestsCount.value = state.requestsSummaryEntity.ongoingRequestCount;
-          _fulfilledRequestsCount.value = state.requestsSummaryEntity.fulfilledRequestCount;
+          return MostRequestedItemsBarChart(
+            mostRequestedItems: state.requestsSummaryEntity.mostRequestedItems
+                as List<RequestedItemModel>,
+          );
         }
-      },
-      child: BlocBuilder<RequestsSummaryBloc, RequestsSummaryState>(
-          builder: (context, state) {
-            if (state is RequestsSummaryLoaded) {
-              return MostRequestedItemsBarChart(
-                mostRequestedItems:
-                    state.requestsSummaryEntity.mostRequestedItems as List<RequestedItemModel>,
-              );
-            }
 
-            return BaseContainer(
-              child: Column(
-                children: [
-                  Text(
-                    'Loading graph...',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w400,
-                        ),
-                  ),
-                  const SpinKitFadingCircle(
-                    color: AppColor.accent,
-                    size: 50.0,
-                  ),
-                ],
+        return BaseContainer(
+          child: Column(
+            children: [
+              Text(
+                'Loading graph...',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w400,
+                    ),
               ),
-            );
-          },
-        )
-    );
+              const SpinKitFadingCircle(
+                color: AppColor.accent,
+                size: 50.0,
+              ),
+            ],
+          ),
+        );
+      },
+    ));
   }
 
   Widget _buildCardsSection() {
@@ -264,7 +264,7 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(
           width: 20.0,
         ),
-         Expanded(
+        Expanded(
           child: DashboardKPICard(
             title: 'Ongoing Requests',
             count: _ongoingRequestsCount.value, // add pending and ongoing
@@ -274,7 +274,7 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(
           width: 20.0,
         ),
-         Expanded(
+        Expanded(
           child: DashboardKPICard(
             title: 'Fulfilled Requests',
             count: _fulfilledRequestsCount.value, // get fulfilled req count

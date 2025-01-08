@@ -64,21 +64,18 @@ Handler middleware(Handler handler) {
           .call(context);
 
       return response;
-
     } on SocketException catch (e) {
       print('Failed to connect to the database: $e');
       return Response.json(
         statusCode: HttpStatus.internalServerError,
         body: 'Database connection failed. Please try again later.',
       );
-
     } catch (e) {
       print('An unexpected error occurred: $e');
       return Response.json(
         statusCode: HttpStatus.internalServerError,
         body: 'An unexpected error occurred. Please try again later.',
       );
-
     } finally {
       // Ensure the connection is closed even if an error occurs
       if (connection != null) {
@@ -88,4 +85,3 @@ Handler middleware(Handler handler) {
     }
   };
 }
-
