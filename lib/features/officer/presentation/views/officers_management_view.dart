@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,30 +6,23 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_data_table.dart';
-import '../../../../core/common/components/custom_dropdown_button.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
-import '../../../../core/common/components/custom_labeled_text_box.dart';
 import '../../../../core/common/components/custom_message_box.dart';
-import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/common/components/custom_search_box.dart';
 import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
-import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
-import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../bloc/officers_bloc.dart';
-import '../components/dropdown_action_button.dart';
 import '../components/filter_officer_modal.dart';
 import '../components/reusable_officer_modal.dart';
+import '../components/view_officer_modal.dart';
 
 class OfficersManagementView extends StatefulWidget {
   const OfficersManagementView({super.key});
@@ -208,10 +200,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   Widget _buildTableActionsRow() {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.end, // MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // _buildFilterTableRow(),
+        _buildFilterTableRow(),
         Row(
           children: [
             ExpandableSearchButton(
@@ -234,6 +225,20 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
           ],
         ),
       ],
+    );
+  }
+
+  // todo: to be implement
+  Widget _buildFilterTableRow() {
+    final Map<String, String> filterMapping = {
+      'Active': '',
+      'Suspended': '',
+      'Resigned': '',
+      'Retired': '',
+    };
+    return FilterTableRow(
+      selectedFilterNotifier: _selectedFilterNotifier,
+      filterMapping: filterMapping,
     );
   }
 
@@ -321,6 +326,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
           _tableRows = state.officers.map((officer) {
             return TableData(
               id: officer.id,
+              object: officer,
               columns: [
                 // Text(
                 //   officer.id,
@@ -352,6 +358,10 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                 ),
               ],
               menuItems: [
+                {
+                  'text': 'View',
+                  'icon': HugeIcons.strokeRoundedEye,
+                },
                 if (!isAdmin)
                   {
                     'text': 'Edit',
@@ -420,6 +430,15 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                               UpdateOfficerArchiveStatusEvent(
                                 id: officerId,
                                 isArchived: true,
+                              ),
+                            );
+                          }
+
+                          if (action.contains('View')) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ViewOfficerModal(
+                                officerEntity: _tableRows[index].object,
                               ),
                             );
                           }

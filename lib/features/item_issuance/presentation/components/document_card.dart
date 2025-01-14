@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_context_menu/flutter_context_menu.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
@@ -10,9 +9,11 @@ import '../../../../config/themes/bloc/theme_bloc.dart';
 class DocumentCard extends StatelessWidget {
   const DocumentCard({
     super.key,
+    required this.title,
     this.onTap,
   });
 
+  final String title;
   final void Function()? onTap;
 
   @override
@@ -68,7 +69,7 @@ class DocumentCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Document title',
+                          title,
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontSize: 12.0,

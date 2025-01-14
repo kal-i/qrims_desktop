@@ -30,10 +30,10 @@ class FilterButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.0),
         hoverColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.3),
         splashColor:
-        Theme.of(context).scaffoldBackgroundColor.withOpacity(0.03),
+            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.03),
         onTap: () => onTap(filterValue),
         child: Container(
-          width: 100.0,
+          //width: 100.0,
           height: 40.0,
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
@@ -43,8 +43,8 @@ class FilterButton extends StatelessWidget {
             child: Text(
               text,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 13.0,
-              ),
+                    fontSize: 13.0,
+                  ),
             ),
           ),
         ),

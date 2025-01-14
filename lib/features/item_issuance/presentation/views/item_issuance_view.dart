@@ -167,7 +167,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
       children: [
         Expanded(
           child: CustomInteractableCard(
-            name: 'New Issuance',
+            name: 'New RIS',
             icon: CupertinoIcons.folder,
             onTap: () {},
           ),
@@ -221,7 +221,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Recently generated documents',
+          'Predefined templates',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 18.0,
               ),
@@ -232,7 +232,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         Row(
           children: [
             Expanded(
-              /// todo: rpci
               child: DocumentCard(
                 onTap: () {
                   showCustomDocumentPreview(
@@ -241,16 +240,16 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     docType: DocumentType.rpci,
                   );
                 },
+                title: 'RCPI',
               ),
             ),
             const SizedBox(
               width: 15.0,
             ),
             Expanded(
-
-                /// todo: a73
                 child: DocumentCard(
               onTap: () {},
+              title: 'a73',
             )),
             const SizedBox(
               width: 15.0,
@@ -258,6 +257,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
             Expanded(
                 child: DocumentCard(
               onTap: () {},
+              title: 'RSMI',
             )),
           ],
         ),
@@ -312,6 +312,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
       'View All': '',
+      'RIS': 'ris',
       'ICS': 'ics',
       'PAR': 'par',
     };
