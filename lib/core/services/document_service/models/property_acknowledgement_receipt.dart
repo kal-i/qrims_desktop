@@ -5,7 +5,7 @@ import '../../../enums/unit.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/readable_enum_converter.dart';
-import '../../document_service.dart';
+import '../document_service.dart';
 import '../font_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
@@ -72,7 +72,7 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     print('desc length: ${descriptionColumn.length}');
 
     final rowHeights = descriptionColumn.map((row) {
-      return DocumentService().getRowHeight(
+      return DocumentService.getRowHeight(
         row,
         fontSize: 8.5,
       );

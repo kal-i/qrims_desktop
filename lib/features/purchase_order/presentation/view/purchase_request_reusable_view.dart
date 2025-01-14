@@ -19,8 +19,8 @@ import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
+import '../../../../init_dependencies.dart';
 import '../bloc/purchase_requests_bloc.dart';
 import '../components/custom_search_field.dart';
 
@@ -174,7 +174,8 @@ class _PurchaseRequestReusableViewState
               icon: HugeIcons.strokeRoundedCheckmarkCircle02,
               context: context,
               title: 'Error',
-              subtitle: 'Failed to register Purchase Request: ${state.message}.',
+              subtitle:
+                  'Failed to register Purchase Request: ${state.message}.',
             );
           }
         },
@@ -263,9 +264,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Purchase Request',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 24.0,
-            fontWeight: FontWeight.w700,
-          ),
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
         ),
         const SizedBox(
           height: 5.0,
@@ -273,9 +274,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Initial information for the request.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w400,
-          ),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w400,
+              ),
         ),
         // Divider(
         //   color: Theme.of(context).dividerColor,
@@ -351,9 +352,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Item Information',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 24.0,
-            fontWeight: FontWeight.w700,
-          ),
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
         ),
         const SizedBox(
           height: 5.0,
@@ -361,9 +362,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Requested Item Information.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w400,
-          ),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w400,
+              ),
         ),
         const SizedBox(
           height: 15.0,
@@ -431,9 +432,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Associated Officers',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 24.0,
-            fontWeight: FontWeight.w700,
-          ),
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
         ),
         const SizedBox(
           height: 5.0,
@@ -441,9 +442,9 @@ class _PurchaseRequestReusableViewState
         Text(
           'Officers involved with the request.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w400,
-          ),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w400,
+              ),
         ),
         const SizedBox(
           height: 20.0,

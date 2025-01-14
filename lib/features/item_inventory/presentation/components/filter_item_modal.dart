@@ -10,7 +10,7 @@ import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 
 class FilterItemModal extends StatefulWidget {
@@ -64,12 +64,16 @@ class _FilterItemModalState extends State<FilterItemModal> {
     _selectedSubClassFilter = widget.selectedSubClassFilter;
 
     // Set the controllers to show the selected values
-    _manufacturerController.text = _selectedManufacturerFilter != null ? _selectedManufacturerFilter! : '';
-    _brandController.text = _selectedBrandFilter != null ? _selectedBrandFilter! : '';
-    _assetClassificationController.text = _selectedClassificationFilter != null ?
-        readableEnumConverter(_selectedClassificationFilter!) : '';
-    _assetSubClassController.text = _selectedSubClassFilter != null ?
-        readableEnumConverter(_selectedSubClassFilter!) : '';
+    _manufacturerController.text =
+        _selectedManufacturerFilter != null ? _selectedManufacturerFilter! : '';
+    _brandController.text =
+        _selectedBrandFilter != null ? _selectedBrandFilter! : '';
+    _assetClassificationController.text = _selectedClassificationFilter != null
+        ? readableEnumConverter(_selectedClassificationFilter!)
+        : '';
+    _assetSubClassController.text = _selectedSubClassFilter != null
+        ? readableEnumConverter(_selectedSubClassFilter!)
+        : '';
   }
 
   List<String> _assetClassificationSuggestionCallback(

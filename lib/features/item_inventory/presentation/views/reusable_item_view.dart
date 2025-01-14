@@ -26,7 +26,7 @@ import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/item_inventory_bloc.dart';
@@ -472,9 +472,9 @@ class _RegisterItemViewState extends State<ReusableItemView> {
         Text(
           'Items to be stored in the inventory. To list multiple items of the same type, use a \' - \' symbol as a separator in the serial numbers. Apply the same approach to specifications to ensure proper formatting in the document.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w400,
-          ),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w400,
+              ),
         ),
       ],
     );

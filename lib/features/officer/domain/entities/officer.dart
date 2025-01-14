@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/enums/officer_status.dart';
+import 'position_history.dart';
 
 class OfficerEntity extends Equatable {
   const OfficerEntity({
@@ -11,6 +12,7 @@ class OfficerEntity extends Equatable {
     required this.officeName,
     required this.positionName,
     this.status = OfficerStatus.active,
+    required this.positionHistory,
     this.isArchived = false,
   });
 
@@ -21,6 +23,7 @@ class OfficerEntity extends Equatable {
   final String officeName;
   final String positionName;
   final OfficerStatus status;
+  final List<PositionHistoryEntity> positionHistory;
   final bool isArchived;
 
   @override
@@ -32,6 +35,7 @@ class OfficerEntity extends Equatable {
         officeName,
         positionName,
         status,
+        positionHistory,
         isArchived,
       ];
 }

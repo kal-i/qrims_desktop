@@ -4,32 +4,46 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../constants/assets_path.dart';
 
 class FontService {
-  late Map<String, pw.Font> fonts;
+  final Map<String, pw.Font> _fonts = {};
 
   Future<void> initialize() async {
-    fonts = {
-      'algeria': await _loadFont(FontPath.algeria),
-      'arial': await _loadFont(FontPath.arial),
-      'calibriRegular': await _loadFont(FontPath.calibriRegular),
-      'calibriBold': await _loadFont(FontPath.calibriBold),
-      'calibriItalic': await _loadFont(FontPath.calibriItalic),
-      'calibriBoldItalic': await _loadFont(FontPath.calibriBoldItalic),
-      'oldEnglish': await _loadFont(FontPath.oldEnglish),
-      'popvlvs': await _loadFont(FontPath.popvlvs),
-      'trajanProRegular': await _loadFont(FontPath.trajanProRegular),
-      'trajanProBold': await _loadFont(FontPath.trajanProBold),
-      'tahomaRegular': await _loadFont(FontPath.tahomaRegular),
-      'tahomaBold': await _loadFont(FontPath.tahomaBold),
-      'timesNewRomanRegular': await _loadFont(FontPath.timesNewRomanRegular),
-      'timesNewRomanBold': await _loadFont(FontPath.timesNewRomanBold),
-    };
+    try {
+      final fontPaths = {
+        'algeria': FontPath.algeria,
+        'arial': FontPath.arial,
+        'calibriRegular': FontPath.calibriRegular,
+        'calibriBold': FontPath.calibriBold,
+        'calibriItalic': FontPath.calibriItalic,
+        'calibriBoldItalic': FontPath.calibriBoldItalic,
+        'oldEnglish': FontPath.oldEnglish,
+        'popvlvs': FontPath.popvlvs,
+        'trajanProRegular': FontPath.trajanProRegular,
+        'trajanProBold': FontPath.trajanProBold,
+        'tahomaRegular': FontPath.tahomaRegular,
+        'tahomaBold': FontPath.tahomaBold,
+        'timesNewRomanRegular': FontPath.timesNewRomanRegular,
+        'timesNewRomanBold': FontPath.timesNewRomanBold,
+      };
+
+      for (var entry in fontPaths.entries) {
+        _fonts[entry.key] = await _loadFont(entry.value);
+      }
+    } catch (e) {
+      print('Error initializing FontService: $e');
+      rethrow;
+    }
   }
 
   Future<pw.Font> _loadFont(String path) async {
-    return pw.Font.ttf(await rootBundle.load(path));
+    final data = await rootBundle.load(path);
+    return pw.Font.ttf(data);
   }
 
   pw.Font getFont(String fontName) {
-    return fonts[fontName] ?? (throw ArgumentError('Font not found'));
+    print('fonts: ${_fonts.length}');
+    if (!_fonts.containsKey(fontName)) {
+      throw ArgumentError('Font not found: $fontName');
+    }
+    return _fonts[fontName]!;
   }
 }

@@ -25,7 +25,6 @@ import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
-import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/components/custom_outline_button.dart';
 import '../bloc/officers_bloc.dart';
@@ -129,37 +128,35 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        bool isAdmin = false;
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      bool isAdmin = false;
 
-        if (state is AuthSuccess) {
-          isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
-              Role.admin;
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildActionsRow(isAdmin),
-            const SizedBox(
-              height: 30.0,
-            ),
-            _buildTableActionsRow(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            Expanded(
-              child: _buildDataTable(isAdmin),
-            ),
-          ],
-        );
+      if (state is AuthSuccess) {
+        isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+            Role.admin;
       }
-    );
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(),
+          const SizedBox(
+            height: 50.0,
+          ),
+          _buildActionsRow(isAdmin),
+          const SizedBox(
+            height: 30.0,
+          ),
+          _buildTableActionsRow(),
+          const SizedBox(
+            height: 20.0,
+          ),
+          Expanded(
+            child: _buildDataTable(isAdmin),
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildHeader() {
@@ -246,8 +243,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
       onTap: () => showDialog(
         context: context,
         builder: (context) => FilterOfficerModal(
-
-          onApplyFilters: (String? office,) {
+          onApplyFilters: (
+            String? office,
+          ) {
             _selectedOffice = office;
             _fetchOfficers();
           },

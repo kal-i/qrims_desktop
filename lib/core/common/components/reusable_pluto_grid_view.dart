@@ -27,10 +27,8 @@ class ReusablePlutoGridView extends StatelessWidget {
       configuration: context.watch<ThemeBloc>().state == AppTheme.light
           ? const PlutoGridConfiguration().copyWith(
               style: PlutoGridStyleConfig(
-                enableColumnBorderHorizontal: true,
                 enableColumnBorderVertical: false,
                 enableCellBorderVertical: false,
-                enableCellBorderHorizontal: true,
                 borderColor: AppColor.lightTableOutline,
                 gridBackgroundColor: AppColor.lightTableColumn,
                 gridBorderColor: AppColor.lightTableOutline,
@@ -56,10 +54,8 @@ class ReusablePlutoGridView extends StatelessWidget {
             )
           : PlutoGridConfiguration.dark(
               style: PlutoGridStyleConfig.dark(
-                enableColumnBorderHorizontal: true,
                 enableColumnBorderVertical: false,
                 enableCellBorderVertical: false,
-                enableCellBorderHorizontal: true,
                 borderColor: AppColor.darkTableOutline,
                 gridBackgroundColor: AppColor.darkTableColumn,
                 rowColor: AppColor.darkTableRow,

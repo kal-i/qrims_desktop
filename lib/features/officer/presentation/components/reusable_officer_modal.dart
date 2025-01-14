@@ -11,7 +11,7 @@ import '../../../../core/common/components/custom_search_box.dart';
 import '../../../../core/common/components/custom_text_box.dart';
 import '../../../../core/enums/reusable_purpose.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/officers_bloc.dart';
 

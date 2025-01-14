@@ -2,6 +2,7 @@ import 'package:api/src/utils/generate_id.dart';
 import 'package:postgres/postgres.dart';
 
 import '../models/officer.dart';
+import '../models/position_history.dart';
 
 class OfficerRepository {
   const OfficerRepository(this._conn);
@@ -37,16 +38,36 @@ class OfficerRepository {
     try {
       final officerId = await _generateUniqueOfficerId();
 
-      await _conn.execute(
-        Sql.named('''
-        INSERT INTO Officers (id, user_id, name, position_id)
-        VALUES (@id, @user_id, @name, @position_id)
-        '''),
-        parameters: {
-          'id': officerId,
-          'user_id': userId,
-          'name': name,
-          'position_id': positionId,
+      await _conn.runTx(
+        (ctx) async {
+          await ctx.execute(
+            Sql.named(
+              '''
+              INSERT INTO Officers (id, user_id, name, position_id)
+              VALUES (@id, @user_id, @name, @position_id)
+              ''',
+            ),
+            parameters: {
+              'id': officerId,
+              'user_id': userId,
+              'name': name,
+              'position_id': positionId,
+            },
+          );
+
+          await ctx.execute(
+            Sql.named(
+              '''
+              INSERT INTO PositionHistory (officer_id, position_id, created_at)
+              VALUES (@officer_id, @position_id, @created_at);
+              ''',
+            ),
+            parameters: {
+              'officer_id': officerId,
+              'position_id': positionId,
+              'created_at': DateTime.now().toIso8601String(),
+            },
+          );
         },
       );
 
@@ -90,22 +111,33 @@ class OfficerRepository {
       final whereClause = StringBuffer();
 
       final baseQuery = '''
-      SELECT 
-        Officers.id AS officer_id,
-        Officers.user_id AS user_id,
-        Officers.name AS officer_name,
-        Positions.id AS position_id,
-        -- Positions.office_id AS office_id,
-        Offices.name AS office_name,
-        Positions.position_name AS position_name,
-        Officers.is_archived AS is_archived
-      FROM 
-        Officers
-      JOIN 
-        Positions ON Officers.position_id = Positions.id
-      JOIN 
-        Offices ON Positions.office_id = Offices.id
-      ''';
+    SELECT 
+      Officers.id AS officer_id,
+      Officers.user_id AS user_id,
+      Officers.name AS officer_name,
+      Positions.id AS position_id,
+      Offices.name AS office_name,
+      Positions.position_name AS position_name,
+      Officers.officer_status AS officer_status,
+      Officers.is_archived AS is_archived,
+      PositionHistory.id AS history_id,
+      PositionHistory.position_id AS history_position_id,
+      PositionHistory.created_at AS history_created_at,
+      HistoricalPositions.position_name AS history_position_name,
+      HistoricalOffices.name AS history_office_name
+    FROM 
+      Officers
+    JOIN 
+      Positions ON Officers.position_id = Positions.id
+    JOIN 
+      Offices ON Positions.office_id = Offices.id
+    LEFT JOIN
+      PositionHistory AS PositionHistory ON Officers.id = PositionHistory.officer_id
+    LEFT JOIN
+      Positions AS HistoricalPositions ON PositionHistory.position_id = HistoricalPositions.id
+    LEFT JOIN
+      Offices AS HistoricalOffices ON HistoricalPositions.office_id = HistoricalOffices.id
+    ''';
 
       if (officerId != null && officerId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
@@ -120,9 +152,9 @@ class OfficerRepository {
       }
 
       final finalQuery = '''
-      $baseQuery
-      $whereClause
-      ''';
+    $baseQuery
+    $whereClause
+    ''';
 
       final result = await _conn.execute(
         Sql.named(
@@ -133,6 +165,20 @@ class OfficerRepository {
 
       if (result.isNotEmpty) {
         final row = result.first;
+
+        print(row);
+
+        final positionHistoryList = result.map((row) {
+          return PositionHistory.fromJson({
+            'id': row[8],
+            'officer_id': row[0],
+            'position_id': row[9],
+            'created_at': row[10],
+            'position_name': row[11],
+            'office_name': row[12],
+          }).toJson();
+        }).toList();
+
         return Officer.fromJson({
           'id': row[0],
           'user_id': row[1],
@@ -140,7 +186,9 @@ class OfficerRepository {
           'position_id': row[3],
           'office_name': row[4],
           'position_name': row[5],
-          'is_archived': row[6],
+          'status': row[6],
+          'is_archived': row[7],
+          'position_history': positionHistoryList,
         });
       }
 
@@ -173,6 +221,20 @@ class OfficerRepository {
         if (positionId != null) {
           setClauses.add('position_id = @position_id');
           parameters['position_id'] = positionId;
+
+          await ctx.execute(
+            Sql.named(
+              '''
+              INSERT INTO PositionHistory (officer_id, position_id, created_at)
+              VALUES (@officer_id, @position_id, @created_at);
+              ''',
+            ),
+            parameters: {
+              'officer_id': id,
+              'position_id': positionId,
+              'created_at': DateTime.now().toIso8601String(),
+            },
+          );
         }
 
         if (status != null) {
@@ -182,11 +244,13 @@ class OfficerRepository {
 
         // Update the Officers table
         await ctx.execute(
-          Sql.named('''
+          Sql.named(
+            '''
         UPDATE Officers
         SET ${setClauses.join(', ')}
         WHERE id = @id;
-        '''),
+        ''',
+          ),
           parameters: parameters,
         );
 
@@ -195,11 +259,13 @@ class OfficerRepository {
           final userId = parameters['user_id'] as int;
           if (name != null && name.isNotEmpty) {
             await ctx.execute(
-              Sql.named('''
+              Sql.named(
+                '''
             UPDATE Users
             SET name = @name
             WHERE id = @user_id;
-            '''),
+            ''',
+              ),
               parameters: {
                 'name': name,
                 'user_id': userId,
@@ -276,23 +342,40 @@ class OfficerRepository {
       final officerList = <Officer>[];
       final params = <String, dynamic>{};
 
+      /// Used JSON_AGG function wich collects a list of row to convert into an a JSON array
       final baseQuery = '''
-      SELECT 
-        Officers.id AS officer_id,
-        Officers.user_id AS user_id,
-        Officers.name AS officer_name,
-        Positions.id AS position_id,
-        --Positions.office_id AS office_id,
-        Offices.name AS office_name,
-        Positions.position_name AS position_name,
-        Officers.is_archived AS is_archived
-      FROM 
-        Officers
-      JOIN 
-        Positions ON Officers.position_id = Positions.id
-      JOIN 
-        Offices ON Positions.office_id = Offices.id
-      ''';
+    SELECT 
+      Officers.id AS officer_id,
+      Officers.user_id AS user_id,
+      Officers.name AS officer_name,
+      Positions.id AS position_id,
+      Offices.name AS office_name,
+      Positions.position_name AS position_name,
+      Officers.officer_status AS officer_status,
+      Officers.is_archived AS is_archived,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', PositionHistory.id,
+          'officer_id', PositionHistory.officer_id,
+          'position_id', PositionHistory.position_id,
+          'created_at', PositionHistory.created_at,
+          'position_name', HistoricalPositions.position_name,
+          'office_name', HistoricalOffices.name
+        )
+      ) AS position_history
+    FROM 
+      Officers
+    JOIN 
+      Positions ON Officers.position_id = Positions.id
+    JOIN 
+      Offices ON Positions.office_id = Offices.id
+    LEFT JOIN
+      PositionHistory ON Officers.id = PositionHistory.officer_id
+    LEFT JOIN
+      Positions AS HistoricalPositions ON PositionHistory.position_id = HistoricalPositions.id
+    LEFT JOIN
+      Offices AS HistoricalOffices ON HistoricalPositions.office_id = HistoricalOffices.id
+    ''';
 
       final whereClause = StringBuffer();
       whereClause.write('WHERE Officers.is_archived = @is_archived');
@@ -305,19 +388,21 @@ class OfficerRepository {
 
       if (office != null && office.isNotEmpty) {
         whereClause.write(' AND Offices.name ILIKE @office');
-        params['office'] = office;
+        params['office'] = '%$office%';
       }
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
 
       final finalQuery = '''
-      $baseQuery
-      $whereClause
-      ORDER BY
-        $sortBy $sortDirection
-      LIMIT
-        @page_size OFFSET @offset;
-      ''';
+    $baseQuery
+    $whereClause
+    GROUP BY 
+      Officers.id, Officers.user_id, Officers.name, Positions.id, Offices.name, Positions.position_name, Officers.officer_status, Officers.is_archived
+    ORDER BY
+      $sortBy $sortDirection
+    LIMIT
+      @page_size OFFSET @offset;
+    ''';
 
       params['page_size'] = pageSize;
       params['offset'] = offset;
@@ -328,6 +413,13 @@ class OfficerRepository {
       );
 
       for (final row in results) {
+        final positionHistory = row[8] != null
+            ? List<Map<String, dynamic>>.from((row[8] as List<dynamic>)
+                .map((e) => Map<String, dynamic>.from(e as Map)))
+            : [];
+
+        print('pos his res from repo: $positionHistory');
+
         final officerMap = {
           'id': row[0],
           'user_id': row[1],
@@ -335,7 +427,9 @@ class OfficerRepository {
           'position_id': row[3],
           'office_name': row[4],
           'position_name': row[5],
-          'is_archived': row[6],
+          'status': row[6],
+          'is_archived': row[7],
+          'position_history': positionHistory,
         };
         officerList.add(Officer.fromJson(officerMap));
       }

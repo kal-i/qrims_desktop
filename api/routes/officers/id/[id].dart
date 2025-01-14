@@ -5,9 +5,9 @@ import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(
-    RequestContext context,
-    String id,
-    ) async {
+  RequestContext context,
+  String id,
+) async {
   final connection = context.read<Connection>();
   final repository = OfficerRepository(connection);
 
@@ -19,10 +19,10 @@ Future<Response> onRequest(
 }
 
 Future<Response> _getPositionInformation(
-    RequestContext context,
-    OfficerRepository repository,
-    String id,
-    ) async {
+  RequestContext context,
+  OfficerRepository repository,
+  String id,
+) async {
   try {
     if (id.isEmpty) {
       return Response.json(
@@ -55,10 +55,10 @@ Future<Response> _getPositionInformation(
 }
 
 Future<Response> _updatePositionInformation(
-    RequestContext context,
-    OfficerRepository repository,
-    String id,
-    ) async {
+  RequestContext context,
+  OfficerRepository repository,
+  String id,
+) async {
   try {
     if (id.isEmpty) {
       return Response.json(
@@ -69,12 +69,12 @@ Future<Response> _updatePositionInformation(
 
     final params = await context.request.json();
     final name = params['name'] as String?;
-    final positionId = params['position_id'] as int?;
+    final positionId = params['position_id'] as String?;
 
     final result = await repository.updateOfficerInformation(
       id: id,
       name: name,
-      positionId: id,
+      positionId: positionId,
     );
 
     if (result == true) {

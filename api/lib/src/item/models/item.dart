@@ -29,35 +29,7 @@ enum Unit {
   undetermined,
 }
 
-/// Represents the general product information
-class Stock {
-  const Stock({
-    required this.id,
-    required this.productName,
-    required this.description,
-  });
-
-  final String id;
-  final String productName;
-  final String description;
-
-  factory Stock.fromJson(Map<String, dynamic> json) {
-    return Stock(
-      id: json['stock_id'] as String? ?? '',
-      productName: json['product_name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'stock_id': id,
-      'product_name': productName,
-      'description': description,
-    };
-  }
-}
-
+/// Represents the Product Stock
 class ProductStock {
   const ProductStock({
     required this.productName,
@@ -88,6 +60,7 @@ class ProductStock {
   }
 }
 
+/// Represents the Stock's name
 class ProductName {
   const ProductName({
     required this.id,
@@ -112,6 +85,7 @@ class ProductName {
   }
 }
 
+/// Represents the Stock's article
 class ProductDescription {
   const ProductDescription({
     required this.id,
@@ -119,7 +93,7 @@ class ProductDescription {
   });
 
   final String id;
-  final String?  description;
+  final String? description;
 
   factory ProductDescription.fromJson(Map<String, dynamic> json) {
     return ProductDescription(

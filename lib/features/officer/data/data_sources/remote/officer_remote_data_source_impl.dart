@@ -31,8 +31,7 @@ class OfficerRemoteDataSourceImpl implements OfficerRemoteDataSource {
         'page_size': pageSize,
         if (searchQuery != null && searchQuery.isNotEmpty)
           'search_query': searchQuery,
-        if (office != null && office.isNotEmpty)
-          'office': office,
+        if (office != null && office.isNotEmpty) 'office': office,
         if (sortBy != null && sortBy.isNotEmpty) 'sort_by': sortBy,
         if (sortAscending != null) 'sort_ascending': sortAscending,
         if (isArchived != null) 'is_archived': isArchived,

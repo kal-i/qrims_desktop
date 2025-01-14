@@ -13,9 +13,9 @@ import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/enums/document_type.dart';
-import '../../../../core/services/document_service.dart';
+import '../../../../core/services/document_service/document_service.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 
 class CustomDocumentPreview<T> extends StatefulWidget {
   const CustomDocumentPreview({
@@ -59,13 +59,14 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
   }
 
   Future<void> _init() async {
+    await _documentService.initialize();
+
     final printers = await Printing.listPrinters();
 
     if (printers.isNotEmpty) {
       _printers = printers;
       _selectedPrinter.value = _printers[0];
     }
-
     _copyController.text = _copyNotifier.value.toString();
   }
 

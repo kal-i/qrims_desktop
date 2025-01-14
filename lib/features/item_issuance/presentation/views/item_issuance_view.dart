@@ -232,9 +232,14 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         Row(
           children: [
             Expanded(
+              /// todo: rpci
               child: DocumentCard(
                 onTap: () {
-                  // showCustomDocumentPreview(context, {},);
+                  showCustomDocumentPreview(
+                    context: context,
+                    documentObject: null,
+                    docType: DocumentType.rpci,
+                  );
                 },
               ),
             ),
@@ -242,6 +247,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
               width: 15.0,
             ),
             Expanded(
+
+                /// todo: a73
                 child: DocumentCard(
               onTap: () {},
             )),
@@ -328,7 +335,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         builder: (context) => FilterByDateModal(
           title: 'Filter Issuance',
           subtitle: 'Filter issuances by the following parameters.',
-          onApplyFilters: (DateTime? startDate, DateTime? endDate,) {
+          onApplyFilters: (
+            DateTime? startDate,
+            DateTime? endDate,
+          ) {
             _selectedStartDate = startDate;
             _selectedEndDate = endDate;
             _fetchIssuances();
@@ -522,12 +532,12 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                             );
                           }
 
-                          if (action.contains('Generate Issuance Document')) {
-                            showCustomDocumentPreview(
-                                context: context,
-                                documentObject: _tableRows[index].object,
-                                docType: DocumentType.issuance);
-                          }
+                          // if (action.contains('Generate Issuance Document')) {
+                          //   showCustomDocumentPreview(
+                          //       context: context,
+                          //       documentObject: _tableRows[index].object,
+                          //       docType: DocumentType);
+                          // }
 
                           if (action.contains('Generate RIS Document')) {
                             showCustomDocumentPreview(

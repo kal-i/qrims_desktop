@@ -17,7 +17,7 @@ import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/issuances_bloc.dart';
 

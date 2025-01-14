@@ -48,7 +48,6 @@ import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/item_inventory_bloc.dart';
 import '../components/filter_item_modal.dart';
@@ -500,7 +499,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                     ],
                     menuItems: [
                       {'text': 'View', 'icon': FluentIcons.eye_12_regular},
-                      if (!isAdmin) {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
+                      if (!isAdmin)
+                        {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
                     ],
                   ),
                 )

@@ -19,8 +19,8 @@ import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
+import '../../../../init_dependencies.dart';
 import '../bloc/purchase_requests_bloc.dart';
 import '../components/custom_search_field.dart';
 
@@ -316,9 +316,9 @@ class _CreatePurchaseOrderViewState extends State<CreatePurchaseOrderView> {
         Text(
           'Delivery Information',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 24.0,
-            fontWeight: FontWeight.w700,
-          ),
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
         ),
         const SizedBox(
           height: 20.0,

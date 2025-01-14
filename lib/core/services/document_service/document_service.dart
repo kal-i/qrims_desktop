@@ -16,11 +16,20 @@ class DocumentService {
   final ImageService imageService;
 
   Future<void> initialize() async {
-    await fontService.initialize();
-    await imageService.initialize();
+    try {
+      await fontService.initialize();
+      await imageService.initialize();
+    } catch (e, stackTrace) {
+      print('Error during DocumentService initialization: $e');
+      print(stackTrace);
+      rethrow;
+    }
   }
 
-  double getRowHeight(String text, {double fontSize = 8.5}) {
+  static double getRowHeight(
+    String text, {
+    double fontSize = 8.5,
+  }) {
     final lines = (text.length / 20).ceil();
     return lines * fontSize * 1.5;
   }

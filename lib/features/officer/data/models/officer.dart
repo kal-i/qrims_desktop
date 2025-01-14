@@ -1,5 +1,6 @@
 import '../../../../core/enums/officer_status.dart';
 import '../../domain/entities/officer.dart';
+import 'position_history.dart';
 
 class OfficerModel extends OfficerEntity {
   const OfficerModel({
@@ -10,6 +11,7 @@ class OfficerModel extends OfficerEntity {
     required super.officeName,
     required super.positionName,
     super.status,
+    required super.positionHistory,
     super.isArchived,
   });
 
@@ -20,6 +22,18 @@ class OfficerModel extends OfficerEntity {
       (e) => e.toString().split('.').last == statusString,
     );
 
+    final positionHistory =
+        (json['position_history'] as List<dynamic>).map((position) {
+      return PositionHistoryModel.fromJson({
+        'id': position['id'],
+        'officer_id': position['officer_id'],
+        'position_id': position['position_id'],
+        'office_name': position['office_name'],
+        'position_name': position['position_name'],
+        'created_at': position['created_at'],
+      });
+    }).toList();
+
     return OfficerModel(
       id: json['id'] as String,
       userId: json['user_id'] as String?,
@@ -27,6 +41,7 @@ class OfficerModel extends OfficerEntity {
       positionId: json['position_id'] as String,
       officeName: json['office_name'] as String,
       positionName: json['position_name'] as String,
+      positionHistory: positionHistory,
       status: status,
       isArchived: json['is_archived'] as bool,
     );

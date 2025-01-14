@@ -7,6 +7,7 @@ import 'models/inventory_custodian_slip.dart';
 import 'models/property_acknowledgement_receipt.dart';
 import 'models/purchase_order.dart';
 import 'models/requisition_and_issuance_slip.dart';
+import 'models/rpci.dart';
 import 'models/sticker.dart';
 
 class DocumentFactory {
@@ -19,6 +20,7 @@ class DocumentFactory {
           DocumentType.par: () => PropertyAcknowledgementReceipt(),
           DocumentType.ris: () => RequisitionAndIssuanceSlip(),
           DocumentType.sticker: () => Sticker(),
+          DocumentType.rpci: () => RPCI(),
         };
 
   Future<pw.Document> createDocument({

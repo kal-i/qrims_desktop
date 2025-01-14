@@ -27,8 +27,7 @@ import 'features/navigation/presentation/components/side_navigation_drawer/bloc/
 import 'features/officer/presentation/bloc/officers_bloc.dart';
 import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
 import 'features/users_management/presentation/bloc/users_management_bloc.dart';
-
-import 'injection_container.dart';
+import 'init_dependencies.dart';
 
 // TODO: consider opting for persistent base auth view - done
 // pros: perf and reduce codes rebuilt

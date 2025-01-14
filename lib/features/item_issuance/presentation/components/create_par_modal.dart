@@ -12,7 +12,7 @@ import '../../../../core/enums/issuance_purpose.dart';
 import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/purchase_request_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../../../../core/common/components/base_modal.dart';
 

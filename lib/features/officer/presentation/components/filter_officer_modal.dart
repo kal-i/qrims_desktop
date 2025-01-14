@@ -11,7 +11,7 @@ import '../../../../core/enums/auth_status.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../injection_container.dart';
+import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 
 class FilterOfficerModal extends StatefulWidget {

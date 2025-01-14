@@ -84,10 +84,10 @@ class DocumentComponents {
       child: pw.Text(
         data,
         style: pw.TextStyle(
-          font: font ??
-              FontService().getFont(
-                isBold ? 'timesNewRomanBold' : 'timesNewRomanRegular',
-              ),
+          //font: font ??
+          //FontService().getFont(
+          //isBold ? 'timesNewRomanBold' : 'timesNewRomanRegular',
+          //),
           fontSize: fontSize ?? 10.0,
         ),
         textAlign: isAlignCenter ? pw.TextAlign.center : null,
@@ -150,7 +150,7 @@ class DocumentComponents {
     );
   }
 
-  static pw.Widget _buildTableRowColumn({
+  static pw.Widget buildTableRowColumn({
     required String data,
     double? fontSize,
     double? rowHeight,
@@ -217,14 +217,14 @@ class DocumentComponents {
   }) {
     return pw.TableRow(
       children: [
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: quantity.toString(),
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
           isBottomBorderSlashed: true,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: readableEnumConverter(unit),
           borderRight: false,
           rowHeight: rowHeight,
@@ -235,7 +235,7 @@ class DocumentComponents {
           children: [
             pw.SizedBox(
               width: 45.0,
-              child: _buildTableRowColumn(
+              child: buildTableRowColumn(
                 data: unitCost.toString(),
                 borderRight: false,
                 rowHeight: rowHeight,
@@ -244,7 +244,7 @@ class DocumentComponents {
               ),
             ),
             pw.Expanded(
-              child: _buildTableRowColumn(
+              child: buildTableRowColumn(
                 data: totalCost.toString(),
                 solidBorderWidth: 2.0,
                 borderRight: false,
@@ -255,14 +255,14 @@ class DocumentComponents {
             ),
           ],
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: description ?? '\n', // truncateText(description ?? '\n', 40),
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
           isBottomBorderSlashed: true,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: itemId ?? '\n', //truncateText(itemId ?? '\n', 21),
           fontSize: 7.0,
           borderRight: false,
@@ -270,7 +270,7 @@ class DocumentComponents {
           borderBottom: borderBottom,
           isBottomBorderSlashed: true,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: estimatedUsefulLife != null
               ? estimatedUsefulLife > 1
                   ? '$estimatedUsefulLife years'
@@ -296,39 +296,39 @@ class DocumentComponents {
   }) {
     return pw.TableRow(
       children: [
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: quantity.toString(),
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: readableEnumConverter(unit),
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: description ?? '\n',
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: propertyNumber ?? '\n',
           fontSize: 7.0,
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: dateAcquired ?? '\n',
           solidBorderWidth: 2.0,
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
         ),
-        _buildTableRowColumn(
+        buildTableRowColumn(
           data: amount.toString(),
           rowHeight: rowHeight,
           borderBottom: borderBottom,
@@ -432,6 +432,373 @@ class DocumentComponents {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.TableRow buildRISTableRow({
+    String? stockNo,
+    String? unit,
+    String? description,
+    String? requestQuantity,
+    String? yes,
+    String? no,
+    String? issueQuantity,
+    String? remarks,
+    double? rowHeight,
+    borderBottom = true,
+  }) {
+    return pw.TableRow(
+      children: [
+        buildTableRowColumn(
+          data: stockNo ?? '\n',
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: readableEnumConverter(unit),
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: description ?? '\n',
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: requestQuantity ?? '\n',
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: yes ?? '\n',
+          solidBorderWidth: 2.0,
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: no ?? '\n',
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: issueQuantity ?? '\n',
+          solidBorderWidth: 2.0,
+          borderRight: false,
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+        buildTableRowColumn(
+          data: remarks ?? '\n',
+          rowHeight: rowHeight,
+          borderBottom: borderBottom,
+        ),
+      ],
+    );
+  }
+
+  pw.Widget buildRISHeaderContainer({
+    required String row1Title,
+    String? row1Value,
+    required String row2Title,
+    String? row2Value,
+    bool borderRight = true,
+    bool isRow1Underlined = false,
+    bool isRow2Underlined = false,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(3.0),
+      decoration: pw.BoxDecoration(
+        border: pw.Border(
+          top: const pw.BorderSide(
+            width: 3.0,
+          ),
+          right: borderRight
+              ? const pw.BorderSide(
+                  width: 3.0,
+                )
+              : pw.BorderSide.none,
+          bottom: const pw.BorderSide(
+            width: 3.0,
+          ),
+          left: const pw.BorderSide(
+            width: 3.0,
+          ),
+        ),
+      ),
+      child: pw.Column(
+        children: [
+          buildRowTextValue(
+            text: row1Title,
+            value: row1Value ?? (isRow1Underlined ? '________' : ''),
+            font: FontService().getFont('calibriRegular'),
+          ),
+          buildRowTextValue(
+            text: row2Title,
+            value: row2Value ?? (isRow2Underlined ? '________' : ''),
+            font: FontService().getFont('calibriRegular'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.TableRow buildRISFooterTableHeader() {
+    return pw.TableRow(
+      children: [
+        buildHeaderContainerCell(
+          data: '\nSignature:',
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          font: FontService().getFont('calibriRegular'),
+          isAlignCenter: false,
+          borderTop: false,
+          borderRight: false,
+        ),
+        buildHeaderContainerCell(
+          data: 'Requested by: \n\n',
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          font: FontService().getFont('calibriBold'),
+          isAlignCenter: false,
+          borderTop: false,
+          borderRight: false,
+        ),
+        buildHeaderContainerCell(
+          data: 'Approved by: \n\n',
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          font: FontService().getFont('calibriBold'),
+          isAlignCenter: false,
+          borderTop: false,
+          borderRight: false,
+        ),
+        buildHeaderContainerCell(
+          data: 'Issued by: \n\n',
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          font: FontService().getFont('calibriBold'),
+          isAlignCenter: false,
+          borderTop: false,
+          borderRight: false,
+        ),
+        buildHeaderContainerCell(
+          data: 'Received by: \n\n',
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          font: FontService().getFont('calibriBold'),
+          isAlignCenter: false,
+          borderTop: false,
+        ),
+      ],
+    );
+  }
+
+  static pw.TableRow buildRISFooterTableRow({
+    required String title,
+    String? dataRowColumnOne,
+    String? dataRowColumnTwo,
+    String? dataRowColumnThree,
+    String? dataRowColumnFour,
+  }) {
+    return pw.TableRow(
+      children: [
+        buildTableRowColumn(
+          data: title,
+          isAlignCenter: false,
+          borderRight: false,
+          fontSize: 7.0,
+        ),
+        buildTableRowColumn(
+          data: dataRowColumnOne?.toUpperCase() ?? '\n',
+          borderRight: false,
+          fontSize: 7.0,
+        ),
+        buildTableRowColumn(
+          data: dataRowColumnTwo?.toUpperCase() ?? '\n',
+          borderRight: false,
+          fontSize: 7.0,
+        ),
+        buildTableRowColumn(
+          data: dataRowColumnThree?.toUpperCase() ?? '\n',
+          borderRight: false,
+          fontSize: 7.0,
+        ),
+        buildTableRowColumn(
+          data: dataRowColumnFour?.toUpperCase() ?? '\n',
+          fontSize: 7.0,
+        ),
+      ],
+    );
+  }
+
+  static pw.Container buildContainer({
+    double? width,
+    double? height,
+    double? horizontalPadding,
+    double? verticalPadding,
+    double borderWidthTop = 3.5,
+    double borderWidthRight = 3.5,
+    double borderWidthBottom = 3.5,
+    double borderWidthLeft = 3.5,
+    bool borderTop = true,
+    bool borderRight = true,
+    bool borderBottom = true,
+    bool borderLeft = true,
+    pw.Widget? child,
+  }) {
+    return pw.Container(
+      width: width,
+      height: height,
+      padding: pw.EdgeInsets.symmetric(
+        horizontal: horizontalPadding ?? 0.0,
+        vertical: verticalPadding ?? 0.0,
+      ),
+      decoration: pw.BoxDecoration(
+        border: pw.Border(
+          top: borderTop
+              ? pw.BorderSide(
+                  width: borderWidthTop,
+                )
+              : pw.BorderSide.none,
+          right: borderRight
+              ? pw.BorderSide(
+                  width: borderWidthRight,
+                )
+              : pw.BorderSide.none,
+          bottom: borderBottom
+              ? pw.BorderSide(
+                  width: borderWidthBottom,
+                )
+              : pw.BorderSide.none,
+          left: borderLeft
+              ? pw.BorderSide(
+                  width: borderWidthLeft,
+                )
+              : pw.BorderSide.none,
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  static pw.TableRow buildStickerTableRow({
+    required String title,
+    String? value,
+    double? height,
+    bool borderTop = true,
+    bool borderRight = true,
+    bool borderBottom = true,
+    bool borderLeft = true,
+  }) {
+    return pw.TableRow(
+      children: [
+        buildContainer(
+          height: height,
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          borderTop: borderTop,
+          borderRight: false,
+          borderBottom: borderBottom,
+          child: pw.Text(
+            title,
+            style: pw.TextStyle(
+              font: FontService().getFont('calibriBold'),
+              fontSize: 8.5,
+            ),
+          ),
+        ),
+        buildContainer(
+          height: height,
+          horizontalPadding: 3.0,
+          verticalPadding: 3.0,
+          borderTop: borderTop,
+          borderRight: borderRight,
+          borderBottom: borderBottom,
+          borderLeft: borderLeft,
+          child: pw.Text(
+            value ?? '',
+            style: pw.TextStyle(
+              font: FontService().getFont('calibriBold'),
+              fontSize: 8.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget buildStickerHeader() {
+    return pw.Column(
+      children: [
+        pw.Container(
+          height: 48.75,
+          width: 48.75,
+          child: ImageService().getImage('depedSeal'),
+        ),
+        pw.SizedBox(
+          height: 5.0,
+        ),
+        pw.Text(
+          'DEPARTMENT OF EDUCATION',
+          style: pw.TextStyle(
+            font: FontService().getFont('calibriBold'),
+            fontSize: 10,
+            // fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(
+          height: 5.0,
+        ),
+        pw.Text(
+          'Schools Division of Legazpi City',
+          style: pw.TextStyle(
+            font: FontService().getFont('calibriBold'),
+            fontSize: 10,
+            //fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(
+          height: 5.0,
+        ),
+        pw.Text(
+          'Legazpi City',
+          style: pw.TextStyle(
+            font: FontService().getFont('calibriBold'),
+            fontSize: 10,
+            //fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static pw.RichText richText({
+    required String title,
+    required String value,
+  }) {
+    return pw.RichText(
+      text: pw.TextSpan(
+        text: title,
+        style: pw.TextStyle(
+          font: FontService().getFont('calibriBold'),
+          fontSize: 11.0,
+        ),
+        children: [
+          pw.TextSpan(
+            text: value,
+            style: pw.TextStyle(
+              font: FontService().getFont('calibriRegular'),
+              fontSize: 11.0,
+            ),
           ),
         ],
       ),
