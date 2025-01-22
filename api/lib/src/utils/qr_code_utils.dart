@@ -11,7 +11,6 @@ class QrCodeUtils {
       errorCorrectLevel: QrErrorCorrectLevel.L,
     );
 
-
     final qrImage = QrImage(qr);
 
     // size of each module (in px)
@@ -40,13 +39,17 @@ class QrCodeUtils {
     }
 
     // Encode image as PNG
-    final pngImageData = img.encodePng(image, level: 9,);
+    final pngImageData = img.encodePng(
+      image,
+      level: 9,
+    );
 
     // Convert PNG to base64
     final base64Image = base64Encode(pngImageData);
 
     // Save the image file
-    final filePath = 'D:/qr_code_${encryptedId.hashCode}.png';
+    final filePath =
+        'C:/Users/johnpaulmaceres/Documents/QR/qr_code_${encryptedId.hashCode}.png';
     final file = File(filePath);
     await file.writeAsBytes(img.encodePng(image));
 

@@ -13,7 +13,7 @@ class PurchaseOrder implements BaseDocument {
   @override
   Future<pw.Document> generate({
     required PdfPageFormat pageFormat,
-    required pw.PageOrientation orientation,
+    //required pw.PageOrientation orientation,
     required data,
     required bool withQr,
   }) async {
@@ -77,7 +77,7 @@ class PurchaseOrder implements BaseDocument {
       pw.Page(
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
-          orientation: orientation,
+          orientation: pw.PageOrientation.portrait,
           marginTop: 1.9,
           marginRight: 1.8,
           marginBottom: 1.9,

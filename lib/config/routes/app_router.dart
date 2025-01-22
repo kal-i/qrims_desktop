@@ -17,13 +17,14 @@ import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/set_new_password_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
 import '../../features/item_inventory/presentation/views/item_inventory_view.dart';
+import '../../features/item_inventory/presentation/views/reusable_equipment_item_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_item_view.dart';
+import '../../features/item_inventory/presentation/views/reusable_supply_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/view_issuance_information.dart';
 import '../../features/navigation/presentation/views/navigation_view.dart';
 import '../../features/officer/presentation/views/officers_management_view.dart';
-import '../../features/purchase_order/presentation/view/purchase_order_view.dart';
 import '../../features/purchase_request/presentation/view/create_purchase_order_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_reusable_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_view.dart';
@@ -136,8 +137,8 @@ class AppRoutingConfig {
                 const MaterialPage(child: ItemInventoryView()),
             routes: [
               GoRoute(
-                name: RoutingConstants.viewItemRouteName,
-                path: RoutingConstants.viewItemRoutePath,
+                name: RoutingConstants.viewSupplyItemRouteName,
+                path: RoutingConstants.viewSupplyItemRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -145,7 +146,7 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableItemView(
+                    child: ReusableSupplyItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -153,8 +154,8 @@ class AppRoutingConfig {
                 },
               ),
               GoRoute(
-                name: RoutingConstants.registerItemViewRouteName,
-                path: RoutingConstants.registerItemViewRoutePath,
+                name: RoutingConstants.viewEquipmentItemRouteName,
+                path: RoutingConstants.viewEquipmentItemRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -162,7 +163,7 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableItemView(
+                    child: ReusableEquipmentItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -170,8 +171,8 @@ class AppRoutingConfig {
                 },
               ),
               GoRoute(
-                name: RoutingConstants.updateItemViewRouteName,
-                path: RoutingConstants.updateItemViewRoutePath,
+                name: RoutingConstants.registerSupplyItemViewRouteName,
+                path: RoutingConstants.registerSupplyItemViewRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -179,7 +180,58 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableItemView(
+                    child: ReusableSupplyItemView(
+                      isUpdate: isUpdate,
+                      itemId: itemId,
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.registerEquipmentItemViewRouteName,
+                path: RoutingConstants.registerEquipmentItemViewRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final isUpdate = extras['is_update'] as bool;
+                  final itemId = extras['item_id'] as String?;
+
+                  return MaterialPage(
+                    child: ReusableEquipmentItemView(
+                      isUpdate: isUpdate,
+                      itemId: itemId,
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.updateSupplyItemViewRouteName,
+                path: RoutingConstants.updateSupplyItemViewRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final isUpdate = extras['is_update'] as bool;
+                  final itemId = extras['item_id'] as String?;
+
+                  return MaterialPage(
+                    child: ReusableSupplyItemView(
+                      isUpdate: isUpdate,
+                      itemId: itemId,
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.updateEquipmentItemViewRouteName,
+                path: RoutingConstants.updateEquipmentItemViewRoutePath,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final isUpdate = extras['is_update'] as bool;
+                  final itemId = extras['item_id'] as String?;
+
+                  return MaterialPage(
+                    child: ReusableEquipmentItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -228,7 +280,7 @@ class AppRoutingConfig {
                 path: RoutingConstants.registerPurchaseOrderViewRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
-                  state.extra as Map<String, dynamic>;
+                      state.extra as Map<String, dynamic>;
                   final prId = extras['pr_id'] as String;
 
                   return MaterialPage(

@@ -23,16 +23,16 @@ Future<Response> _getSummaryInformation(
   ItemRepository itemRepository,
 ) async {
   try {
-    final inStocksCount = await itemRepository.getInStocksCount();
-    final lowStocksCount = await itemRepository.getLowStocksCount();
+    final suppliesCount = await itemRepository.getSuppliesCount();
+    final equipmentCount = await itemRepository.getEquipmentCount();
     final outOfStocksCount = await itemRepository.getOutOfStocksCount();
 
     final categoricalInventory = await itemRepository.getCategoricalInventory();
 
     return Response.json(
       body: {
-        'in_stocks_count': inStocksCount,
-        'low_stocks_count': lowStocksCount,
+        'supplies_count': suppliesCount,
+        'equipment_count': equipmentCount,
         'out_of_stocks_count': outOfStocksCount,
         'categorical_inventory_data': categoricalInventory,
       },

@@ -46,19 +46,44 @@ final class FetchItems extends ItemInventoryEvent {
       ];
 }
 
-final class ItemRegister extends ItemInventoryEvent {
-  const ItemRegister({
+final class SupplyItemRegister extends ItemInventoryEvent {
+  const SupplyItemRegister({
     required this.itemName,
     required this.description,
+    required this.specification,
+    required this.unit,
+    required this.quantity,
+  });
+
+  final String itemName;
+  final String description;
+  final String specification;
+  final Unit unit;
+  final int quantity;
+
+  @override
+  List<Object?> get props => [
+        itemName,
+        description,
+        specification,
+        unit,
+        quantity,
+      ];
+}
+
+final class EquipmentItemRegister extends ItemInventoryEvent {
+  const EquipmentItemRegister({
+    required this.itemName,
+    required this.description,
+    required this.specification,
+    required this.unit,
+    required this.quantity,
     required this.manufacturerName,
     required this.brandName,
     required this.modelName,
-    this.serialNo,
-    required this.specification,
+    required this.serialNo,
     this.assetClassification,
     this.assetSubClass,
-    required this.unit,
-    required this.quantity,
     required this.unitCost,
     this.estimatedUsefulLife,
     this.acquiredDate,
@@ -66,15 +91,15 @@ final class ItemRegister extends ItemInventoryEvent {
 
   final String itemName;
   final String description;
+  final String specification;
+  final Unit unit;
+  final int quantity;
   final String manufacturerName;
   final String brandName;
   final String modelName;
-  final String? serialNo;
-  final String specification;
+  final String serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
-  final Unit unit;
-  final int quantity;
   final double unitCost;
   final int? estimatedUsefulLife;
   final DateTime? acquiredDate;

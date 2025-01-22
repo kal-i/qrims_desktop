@@ -22,10 +22,28 @@ enum AssetSubClass {
 }
 
 enum Unit {
-  unit,
+  piece,
   set,
+  box,
   pack,
+  bundle,
+  roll,
+  pair,
+  dozen,
   liter,
+  milliliter,
+  gallon,
+  cubic_meter,
+  gram,
+  kilogram,
+  ton,
+  meter,
+  centimeter,
+  millimeter,
+  foot,
+  yard,
+  batch,
+  unit,
   undetermined,
 }
 
@@ -426,14 +444,230 @@ class ItemWithStock {
   }
 }
 
-/// todo: create a base entity for item
-/// todo: implemented by two concrete items [supply, equipment]
-/// todo: update other parts of the code, including frontend
-/// todo: implement a way two register both items
-/// todo: fix the logic for receiving an issuance
-/// todo: create other templates
-abstract class BaseItemModel {}
+class ShareableItemInformationModel {
+  const ShareableItemInformationModel({
+    required this.id,
+    required this.productNameId,
+    required this.productDescriptionId,
+    required this.specification,
+    required this.unit,
+    required this.quantity,
+    required this.encryptedId,
+    required this.qrCodeImageData,
+  });
 
-class Supply extends BaseItemModel {}
+  final String id;
+  final String productNameId;
+  final String productDescriptionId;
+  final String specification;
+  final Unit unit;
+  final int quantity;
+  final String encryptedId;
+  final String qrCodeImageData;
 
-class Equipment extends BaseItemModel {}
+  factory ShareableItemInformationModel.fromJson(Map<String, dynamic> json) {
+    final unit = Unit.values.firstWhere(
+      (e) => e.toString().split('.').last == json['unit'] as String,
+      orElse: () => Unit.undetermined,
+    );
+
+    return ShareableItemInformationModel(
+      id: json['base_item_id'] as String,
+      productNameId: json['product_name_id'] as String,
+      productDescriptionId: json['product_description_id'] as String,
+      specification: json['specification'] as String,
+      unit: unit,
+      quantity: json['quantity'] as int,
+      encryptedId: json['encrypted_id'] as String,
+      qrCodeImageData: json['qr_code_image_data'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'base_item_id': id,
+      'product_name_id': productNameId,
+      'product_description_id': productDescriptionId,
+      'specification': specification,
+      'unit': unit.toString().split('.').last,
+      'quantity': quantity,
+      'encrypted_id': encryptedId,
+      'qr_code_image_data': qrCodeImageData,
+    };
+  }
+}
+
+// exclude the ff: params that will tie it to a specific item:
+// serial no
+// acquired date
+// manufacturer
+// brand
+// model
+// unit cost
+// estimated useful life
+abstract class BaseItemModel {
+  const BaseItemModel({
+    required this.productStock,
+    required this.shareableItemInformationModel,
+  });
+
+  final ProductStock productStock;
+  final ShareableItemInformationModel shareableItemInformationModel;
+}
+
+class Supply extends BaseItemModel {
+  const Supply({
+    required this.id,
+    required super.productStock,
+    required super.shareableItemInformationModel,
+  });
+
+  final int id;
+
+  factory Supply.fromJson(Map<String, dynamic> json) {
+    final productStock = ProductStock.fromJson({
+      'product_name_id': json['product_name_id'],
+      'product_name': json['product_name'],
+      'product_description_id': json['product_description_id'],
+      'product_description': json['product_description'],
+    });
+
+    final shareableItemInformation = ShareableItemInformationModel.fromJson({
+      'base_item_id': json['base_item_id'],
+      'product_name_id': json['product_name_id'],
+      'product_description_id': json['product_description_id'],
+      'specification': json['specification'],
+      'unit': json['unit'],
+      'quantity': json['quantity'],
+      'encrypted_id': json['encrypted_id'],
+      'qr_code_image_data': json['qr_code_image_data'],
+    });
+
+    return Supply(
+      id: json['supply_id'] as int,
+      productStock: productStock,
+      shareableItemInformationModel: shareableItemInformation,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'supply_id': id,
+      'product_stock': productStock.toJson(),
+      'shareable_item_information': shareableItemInformationModel.toJson(),
+    };
+  }
+}
+
+class Equipment extends BaseItemModel {
+  const Equipment({
+    required this.id,
+    required super.productStock,
+    required super.shareableItemInformationModel,
+    required this.manufacturerBrand,
+    required this.model,
+    required this.serialNo,
+    required this.assetClassification,
+    required this.assetSubClass,
+    required this.unitCost,
+    this.estimatedUsefulLife = 1,
+    this.acquiredDate,
+  });
+
+  final int id;
+  final ManufacturerBrand manufacturerBrand;
+  final Model model;
+  final String serialNo;
+  final AssetClassification? assetClassification;
+  final AssetSubClass? assetSubClass;
+  final double unitCost;
+  final int? estimatedUsefulLife;
+  final DateTime? acquiredDate;
+
+  factory Equipment.fromJson(Map<String, dynamic> json) {
+    final assetClassificationString = json['asset_classification'] as String?;
+    final assetSubClassString = json['asset_sub_class'] as String?;
+
+    final assetClassification = assetClassificationString != null
+        ? AssetClassification.values.firstWhere(
+            (e) => e.toString().split('.').last == assetClassificationString,
+            orElse: () => AssetClassification.unknown,
+          )
+        : AssetClassification.unknown;
+
+    final assetSubClass = assetSubClassString != null
+        ? AssetSubClass.values.firstWhere(
+            (e) => e.toString().split('.').last == assetSubClassString,
+            orElse: () => AssetSubClass.unknown,
+          )
+        : AssetSubClass.unknown;
+
+    final productStock = ProductStock.fromJson({
+      'product_name_id': json['product_name_id'],
+      'product_name': json['product_name'],
+      'product_description_id': json['product_description_id'],
+      'product_description': json['product_description'],
+    });
+
+    final shareableItemInformation = ShareableItemInformationModel.fromJson({
+      'base_item_id': json['base_item_id'],
+      'product_name_id': json['product_name_id'],
+      'product_description_id': json['product_description_id'],
+      'specification': json['specification'],
+      'unit': json['unit'],
+      'quantity': json['quantity'],
+      'encrypted_id': json['encrypted_id'],
+      'qr_code_image_data': json['qr_code_image_data'],
+    });
+
+    final manufacturerBrand = ManufacturerBrand.fromJson({
+      'manufacturer_id': json['manufacturer_id'],
+      'manufacturer_name': json['manufacturer_name'],
+      'brand_id': json['brand_id'],
+      'brand_name': json['brand_name'],
+    });
+
+    final model = Model.fromJson({
+      'model_id': json['model_id'],
+      'product_name_id': json['product_name_id'],
+      'brand_id': json['brand_id'],
+      'model_name': json['model_name'],
+    });
+
+    return Equipment(
+      id: json['equipment_id'] as int,
+      productStock: productStock,
+      shareableItemInformationModel: shareableItemInformation,
+      manufacturerBrand: manufacturerBrand,
+      model: model,
+      serialNo: json['serial_no'] as String,
+      assetClassification: assetClassification,
+      assetSubClass: assetSubClass,
+      unitCost: json['unit_cost'] is String
+          ? double.tryParse(json['unit_cost'] as String) ?? 0.0
+          : json['unit_cost'] as double,
+      estimatedUsefulLife: json['estimated_useful_life'] as int?,
+      acquiredDate: json['acquired_date'] != null
+          ? json['acquired_date'] is String
+              ? DateTime.parse(json['acquired_date'] as String)
+              : json['acquired_date'] as DateTime
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'equipment_id': id,
+      'product_stock': productStock.toJson(),
+      'shareable_item_information': shareableItemInformationModel.toJson(),
+      'manufacturer_brand': manufacturerBrand.toJson(),
+      'model': model.toJson(),
+      'serial_no': serialNo,
+      'asset_classification': assetClassification.toString().split('.').last,
+      'asset_sub_class': assetSubClass.toString().split('.').last,
+      'unit_cost': unitCost,
+      'estimated_useful_life': estimatedUsefulLife,
+      'acquired_date': acquiredDate?.toIso8601String(),
+    };
+  }
+}

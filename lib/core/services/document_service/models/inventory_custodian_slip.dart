@@ -15,7 +15,7 @@ class InventoryCustodianSlip implements BaseDocument {
   @override
   Future<pw.Document> generate({
     required PdfPageFormat pageFormat,
-    required pw.PageOrientation orientation,
+    //required pw.PageOrientation orientation,
     required data,
     required bool withQr,
   }) async {
@@ -77,7 +77,7 @@ class InventoryCustodianSlip implements BaseDocument {
       pw.Page(
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
-          orientation: orientation,
+          orientation: pw.PageOrientation.portrait,
         ),
         build: (context) => pw.Column(
           children: [

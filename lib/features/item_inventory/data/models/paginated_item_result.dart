@@ -1,12 +1,12 @@
 import '../../domain/entities/paginated_item_result.dart';
-import 'item_with_stock.dart';
+import 'base_item.dart';
 
 class PaginatedItemResultModel extends PaginatedItemResultEntity {
   const PaginatedItemResultModel({
     required super.items,
     required super.totalItemCount,
-    required super.inStockCount,
-    required super.lowStockCount,
+    required super.suppliesCount,
+    required super.equipmentCount,
     required super.outOfStockCount,
   });
 
@@ -14,13 +14,13 @@ class PaginatedItemResultModel extends PaginatedItemResultEntity {
     return PaginatedItemResultModel(
       items: (json['items'] as List<dynamic>)
           .map(
-            (item) => ItemWithStockModel.fromJson(item), // ItemModel.fromJson(item),
+            (item) => BaseItemModel.fromJson(item),
           )
           .toList(),
-      totalItemCount: json['totalItemCount'],
-      inStockCount: json['inStockCount'],
-      lowStockCount: json['lowStockCount'],
-      outOfStockCount: json['outOfStockCount'],
+      totalItemCount: json['total_item_count'],
+      suppliesCount: json['supplies_count'] ?? 0,
+      equipmentCount: json['equipment_count'] ?? 0,
+      outOfStockCount: json['out_of_stock_count'] ?? 0,
     );
   }
 }

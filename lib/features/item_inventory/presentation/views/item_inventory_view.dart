@@ -1,56 +1,37 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
-import 'package:fluid_dialog/fluid_dialog.dart';
-import 'package:data_table_2/data_table_2.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 
-import '../../../../config/themes/app_theme.dart';
-import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_data_table.dart';
-import '../../../../core/common/components/custom_dropdown_button.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
-import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/common/components/custom_popup_menu.dart';
-import '../../../../core/common/components/custom_search_box.dart';
-import '../../../../core/common/components/error_message_container.dart';
 import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/kpi_card.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
-import '../../../../core/common/components/reusable_data_table.dart';
-import '../../../../core/common/components/reusable_dynamic_filter_menu.dart';
-import '../../../../core/common/components/reusable_filter_custom_outline_button.dart';
-import '../../../../core/common/components/reusable_popup_menu_button.dart';
-import '../../../../core/common/components/reusable_popup_menu_container.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 
-import '../../../../core/common/components/slideable_container.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
-import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
-import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../domain/entities/equipment.dart';
+import '../../domain/entities/supply.dart';
 import '../bloc/item_inventory_bloc.dart';
 import '../components/filter_item_modal.dart';
+import '../components/register_new_item_modal.dart';
 
 class ItemInventoryView extends StatefulWidget {
   const ItemInventoryView({super.key});
@@ -69,8 +50,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   late AssetSubClass? _selectedSubClassFilter;
 
   final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
-  final ValueNotifier<String> _selectedFilterNotifier =
-      ValueNotifier('in_stock');
+  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
 
   final ValueNotifier<int> _totalItemsCount = ValueNotifier(0);
   final ValueNotifier<int> _inStockCount = ValueNotifier(0);
@@ -92,10 +72,10 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   final List<String> _tableHeaders = [
     'Item Name',
     'Description',
-    'Brand',
-    'Model',
+    //'Brand',
+    //'Model',
     'Quantity',
-    'Unit Cost',
+    //'Unit Cost',
     'Status',
   ];
   late List<TableData> _tableRows = [];
@@ -150,7 +130,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _selectedClassificationFilter = null;
     _selectedSubClassFilter = null;
 
-    _selectedFilterNotifier.value = 'in_stock';
+    _selectedFilterNotifier.value = '';
     _selectedSortValue = '';
     _selectedSortOrder.value = 'Descending';
     _fetchItems();
@@ -268,7 +248,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
               builder: (context, inStockCount, child) {
                 return KPICard(
                   icon: HugeIcons.strokeRoundedPackageDelivered,
-                  title: 'In stock',
+                  title: 'Supply Items',
                   data: inStockCount.toString(),
                   // baseColor: Colors.transparent,
                 );
@@ -283,7 +263,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
               builder: (context, lowStockCount, child) {
                 return KPICard(
                   icon: HugeIcons.strokeRoundedPackageProcess,
-                  title: 'Low stock',
+                  title: 'Equipment Items',
                   data: lowStockCount.toString(),
                   // baseColor: Colors.transparent,
                 );
@@ -326,10 +306,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
               width: 10.0,
             ),
             _buildFilterButton(),
-            // const SizedBox(
-            //   width: 10.0,
-            // ),
-            // _buildSortButton(),
           ],
         ),
       ],
@@ -339,9 +315,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
       'View All': '',
-      'Consumable': 'consumable',
+      'Supply': 'supply',
       'Equipment': 'equipment',
-      'In Stock': 'in_stock', // todo: remove this and impl others
       'Out': 'out',
     };
     return FilterTableRow(
@@ -358,9 +333,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     return CustomFilledButton(
       width: 160.0,
       height: 40.0,
-      onTap: () => context.go(
-        RoutingConstants.nestedRegisterItemViewRoutePath,
-        extra: extra,
+      onTap: () => showDialog(
+        context: context,
+        builder: (context) => RegisterNewItemModal(),
       ),
       prefixWidget: const Icon(
         HugeIcons.strokeRoundedDeliveryBox01,
@@ -417,7 +392,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         }
 
         // just to reset the loading state
-        if (state is ItemRegistered || state is ItemUpdated) {
+        if (state is SupplyItemRegistered ||
+            state is EquipmentItemRegistered ||
+            state is ItemUpdated) {
           _isLoading = false;
           _refreshItemList();
         }
@@ -437,7 +414,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
             state.items
                 .map(
                   (item) => TableData(
-                    id: item.itemEntity.id,
+                    id: item.shareableItemInformationEntity.id,
+                    object: item,
                     columns: [
                       Text(
                         capitalizeWord(
@@ -457,42 +435,42 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                             ),
                         overflow: TextOverflow.ellipsis,
                       ),
+                      // Text(
+                      //   item.manufacturerBrandEntity.brand.name,
+                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      //         fontSize: 14.0,
+                      //         fontWeight: FontWeight.w500,
+                      //       ),
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
+                      // Text(
+                      //   item.modelEntity.modelName,
+                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      //         fontSize: 14.0,
+                      //         fontWeight: FontWeight.w500,
+                      //       ),
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
                       Text(
-                        item.manufacturerBrandEntity.brand.name,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w500,
-                            ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.modelEntity.modelName,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w500,
-                            ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.itemEntity.quantity.toString(),
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      Text(
-                        item.itemEntity.unitCost.toString(),
+                        item.shareableItemInformationEntity.quantity.toString(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
                       ),
+                      // Text(
+                      //   item.itemEntity.unitCost.toString(),
+                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      //         fontSize: 14.0,
+                      //         fontWeight: FontWeight.w500,
+                      //       ),
+                      // ),
                       SizedBox(
                         width: 50.0,
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: _buildStatusHighlighter(
-                            item.itemEntity.quantity,
+                            item.shareableItemInformationEntity.quantity,
                           ),
                         ),
                       ),
@@ -528,21 +506,40 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                       ),
                       onActionSelected: (index, action) {
                         final itemId = _tableRows[index].id;
+                        final itemObj = _tableRows[index].object;
+
                         String? path;
                         final Map<String, dynamic> extras = {
                           'item_id': itemId,
                         };
 
                         if (action.isNotEmpty) {
-                          if (action.contains('View')) {
-                            extras['is_update'] = false;
-                            path = RoutingConstants.nestedViewItemRoutePath;
+                          if (itemObj is SupplyEntity) {
+                            if (action.contains('View')) {
+                              extras['is_update'] = false;
+                              path = RoutingConstants
+                                  .nestedViewSupplyItemRoutePath;
+                            }
+
+                            if (action.contains('Edit')) {
+                              extras['is_update'] = true;
+                              path = RoutingConstants
+                                  .nestedUpdateSupplyItemViewRoutePath;
+                            }
                           }
 
-                          if (action.contains('Edit')) {
-                            extras['is_update'] = true;
-                            path =
-                                RoutingConstants.nestedUpdateItemViewRoutePath;
+                          if (itemObj is EquipmentEntity) {
+                            if (action.contains('View')) {
+                              extras['is_update'] = false;
+                              path = RoutingConstants
+                                  .nestedViewEquipmentItemRoutePath;
+                            }
+
+                            if (action.contains('Edit')) {
+                              extras['is_update'] = true;
+                              path = RoutingConstants
+                                  .nestedUpdateEquipmentItemViewRoutePath;
+                            }
                           }
 
                           context.go(

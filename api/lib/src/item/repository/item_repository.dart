@@ -403,6 +403,441 @@ class ItemRepository {
     }
   }
 
+  Future<String> registerBaseItem({
+    required String productName,
+    required String productNameId,
+    String? productDescriptionId,
+    String? specification,
+    required Unit unit,
+    required int quantity,
+  }) async {
+    try {
+      /// generate an item id
+      final itemId = await _generateUniqueItemId(productName);
+      print('item id: $itemId');
+
+      /// generate encrypted id
+      final encryptedId = await EncryptionUtils.encryptId(itemId);
+      print('encrypted id: $encryptedId');
+
+      /// generate base 64 String qr code image data
+      final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
+      print('qr data id: $qrCodeImageData');
+
+      await _conn.execute(
+        Sql.named(
+          '''
+        INSERT INTO Items (
+          id, product_name_id, product_description_id, specification, unit, 
+          quantity, encrypted_id, qr_code_image_data
+        ) VALUES (
+          @id, @product_name_id, @product_description_id, @specification, @unit,
+          @quantity, @encrypted_id, @qr_code_image_data
+        );
+        ''',
+        ),
+        parameters: {
+          'id': itemId,
+          'product_name_id': productNameId,
+          'product_description_id': productDescriptionId,
+          'specification': specification,
+          'unit': unit.toString().split('.').last,
+          'quantity': quantity,
+          'encrypted_id': encryptedId,
+          'qr_code_image_data': qrCodeImageData,
+        },
+      );
+
+      return itemId;
+    } catch (e) {
+      throw Exception('Error registering base item entity: $e');
+    }
+  }
+
+  Future<String?> checkSupplyIfExist({
+    required String productNameId,
+    required String productDescriptionId,
+    String? specification,
+    required Unit unit,
+  }) async {
+    final baseItemResult = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT 
+          id 
+        FROM 
+          Items 
+        WHERE 
+          product_name_id = @product_name_id 
+        AND 
+          product_description_id = @product_description_id
+        AND
+          (specification IS NULL OR specification ILIKE @specification)
+        AND
+          unit = @unit;
+        ''',
+      ),
+      parameters: {
+        'product_name_id': productNameId,
+        'product_description_id': productDescriptionId,
+        'specification': specification,
+        'unit': unit.toString().split('.').last,
+      },
+    );
+
+    if (baseItemResult.isNotEmpty) {
+      String baseItemId = baseItemResult.first[0] as String;
+
+      final supplyItemResult = await _conn.execute(
+        Sql.named(
+          'SELECT base_item_id FROM Supplies WHERE base_item_id ILIKE @base_item_id;',
+        ),
+        parameters: {
+          'base_item_id': baseItemId,
+        },
+      );
+
+      return supplyItemResult.isNotEmpty
+          ? supplyItemResult.first[0] as String
+          : null;
+    }
+
+    return null;
+  }
+
+  Future<bool> updateSupplyItemQuantityByBaseItemId({
+    required String baseItemId,
+    required int quantity,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        UPDATE Items
+        SET quantity = quantity + @quantity
+        WHERE id = @base_item_id;
+        ''',
+      ),
+      parameters: {
+        'base_item_id': baseItemId,
+        'quantity': quantity,
+      },
+    );
+
+    return result.affectedRows == 1;
+  }
+
+  Future<String> registerSupply({
+    required String baseItemModelId,
+  }) async {
+    try {
+      await _conn.execute(
+        Sql.named(
+          '''
+          INSERT INTO Supplies (base_item_id) VALUES (@base_item_id);
+          ''',
+        ),
+        parameters: {
+          'base_item_id': baseItemModelId,
+        },
+      );
+
+      return baseItemModelId;
+    } catch (e) {
+      throw Exception('Error registering supply item: $e');
+    }
+  }
+
+  Future<String> registerEquipment({
+    required String baseItemModelId,
+    required String productNameId,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
+    required String serialNo,
+    AssetClassification? assetClassification,
+    AssetSubClass? assetSubClass,
+    required double unitCost,
+    int? estimatedUsefulLife,
+    DateTime? acquiredDate,
+  }) async {
+    try {
+      String? manufacturerId;
+      String? brandId;
+      String? modelId;
+
+      /// check if manufacturer exists
+      final manufacturerResult = await checkManufacturerIfExist(
+        manufacturerName: manufacturerName,
+      );
+
+      if (manufacturerResult != null) {
+        manufacturerId = manufacturerResult;
+      } else {
+        manufacturerId = await registerManufacturer(
+          manufacturerName: manufacturerName,
+        );
+      }
+      print('manufacturer id: $manufacturerId');
+
+      /// check if brand exists
+      final brandResult = await checkBrandIfExist(
+        brandName: brandName,
+      );
+      if (brandResult != null) {
+        brandId = brandResult;
+      } else {
+        brandId = await registerBrand(
+          brandName: brandName,
+        );
+      }
+      print('brand id: $brandId');
+
+      final manufacturerBrandResult = await checkManufacturerBrandIfExist(
+        manufacturerId: manufacturerId,
+        brandId: brandId,
+      );
+
+      if (manufacturerBrandResult == 0) {
+        await registerManufacturerBrand(
+          manufacturerId: manufacturerId,
+          brandId: brandId,
+        );
+      }
+
+      /// check if model exists
+      final modelResult = await checkModelIfExist(
+        productNameId: productNameId,
+        brandId: brandId,
+        modelName: modelName,
+      );
+
+      if (modelResult != null) {
+        modelId = modelResult;
+      } else {
+        modelId = await registerModel(
+          productNameId: productNameId,
+          brandId: brandId,
+          modelName: modelName,
+        );
+      }
+      print('model id: $modelId');
+
+      await _conn.execute(
+        Sql.named(
+          '''
+        INSERT INTO Equipment (
+          base_item_id, manufacturer_id, brand_id, model_id, serial_no, asset_classification,
+          asset_sub_class, unit_cost, estimated_useful_life, acquired_date
+        ) VALUES (
+          @base_item_id, @manufacturer_id, @brand_id, @model_id, @serial_no, 
+          @asset_classification, @asset_sub_class, @unit_cost, 
+          @estimated_useful_life, @acquired_date
+        );
+        ''',
+        ),
+        parameters: {
+          'base_item_id': baseItemModelId,
+          'manufacturer_id': manufacturerId,
+          'brand_id': brandId,
+          'model_id': modelId,
+          'serial_no': serialNo,
+          'asset_classification':
+              assetClassification.toString().split('.').last,
+          'asset_sub_class': assetSubClass.toString().split('.').last,
+          'unit_cost': unitCost,
+          'estimated_useful_life': estimatedUsefulLife,
+          'acquired_date': acquiredDate ?? DateTime.now().toIso8601String(),
+        },
+      );
+
+      return baseItemModelId;
+    } catch (e) {
+      throw Exception('Error registering equipment item: $e');
+    }
+  }
+
+  Future<String> registerItem({
+    required String productName,
+    String? description,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
+    String? serialNo,
+    required String specification,
+    AssetClassification? assetClassification,
+    AssetSubClass? assetSubClass,
+    required Unit unit,
+    required int quantity,
+    required double unitCost,
+    int? estimatedUsefulLife,
+    DateTime? acquiredDate,
+  }) async {
+    try {
+      /// generate an item id
+      final itemId = await _generateUniqueItemId(productName);
+      print('item id: $itemId');
+
+      /// generate encrypted id
+      final encryptedId = await EncryptionUtils.encryptId(itemId);
+      print('encrypted id: $encryptedId');
+
+      /// generate base 64 String qr code image data
+      final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
+      print('qr data id: $qrCodeImageData');
+
+      String? productNameId;
+      String? productDescriptionId;
+      String? manufacturerId;
+      String? brandId;
+      String? modelId;
+
+      final productNameResult = await checkProductNameIfExist(
+        productName: productName,
+      );
+
+      if (productNameResult != null) {
+        productNameId = productNameResult;
+      } else {
+        productNameId = await registerProductName(
+          productName: productName,
+        );
+      }
+      print('product name id: $productNameId');
+
+      final productDescriptionResult = await checkProductDescriptionIfExist(
+        productDescription: description,
+      );
+
+      if (productDescriptionResult != null) {
+        productDescriptionId = productDescriptionResult;
+      } else {
+        productDescriptionId = await registerProductDescription(
+          productDescription: description,
+        );
+      }
+      print('product name id: $productDescriptionId');
+
+      final productStockResult = await checkProductStockIfExist(
+        productNameId: productNameId,
+        productDescriptionId: productDescriptionId,
+      );
+
+      if (productStockResult == 0) {
+        await registerProductStock(
+          productNameId: productNameId,
+          productDescriptionId: productDescriptionId,
+        );
+      }
+      print('saved product stock!');
+
+      /// check if manufacturer exists
+      final manufacturerResult = await checkManufacturerIfExist(
+        manufacturerName: manufacturerName,
+      );
+
+      if (manufacturerResult != null) {
+        manufacturerId = manufacturerResult;
+      } else {
+        manufacturerId = await registerManufacturer(
+          manufacturerName: manufacturerName,
+        );
+      }
+      print('manufacturer id: $manufacturerId');
+
+      /// check if brand exists
+      final brandResult = await checkBrandIfExist(
+        brandName: brandName,
+      );
+      if (brandResult != null) {
+        brandId = brandResult;
+      } else {
+        brandId = await registerBrand(
+          brandName: brandName,
+        );
+      }
+      print('brand id: $brandId');
+
+      final manufacturerBrandResult = await checkManufacturerBrandIfExist(
+        manufacturerId: manufacturerId,
+        brandId: brandId,
+      );
+
+      if (manufacturerBrandResult == 0) {
+        await registerManufacturerBrand(
+          manufacturerId: manufacturerId,
+          brandId: brandId,
+        );
+      }
+
+      /// check if model exists
+      final modelResult = await checkModelIfExist(
+        productNameId: productNameId,
+        brandId: brandId,
+        modelName: modelName,
+      );
+
+      if (modelResult != null) {
+        modelId = modelResult;
+      } else {
+        modelId = await registerModel(
+          productNameId: productNameId,
+          brandId: brandId,
+          modelName: modelName,
+        );
+      }
+      print('model id: $modelId');
+
+      await _conn.execute(
+        Sql.named(
+          '''
+        INSERT INTO Items (
+          id, product_name_id, product_description_id, manufacturer_id, brand_id, model_id, serial_no, specification,
+          asset_classification, asset_sub_class, unit, quantity,
+          unit_cost, estimated_useful_life, acquired_date, encrypted_id,
+          qr_code_image_data
+        ) VALUES (
+          @id, @product_name_id, @product_description_id, @manufacturer_id, @brand_id, @model_id, @serial_no, @specification,
+          @asset_classification, @asset_sub_class, @unit, @quantity,
+          @unit_cost, @estimated_useful_life, @acquired_date, @encrypted_id,
+          @qr_code_image_data
+        );
+        ''',
+        ),
+        parameters: {
+          'id': itemId,
+          'product_name_id': productNameId,
+          'product_description_id': productDescriptionId,
+          'manufacturer_id': manufacturerId,
+          'brand_id': brandId,
+          'model_id': modelId,
+          'serial_no': serialNo,
+          'specification': specification,
+          'asset_classification':
+              assetClassification.toString().split('.').last,
+          'asset_sub_class': assetSubClass.toString().split('.').last,
+          'unit': unit.toString().split('.').last,
+          'quantity': quantity,
+          'unit_cost': unitCost,
+          'estimated_useful_life': estimatedUsefulLife,
+          'acquired_date': acquiredDate,
+          'encrypted_id': encryptedId,
+          'qr_code_image_data': qrCodeImageData,
+        },
+      );
+
+      return encryptedId;
+    } catch (e) {
+      print(e);
+      if (e
+          .toString()
+          .contains('duplicate key value violates unique constraint')) {
+        print('Serial no. already exists');
+        throw Exception('Serial no. already exists.');
+      }
+      throw Exception('Error registering item: $e');
+    }
+  }
+
   // Future<List<String>> registerItemsWithStock({
   //   required String productName,
   //   String? description,
@@ -854,6 +1289,104 @@ class ItemRepository {
     }
   }
 
+  Future<BaseItemModel?> getConcreteItemByBaseItemId({
+    required String baseItemId,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          i.*,
+          pn.name as product_name,
+          pd.description as product_description,
+          s.id as supply_id,
+          e.id as equipment_id,
+          e.manufacturer_id,
+          e.brand_id,
+          e.model_id,
+          e.serial_no,
+          e.asset_classification,
+          e.asset_sub_class,
+          e.unit_cost,
+          e.estimated_useful_life,
+          e.acquired_date,
+          mnf.name as manufacturer_name,
+          brnd.name as brand_name,
+          md.model_name
+        FROM
+          Items i
+        LEFT JOIN
+          ProductNames pn ON i.product_name_id = pn.id
+        LEFT JOIN
+          ProductDescriptions pd ON i.product_description_id = pd.id
+        LEFT JOIN
+          Supplies s ON i.id = s.base_item_id
+        LEFT JOIN
+          Equipment e ON i.id = e.base_item_id
+        LEFT JOIN
+          Manufacturers mnf ON e.manufacturer_id =  mnf.id
+        LEFT JOIN
+          Brands brnd ON e.brand_id = brnd.id
+        LEFT JOIN
+          Models md ON e.model_id = md.id
+        WHERE
+          i.id = @base_item_id;
+        ''',
+      ),
+      parameters: {
+        'base_item_id': baseItemId,
+      },
+    );
+
+    final row = result.first;
+
+    if (row[10] != null) {
+      final supplyMap = {
+        'supply_id': row[10],
+        'base_item_id': row[0],
+        'product_name_id': row[1],
+        'product_description_id': row[2],
+        'specification': row[3],
+        'unit': row[4],
+        'quantity': row[5],
+        'encrypted_id': row[6],
+        'qr_code_image_data': row[7],
+        'product_name': row[8],
+        'product_description': row[9],
+      };
+      return Supply.fromJson(supplyMap);
+    } else if (row[11] != null) {
+      final equipmentMap = {
+        'equipment_id': row[11],
+        'base_item_id': row[0],
+        'product_name_id': row[1],
+        'product_description_id': row[2],
+        'specification': row[3],
+        'unit': row[4],
+        'quantity': row[5],
+        'encrypted_id': row[6],
+        'qr_code_image_data': row[7],
+        'product_name': row[8],
+        'product_description': row[9],
+        'manufacturer_id': row[12],
+        'brand_id': row[13],
+        'model_id': row[14],
+        'serial_no': row[15],
+        'asset_classification': row[16],
+        'asset_sub_class': row[17],
+        'unit_cost': row[18],
+        'estimated_useful_life': row[19],
+        'acquired_date': row[20],
+        'manufacturer_name': row[21],
+        'brand_name': row[22],
+        'model_name': row[23],
+      };
+      return Equipment.fromJson(equipmentMap);
+    }
+
+    return null;
+  }
+
   Future<ItemWithStock?> getItemByEncryptedId({
     required String encryptedId,
   }) async {
@@ -906,13 +1439,13 @@ class ItemRepository {
       'asset_sub_class': row[9],
       'unit': row[10],
       'quantity': row[11],
-      'unit_cost': row[12],
-      'estimated_useful_life': row[13],
-      'acquired_date': row[14],
-      'encrypted_id': row[15],
-      'qr_code_image_data': row[16],
-      'product_name': row[17],
-      'product_description': row[18],
+      'encrypted_id': row[12],
+      'qr_code_image_data': row[13],
+      'product_name': row[14],
+      'product_description': row[15],
+      'unit_cost': row[16],
+      'estimated_useful_life': row[17],
+      'acquired_date': row[18],
       'manufacturer_name': row[19],
       'brand_name': row[20],
       'model_name': row[21],
@@ -932,20 +1465,24 @@ class ItemRepository {
     try {
       final params = <String, dynamic>{};
       final baseQuery = '''
-      SELECT
-        COUNT(i.*)
-      FROM
-        Items i
-      LEFT JOIN
-        ProductNames pn ON i.product_name_id = pn.id
-      LEFT JOIN
-        ProductDescriptions pd ON i.product_description_id = pd.id
-      LEFT JOIN
-        Manufacturers mnf ON i.manufacturer_id =  mnf.id
-      LEFT JOIN
-        Brands brnd ON i.brand_id = brnd.id
-      LEFT JOIN
-        Models md ON i.model_id = md.id
+        SELECT
+          COUNT(i.*)
+        FROM
+          Items i
+        LEFT JOIN
+          ProductNames pn ON i.product_name_id = pn.id
+        LEFT JOIN
+          ProductDescriptions pd ON i.product_description_id = pd.id
+        LEFT JOIN
+          Supplies s ON i.id = s.base_item_id
+        LEFT JOIN
+          Equipment e ON i.id = e.base_item_id
+        LEFT JOIN
+          Manufacturers mnf ON e.manufacturer_id =  mnf.id
+        LEFT JOIN
+          Brands brnd ON e.brand_id = brnd.id
+        LEFT JOIN
+          Models md ON e.model_id = md.id
       ''';
 
       final whereClause = StringBuffer();
@@ -957,12 +1494,6 @@ class ItemRepository {
         );
 
         params['search_query'] = '%$searchQuery%';
-        // i.id = @search_query OR
-        // i.serial_no = @search_query OR
-        // mnf.name ILIKE @search_query OR
-        // brnd.name ILIKE @search_query OR
-        // md.model_name ILIKE @search_query OR
-        // i.specification ILIKE @search_query
       }
 
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
@@ -979,26 +1510,29 @@ class ItemRepository {
 
       if (classificationFilter != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('i.asset_classification = @classification_filter');
+        whereClause.write('e.asset_classification = @classification_filter');
         params['classification_filter'] =
             classificationFilter.toString().split('.').last;
       }
 
       if (subClassFilter != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('i.asset_sub_class = @sub_class_filter');
+        whereClause.write('e.asset_sub_class = @sub_class_filter');
         params['sub_class_filter'] = subClassFilter.toString().split('.').last;
       }
 
       if (filter != null && filter.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        if (filter == 'in_stock') {
-          whereClause.write('i.quantity > 0');
-        }
-
-        if (filter == 'out') {
+        whereClause.write(whereClause.isNotEmpty ? ' AND (' : 'WHERE (');
+        if (filter == 'supply') {
+          whereClause.write('s.id IS NOT NULL');
+        } else if (filter == 'equipment') {
+          whereClause.write('e.id IS NOT NULL');
+        } else if (filter == 'out') {
           whereClause.write('i.quantity = 0');
+        } else {
+          whereClause.write('s.id IS NOT NULL OR e.id IS NOT NULL');
         }
+        whereClause.write(')');
       }
 
       final finalQuery = '''
@@ -1053,7 +1587,7 @@ class ItemRepository {
     return result.first[0] as int;
   }
 
-  Future<List<ItemWithStock>?> getItems({
+  Future<List<BaseItemModel>?> getItems({
     required int page,
     required int pageSize,
     String? searchQuery,
@@ -1062,53 +1596,52 @@ class ItemRepository {
     String? filter,
     String? manufacturerName,
     String? brandName,
-    // double? minimumUnitPrice,
-    // double? maximumUnitPrice,
     AssetClassification? classificationFilter,
     AssetSubClass? subClassFilter,
-    //DateTime? acquiredDate,
   }) async {
     try {
       final offset = (page - 1) * pageSize;
-      final itemList = <ItemWithStock>[];
+      final itemList = <BaseItemModel>[];
       final params = <String, dynamic>{};
 
-      // working fine
-      final validSortColumn = {
-        'quantity',
-        'unit_cost',
-        'estimated_useful_life',
-        'acquired_date'
-      };
-
-      if (!validSortColumn.contains(sortBy)) {
-        throw ArgumentError('Invalid sort column: $sortBy');
-      }
-
       final baseQuery = '''
-      SELECT
-        i.*,
-        pn.name as product_name,
-        pd.description as product_description,
-        mnf.name as manufacturer_name,
-        brnd.name as brand_name,
-        md.model_name
-      FROM
-        Items i
-      LEFT JOIN
-        ProductNames pn ON i.product_name_id = pn.id
-      LEFT JOIN
-        ProductDescriptions pd ON i.product_description_id = pd.id
-      LEFT JOIN
-        Manufacturers mnf ON i.manufacturer_id =  mnf.id
-      LEFT JOIN
-        Brands brnd ON i.brand_id = brnd.id
-      LEFT JOIN
-        Models md ON i.model_id = md.id
+        SELECT
+          i.*,
+          pn.name as product_name,
+          pd.description as product_description,
+          s.id as supply_id,
+          e.id as equipment_id,
+          e.manufacturer_id,
+          e.brand_id,
+          e.model_id,
+          e.serial_no,
+          e.asset_classification,
+          e.asset_sub_class,
+          e.unit_cost,
+          e.estimated_useful_life,
+          e.acquired_date,
+          mnf.name as manufacturer_name,
+          brnd.name as brand_name,
+          md.model_name
+        FROM
+          Items i
+        LEFT JOIN
+          ProductNames pn ON i.product_name_id = pn.id
+        LEFT JOIN
+          ProductDescriptions pd ON i.product_description_id = pd.id
+        LEFT JOIN
+          Supplies s ON i.id = s.base_item_id
+        LEFT JOIN
+          Equipment e ON i.id = e.base_item_id
+        LEFT JOIN
+          Manufacturers mnf ON e.manufacturer_id =  mnf.id
+        LEFT JOIN
+          Brands brnd ON e.brand_id = brnd.id
+        LEFT JOIN
+          Models md ON e.model_id = md.id
       ''';
 
       final whereClause = StringBuffer();
-      // There really is no problem in the search query, except for the fact that it is confuse between id and serial no.
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
           '''
@@ -1117,12 +1650,6 @@ class ItemRepository {
         );
 
         params['search_query'] = '%$searchQuery%';
-        // i.id = @search_query OR
-        // i.serial_no = @search_query
-        // mnf.name ILIKE @search_query OR
-        // brnd.name ILIKE @search_query OR
-        // md.model_name ILIKE @search_query OR
-        // i.specification ILIKE @search_query
       }
 
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
@@ -1139,30 +1666,32 @@ class ItemRepository {
 
       if (classificationFilter != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('i.asset_classification = @classification_filter');
+        whereClause.write('e.asset_classification = @classification_filter');
         params['classification_filter'] =
             classificationFilter.toString().split('.').last;
       }
 
       if (subClassFilter != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        whereClause.write('i.asset_sub_class = @sub_class_filter');
+        whereClause.write('e.asset_sub_class = @sub_class_filter');
         params['sub_class_filter'] = subClassFilter.toString().split('.').last;
       }
 
       if (filter != null && filter.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
-        if (filter == 'in_stock') {
-          whereClause.write('i.quantity > 0');
-        }
-
-        if (filter == 'out') {
+        whereClause.write(whereClause.isNotEmpty ? ' AND (' : 'WHERE (');
+        if (filter == 'supply') {
+          whereClause.write('s.id IS NOT NULL');
+        } else if (filter == 'equipment') {
+          whereClause.write('e.id IS NOT NULL');
+        } else if (filter == 'out') {
           whereClause.write('i.quantity = 0');
+        } else {
+          whereClause.write('s.id IS NOT NULL OR e.id IS NOT NULL');
         }
+        whereClause.write(')');
       }
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
-      print('sort dir: $sortDirection');
 
       final finalQuery = '''
       $baseQuery
@@ -1186,31 +1715,49 @@ class ItemRepository {
       print('raw res: $results');
 
       for (final row in results) {
-        final itemWithStockMap = {
-          'item_id': row[0],
-          'product_name_id': row[1],
-          'product_description_id': row[2],
-          'manufacturer_id': row[3],
-          'brand_id': row[4],
-          'model_id': row[5],
-          'serial_no': row[6],
-          'specification': row[7],
-          'asset_classification': row[8],
-          'asset_sub_class': row[9],
-          'unit': row[10],
-          'quantity': row[11],
-          'unit_cost': row[12],
-          'estimated_useful_life': row[13],
-          'acquired_date': row[14],
-          'encrypted_id': row[15],
-          'qr_code_image_data': row[16],
-          'product_name': row[17],
-          'product_description': row[18],
-          'manufacturer_name': row[19],
-          'brand_name': row[20],
-          'model_name': row[21],
-        };
-        itemList.add(ItemWithStock.fromJson(itemWithStockMap));
+        if (row[10] != null) {
+          final supplyMap = {
+            'supply_id': row[10],
+            'base_item_id': row[0],
+            'product_name_id': row[1],
+            'product_description_id': row[2],
+            'specification': row[3],
+            'unit': row[4],
+            'quantity': row[5],
+            'encrypted_id': row[6],
+            'qr_code_image_data': row[7],
+            'product_name': row[8],
+            'product_description': row[9],
+          };
+          itemList.add(Supply.fromJson(supplyMap));
+        } else if (row[11] != null) {
+          final equipmentMap = {
+            'equipment_id': row[11],
+            'base_item_id': row[0],
+            'product_name_id': row[1],
+            'product_description_id': row[2],
+            'specification': row[3],
+            'unit': row[4],
+            'quantity': row[5],
+            'encrypted_id': row[6],
+            'qr_code_image_data': row[7],
+            'product_name': row[8],
+            'product_description': row[9],
+            'manufacturer_id': row[12],
+            'brand_id': row[13],
+            'model_id': row[14],
+            'serial_no': row[15],
+            'asset_classification': row[16],
+            'asset_sub_class': row[17],
+            'unit_cost': row[18],
+            'estimated_useful_life': row[19],
+            'acquired_date': row[20],
+            'manufacturer_name': row[21],
+            'brand_name': row[22],
+            'model_name': row[23],
+          };
+          itemList.add(Equipment.fromJson(equipmentMap));
+        }
       }
       print('Fetched items for page $page: ${itemList.length}');
       return itemList;
@@ -1220,7 +1767,174 @@ class ItemRepository {
     }
   }
 
-  Future<ItemWithStock?> getItemById({
+  // Future<List<ItemWithStock>?> getItems({
+  //   required int page,
+  //   required int pageSize,
+  //   String? searchQuery,
+  //   String sortBy = 'acquired_date',
+  //   bool sortAscending = false,
+  //   String? filter,
+  //   String? manufacturerName,
+  //   String? brandName,
+  //   // double? minimumUnitPrice,
+  //   // double? maximumUnitPrice,
+  //   AssetClassification? classificationFilter,
+  //   AssetSubClass? subClassFilter,
+  //   //DateTime? acquiredDate,
+  // }) async {
+  //   try {
+  //     final offset = (page - 1) * pageSize;
+  //     final itemList = <ItemWithStock>[];
+  //     final params = <String, dynamic>{};
+
+  //     // working fine
+  //     final validSortColumn = {
+  //       'quantity',
+  //       'unit_cost',
+  //       'estimated_useful_life',
+  //       'acquired_date'
+  //     };
+
+  //     if (!validSortColumn.contains(sortBy)) {
+  //       throw ArgumentError('Invalid sort column: $sortBy');
+  //     }
+
+  //     final baseQuery = '''
+  //     SELECT
+  //       i.*,
+  //       pn.name as product_name,
+  //       pd.description as product_description,
+  //       mnf.name as manufacturer_name,
+  //       brnd.name as brand_name,
+  //       md.model_name
+  //     FROM
+  //       Items i
+  //     LEFT JOIN
+  //       ProductNames pn ON i.product_name_id = pn.id
+  //     LEFT JOIN
+  //       ProductDescriptions pd ON i.product_description_id = pd.id
+  //     LEFT JOIN
+  //       Manufacturers mnf ON i.manufacturer_id =  mnf.id
+  //     LEFT JOIN
+  //       Brands brnd ON i.brand_id = brnd.id
+  //     LEFT JOIN
+  //       Models md ON i.model_id = md.id
+  //     ''';
+
+  //     final whereClause = StringBuffer();
+  //     // There really is no problem in the search query, except for the fact that it is confuse between id and serial no.
+  //     if (searchQuery != null && searchQuery.isNotEmpty) {
+  //       whereClause.write(
+  //         '''
+  //         WHERE pn.name ILIKE @search_query
+  //         ''',
+  //       );
+
+  //       params['search_query'] = '%$searchQuery%';
+  //       // i.id = @search_query OR
+  //       // i.serial_no = @search_query
+  //       // mnf.name ILIKE @search_query OR
+  //       // brnd.name ILIKE @search_query OR
+  //       // md.model_name ILIKE @search_query OR
+  //       // i.specification ILIKE @search_query
+  //     }
+
+  //     if (manufacturerName != null && manufacturerName.isNotEmpty) {
+  //       whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+  //       whereClause.write('mnf.name = @manufacturer_name');
+  //       params['manufacturer_name'] = manufacturerName;
+  //     }
+
+  //     if (brandName != null && brandName.isNotEmpty) {
+  //       whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+  //       whereClause.write('brnd.name = @brand_name');
+  //       params['brand_name'] = brandName;
+  //     }
+
+  //     if (classificationFilter != null) {
+  //       whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+  //       whereClause.write('i.asset_classification = @classification_filter');
+  //       params['classification_filter'] =
+  //           classificationFilter.toString().split('.').last;
+  //     }
+
+  //     if (subClassFilter != null) {
+  //       whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+  //       whereClause.write('i.asset_sub_class = @sub_class_filter');
+  //       params['sub_class_filter'] = subClassFilter.toString().split('.').last;
+  //     }
+
+  //     if (filter != null && filter.isNotEmpty) {
+  //       whereClause.write(whereClause.isNotEmpty ? ' AND ' : 'WHERE ');
+  //       if (filter == 'in_stock') {
+  //         whereClause.write('i.quantity > 0');
+  //       }
+
+  //       if (filter == 'out') {
+  //         whereClause.write('i.quantity = 0');
+  //       }
+  //     }
+
+  //     final sortDirection = sortAscending ? 'ASC' : 'DESC';
+  //     print('sort dir: $sortDirection');
+
+  //     final finalQuery = '''
+  //     $baseQuery
+  //     $whereClause
+  //     ORDER BY
+  //       $sortBy $sortDirection
+  //     LIMIT @page_size OFFSET @offset;
+  //     ''';
+
+  //     params['page_size'] = pageSize;
+  //     params['offset'] = offset;
+
+  //     print('final query: $finalQuery');
+  //     print('params: $params');
+
+  //     final results = await _conn.execute(
+  //       Sql.named(finalQuery),
+  //       parameters: params,
+  //     );
+
+  //     print('raw res: $results');
+
+  //     for (final row in results) {
+  //       final itemWithStockMap = {
+  //         'item_id': row[0],
+  //         'product_name_id': row[1],
+  //         'product_description_id': row[2],
+  //         'manufacturer_id': row[3],
+  //         'brand_id': row[4],
+  //         'model_id': row[5],
+  //         'serial_no': row[6],
+  //         'specification': row[7],
+  //         'asset_classification': row[8],
+  //         'asset_sub_class': row[9],
+  //         'unit': row[10],
+  //         'quantity': row[11],
+  //         'unit_cost': row[12],
+  //         'estimated_useful_life': row[13],
+  //         'acquired_date': row[14],
+  //         'encrypted_id': row[15],
+  //         'qr_code_image_data': row[16],
+  //         'product_name': row[17],
+  //         'product_description': row[18],
+  //         'manufacturer_name': row[19],
+  //         'brand_name': row[20],
+  //         'model_name': row[21],
+  //       };
+  //       itemList.add(ItemWithStock.fromJson(itemWithStockMap));
+  //     }
+  //     print('Fetched items for page $page: ${itemList.length}');
+  //     return itemList;
+  //   } catch (e) {
+  //     print('Error fetching items: $e');
+  //     throw Exception('Failed to fetch users.');
+  //   }
+  // }
+
+  Future<BaseItemModel?> getItemById({
     required String id,
   }) async {
     try {
@@ -1231,6 +1945,17 @@ class ItemRepository {
             i.*,
             pn.name as product_name,
             pd.description as product_description,
+            s.id as supply_id,
+            e.id as equipment_id,
+            e.manufacturer_id,
+            e.brand_id,
+            e.model_id,
+            e.serial_no,
+            e.asset_classification,
+            e.asset_sub_class,
+            e.unit_cost,
+            e.estimated_useful_life,
+            e.acquired_date,
             mnf.name as manufacturer_name,
             brnd.name as brand_name,
             md.model_name
@@ -1241,11 +1966,15 @@ class ItemRepository {
           LEFT JOIN
             ProductDescriptions pd ON i.product_description_id = pd.id
           LEFT JOIN
-            Manufacturers mnf ON i.manufacturer_id =  mnf.id
+            Supplies s ON i.id = s.base_item_id
           LEFT JOIN
-            Brands brnd ON i.brand_id = brnd.id
+            Equipment e ON i.id = e.base_item_id
           LEFT JOIN
-            Models md ON i.model_id = md.id
+            Manufacturers mnf ON e.manufacturer_id =  mnf.id
+          LEFT JOIN
+            Brands brnd ON e.brand_id = brnd.id
+          LEFT JOIN
+            Models md ON e.model_id = md.id
           WHERE
             i.id = @id;
           ''',
@@ -1255,36 +1984,52 @@ class ItemRepository {
         },
       );
 
-      if (result.isNotEmpty) {
-        for (final row in result) {
-          final itemWithStockMap = {
-            'item_id': row[0],
-            'product_name_id': row[1],
-            'product_description_id': row[2],
-            'manufacturer_id': row[3],
-            'brand_id': row[4],
-            'model_id': row[5],
-            'serial_no': row[6],
-            'specification': row[7],
-            'asset_classification': row[8],
-            'asset_sub_class': row[9],
-            'unit': row[10],
-            'quantity': row[11],
-            'unit_cost': row[12],
-            'estimated_useful_life': row[13],
-            'acquired_date': row[14],
-            'encrypted_id': row[15],
-            'qr_code_image_data': row[16],
-            'product_name': row[17],
-            'product_description': row[18],
-            'manufacturer_name': row[19],
-            'brand_name': row[20],
-            'model_name': row[21],
-          };
-          return ItemWithStock.fromJson(itemWithStockMap);
-        }
+      final row = result.first;
+
+      if (row[10] != null) {
+        final supplyMap = {
+          'supply_id': row[10],
+          'base_item_id': row[0],
+          'product_name_id': row[1],
+          'product_description_id': row[2],
+          'specification': row[3],
+          'unit': row[4],
+          'quantity': row[5],
+          'encrypted_id': row[6],
+          'qr_code_image_data': row[7],
+          'product_name': row[8],
+          'product_description': row[9],
+        };
+        return Supply.fromJson(supplyMap);
+      } else if (row[11] != null) {
+        final equipmentMap = {
+          'equipment_id': row[11],
+          'base_item_id': row[0],
+          'product_name_id': row[1],
+          'product_description_id': row[2],
+          'specification': row[3],
+          'unit': row[4],
+          'quantity': row[5],
+          'encrypted_id': row[6],
+          'qr_code_image_data': row[7],
+          'product_name': row[8],
+          'product_description': row[9],
+          'manufacturer_id': row[12],
+          'brand_id': row[13],
+          'model_id': row[14],
+          'serial_no': row[15],
+          'asset_classification': row[16],
+          'asset_sub_class': row[17],
+          'unit_cost': row[18],
+          'estimated_useful_life': row[19],
+          'acquired_date': row[20],
+          'manufacturer_name': row[21],
+          'brand_name': row[22],
+          'model_name': row[23],
+        };
+        return Equipment.fromJson(equipmentMap);
       }
-      throw Exception('Item not found.');
+      return null;
     } catch (e) {
       throw Exception(e.toString());
     }
@@ -1308,17 +2053,11 @@ class ItemRepository {
     DateTime? acquiredDate,
   }) async {
     try {
-      final List<String> setClauses = [];
-      final Map<String, dynamic> parameters = {
-        'id': id,
-      };
+      final List<String> baseItemSetClauses = [];
+      final List<String> equipmentSetClauses = [];
 
-      /// Retrieve the info for this particular item
-      /// to be re-use when that particular info is not existing, so we just gonna override/ update its value
-      /// or we can just create a new record for that updated info
-      final existingItemObj = await getItemById(
-        id: id,
-      );
+      final Map<String, dynamic> baseItemParams = {'id': id};
+      final Map<String, dynamic> equipmentParams = {'id': id};
 
       String? productNameId;
       String? productDescriptionId;
@@ -1326,13 +2065,6 @@ class ItemRepository {
       String? brandId;
       String? modelId;
 
-      /// these are wrong, we just update them
-      /// check first if the record exist, if not just update the curr
-      /// this is to avoid having the same record data
-      ///
-      /// what should happen is we will check first if the product name already exists
-      /// that is to avoid having more than 1 records
-      /// if not, then we will update the data of that particular product name
       if (productName != null && productName.isNotEmpty) {
         final productNameResult = await checkProductNameIfExist(
           productName: productName,
@@ -1345,24 +2077,10 @@ class ItemRepository {
             productName: productName,
           );
           print('product name does not exist; created id: $productNameId');
-          // productNameId = existingItemObj?.productStock.productName.id;
-          //
-          // await _conn.execute(
-          //   Sql.named(
-          //     '''
-          //     UPDATE ProductNames
-          //     SET product_name = @product_name
-          //     WHERE id = id;
-          //     ''',
-          //   ),
-          //   parameters: {
-          //     'id': productNameId,
-          //   },
-          // );
         }
 
-        setClauses.add('product_name_id = @product_name_id');
-        parameters['product_name_id'] = productNameId;
+        baseItemSetClauses.add('product_name_id = @product_name_id');
+        baseItemParams['product_name_id'] = productNameId;
       }
 
       if ((productNameId != null && productNameId.isNotEmpty) &&
@@ -1394,8 +2112,9 @@ class ItemRepository {
           print('product stock does not exist; created one.');
         }
 
-        setClauses.add('product_description_id = @product_description_id');
-        parameters['product_description_id'] = productDescriptionId;
+        baseItemSetClauses
+            .add('product_description_id = @product_description_id');
+        baseItemParams['product_description_id'] = productDescriptionId;
       }
 
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
@@ -1410,24 +2129,15 @@ class ItemRepository {
             manufacturerName: manufacturerName,
           );
           print('manufacturer does not exist; created id: $manufacturerId');
-          // manufacturerId = existingItemObj?.manufacturerBrand.manufacturer.id;
-          //
-          // await _conn.execute(
-          //   Sql.named(
-          //     '''
-          //     UPDATE Manufacturers
-          //     SET product_name = @product_name
-          //     WHERE id = id;
-          //     ''',
-          //   ),
-          //   parameters: {
-          //     'id': productNameId,
-          //   },
-          // );
         }
 
-        setClauses.add('manufacturer_id = @manufacturer_id');
-        parameters['manufacturer_id'] = manufacturerId;
+        equipmentSetClauses.add('manufacturer_id = @manufacturer_id');
+        equipmentParams['manufacturer_id'] = manufacturerId;
+      }
+
+      if (specification != null) {
+        baseItemSetClauses.add('specification = @specification');
+        baseItemParams['specification'] = specification;
       }
 
       if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
@@ -1446,7 +2156,6 @@ class ItemRepository {
         }
         print('brand id: $brandId');
 
-        /// Check if the manufacturer and brand are connected; otherwise insert new rec
         final manufacturerBrandResult = await checkManufacturerBrandIfExist(
           manufacturerId: manufacturerId,
           brandId: brandId,
@@ -1460,8 +2169,8 @@ class ItemRepository {
           print('manufacturer brand does not exist; created one.');
         }
 
-        setClauses.add('brand_id = @brand_id');
-        parameters['brand_id'] = brandId;
+        equipmentSetClauses.add('brand_id = @brand_id');
+        equipmentParams['brand_id'] = brandId;
       }
 
       if ((productNameId != null && productNameId.isNotEmpty) &&
@@ -1485,74 +2194,77 @@ class ItemRepository {
         }
         print('model id: $modelId');
 
-        setClauses.add('model_id = @model_id');
-        parameters['model_id'] = modelId;
+        equipmentSetClauses.add('model_id = @model_id');
+        equipmentParams['model_id'] = modelId;
       }
 
       if (serialNo != null) {
-        setClauses.add('serial_no = @serial_no');
-        parameters['serial_no'] = serialNo;
+        equipmentSetClauses.add('serial_no = @serial_no');
+        equipmentParams['serial_no'] = serialNo;
       }
 
-      if (specification != null) {
-        setClauses.add('specification = @specification');
-        parameters['specification'] = specification;
+      if (unit != null) {
+        baseItemSetClauses.add('unit = @unit');
+        baseItemParams['unit'] = unit.toString().split('.').last;
+      }
+
+      if (quantity != null) {
+        baseItemSetClauses.add('quantity = @quantity');
+        baseItemParams['quantity'] = quantity;
       }
 
       if (assetClassification != null) {
-        setClauses.add('asset_classification = @asset_classification');
-        parameters['asset_classification'] =
+        equipmentSetClauses.add('asset_classification = @asset_classification');
+        equipmentParams['asset_classification'] =
             assetClassification.toString().split('.').last;
       }
 
       if (assetSubClass != null) {
-        setClauses.add('asset_sub_class = @asset_sub_class');
-        parameters['asset_sub_class'] =
+        equipmentSetClauses.add('asset_sub_class = @asset_sub_class');
+        equipmentParams['asset_sub_class'] =
             assetSubClass.toString().split('.').last;
       }
 
-      if (unit != null) {
-        setClauses.add('unit = @unit');
-        parameters['unit'] = unit.toString().split('.').last;
-      }
-
-      if (quantity != null) {
-        setClauses.add('quantity = @quantity');
-        parameters['quantity'] = quantity;
-      }
-
       if (unitCost != null) {
-        setClauses.add('unit_cost = @unit_cost');
-        parameters['unit_cost'] = unitCost;
+        equipmentSetClauses.add('unit_cost = @unit_cost');
+        equipmentParams['unit_cost'] = unitCost;
       }
 
       if (estimatedUsefulLife != null) {
-        setClauses.add('estimated_useful_life = @estimated_useful_life');
-        parameters['estimated_useful_life'] = estimatedUsefulLife;
+        equipmentSetClauses
+            .add('estimated_useful_life = @estimated_useful_life');
+        equipmentParams['estimated_useful_life'] = estimatedUsefulLife;
       }
 
       if (acquiredDate != null) {
-        setClauses.add('acquired_date = @acquired_date');
-        parameters['acquired_date'] = acquiredDate;
+        equipmentSetClauses.add('acquired_date = @acquired_date');
+        equipmentParams['acquired_date'] = acquiredDate;
       }
 
-      if (setClauses.isEmpty) {
-        return false;
-      }
-
-      final setClause = setClauses.join(', ');
-      final result = await _conn.execute(
+      final baseItemUpdated = await _conn.execute(
         Sql.named(
           '''
-        UPDATE Items
-        SET $setClause
-        WHERE id = @id;
-        ''',
+          UPDATE Items
+          SET ${baseItemSetClauses.join(', ')}
+          WHERE id = @id;
+          ''',
         ),
-        parameters: parameters,
+        parameters: baseItemParams,
       );
 
-      return result.affectedRows == 1;
+      final equipmentUpdated = await _conn.execute(
+        Sql.named(
+          '''
+          UPDATE Equipment
+          SET ${equipmentSetClauses.join(', ')}
+          WHERE base_item_id = @id;
+          ''',
+        ),
+        parameters: equipmentParams,
+      );
+
+      return baseItemUpdated.affectedRows == 1 ||
+          equipmentUpdated.affectedRows == 1;
     } catch (e) {
       if (e.toString().contains(
           'duplicate key value violates unique constraints "items_serial_no_key"')) {
@@ -1952,25 +2664,11 @@ class ItemRepository {
     return null;
   }
 
-  Future<int> getInStocksCount() async {
+  Future<int> getSuppliesCount() async {
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT 
-          COUNT(*) AS in_stock_count
-        FROM (
-          SELECT 
-            pn.name AS product_name,
-            SUM(i.quantity) AS total_quantity
-          FROM 
-            Items i
-          JOIN 
-            ProductNames pn ON i.product_name_id = pn.id
-          GROUP BY 
-            pn.name
-          HAVING 
-            SUM(i.quantity) > 0
-        ) AS in_stock_count;
+        SELECT COUNT (*) AS supplies_count FROM Supplies;
         ''',
       ),
     );
@@ -1978,25 +2676,11 @@ class ItemRepository {
     return result.first[0] as int;
   }
 
-  Future<int> getLowStocksCount() async {
+  Future<int> getEquipmentCount() async {
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT 
-          COUNT(*) AS low_stock_count
-        FROM (
-          SELECT 
-            pn.name AS product_name,
-            SUM(i.quantity) AS total_quantity
-          FROM 
-            Items i
-          JOIN 
-            ProductNames pn ON i.product_name_id = pn.id
-          GROUP BY 
-            pn.name
-          HAVING 
-            SUM(i.quantity) > 0 AND SUM(i.quantity) <= 5
-        ) AS low_stock_count;
+        SELECT COUNT(*) AS equipment_count FROM Equipment;
         ''',
       ),
     );
@@ -2089,7 +2773,7 @@ class ItemRepository {
 
     for (var row in result) {
       lowStockItems.add({
-        'product_name': row[0],  // pn.name
+        'product_name': row[0], // pn.name
         'total_quantity': row[1], // SUM(i.quantity)
       });
     }
@@ -2131,7 +2815,7 @@ class ItemRepository {
 
     for (var row in result) {
       outOfStockItems.add({
-        'product_name': row[0],  // pn.name
+        'product_name': row[0], // pn.name
         'total_quantity': row[1], // SUM(i.quantity)
       });
     }

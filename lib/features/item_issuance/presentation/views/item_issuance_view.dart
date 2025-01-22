@@ -233,13 +233,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           children: [
             Expanded(
               child: DocumentCard(
-                onTap: () {
-                  showCustomDocumentPreview(
-                    context: context,
-                    documentObject: null,
-                    docType: DocumentType.rpci,
-                  );
-                },
+                onTap: () => showCustomDocumentPreview(
+                  context: context,
+                  documentObject: null,
+                  docType: DocumentType.rpci,
+                ),
                 title: 'RCPI',
               ),
             ),
@@ -248,7 +246,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
             ),
             Expanded(
                 child: DocumentCard(
-              onTap: () {},
+              onTap: () => showCustomDocumentPreview(
+                context: context,
+                documentObject: null,
+                docType: DocumentType.a73,
+              ),
               title: 'a73',
             )),
             const SizedBox(

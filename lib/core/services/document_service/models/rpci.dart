@@ -10,133 +10,187 @@ class RPCI implements BaseDocument {
   @override
   Future<pw.Document> generate({
     required PdfPageFormat pageFormat,
-    required pw.PageOrientation orientation,
     required data,
     required bool withQr,
   }) async {
     final pdf = pw.Document();
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
           orientation: pw.PageOrientation.landscape,
         ),
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Center(
-              child: pw.Column(
-                children: [
-                  pw.Text(
-                    'REPORT ON THE PHYSICAL COUNT OF INVENTORIES\nOFFICE SUPPLIES',
-                    style: const pw.TextStyle(
-                      //font: FontService().getFont('timesNewRomanBold'),
-                      fontSize: 14.0,
-                    ),
-                    textAlign: pw.TextAlign.center,
-                  ),
-                  pw.SizedBox(
-                    height: 5.0,
-                  ),
-                  pw.Text(
-                    '(Type of Inventory Item)',
-                    style: const pw.TextStyle(
-                      //font: FontService().getFont('timesNewRomanRegular'),
-                      fontSize: 10.0,
-                    ),
-                  ),
-                  pw.SizedBox(
-                    height: 10.0,
-                  ),
-                  pw.Text(
-                    'As at ________________',
-                    style: const pw.TextStyle(
-                      //font: FontService().getFont('timesNewRomanBold'),
-                      fontSize: 12.0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(
-              height: 10.0,
-            ),
-            pw.Text(
-              'Fund Cluster: ',
-              style: const pw.TextStyle(
-                //font: FontService().getFont('timesNewRomanBold'),
-                fontSize: 10.0,
-              ),
-            ),
-            pw.SizedBox(
-              height: 10.0,
-            ),
-            pw.Text(
-              'For which __________________, ________________, __________________ is accountable, having assumed such account on ______________.',
-              style: const pw.TextStyle(
-                //font: FontService().getFont('timesNewRomanBold'),
-                fontSize: 10.0,
-              ),
-            ),
-            pw.SizedBox(
-              height: 10.0,
-            ),
-            pw.Table(
-              columnWidths: {
-                0: const pw.FixedColumnWidth(200.0),
-                1: const pw.FixedColumnWidth(600.0),
-                2: const pw.FixedColumnWidth(300.0),
-                3: const pw.FixedColumnWidth(300.0),
-                4: const pw.FixedColumnWidth(125.0),
-                5: const pw.FixedColumnWidth(200.0),
-                6: const pw.FixedColumnWidth(200.0),
-                7: const pw.FixedColumnWidth(325.0),
-                8: const pw.FixedColumnWidth(400.0),
-                9: const pw.FixedColumnWidth(175.0),
-                10: const pw.FixedColumnWidth(200.0),
-                11: const pw.FixedColumnWidth(125.0),
-                12: const pw.FixedColumnWidth(200.0),
-              },
+        build: (context) => [
+          pw.Center(
+            child: pw.Column(
               children: [
-                _buildHeaderTableRow(),
+                pw.Text(
+                  'REPORT ON THE PHYSICAL COUNT OF INVENTORIES\nOFFICE SUPPLIES',
+                  style: const pw.TextStyle(
+                    //font: FontService().getFont('timesNewRomanBold'),
+                    fontSize: 14.0,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(
+                  height: 5.0,
+                ),
+                pw.Text(
+                  '(Type of Inventory Item)',
+                  style: const pw.TextStyle(
+                    //font: FontService().getFont('timesNewRomanRegular'),
+                    fontSize: 10.0,
+                  ),
+                ),
+                pw.SizedBox(
+                  height: 10.0,
+                ),
+                pw.Text(
+                  'As at ________________',
+                  style: const pw.TextStyle(
+                    //font: FontService().getFont('timesNewRomanBold'),
+                    fontSize: 12.0,
+                  ),
+                ),
               ],
             ),
-          ],
+          ),
+          pw.SizedBox(
+            height: 10.0,
+          ),
+          pw.Text(
+            'Fund Cluster: ',
+            style: const pw.TextStyle(
+              //font: FontService().getFont('timesNewRomanBold'),
+              fontSize: 10.0,
+            ),
+          ),
+          pw.SizedBox(
+            height: 10.0,
+          ),
+          pw.Text(
+            'For which __________________, ________________, __________________ is accountable, having assumed such account on ______________.',
+            style: const pw.TextStyle(
+              //font: FontService().getFont('timesNewRomanBold'),
+              fontSize: 10.0,
+            ),
+          ),
+          pw.SizedBox(
+            height: 10.0,
+          ),
+          pw.Table(
+            columnWidths: pageFormat == PdfPageFormat.a4
+                ? {
+                    0: const pw.FixedColumnWidth(300.0),
+                    1: const pw.FixedColumnWidth(425.0),
+                    2: const pw.FixedColumnWidth(200.0),
+                    3: const pw.FixedColumnWidth(175.0),
+                    4: const pw.FixedColumnWidth(125.0),
+                    5: const pw.FixedColumnWidth(240.0),
+                    6: const pw.FixedColumnWidth(240.0),
+                    7: const pw.FixedColumnWidth(425.0),
+                  }
+                : pageFormat == PdfPageFormat.letter
+                    ? {
+                        0: const pw.FixedColumnWidth(300.0),
+                        1: const pw.FixedColumnWidth(400.0),
+                        2: const pw.FixedColumnWidth(200.0),
+                        3: const pw.FixedColumnWidth(175.0),
+                        4: const pw.FixedColumnWidth(125.0),
+                        5: const pw.FixedColumnWidth(250.0),
+                        6: const pw.FixedColumnWidth(250.0),
+                        7: const pw.FixedColumnWidth(400.0),
+                      }
+                    : {
+                        0: const pw.FixedColumnWidth(360.0),
+                        1: const pw.FixedColumnWidth(470.0),
+                        2: const pw.FixedColumnWidth(200.0),
+                        3: const pw.FixedColumnWidth(150.0),
+                        4: const pw.FixedColumnWidth(100.0),
+                        5: const pw.FixedColumnWidth(200.0),
+                        6: const pw.FixedColumnWidth(200.0),
+                        7: const pw.FixedColumnWidth(470.0),
+                      },
+            children: [
+              _buildFirstPageHeaderTableRow(),
+              for (int i = 0; i < 20; i++) _buildFirstPageTableRow(),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: DocumentPageUtil.getPageTheme(
+          pageFormat: pageFormat,
+          orientation: pw.PageOrientation.landscape,
         ),
+        build: (context) => [
+          pw.Table(
+            columnWidths: pageFormat == PdfPageFormat.a4
+                ? {
+                    0: const pw.FixedColumnWidth(300.0),
+                    1: const pw.FixedColumnWidth(425.0),
+                    2: const pw.FixedColumnWidth(200.0),
+                    3: const pw.FixedColumnWidth(175.0),
+                    4: const pw.FixedColumnWidth(125.0),
+                  }
+                : pageFormat == PdfPageFormat.letter
+                    ? {
+                        0: const pw.FixedColumnWidth(300.0),
+                        1: const pw.FixedColumnWidth(400.0),
+                        2: const pw.FixedColumnWidth(200.0),
+                        3: const pw.FixedColumnWidth(175.0),
+                        4: const pw.FixedColumnWidth(125.0),
+                      }
+                    : {
+                        0: const pw.FixedColumnWidth(360.0),
+                        1: const pw.FixedColumnWidth(470.0),
+                        2: const pw.FixedColumnWidth(200.0),
+                        3: const pw.FixedColumnWidth(150.0),
+                        4: const pw.FixedColumnWidth(100.0),
+                      },
+            children: [
+              _buildSecondPageHeaderTableRow(),
+              for (int i = 0; i < 20; i++) _buildSecondPageTableRow(),
+            ],
+          ),
+        ],
       ),
     );
 
     return pdf;
   }
 
-  pw.TableRow _buildHeaderTableRow() {
+  pw.TableRow _buildFirstPageHeaderTableRow() {
     return pw.TableRow(
       children: [
         DocumentComponents.buildHeaderContainerCell(
           data: 'Article',
           //horizontalPadding: 3.0,
-          verticalPadding: 15.0,
+          verticalPadding: 17.5,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Description',
-          verticalPadding: 15.0,
+          verticalPadding: 17.5,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Stock Number',
-          verticalPadding: 15.0,
+          verticalPadding: 17.5,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit of Measure',
-          verticalPadding: 15.0,
+          verticalPadding: 11.8,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit Value',
-          verticalPadding: 15.0,
+          verticalPadding: 11.8,
           borderRight: false,
         ),
         pw.Column(
@@ -144,12 +198,16 @@ class RPCI implements BaseDocument {
           children: [
             DocumentComponents.buildHeaderContainerCell(
               data: 'Balance Per Card',
+              horizontalPadding: 3.0,
               borderRight: false,
+              verticalPadding: 8.8,
+              borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
               data: '(Quantity)',
               borderTop: false,
               borderRight: false,
+              verticalPadding: 3.0,
             ),
           ],
         ),
@@ -157,13 +215,16 @@ class RPCI implements BaseDocument {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Balance Per Card',
+              data: 'On Hand Per Count',
               borderRight: false,
+              verticalPadding: 3.0,
+              borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
               data: '(Quantity)',
               borderTop: false,
               borderRight: false,
+              verticalPadding: 3.0,
             ),
           ],
         ),
@@ -172,42 +233,145 @@ class RPCI implements BaseDocument {
           children: [
             DocumentComponents.buildHeaderContainerCell(
               data: 'Shortage/Overage',
-              borderRight: false,
+              borderWidthBottom: 2.0,
+              verticalPadding: 8.8,
             ),
             pw.Row(
               children: [
-                DocumentComponents.buildHeaderContainerCell(
-                  data: 'Quantity',
-                  borderTop: false,
-                  borderRight: false,
+                pw.Expanded(
+                  child: DocumentComponents.buildHeaderContainerCell(
+                    data: 'Quantity',
+                    borderTop: false,
+                    borderRight: false,
+                    horizontalPadding: 3.0,
+                    verticalPadding: 3.0,
+                  ),
                 ),
-                DocumentComponents.buildHeaderContainerCell(
-                  data: 'Value',
-                  borderTop: false,
-                  borderRight: false,
+                pw.Expanded(
+                  child: DocumentComponents.buildHeaderContainerCell(
+                    data: 'Value',
+                    borderTop: false,
+                    horizontalPadding: 15.0,
+                    verticalPadding: 3.0,
+                    borderWidthLeft: 2.0,
+                    borderWidthBottom: 3.0,
+                  ),
                 ),
               ],
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  pw.TableRow _buildSecondPageHeaderTableRow() {
+    return pw.TableRow(
+      children: [
         DocumentComponents.buildHeaderContainerCell(
           data: 'Remarks (Accountable Officer, Location)',
           borderRight: false,
+          verticalPadding: 17.5,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Date Acquired',
           borderRight: false,
+          verticalPadding: 17.5,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Accountable Officer',
           borderRight: false,
+          verticalPadding: 17.5,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Location',
           borderRight: false,
+          verticalPadding: 17.5,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Fund Cluster',
+          verticalPadding: 17.5,
+        ),
+      ],
+    );
+  }
+
+  pw.TableRow _buildFirstPageTableRow() {
+    return pw.TableRow(
+      children: [
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+          children: [
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: DocumentComponents.buildTableRowColumn(
+                    data: '\n',
+                    borderRight: false,
+                  ),
+                ),
+                pw.Expanded(
+                  child: DocumentComponents.buildTableRowColumn(
+                    data: '\n',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.TableRow _buildSecondPageTableRow() {
+    return pw.TableRow(
+      children: [
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
+          borderRight: false,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: '\n',
         ),
       ],
     );

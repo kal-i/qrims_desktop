@@ -31,7 +31,11 @@ Future<Response> _getItemById(
       return Response.json(
         statusCode: 200,
         body: {
-          'item': item.toJson(),
+          'item': item is Supply
+              ? item.toJson()
+              : item is Equipment
+                  ? item.toJson()
+                  : null,
         },
       );
     }
@@ -64,33 +68,40 @@ Future<Response> _updateItemInformation(
   final modelName = json['model_name'] as String?;
   final serialNo = json['serial_no'] as String?;
   final specification = json['specification'] as String?;
-  final assetClassification = json['asset_classification'] != null ? AssetClassification.values.firstWhere((assetClassification) => assetClassification.toString().split('.'). last == (json['asset_classification'] as String)) : null;
-  final assetSubClass = json['asset_sub_class'] != null ? AssetSubClass.values.firstWhere((assetSubClass) => assetSubClass.toString().split('.').last == (json['asset_sub_class'] as String)) : null;
-  final unit = json['unit'] != null ? Unit.values.firstWhere((unit) => unit.toString().split('.').last == (json['unit'] as String)) : null;
+  final assetClassification = json['asset_classification'] != null
+      ? AssetClassification.values.firstWhere((assetClassification) =>
+          assetClassification.toString().split('.').last ==
+          (json['asset_classification'] as String))
+      : null;
+  final assetSubClass = json['asset_sub_class'] != null
+      ? AssetSubClass.values.firstWhere((assetSubClass) =>
+          assetSubClass.toString().split('.').last ==
+          (json['asset_sub_class'] as String))
+      : null;
+  final unit = json['unit'] != null
+      ? Unit.values.firstWhere(
+          (unit) => unit.toString().split('.').last == (json['unit'] as String))
+      : null;
   final quantity = json['quantity'] as int?;
   final unitCost = json['unit_cost'] as double?;
   final estimatedUsefulLife = json['estimated_useful_life'] as int?;
-  final acquiredDate = json['acquired_date'] is String ? DateTime.parse(json['acquired_date'] as String) : json['acquired_date'] as DateTime?;
-
-  print(productName);
-  print(description);
-  print(manufacturerName);
-  print(brandName);
-  print(modelName);
+  final acquiredDate = json['acquired_date'] is String
+      ? DateTime.parse(json['acquired_date'] as String)
+      : json['acquired_date'] as DateTime?;
 
   final result = await repository.updateItemInformation(
     id: id,
     productName: productName,
     description: description,
+    specification: specification,
+    unit: unit,
+    quantity: quantity,
     manufacturerName: manufacturerName,
     brandName: brandName,
     modelName: modelName,
     serialNo: serialNo,
-    specification: specification,
     assetClassification: assetClassification,
     assetSubClass: assetSubClass,
-    unit: unit,
-    quantity: quantity,
     unitCost: unitCost,
     estimatedUsefulLife: estimatedUsefulLife,
     acquiredDate: acquiredDate,

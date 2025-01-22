@@ -15,7 +15,6 @@ import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
-import '../../../../core/common/components/test_popup.dart';
 import '../../../../core/enums/auth_status.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -368,24 +367,24 @@ class _UsersManagementViewState extends State<UsersManagementView> {
                   capitalizeWord(user.name),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w500,
                       ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   user.email,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   dateFormatter(user.createdAt),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 SizedBox(
                   width: 50.0,

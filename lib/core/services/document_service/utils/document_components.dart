@@ -169,7 +169,7 @@ class DocumentComponents {
       child: pw.Text(
         data,
         style: pw.TextStyle(
-          font: FontService().getFont('tahomaRegular'),
+          //font: FontService().getFont('tahomaRegular'),
           fontSize: fontSize ?? 8.5,
         ),
         textAlign: isAlignCenter ? pw.TextAlign.center : null,

@@ -1,7 +1,7 @@
 import '../../../../../core/enums/asset_classification.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
 import '../../../../../core/enums/unit.dart';
-import '../../models/item_with_stock.dart';
+import '../../models/base_item.dart';
 import '../../models/paginated_item_result.dart';
 
 abstract interface class ItemInventoryRemoteDateSource {
@@ -18,24 +18,32 @@ abstract interface class ItemInventoryRemoteDateSource {
     AssetSubClass? subClassFilter,
   });
 
-  Future<List<ItemWithStockModel>> registerItem({
+  Future<BaseItemModel> registerSupplyItem({
     required String itemName,
     required String description,
+    required String specification,
+    required Unit unit,
+    required int quantity,
+  });
+
+  Future<List<BaseItemModel>> registerEquipmentItem({
+    required String itemName,
+    required String description,
+    required String specification,
+    required Unit unit,
+    required int quantity,
     required String manufacturerName,
     required String brandName,
     required String modelName,
-    String? serialNo,
-    required String specification,
+    required String serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
-    required Unit unit,
-    required int quantity,
     required double unitCost,
     int? estimatedUsefulLife,
     DateTime? acquiredDate,
   });
 
-  Future<ItemWithStockModel?> getItemById({
+  Future<BaseItemModel?> getItemById({
     required String id,
   });
 

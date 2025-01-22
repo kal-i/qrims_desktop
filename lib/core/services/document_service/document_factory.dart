@@ -2,6 +2,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../enums/document_type.dart';
+import 'models/a73.dart';
 import 'models/base_document.dart';
 import 'models/inventory_custodian_slip.dart';
 import 'models/property_acknowledgement_receipt.dart';
@@ -21,6 +22,7 @@ class DocumentFactory {
           DocumentType.ris: () => RequisitionAndIssuanceSlip(),
           DocumentType.sticker: () => Sticker(),
           DocumentType.rpci: () => RPCI(),
+          DocumentType.a73: () => A73(),
         };
 
   Future<pw.Document> createDocument({
@@ -36,7 +38,7 @@ class DocumentFactory {
     }
     return documentBuilder().generate(
       pageFormat: pageFormat,
-      orientation: orientation,
+      //orientation: orientation,
       data: data,
       withQr: withQR,
     );

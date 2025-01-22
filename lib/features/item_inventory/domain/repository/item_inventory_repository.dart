@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/error/failure.dart';
-import '../entities/item_with_stock.dart';
+import '../entities/base_item.dart';
 import '../entities/paginated_item_result.dart';
 import '../../../../core/enums/unit.dart' as unit;
 
@@ -21,24 +21,32 @@ abstract interface class ItemInventoryRepository {
     AssetSubClass? subClassFilter,
   });
 
-  Future<Either<Failure, List<ItemWithStockEntity>>> registerItem({
+  Future<Either<Failure, BaseItemEntity>> registerSupplyItem({
     required String itemName,
     required String description,
+    required String specification,
+    required unit.Unit unit,
+    required int quantity,
+  });
+
+  Future<Either<Failure, List<BaseItemEntity>>> registerEquipmentItem({
+    required String itemName,
+    required String description,
+    required String specification,
+    required unit.Unit unit,
+    required int quantity,
     required String manufacturerName,
     required String brandName,
     required String modelName,
-    String? serialNo,
-    required String specification,
+    required String serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
-    required unit.Unit unit,
-    required int quantity,
     required double unitCost,
     int? estimatedUsefulLife,
     DateTime? acquiredDate,
   });
 
-  Future<Either<Failure, ItemWithStockEntity?>> getItemById({
+  Future<Either<Failure, BaseItemEntity?>> getItemById({
     required String id,
   });
 

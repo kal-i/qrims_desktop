@@ -5,30 +5,33 @@ import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../entities/item_with_stock.dart';
+import '../entities/base_item.dart';
 import '../repository/item_inventory_repository.dart';
 
-class RegisterItem implements UseCase<List<ItemWithStockEntity>, RegisterItemParams> {
-  const RegisterItem({
+class RegisterEquipmentItem
+    implements UseCase<List<BaseItemEntity>, RegisterEquipmentItemParams> {
+  const RegisterEquipmentItem({
     required this.itemInventoryRepository,
   });
 
   final ItemInventoryRepository itemInventoryRepository;
 
   @override
-  Future<Either<Failure, List<ItemWithStockEntity>>> call(RegisterItemParams params) async {
-    return await itemInventoryRepository.registerItem(
-      specification: params.specification,
+  Future<Either<Failure, List<BaseItemEntity>>> call(
+    RegisterEquipmentItemParams params,
+  ) async {
+    return await itemInventoryRepository.registerEquipmentItem(
       itemName: params.itemName,
+      description: params.description,
+      specification: params.specification,
+      unit: params.unit,
+      quantity: params.quantity,
       manufacturerName: params.manufacturerName,
       brandName: params.brandName,
       modelName: params.modelName,
       serialNo: params.serialNo,
-      description: params.description,
       assetClassification: params.assetClassification,
       assetSubClass: params.assetSubClass,
-      unit: params.unit,
-      quantity: params.quantity,
       unitCost: params.unitCost,
       estimatedUsefulLife: params.estimatedUsefulLife,
       acquiredDate: params.acquiredDate,
@@ -36,19 +39,19 @@ class RegisterItem implements UseCase<List<ItemWithStockEntity>, RegisterItemPar
   }
 }
 
-class RegisterItemParams {
-  const RegisterItemParams({
+class RegisterEquipmentItemParams {
+  const RegisterEquipmentItemParams({
     required this.itemName,
     required this.description,
+    required this.specification,
+    required this.unit,
+    required this.quantity,
     required this.manufacturerName,
     required this.brandName,
     required this.modelName,
-    this.serialNo,
-    required this.specification,
+    required this.serialNo,
     this.assetClassification,
     this.assetSubClass,
-    required this.unit,
-    required this.quantity,
     required this.unitCost,
     this.estimatedUsefulLife,
     this.acquiredDate,
@@ -56,15 +59,15 @@ class RegisterItemParams {
 
   final String itemName;
   final String description;
+  final String specification;
+  final Unit unit;
+  final int quantity;
   final String manufacturerName;
   final String brandName;
   final String modelName;
-  final String? serialNo;
-  final String specification;
+  final String serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
-  final Unit unit;
-  final int quantity;
   final double unitCost;
   final int? estimatedUsefulLife;
   final DateTime? acquiredDate;

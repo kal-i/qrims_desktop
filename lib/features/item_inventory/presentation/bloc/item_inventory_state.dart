@@ -20,7 +20,7 @@ final class ItemsLoaded extends ItemInventoryState {
     required this.outOfStockCount,
   });
 
-  final List<ItemWithStockEntity> items;
+  final List<BaseItemEntity> items;
   final int totalItemCount;
   final int inStockCount;
   final int lowStockCount;
@@ -35,12 +35,20 @@ final class ItemsError extends ItemInventoryState {
   final String message;
 }
 
-final class ItemRegistered extends ItemInventoryState {
-  const ItemRegistered({
+final class SupplyItemRegistered extends ItemInventoryState {
+  const SupplyItemRegistered({
+    required this.itemEntity,
+  });
+
+  final BaseItemEntity itemEntity;
+}
+
+final class EquipmentItemRegistered extends ItemInventoryState {
+  const EquipmentItemRegistered({
     required this.itemEntities,
   });
 
-  final List<ItemWithStockEntity> itemEntities;
+  final List<BaseItemEntity> itemEntities;
 }
 
 final class ItemFetched extends ItemInventoryState {
@@ -48,7 +56,7 @@ final class ItemFetched extends ItemInventoryState {
     required this.item,
   });
 
-  final ItemWithStockEntity item;
+  final BaseItemEntity item;
 }
 
 final class ItemUpdated extends ItemInventoryState {
@@ -60,6 +68,6 @@ final class ItemUpdated extends ItemInventoryState {
 
   @override
   List<Object?> get props => [
-    isSuccessful,
-  ];
+        isSuccessful,
+      ];
 }

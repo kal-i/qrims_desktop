@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +6,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
-import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/asset_classification.dart';
@@ -22,12 +20,12 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
-import '../../../purchase_request/presentation/components/custom_search_field.dart';
-import '../../domain/entities/supply.dart';
+import '../../../purchase_order/presentation/components/custom_search_field.dart';
+import '../../domain/entities/equipment.dart';
 import '../bloc/item_inventory_bloc.dart';
 
-class ReusableItemView extends StatefulWidget {
-  const ReusableItemView({
+class ReusableEquipmentItemView extends StatefulWidget {
+  const ReusableEquipmentItemView({
     super.key,
     required this.isUpdate,
     this.itemId,
@@ -37,26 +35,27 @@ class ReusableItemView extends StatefulWidget {
   final String? itemId;
 
   @override
-  State<ReusableItemView> createState() => _RegisterItemViewState();
+  State<ReusableEquipmentItemView> createState() =>
+      _ReusableEquipmentItemViewState();
 }
 
-class _RegisterItemViewState extends State<ReusableItemView> {
+class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
   late ItemSuggestionsService _itemSuggestionsService;
 
   final _formKey = GlobalKey<FormState>();
   final _itemIdController = TextEditingController();
   final _encryptedItemIdController = TextEditingController();
+  final _itemNameController = TextEditingController();
+  final _itemDescriptionsController = TextEditingController();
+  final _specificationController = TextEditingController();
+  final _unitController = TextEditingController();
+  final _quantityController = TextEditingController();
   final _manufacturerController = TextEditingController();
   final _brandController = TextEditingController();
   final _modelController = TextEditingController();
   final _serialNoController = TextEditingController();
-  final _specificationController = TextEditingController();
-  final _unitController = TextEditingController();
-  final _quantityController = TextEditingController();
   final _unitCostController = TextEditingController();
   final _estimatedUsefulLifeController = TextEditingController();
-  final _itemNameController = TextEditingController();
-  final _itemDescriptionsController = TextEditingController();
 
   final ValueNotifier<int> _quantity = ValueNotifier(0);
   final ValueNotifier<AssetClassification> _selectedAssetClassification =
@@ -125,25 +124,25 @@ class _RegisterItemViewState extends State<ReusableItemView> {
 
   void _saveItem() {
     if (_formKey.currentState!.validate()) {
-      // context.read<ItemInventoryBloc>().add(
-      //       ItemRegister(
-      //         itemName: _itemNameController.text,
-      //         description: _itemDescriptionsController.text,
-      //         manufacturerName: _manufacturerController.text,
-      //         brandName: _brandController.text,
-      //         modelName: _modelController.text,
-      //         serialNo: _serialNoController.text,
-      //         specification: _specificationController.text,
-      //         assetClassification: _selectedAssetClassification.value,
-      //         assetSubClass: _selectedAssetSubClassification.value,
-      //         unit: _selectedUnit.value,
-      //         quantity: int.parse(_quantityController.text),
-      //         unitCost: double.parse(_unitCostController.text),
-      //         estimatedUsefulLife:
-      //             int.parse(_estimatedUsefulLifeController.text),
-      //         acquiredDate: _pickedDate.value,
-      //       ),
-      //     );
+      context.read<ItemInventoryBloc>().add(
+            EquipmentItemRegister(
+              itemName: _itemNameController.text,
+              description: _itemDescriptionsController.text,
+              specification: _specificationController.text,
+              unit: _selectedUnit.value,
+              quantity: int.parse(_quantityController.text),
+              manufacturerName: _manufacturerController.text,
+              brandName: _brandController.text,
+              modelName: _modelController.text,
+              serialNo: _serialNoController.text,
+              assetClassification: _selectedAssetClassification.value,
+              assetSubClass: _selectedAssetSubClassification.value,
+              unitCost: double.parse(_unitCostController.text),
+              estimatedUsefulLife:
+                  int.parse(_estimatedUsefulLifeController.text),
+              acquiredDate: _pickedDate.value,
+            ),
+          );
     }
   }
 
@@ -204,20 +203,20 @@ class _RegisterItemViewState extends State<ReusableItemView> {
     return Scaffold(
       body: BlocListener<ItemInventoryBloc, ItemInventoryState>(
         listener: (context, state) async {
-          // if (state is ItemRegistered) {
-          //   final itemCount = state.itemEntities.length;
+          if (state is EquipmentItemRegistered) {
+            final itemCount = state.itemEntities.length;
 
-          //   DelightfulToastUtils.showDelightfulToast(
-          //     context: context,
-          //     icon: Icons.check_circle_outline,
-          //     title: 'Success',
-          //     subtitle: itemCount > 1
-          //         ? '$itemCount items registered successfully.'
-          //         : 'Item registered successfully.',
-          //   );
-          //   await Future.delayed(const Duration(seconds: 3));
-          //   context.pop();
-          // }
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.check_circle_outline,
+              title: 'Success',
+              subtitle: itemCount > 1
+                  ? '$itemCount equipment items registered successfully.'
+                  : 'Equipment item registered successfully.',
+            );
+            await Future.delayed(const Duration(seconds: 3));
+            context.pop();
+          }
 
           if (state is ItemUpdated) {
             DelightfulToastUtils.showDelightfulToast(
@@ -233,60 +232,61 @@ class _RegisterItemViewState extends State<ReusableItemView> {
           if (state is ItemFetched) {
             final initItemData = state.item;
 
-            // _itemIdController.text = initItemData.itemEntity.id.toString();
-            // _encryptedItemIdController.text =
-            //     initItemData.itemEntity.encryptedId;
-            // _itemNameController.text = initItemData
-            //         .productStockEntity.productName.name
-            //         .toLowerCase() ??
-            //     '';
-            // _itemDescriptionsController.text = initItemData
-            //         .productStockEntity.productDescription?.description ??
-            //     '';
-            // _specificationController.text =
-            //     initItemData.itemEntity.specification;
-            // _brandController.text =
-            //     initItemData.manufacturerBrandEntity.brand.name;
-            // _modelController.text = initItemData.modelEntity.modelName;
-            // _serialNoController.text = initItemData.itemEntity.serialNo ?? '';
-            // _manufacturerController.text =
-            //     initItemData.manufacturerBrandEntity.manufacturer.name;
-            // _selectedAssetClassification.value =
-            //     AssetClassification.values.firstWhere(
-            //   (e) =>
-            //       e.toString().split('.').last ==
-            //       initItemData.itemEntity.assetClassification
-            //           ?.toString()
-            //           .split('.')
-            //           .last,
-            //   orElse: () => AssetClassification.unknown,
-            // );
+            if (initItemData is EquipmentEntity) {
+              _itemIdController.text =
+                  initItemData.shareableItemInformationEntity.id.toString();
+              _encryptedItemIdController.text =
+                  initItemData.shareableItemInformationEntity.encryptedId;
+              _itemNameController.text = initItemData
+                      .productStockEntity.productName.name
+                      .toLowerCase() ??
+                  '';
+              _itemDescriptionsController.text = initItemData
+                      .productStockEntity.productDescription?.description ??
+                  '';
+              _specificationController.text =
+                  initItemData.shareableItemInformationEntity.specification;
+              _brandController.text =
+                  initItemData.manufacturerBrandEntity.brand.name;
+              _modelController.text = initItemData.modelEntity.modelName;
+              _serialNoController.text = initItemData.serialNo;
+              _manufacturerController.text =
+                  initItemData.manufacturerBrandEntity.manufacturer.name;
+              _selectedAssetClassification.value =
+                  AssetClassification.values.firstWhere(
+                (e) =>
+                    e.toString().split('.').last ==
+                    initItemData.assetClassification
+                        ?.toString()
+                        .split('.')
+                        .last,
+                orElse: () => AssetClassification.unknown,
+              );
 
-            // _selectedAssetSubClassification.value =
-            //     AssetSubClass.values.firstWhere(
-            //   (e) =>
-            //       e.toString().split('.').last ==
-            //       initItemData.itemEntity.assetSubClass
-            //           ?.toString()
-            //           .split('.')
-            //           .last,
-            //   orElse: () => AssetSubClass.unknown,
-            // );
-            // _selectedUnit.value = Unit.values.firstWhere(
-            //   (e) =>
-            //       e.toString().split('.').last ==
-            //       initItemData.itemEntity.unit.toString().split('.').last,
-            //   orElse: () => Unit.undetermined,
-            // );
-            // _quantityController.text =
-            //     initItemData.itemEntity.quantity.toString();
-            // _unitCostController.text =
-            //     initItemData.itemEntity.unitCost.toString();
-            // _estimatedUsefulLifeController.text =
-            //     initItemData.itemEntity.estimatedUsefulLife.toString();
-            // _pickedDate.value =
-            //     initItemData.itemEntity.acquiredDate ?? DateTime.now();
-            //_qrCodeImageData.value = initItemData.itemEntity.qrCodeImageData;
+              _selectedAssetSubClassification.value =
+                  AssetSubClass.values.firstWhere(
+                (e) =>
+                    e.toString().split('.').last ==
+                    initItemData.assetSubClass?.toString().split('.').last,
+                orElse: () => AssetSubClass.unknown,
+              );
+              _selectedUnit.value = Unit.values.firstWhere(
+                (e) =>
+                    e.toString().split('.').last ==
+                    initItemData.shareableItemInformationEntity.unit
+                        .toString()
+                        .split('.')
+                        .last,
+                orElse: () => Unit.undetermined,
+              );
+              _quantityController.text = initItemData
+                  .shareableItemInformationEntity.quantity
+                  .toString();
+              _unitCostController.text = initItemData.unitCost.toString();
+              _estimatedUsefulLifeController.text =
+                  initItemData.estimatedUsefulLife.toString();
+              _pickedDate.value = initItemData.acquiredDate ?? DateTime.now();
+            }
           }
 
           if (state is ItemsError) {
@@ -310,7 +310,7 @@ class _RegisterItemViewState extends State<ReusableItemView> {
                   const ReusableLinearProgressIndicator(),
                 Expanded(
                   child: SingleChildScrollView(
-                    child: _buildForm(),
+                    child: _buildEquipmentForm(),
                   ),
                 ),
               ],
@@ -321,7 +321,7 @@ class _RegisterItemViewState extends State<ReusableItemView> {
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildEquipmentForm() {
     return Form(
       key: _formKey,
       child: Padding(
@@ -349,27 +349,6 @@ class _RegisterItemViewState extends State<ReusableItemView> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildEquipmentForm() {
-    return Column(
-      children: [
-        if (_isViewOnlyMode()) _buildViewOnlyWidgets(),
-        _buildItemInformationHeader(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildPrimaryItemInformationSection(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildOtherItemInformationSection(),
-        const SizedBox(
-          height: 20.0,
-        ),
-        _buildActions(),
-      ],
     );
   }
 
@@ -456,58 +435,6 @@ class _RegisterItemViewState extends State<ReusableItemView> {
                 fontSize: 13.5,
                 fontWeight: FontWeight.w400,
               ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSupplyItemInformationSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 100.0,
-                child: _buildItemNamesSuggestionField(),
-              ),
-            ),
-            const SizedBox(width: 20.0),
-            Expanded(
-              child: SizedBox(
-                height: 100.0,
-                child: _buildItemDescriptionsSuggestionField(),
-              ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 100.0,
-                child: _buildUnitSelection(),
-              ),
-            ),
-            const SizedBox(width: 20.0),
-            Expanded(
-              child: SizedBox(
-                height: 100.0,
-                child: _buildQuantityCounterField(),
-              ),
-            ),
-          ],
-        ),
-        CustomFormTextField(
-          label: 'Specification',
-          placeholderText: 'Enter item\'s specification',
-          maxLines: 4,
-          controller: _specificationController,
-          enabled: !_isViewOnlyMode(),
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         ),
       ],
     );

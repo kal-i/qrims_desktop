@@ -2,12 +2,10 @@ import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
-import '../../domain/entities/item_with_stock.dart';
-import '../../domain/entities/paginated_item_name.dart';
+import '../../domain/entities/base_item.dart';
 import '../../domain/entities/paginated_item_result.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/entities/stock.dart';
 import '../../domain/repository/item_inventory_repository.dart';
 import '../data_sources/remote/item_inventory_remote_date_source.dart';
 import '../../../../core/enums/unit.dart' as unit;
@@ -55,41 +53,22 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
   }
 
   @override
-  Future<Either<Failure, List<ItemWithStockEntity>>> registerItem({
+  Future<Either<Failure, BaseItemEntity>> registerSupplyItem({
     required String itemName,
     required String description,
-    required String manufacturerName,
-    required String brandName,
-    required String modelName,
-    String? serialNo,
     required String specification,
-    AssetClassification? assetClassification,
-    AssetSubClass? assetSubClass,
     required unit.Unit unit,
     required int quantity,
-    required double unitCost,
-    int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   }) async {
     try {
-      final response = await itemInventoryRemoteDateSource.registerItem(
+      final response = await itemInventoryRemoteDateSource.registerSupplyItem(
         itemName: itemName,
         description: description,
-        manufacturerName: manufacturerName,
-        brandName: brandName,
-        modelName: modelName,
-        serialNo: serialNo,
         specification: specification,
-        assetClassification: assetClassification,
-        assetSubClass: assetSubClass,
         unit: unit,
         quantity: quantity,
-        unitCost: unitCost,
-        estimatedUsefulLife: estimatedUsefulLife,
-        acquiredDate: acquiredDate,
       );
 
-      print(response);
       return right(response);
     } on ServerException catch (e) {
       return left(Failure(e.message));
@@ -97,7 +76,49 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
   }
 
   @override
-  Future<Either<Failure, ItemWithStockEntity?>> getItemById({
+  Future<Either<Failure, List<BaseItemEntity>>> registerEquipmentItem({
+    required String itemName,
+    required String description,
+    required String specification,
+    required unit.Unit unit,
+    required int quantity,
+    required String manufacturerName,
+    required String brandName,
+    required String modelName,
+    required String serialNo,
+    AssetClassification? assetClassification,
+    AssetSubClass? assetSubClass,
+    required double unitCost,
+    int? estimatedUsefulLife,
+    DateTime? acquiredDate,
+  }) async {
+    try {
+      final response =
+          await itemInventoryRemoteDateSource.registerEquipmentItem(
+        itemName: itemName,
+        description: description,
+        specification: specification,
+        unit: unit,
+        quantity: quantity,
+        manufacturerName: manufacturerName,
+        brandName: brandName,
+        modelName: modelName,
+        serialNo: serialNo,
+        assetClassification: assetClassification,
+        assetSubClass: assetSubClass,
+        unitCost: unitCost,
+        estimatedUsefulLife: estimatedUsefulLife,
+        acquiredDate: acquiredDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BaseItemEntity?>> getItemById({
     required String id,
   }) async {
     try {
