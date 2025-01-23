@@ -145,7 +145,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
             const SizedBox(
               height: 50.0,
             ),
-            _buildRecentlyGeneratedDocumentsRow(),
+            _buildPredefinedDocumentTemplatesRow(),
             const SizedBox(
               height: 50.0,
             ),
@@ -222,11 +222,12 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     {'title': 'A73', 'type': DocumentType.a73},
     {'title': 'Property Card', 'type': DocumentType.propertyCard},
     {'title': 'SPC', 'type': DocumentType.spc},
+    {'title': 'RSPI', 'type': DocumentType.rspi},
 
     //{'title': 'Property Card', 'type': DocumentType.propertyCard},
   ];
 
-  Widget _buildRecentlyGeneratedDocumentsRow() {
+  Widget _buildPredefinedDocumentTemplatesRow() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

@@ -9,5 +9,6 @@ enum DocumentType {
   annexA8,
   propertyCard,
   spc,
+  rspi,
   rsmi,
 }

@@ -12,6 +12,7 @@ import 'models/purchase_order.dart';
 import 'models/requisition_and_issuance_slip.dart';
 import 'models/rpci.dart';
 import 'models/rsmi.dart';
+import 'models/rspi.dart';
 import 'models/spc.dart';
 import 'models/sticker.dart';
 
@@ -30,6 +31,7 @@ class DocumentFactory {
           DocumentType.a73: () => A73(),
           DocumentType.propertyCard: () => PropertyCard(),
           DocumentType.spc: () => SPC(),
+          DocumentType.rspi: () => RSPI(),
           DocumentType.rsmi: () => RSMI(),
         };
 
