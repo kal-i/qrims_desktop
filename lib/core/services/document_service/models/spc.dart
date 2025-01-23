@@ -5,7 +5,7 @@ import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
 
-class PropertyCard implements BaseDocument {
+class SPC implements BaseDocument {
   @override
   Future<pw.Document> generate({
     required PdfPageFormat pageFormat,
@@ -23,7 +23,7 @@ class PropertyCard implements BaseDocument {
         build: (context) => [
           pw.Center(
             child: pw.Text(
-              'PROPERTY CARD',
+              'SEMI-EXPENDABLE PROPERTY CARD',
               style: const pw.TextStyle(
                 //font: FontService().getFont('timesNewRomanBold'),
                 fontSize: 14.0,
@@ -111,7 +111,7 @@ class PropertyCard implements BaseDocument {
               children: [
                 DocumentComponents.buildContainer(
                   child: pw.Text(
-                    'Property:',
+                    'Semi-expendable Property:',
                     style: const pw.TextStyle(
                       fontSize: 10.0,
                     ),
@@ -123,7 +123,7 @@ class PropertyCard implements BaseDocument {
                 ),
                 DocumentComponents.buildContainer(
                   child: pw.Text(
-                    'Property No:',
+                    'Semi-expendable Property No:',
                     style: const pw.TextStyle(
                       fontSize: 10.0,
                     ),
@@ -235,7 +235,7 @@ class PropertyCard implements BaseDocument {
                       children: [
                         pw.Expanded(
                           child: _buildCell(
-                            text: 'Property No',
+                            text: 'Item No',
                             borderTop: false,
                             borderRight: false,
                             borderBottom: false,

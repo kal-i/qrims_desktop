@@ -6,4 +6,8 @@ enum DocumentType {
   sticker, // attach to the issued item
   rpci,
   a73,
+  annexA8,
+  propertyCard,
+  spc,
+  rsmi,
 }

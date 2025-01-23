@@ -5,7 +5,7 @@ import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
 
-class A73 implements BaseDocument {
+class AnnexA8 implements BaseDocument {
   @override
   Future<pw.Document> generate({
     required PdfPageFormat pageFormat,
@@ -48,7 +48,7 @@ class A73 implements BaseDocument {
             height: 10.0,
           ),
           _buildTableHeader(pageFormat),
-          for (int i = 0; i < 20; i++) _buildTableContent(pageFormat),
+          for (int i = 0; i < 5; i++) _buildTableContent(pageFormat),
           pw.Table(
             columnWidths: pageFormat == PdfPageFormat.a4
                 ? {
@@ -597,7 +597,7 @@ class A73 implements BaseDocument {
     return pw.Column(
       children: [
         pw.Text(
-          'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT',
+          'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY',
           style: const pw.TextStyle(
             //font: FontService().getFont('timesNewRomanBold'),
             fontSize: 14.0,
@@ -608,7 +608,7 @@ class A73 implements BaseDocument {
           height: 5.0,
         ),
         pw.Text(
-          '_______________________________________',
+          '__________________________________',
           style: const pw.TextStyle(
             //font: FontService().getFont('timesNewRomanBold'),
             fontSize: 12.0,
@@ -618,7 +618,7 @@ class A73 implements BaseDocument {
           height: 5.0,
         ),
         pw.Text(
-          '(Type of Property, Plant, and Equipment)',
+          '(Type of Semi-expendable Property)',
           style: const pw.TextStyle(
             //font: FontService().getFont('timesNewRomanRegular'),
             fontSize: 10.0,
@@ -628,7 +628,7 @@ class A73 implements BaseDocument {
           height: 5.0,
         ),
         pw.Text(
-          'As at _______________________________',
+          'As at _______________________',
           style: const pw.TextStyle(
             //font: FontService().getFont('timesNewRomanBold'),
             fontSize: 12.0,
@@ -644,25 +644,25 @@ class A73 implements BaseDocument {
           ? {
               0: const pw.FixedColumnWidth(300.0),
               1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(300.0),
+              2: const pw.FixedColumnWidth(350.0),
               3: const pw.FixedColumnWidth(180.0),
               4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(260.0),
-              6: const pw.FixedColumnWidth(260.0),
+              5: const pw.FixedColumnWidth(240.0),
+              6: const pw.FixedColumnWidth(240.0),
               7: const pw.FixedColumnWidth(350.0),
               8: const pw.FixedColumnWidth(600.0),
             }
           : pageFormat == PdfPageFormat.letter
               ? {
                   0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(550.0),
-                  2: const pw.FixedColumnWidth(250.0),
+                  1: const pw.FixedColumnWidth(500.0),
+                  2: const pw.FixedColumnWidth(310.0),
                   3: const pw.FixedColumnWidth(180.0),
                   4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(250.0),
-                  6: const pw.FixedColumnWidth(250.0),
-                  7: const pw.FixedColumnWidth(350.0),
-                  8: const pw.FixedColumnWidth(550.0),
+                  5: const pw.FixedColumnWidth(210.0),
+                  6: const pw.FixedColumnWidth(210.0),
+                  7: const pw.FixedColumnWidth(320.0),
+                  8: const pw.FixedColumnWidth(500.0),
                 }
               : {
                   0: const pw.FixedColumnWidth(360.0),
@@ -688,25 +688,25 @@ class A73 implements BaseDocument {
           ? {
               0: const pw.FixedColumnWidth(300.0),
               1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(300.0),
+              2: const pw.FixedColumnWidth(350.0),
               3: const pw.FixedColumnWidth(180.0),
               4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(260.0),
-              6: const pw.FixedColumnWidth(260.0),
+              5: const pw.FixedColumnWidth(240.0),
+              6: const pw.FixedColumnWidth(240.0),
               7: const pw.FixedColumnWidth(350.0),
               8: const pw.FixedColumnWidth(600.0),
             }
           : pageFormat == PdfPageFormat.letter
               ? {
                   0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(550.0),
-                  2: const pw.FixedColumnWidth(250.0),
+                  1: const pw.FixedColumnWidth(500.0),
+                  2: const pw.FixedColumnWidth(310.0),
                   3: const pw.FixedColumnWidth(180.0),
                   4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(250.0),
-                  6: const pw.FixedColumnWidth(250.0),
-                  7: const pw.FixedColumnWidth(350.0),
-                  8: const pw.FixedColumnWidth(550.0),
+                  5: const pw.FixedColumnWidth(210.0),
+                  6: const pw.FixedColumnWidth(210.0),
+                  7: const pw.FixedColumnWidth(320.0),
+                  8: const pw.FixedColumnWidth(500.0),
                 }
               : {
                   0: const pw.FixedColumnWidth(360.0),
@@ -731,13 +731,13 @@ class A73 implements BaseDocument {
       children: [
         DocumentComponents.buildHeaderContainerCell(
           data: 'Article',
-          verticalPadding: 11.4,
+          verticalPadding: 17.4,
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Description',
+              data: 'Description (Specification, Brand, Model, Serial #, Etc.)',
               verticalPadding: 3.0,
               horizontalPadding: 3.0,
               borderRight: false,
@@ -787,34 +787,34 @@ class A73 implements BaseDocument {
           ],
         ),
         DocumentComponents.buildHeaderContainerCell(
-          data: 'Property Number',
-          verticalPadding: 6.0,
+          data: 'Semi-expendable Property No.',
+          verticalPadding: 11.8,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit of Measure',
-          verticalPadding: 6.0,
+          verticalPadding: 11.8,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit Value',
-          verticalPadding: 6.0,
+          verticalPadding: 11.8,
           borderRight: false,
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Quantity per',
+              data: 'Balance Per Card',
               horizontalPadding: 3.0,
               borderRight: false,
               verticalPadding: 3.0,
               borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Property Card',
+              data: '(Quantity)',
               borderTop: false,
               borderRight: false,
               verticalPadding: 3.0,
@@ -825,13 +825,13 @@ class A73 implements BaseDocument {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Quantity per',
+              data: 'On Hand Per Count',
               verticalPadding: 3.0,
               horizontalPadding: 3.0,
               borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Physical Count',
+              data: '(Quantity)',
               borderTop: false,
               verticalPadding: 3.0,
             ),
@@ -845,7 +845,7 @@ class A73 implements BaseDocument {
               borderRight: false,
               borderLeft: false,
               borderWidthBottom: 2.0,
-              verticalPadding: 3.0,
+              verticalPadding: 8.8,
             ),
             pw.Row(
               children: [
@@ -876,7 +876,7 @@ class A73 implements BaseDocument {
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Remarks (State whereabouts, conditions, Accountable Officer)',
-          verticalPadding: 6.0,
+          verticalPadding: 11.8,
         ),
       ],
     );

@@ -41,12 +41,15 @@ class DocumentService {
     required DocumentType docType,
     bool withQR = true,
   }) async {
+    /// todo: continue implementing later
     return DocumentFactory().createDocument(
       pageFormat: pageFormat,
       orientation: orientation,
       data: data,
       docType: docType,
       withQR: withQR,
+      // fontService: fontService,
+      // imageService: imageService,
     );
   }
 }

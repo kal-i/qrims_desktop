@@ -70,7 +70,7 @@ class RPCI implements BaseDocument {
             height: 10.0,
           ),
           pw.Text(
-            'For which __________________, ________________, __________________ is accountable, having assumed such account on ______________.',
+            'For which __________________, ________________, __________________ is accountable, having assumed such accountability on ______________.',
             style: const pw.TextStyle(
               //font: FontService().getFont('timesNewRomanBold'),
               fontSize: 10.0,

@@ -216,6 +216,16 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   // this will then make an http req when wanna be previewed
   // every time there is a new issuance, it will first the first 3 item issuance info in the db and paste in here
   // btw let's add an stepper for the status like: prepared a doc for approval - approved/ declined - conclusion if there is like generated
+  final predefinedTemplates = [
+    {'title': 'RCPI', 'type': DocumentType.rpci},
+    {'title': 'Annex A.8', 'type': DocumentType.annexA8},
+    {'title': 'A73', 'type': DocumentType.a73},
+    {'title': 'Property Card', 'type': DocumentType.propertyCard},
+    {'title': 'SPC', 'type': DocumentType.spc},
+
+    //{'title': 'Property Card', 'type': DocumentType.propertyCard},
+  ];
+
   Widget _buildRecentlyGeneratedDocumentsRow() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,39 +239,27 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         const SizedBox(
           height: 20.0,
         ),
-        Row(
-          children: [
-            Expanded(
-              child: DocumentCard(
-                onTap: () => showCustomDocumentPreview(
-                  context: context,
-                  documentObject: null,
-                  docType: DocumentType.rpci,
+        SizedBox(
+          height: 100.0, // Adjust the height as per your design
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: predefinedTemplates.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 15.0),
+            itemBuilder: (context, index) {
+              final template = predefinedTemplates[index];
+              return SizedBox(
+                width: 200.0, // Adjust the width of each card as needed
+                child: DocumentCard(
+                  onTap: () => showCustomDocumentPreview(
+                    context: context,
+                    documentObject: null,
+                    docType: template['type'] as DocumentType,
+                  ),
+                  title: template['title'] as String,
                 ),
-                title: 'RCPI',
-              ),
-            ),
-            const SizedBox(
-              width: 15.0,
-            ),
-            Expanded(
-                child: DocumentCard(
-              onTap: () => showCustomDocumentPreview(
-                context: context,
-                documentObject: null,
-                docType: DocumentType.a73,
-              ),
-              title: 'a73',
-            )),
-            const SizedBox(
-              width: 15.0,
-            ),
-            Expanded(
-                child: DocumentCard(
-              onTap: () {},
-              title: 'RSMI',
-            )),
-          ],
+              );
+            },
+          ),
         ),
       ],
     );
