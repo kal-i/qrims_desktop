@@ -48,8 +48,6 @@ class DocumentService {
       data: data,
       docType: docType,
       withQR: withQR,
-      // fontService: fontService,
-      // imageService: imageService,
     );
   }
 }

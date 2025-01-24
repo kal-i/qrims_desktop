@@ -7,6 +7,7 @@ import '../../../utils/extract_specification.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
+import '../image_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';

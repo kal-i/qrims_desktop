@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../font_service.dart';
+import '../image_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -81,7 +82,7 @@ class RSPI implements BaseDocument {
           pw.SizedBox(
             height: 10.0,
           ),
-          _buildTableHeader(),
+          _buildTableHeader(pageFormat),
           for (int i = 0; i < 25; i++)
             _buildTableRow(isLast: i == 25 - 1 ? true : false),
           _buildTableFooter(),
@@ -125,7 +126,9 @@ class RSPI implements BaseDocument {
     );
   }
 
-  pw.Widget _buildTableHeader() {
+  pw.Widget _buildTableHeader(
+    PdfPageFormat pageFormat,
+  ) {
     return pw.Column(
       children: [
         pw.Table(
@@ -146,7 +149,7 @@ class RSPI implements BaseDocument {
                     ),
                     textAlign: pw.TextAlign.center,
                   ),
-                  verticalPadding: 3.0,
+                  verticalPadding: pageFormat == PdfPageFormat.a4 ? 9.0 : 3.0,
                   horizontalPadding: 3.0,
                   borderRight: false,
                   borderBottom: false,
@@ -161,7 +164,7 @@ class RSPI implements BaseDocument {
                     ),
                     textAlign: pw.TextAlign.center,
                   ),
-                  verticalPadding: 3.0,
+                  verticalPadding: pageFormat == PdfPageFormat.a4 ? 4.0 : 3.0,
                   horizontalPadding: 3.0,
                   borderBottom: false,
                 ),
@@ -193,11 +196,13 @@ class RSPI implements BaseDocument {
                   text: 'Responsibility Center Code',
                   borderRight: false,
                   borderBottom: false,
+                  verticalPadding: 4.0,
                 ),
                 _buildCell(
                   text: 'Semi-Expendable Property No.',
                   borderRight: false,
                   borderBottom: false,
+                  verticalPadding: 4.0,
                 ),
                 _buildCell(
                   text: 'Item Description',
@@ -215,6 +220,7 @@ class RSPI implements BaseDocument {
                   text: 'Quantity Issued',
                   borderRight: false,
                   borderBottom: false,
+                  verticalPadding: 4.0,
                 ),
                 _buildCell(
                   text: 'Unit Cost',
@@ -292,7 +298,7 @@ class RSPI implements BaseDocument {
   pw.Table _buildTableFooter() {
     return pw.Table(
       columnWidths: {
-        0: const pw.FixedColumnWidth(825.0),
+        0: const pw.FixedColumnWidth(830.0),
         1: const pw.FixedColumnWidth(440.0),
       },
       children: [

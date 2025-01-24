@@ -23,6 +23,7 @@ class FontService {
         'tahomaBold': FontPath.tahomaBold,
         'timesNewRomanRegular': FontPath.timesNewRomanRegular,
         'timesNewRomanBold': FontPath.timesNewRomanBold,
+        'timesNewRomanItalic': FontPath.timesNewRomanItalic,
       };
 
       for (var entry in fontPaths.entries) {

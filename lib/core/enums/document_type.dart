@@ -10,5 +10,6 @@ enum DocumentType {
   propertyCard,
   spc,
   rspi,
+  stockCard,
   rsmi,
 }

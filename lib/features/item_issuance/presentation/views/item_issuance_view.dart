@@ -217,14 +217,38 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   // every time there is a new issuance, it will first the first 3 item issuance info in the db and paste in here
   // btw let's add an stepper for the status like: prepared a doc for approval - approved/ declined - conclusion if there is like generated
   final predefinedTemplates = [
-    {'title': 'RCPI', 'type': DocumentType.rpci},
-    {'title': 'Annex A.8', 'type': DocumentType.annexA8},
-    {'title': 'A73', 'type': DocumentType.a73},
-    {'title': 'Property Card', 'type': DocumentType.propertyCard},
-    {'title': 'SPC', 'type': DocumentType.spc},
-    {'title': 'RSPI', 'type': DocumentType.rspi},
-
-    //{'title': 'Property Card', 'type': DocumentType.propertyCard},
+    {
+      'title': 'RCPI',
+      'type': DocumentType.rpci,
+    },
+    {
+      'title': 'Annex A.8',
+      'type': DocumentType.annexA8,
+    },
+    {
+      'title': 'A73',
+      'type': DocumentType.a73,
+    },
+    {
+      'title': 'Property Card',
+      'type': DocumentType.propertyCard,
+    },
+    {
+      'title': 'SPC',
+      'type': DocumentType.spc,
+    },
+    {
+      'title': 'RSPI',
+      'type': DocumentType.rspi,
+    },
+    {
+      'title': 'RSMI',
+      'type': DocumentType.rsmi,
+    },
+    {
+      'title': 'Stock Card',
+      'type': DocumentType.stockCard,
+    },
   ];
 
   Widget _buildPredefinedDocumentTemplatesRow() {

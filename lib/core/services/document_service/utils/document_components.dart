@@ -1,5 +1,6 @@
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../init_dependencies.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/format_position.dart';
 import '../../../utils/readable_enum_converter.dart';
@@ -13,13 +14,13 @@ class DocumentComponents {
         pw.Container(
           height: 60.0,
           width: 60.0,
-          child: ImageService().getImage('depedSeal'),
+          child: serviceLocator<ImageService>().getImage('depedSeal'),
         ),
         pw.SizedBox(height: 5.0),
         pw.Text(
           'Republic of the Philippines',
           style: pw.TextStyle(
-            font: FontService().getFont('oldEnglish'),
+            font: serviceLocator<FontService>().getFont('oldEnglish'),
             fontSize: 12,
             fontWeight: pw.FontWeight.bold,
           ),
@@ -27,20 +28,20 @@ class DocumentComponents {
         pw.SizedBox(height: 5.0),
         pw.Text('Department of Education',
             style: pw.TextStyle(
-              font: FontService().getFont('oldEnglish'),
+              font: serviceLocator<FontService>().getFont('oldEnglish'),
               fontSize: 18,
             )),
         pw.SizedBox(height: 5.0),
         pw.Text('Region V - Bicol',
             style: pw.TextStyle(
-              fontBold: FontService().getFont('popvlvs'),
+              fontBold: serviceLocator<FontService>().getFont('popvlvs'),
               fontSize: 10,
               fontWeight: pw.FontWeight.bold,
             )),
         pw.SizedBox(height: 5.0),
         pw.Text('SCHOOLS DIVISION OF LEGAZPI CITY',
             style: pw.TextStyle(
-              fontBold: FontService().getFont('tahomaBold'),
+              fontBold: serviceLocator<FontService>().getFont('tahomaBold'),
               fontSize: 10,
             )),
       ],
@@ -75,6 +76,7 @@ class DocumentComponents {
     bool borderBottom = true,
     bool borderLeft = true,
     pw.Font? font,
+    pw.FontStyle? fontStyle,
   }) {
     return pw.Container(
       padding: pw.EdgeInsets.symmetric(
@@ -84,10 +86,8 @@ class DocumentComponents {
       child: pw.Text(
         data,
         style: pw.TextStyle(
-          //font: font ??
-          //FontService().getFont(
-          //isBold ? 'timesNewRomanBold' : 'timesNewRomanRegular',
-          //),
+          font: font,
+          fontStyle: fontStyle,
           fontSize: fontSize ?? 10.0,
         ),
         textAlign: isAlignCenter ? pw.TextAlign.center : null,

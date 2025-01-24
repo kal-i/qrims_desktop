@@ -1,6 +1,8 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../init_dependencies.dart';
+import '../font_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -18,1016 +20,493 @@ class RSMI implements BaseDocument {
       pw.MultiPage(
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
-          orientation: pw.PageOrientation.landscape,
+          orientation: pw.PageOrientation.portrait,
         ),
         build: (context) => [
           pw.Center(
-            child: _buildHeader(),
-          ),
-          pw.SizedBox(
-            height: 10.0,
-          ),
-          pw.Text(
-            'Fund Cluster: ',
-            style: const pw.TextStyle(
-              //font: FontService().getFont('timesNewRomanBold'),
-              fontSize: 10.0,
+            child: pw.Column(
+              children: [
+                DocumentComponents.buildDocumentHeader(),
+                pw.SizedBox(
+                  height: 20.0,
+                ),
+                pw.Text(
+                  'REPORT OF SUPPLIES AND MATERIALS ISSUED',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 12.0,
+                  ),
+                ),
+              ],
             ),
           ),
           pw.SizedBox(
-            height: 10.0,
+            height: 20.0,
           ),
-          pw.Text(
-            'For which __________________, ________________, __________________ is accountable, having assumed such accountability on ______________.',
-            style: const pw.TextStyle(
-              //font: FontService().getFont('timesNewRomanBold'),
-              fontSize: 10.0,
-            ),
+          pw.Table(
+            columnWidths: {
+              0: const pw.FixedColumnWidth(920.0),
+              1: const pw.FixedColumnWidth(350.0),
+            },
+            children: [
+              pw.TableRow(
+                children: [
+                  pw.Text(
+                    'Entity Name:',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.Text(
+                    'Serial No.:',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                ],
+              ),
+              pw.TableRow(
+                children: [
+                  pw.Text(
+                    'Fund Cluster:',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.Text(
+                    'Date:',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           pw.SizedBox(
             height: 10.0,
           ),
           _buildTableHeader(pageFormat),
-          for (int i = 0; i < 20; i++) _buildTableContent(pageFormat),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Certified Correct by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Approved by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Witnessed by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Chair',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title:
-                              'head of Agency/Entity or Authorized Representative',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'COA Representative',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Co-Chair',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderLeft: false,
-                    borderBottom: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          for (int i = 0; i < 10; i++)
+            _buildTableRow(isLast: i == 10 - 1 ? true : false),
+          _buildRecapitulationHeader(),
+          _buildRecapitulationSubHeader(),
+          for (int i = 0; i < 5; i++)
+            _buildTableRow(isLast: i == 5 - 1 ? true : false),
+          _buildTableFooter(),
         ],
       ),
     );
-
     return pdf;
   }
 
-  pw.Widget _buildHeader() {
-    return pw.Column(
-      children: [
-        pw.Text(
-          'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 14.0,
-          ),
-          textAlign: pw.TextAlign.center,
-        ),
-        pw.SizedBox(
-          height: 5.0,
-        ),
-        pw.Text(
-          '___________________________',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 12.0,
-          ),
-        ),
-        pw.SizedBox(
-          height: 5.0,
-        ),
-        pw.Text(
-          '(Type of Property, Plant and Equipment)',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanRegular'),
-            fontSize: 10.0,
-          ),
-        ),
-        pw.SizedBox(
-          height: 10.0,
-        ),
-        pw.Text(
-          'As at __________________________',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 12.0,
-          ),
-        ),
-      ],
-    );
-  }
-
-  pw.Table _buildTableHeader(PdfPageFormat pageFormat) {
-    return pw.Table(
-      columnWidths: pageFormat == PdfPageFormat.a4
-          ? {
-              0: const pw.FixedColumnWidth(300.0),
-              1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(350.0),
-              3: const pw.FixedColumnWidth(180.0),
-              4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(240.0),
-              6: const pw.FixedColumnWidth(240.0),
-              7: const pw.FixedColumnWidth(350.0),
-              8: const pw.FixedColumnWidth(600.0),
-            }
-          : pageFormat == PdfPageFormat.letter
-              ? {
-                  0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(500.0),
-                  2: const pw.FixedColumnWidth(310.0),
-                  3: const pw.FixedColumnWidth(180.0),
-                  4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(210.0),
-                  6: const pw.FixedColumnWidth(210.0),
-                  7: const pw.FixedColumnWidth(320.0),
-                  8: const pw.FixedColumnWidth(500.0),
-                }
-              : {
-                  0: const pw.FixedColumnWidth(360.0),
-                  1: const pw.FixedColumnWidth(470.0),
-                  2: const pw.FixedColumnWidth(200.0),
-                  3: const pw.FixedColumnWidth(150.0),
-                  4: const pw.FixedColumnWidth(100.0),
-                  5: const pw.FixedColumnWidth(200.0),
-                  6: const pw.FixedColumnWidth(200.0),
-                  7: const pw.FixedColumnWidth(240.0),
-                  8: const pw.FixedColumnWidth(470.0),
-                },
-      children: [
-        _buildHeaderTableRow(),
-        //for (int i = 0; i < 20; i++) _buildFirstPageTableRow(),
-      ],
-    );
-  }
-
-  pw.Table _buildTableContent(PdfPageFormat pageFormat) {
-    return pw.Table(
-      columnWidths: pageFormat == PdfPageFormat.a4
-          ? {
-              0: const pw.FixedColumnWidth(300.0),
-              1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(350.0),
-              3: const pw.FixedColumnWidth(180.0),
-              4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(240.0),
-              6: const pw.FixedColumnWidth(240.0),
-              7: const pw.FixedColumnWidth(350.0),
-              8: const pw.FixedColumnWidth(600.0),
-            }
-          : pageFormat == PdfPageFormat.letter
-              ? {
-                  0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(500.0),
-                  2: const pw.FixedColumnWidth(310.0),
-                  3: const pw.FixedColumnWidth(180.0),
-                  4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(210.0),
-                  6: const pw.FixedColumnWidth(210.0),
-                  7: const pw.FixedColumnWidth(320.0),
-                  8: const pw.FixedColumnWidth(500.0),
-                }
-              : {
-                  0: const pw.FixedColumnWidth(360.0),
-                  1: const pw.FixedColumnWidth(470.0),
-                  2: const pw.FixedColumnWidth(200.0),
-                  3: const pw.FixedColumnWidth(150.0),
-                  4: const pw.FixedColumnWidth(100.0),
-                  5: const pw.FixedColumnWidth(200.0),
-                  6: const pw.FixedColumnWidth(200.0),
-                  7: const pw.FixedColumnWidth(240.0),
-                  8: const pw.FixedColumnWidth(470.0),
-                },
-      children: [
-        _buildContentTableRow(),
-        //for (int i = 0; i < 20; i++) _buildFirstPageTableRow(),
-      ],
-    );
-  }
-
-  pw.TableRow _buildHeaderTableRow() {
-    return pw.TableRow(
-      children: [
-        DocumentComponents.buildHeaderContainerCell(
-          data: 'Article',
-          verticalPadding: 17.4,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            DocumentComponents.buildHeaderContainerCell(
-              data: 'Description (Specification, Brand, Model, Serial #, Etc.)',
-              verticalPadding: 3.0,
-              horizontalPadding: 3.0,
-              borderRight: false,
-              borderLeft: false,
-              borderWidthBottom: 2.0,
-            ),
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Specs',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Brand',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Model',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Serial #',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: 'Semi-expendable Property No.',
-          verticalPadding: 11.8,
-          horizontalPadding: 3.0,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: 'Unit of Measure',
-          verticalPadding: 11.8,
-          horizontalPadding: 3.0,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: 'Unit Value',
-          verticalPadding: 11.8,
-          borderRight: false,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            DocumentComponents.buildHeaderContainerCell(
-              data: 'Balance Per Card',
-              horizontalPadding: 3.0,
-              borderRight: false,
-              verticalPadding: 3.0,
-              borderWidthBottom: 2.0,
-            ),
-            DocumentComponents.buildHeaderContainerCell(
-              data: '(Quantity)',
-              borderTop: false,
-              borderRight: false,
-              verticalPadding: 3.0,
-            ),
-          ],
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            DocumentComponents.buildHeaderContainerCell(
-              data: 'On Hand Per Count',
-              verticalPadding: 3.0,
-              horizontalPadding: 3.0,
-              borderWidthBottom: 2.0,
-            ),
-            DocumentComponents.buildHeaderContainerCell(
-              data: '(Quantity)',
-              borderTop: false,
-              verticalPadding: 3.0,
-            ),
-          ],
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            DocumentComponents.buildHeaderContainerCell(
-              data: 'Shortage/Overage',
-              borderRight: false,
-              borderLeft: false,
-              borderWidthBottom: 2.0,
-              verticalPadding: 8.8,
-            ),
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Quantity',
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 2.0,
-                    borderWidthBottom: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Value',
-                    borderTop: false,
-                    borderRight: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 3.0,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: 'Remarks (State whereabouts, conditions, Accountable Officer)',
-          verticalPadding: 11.8,
-        ),
-      ],
-    );
-  }
-
-  pw.TableRow _buildContentTableRow() {
-    return pw.TableRow(
-      children: [
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          borderTop: false,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          horizontalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          horizontalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          borderRight: false,
-          verticalPadding: 3.0,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          verticalPadding: 3.0,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 3.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    borderTop: false,
-                    borderRight: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 3.0,
-                    borderWidthLeft: 2.0,
-                    borderWidthBottom: 3.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          verticalPadding: 3.0,
-        ),
-      ],
-    );
-  }
-
-  pw.Widget _buildAssociatedOfficerField({
-    String? officerName,
-    required String title,
+  pw.Widget _buildCell({
+    String? data,
+    double? horizontalPadding = 3.0,
+    double? verticalPadding = 3.0,
+    bool borderTop = true,
+    bool borderRight = true,
+    bool borderBottom = true,
+    bool borderLeft = true,
+    double borderWidthTop = 2.0,
+    double borderWidthRight = 2.0,
+    double borderWidthBottom = 2.0,
+    double borderWitdhLeft = 2.0,
+    pw.Font? font,
+    double fontSize = 9.0,
+    bool isCenter = true,
   }) {
+    return DocumentComponents.buildContainer(
+      borderTop: borderTop,
+      borderRight: borderRight,
+      borderBottom: borderBottom,
+      borderLeft: borderLeft,
+      borderWidthTop: borderWidthTop,
+      borderWidthRight: borderWidthRight,
+      borderWidthBottom: borderWidthBottom,
+      borderWidthLeft: borderWitdhLeft,
+      child: pw.Text(
+        data ?? '\n',
+        style: pw.TextStyle(
+          font: font ??
+              serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: fontSize,
+        ),
+        textAlign: isCenter ? pw.TextAlign.center : null,
+      ),
+      verticalPadding: verticalPadding,
+      horizontalPadding: horizontalPadding,
+    );
+  }
+
+  pw.Column _buildTableHeader(PdfPageFormat pageFormat) {
     return pw.Column(
-      mainAxisAlignment: pw.MainAxisAlignment.center,
       children: [
-        pw.Text(
-          officerName ?? '___________________________________',
-          style: const pw.TextStyle(
-            fontSize: 8.0,
-          ),
-          textAlign: pw.TextAlign.center,
+        pw.Table(
+          columnWidths: {
+            0: const pw.FixedColumnWidth(920.0),
+            1: const pw.FixedColumnWidth(350.0),
+          },
+          children: [
+            pw.TableRow(
+              children: [
+                _buildCell(
+                  data:
+                      'To be filled up by the Supply and/or Property Division/Unit',
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanItalic'),
+                  borderRight: false,
+                  borderBottom: false,
+                  verticalPadding: pageFormat == PdfPageFormat.a4 ? 9.0 : 8.0,
+                  fontSize: 8.0,
+                ),
+                _buildCell(
+                  data: 'To be filled up by the Accounting Division/Unit',
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanItalic'),
+                  borderBottom: false,
+                  verticalPadding: pageFormat == PdfPageFormat.a4 ? 4.0 : 4.0,
+                  fontSize: 8.0,
+                ),
+              ],
+            ),
+          ],
         ),
-        pw.SizedBox(
-          height: 5.0,
-        ),
-        pw.Text(
-          'Signature over Printed Name of\n$title',
-          style: const pw.TextStyle(
-            fontSize: 8.0,
+        pw.Table(columnWidths: {
+          0: const pw.FixedColumnWidth(115),
+          1: const pw.FixedColumnWidth(157),
+          2: const pw.FixedColumnWidth(128),
+          3: const pw.FixedColumnWidth(320),
+          4: const pw.FixedColumnWidth(90),
+          5: const pw.FixedColumnWidth(110),
+          6: const pw.FixedColumnWidth(170),
+          7: const pw.FixedColumnWidth(180),
+        }, children: [
+          pw.TableRow(
+            children: [
+              _buildCell(
+                data: 'RIS No.',
+                borderRight: false,
+                verticalPadding: 8.0,
+              ),
+              _buildCell(
+                data: 'Responsibility Center Code',
+                borderRight: false,
+              ),
+              _buildCell(
+                data: 'Stock No.',
+                borderRight: false,
+                verticalPadding: 8.0,
+              ),
+              _buildCell(
+                data: 'Item',
+                borderRight: false,
+                verticalPadding: 8.0,
+              ),
+              _buildCell(
+                data: 'Unit',
+                borderRight: false,
+                verticalPadding: 8.0,
+              ),
+              _buildCell(
+                data: 'Quantity Issued',
+                borderRight: false,
+              ),
+              _buildCell(
+                data: 'Unit Cost',
+                borderRight: false,
+                verticalPadding: 8.0,
+              ),
+              _buildCell(
+                data: 'Amount',
+                verticalPadding: 8.0,
+              ),
+            ],
           ),
-          textAlign: pw.TextAlign.center,
+        ]),
+      ],
+    );
+  }
+
+  pw.Table _buildRecapitulationHeader() {
+    return pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(115),
+        1: const pw.FixedColumnWidth(285),
+        2: const pw.FixedColumnWidth(320),
+        3: const pw.FixedColumnWidth(90),
+        4: const pw.FixedColumnWidth(460),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderRight: false,
+              borderTop: false,
+            ),
+            _buildCell(
+              data: 'Recapitulation',
+              borderRight: false,
+              borderTop: false,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderTop: false,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderTop: false,
+            ),
+            _buildCell(
+              data: 'Recapitulation',
+              borderTop: false,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Table _buildRecapitulationSubHeader() {
+    return pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(115),
+        1: const pw.FixedColumnWidth(157),
+        2: const pw.FixedColumnWidth(128),
+        3: const pw.FixedColumnWidth(320),
+        4: const pw.FixedColumnWidth(90),
+        5: const pw.FixedColumnWidth(110),
+        6: const pw.FixedColumnWidth(170),
+        7: const pw.FixedColumnWidth(180),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              data: 'Stock No.',
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              data: 'Quantity',
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              data: 'Unit Cost',
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              data: 'Total Cost',
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 8.0,
+            ),
+            _buildCell(
+              data: 'UACS Object Code',
+              borderTop: false,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Table _buildTableRow({
+    required bool isLast,
+  }) {
+    return pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(115),
+        1: const pw.FixedColumnWidth(157),
+        2: const pw.FixedColumnWidth(128),
+        3: const pw.FixedColumnWidth(320),
+        4: const pw.FixedColumnWidth(90),
+        5: const pw.FixedColumnWidth(110),
+        6: const pw.FixedColumnWidth(170),
+        7: const pw.FixedColumnWidth(180),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderRight: false,
+              borderBottom: isLast,
+            ),
+            _buildCell(
+              borderBottom: isLast,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Table _buildTableFooter() {
+    return pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(810.0),
+        1: const pw.FixedColumnWidth(460.0),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+            ),
+            _buildCell(
+              data: 'Posted by:',
+              borderTop: false,
+              borderBottom: false,
+              isCenter: false,
+              font:
+                  serviceLocator<FontService>().getFont('timesNewRomanRegular'),
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              data:
+                  'I hereby certify to the correctness of the above information.',
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+              isCenter: false,
+              font:
+                  serviceLocator<FontService>().getFont('timesNewRomanRegular'),
+            ),
+            _buildCell(
+              borderTop: false,
+              borderBottom: false,
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+            ),
+            _buildCell(
+              borderTop: false,
+              borderBottom: false,
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+            ),
+            _buildCell(
+              borderTop: false,
+              borderBottom: false,
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              data: '____________________________________',
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+            ),
+            _buildCell(
+              data: '''_____________________   ______________''',
+              borderTop: false,
+              borderBottom: false,
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              data:
+                  'Signature over Printed Name of Supply and/or Property Custodian',
+              borderTop: false,
+              borderRight: false,
+              borderBottom: false,
+              font:
+                  serviceLocator<FontService>().getFont('timesNewRomanRegular'),
+            ),
+            _buildCell(
+              data: '''Signature over Printed             Date''',
+              borderTop: false,
+              borderBottom: false,
+              font:
+                  serviceLocator<FontService>().getFont('timesNewRomanRegular'),
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _buildCell(
+              borderTop: false,
+              borderRight: false,
+            ),
+            _buildCell(
+              borderTop: false,
+            ),
+          ],
         ),
       ],
     );

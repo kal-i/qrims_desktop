@@ -21,6 +21,8 @@ class FontPath {
 
   static const String timesNewRomanRegular = '$_folder/Times-New-Roman.ttf';
   static const String timesNewRomanBold = '$_folder/Times-New-Roman-Bold.ttf';
+  static const String timesNewRomanItalic =
+      '$_folder/Times-New-Roman-Italic.ttf';
 
   static const String trajanProRegular = '$_folder/Trajan-Pro-Regular.ttf';
   static const String trajanProBold = '$_folder/Trajan-Bold.ttf';

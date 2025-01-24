@@ -149,6 +149,7 @@ flutter:
        fonts:
          - asset: assets/fonts/Times-New-Roman.ttf
          - asset: assets/fonts/Times-New-Roman-Bold.ttf
+         - asset: assets/fonts/Times-New-Roman-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:
