@@ -80,7 +80,11 @@ class Officer {
       'position_id': positionId,
       'office_name': officeName,
       'position_name': positionName,
-      'position_history': positionHistory,
+      'position_history': positionHistory
+          .map(
+            (position) => position.toJson(),
+          )
+          .toList(),
       'status': status.toString().split('.').last,
       'is_archived': false,
     };

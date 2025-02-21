@@ -1,4 +1,4 @@
-import '../../../item_inventory/domain/entities/item_with_stock.dart';
+import '../../../item_inventory/domain/entities/base_item.dart';
 
 class IssuanceItemEntity {
   const IssuanceItemEntity({
@@ -8,6 +8,6 @@ class IssuanceItemEntity {
   });
 
   final String issuanceId;
-  final ItemWithStockEntity itemEntity;
+  final BaseItemEntity itemEntity;
   final int quantity;
 }

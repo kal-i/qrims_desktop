@@ -77,6 +77,14 @@ final class PARRegistered extends IssuancesState {
   final PropertyAcknowledgementReceiptEntity par;
 }
 
+final class RISRegistered extends IssuancesState {
+  const RISRegistered({
+    required this.ris,
+  });
+
+  final RequisitionAndIssueSlipEntity ris;
+}
+
 final class IssuanceArchiveStatusUpdated extends IssuancesState {
   const IssuanceArchiveStatusUpdated({
     required this.isSuccessful,

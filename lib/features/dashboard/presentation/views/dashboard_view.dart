@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
-import '../../../../core/common/components/base_container.dart';
-import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/pagination_controls_2.dart';
-import '../../data/models/inventory_summary.dart';
-import '../../data/models/item.dart';
-import '../../data/models/requested_item.dart';
+import '../../domain/entities/fulfilled_request_trend.dart';
+import '../../domain/entities/inventory_stock.dart';
+import '../../domain/entities/most_requested_item.dart';
+import '../../domain/entities/reusable_item_information.dart';
 import '../bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
 import '../bloc/dashboard/low_stock/low_stock_bloc.dart';
+import '../bloc/dashboard/out_of_stock/out_of_stock_bloc.dart';
 import '../bloc/dashboard/requests_summary/requests_summary_bloc.dart';
-import '../../../../core/common/components/kpi_card.dart';
+import '../components/chart_container.dart';
 import '../components/dashboard_kpi_card.dart';
-import '../components/inventory_summary_pie_chart.dart';
-import '../components/item_card.dart';
-import '../components/most_requested_items_bar_graph.dart';
-import '../components/stock_level_pie_chart.dart';
+import '../components/fulfilled_request_over_time_line_chart.dart';
+import '../components/inventory_stock_pie_chart.dart';
+import '../components/most_requested_items_bar_chart.dart';
+import '../components/reusable_item_information_container.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -31,15 +29,41 @@ class _DashboardViewState extends State<DashboardView> {
   late InventorySummaryBloc _inventorySummaryBloc;
   late RequestsSummaryBloc _requestsSummaryBloc;
   late LowStockBloc _lowStockBloc;
+  late OutOfStockBloc _outOfStockBloc;
 
-  final ValueNotifier<int> _inStocksCount = ValueNotifier(0);
-  final ValueNotifier<int> _lowStocksCount = ValueNotifier(0);
-  final ValueNotifier<int> _outOfStocksCount = ValueNotifier(0);
+  final ValueNotifier<List<int>> _suppliesTrends = ValueNotifier([]);
+  final ValueNotifier<List<int>> _equipmentTrends = ValueNotifier([]);
+  final ValueNotifier<int> _suppliesCount = ValueNotifier(0);
+  final ValueNotifier<int> _equipmentCount = ValueNotifier(0);
+  final ValueNotifier<double> _supplyPercentageChange = ValueNotifier(0.0);
+  final ValueNotifier<double> _equipmentPercentageChange = ValueNotifier(0.0);
 
   final ValueNotifier<int> _ongoingRequestsCount = ValueNotifier(0);
   final ValueNotifier<int> _fulfilledRequestsCount = ValueNotifier(0);
+  final ValueNotifier<List<int>> _ongoingRequestsTrends = ValueNotifier([]);
+  final ValueNotifier<List<int>> _fulfilledRequestsTrends = ValueNotifier([]);
+  final ValueNotifier<double> _ongoingPercentageChange = ValueNotifier(0.0);
+  final ValueNotifier<double> _fulfilledPercentageChange = ValueNotifier(0.0);
 
-  final List<ItemModel> _lowStockItems = [];
+  final ValueNotifier<List<InventoryStockEntity>> _inventoryStocks =
+      ValueNotifier([]);
+  final ValueNotifier<List<MostRequestedItemEntity>> _mostRequestedItems =
+      ValueNotifier([]);
+  final ValueNotifier<List<FulfilledRequestTrendEntity>>
+      _fulfilledRequestTrendEntities = ValueNotifier([]);
+
+  final ValueNotifier<List<ReusableItemInformationEntity>>
+      _lowStockItemEntities = ValueNotifier([]);
+  final ValueNotifier<List<ReusableItemInformationEntity>>
+      _outOfStockItemEntities = ValueNotifier([]);
+
+  int _lowStockCurrentPage = 1;
+  int _lowStockPageSize = 5;
+  int _lowStockTotalRecords = 0;
+
+  int _outOfStockCurrentPage = 1;
+  int _outOfStockPageSize = 5;
+  int _outOfStockTotalRecords = 0;
 
   @override
   void initState() {
@@ -47,28 +71,48 @@ class _DashboardViewState extends State<DashboardView> {
     _inventorySummaryBloc = context.read<InventorySummaryBloc>();
     _requestsSummaryBloc = context.read<RequestsSummaryBloc>();
     _lowStockBloc = context.read<LowStockBloc>();
+    _outOfStockBloc = context.read<OutOfStockBloc>();
+
     _fetchInventorySummary();
-    _fetchMostRequestedItems();
-    //_fetchLowStockItems();
+    _fetchRequestsSummary();
+    _fetchLowStockItems();
+    _fetchOutOfStockItems();
   }
 
   void _fetchInventorySummary() {
-    _inventorySummaryBloc.add(GetInventorySummaryEvent());
+    _inventorySummaryBloc.add(
+      GetInventorySummaryEvent(),
+    );
   }
 
-  void _fetchMostRequestedItems() {
-    _requestsSummaryBloc.add(const GetMostRequestedItemsEvent());
+  void _fetchRequestsSummary() {
+    _requestsSummaryBloc.add(
+      GetRequestsSummaryEvent(),
+    );
   }
 
   void _fetchLowStockItems() {
-    _lowStockBloc.add(const GetLowStockEvent(page: 1, pageSize: 10));
+    _lowStockBloc.add(
+      GetLowStockEvent(
+        page: _lowStockCurrentPage,
+        pageSize: _lowStockPageSize,
+      ),
+    );
+  }
+
+  void _fetchOutOfStockItems() {
+    _outOfStockBloc.add(
+      GetOutOfStockEvent(
+        page: _outOfStockCurrentPage,
+        pageSize: _outOfStockPageSize,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _inStocksCount.dispose();
-    _lowStocksCount.dispose();
-    _outOfStocksCount.dispose();
+    _suppliesCount.dispose();
+    _equipmentCount.dispose();
     _ongoingRequestsCount.dispose();
     _fulfilledRequestsCount.dispose();
     super.dispose();
@@ -77,168 +121,121 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: _buildMainContentSection(),
-            ),
-            // const SizedBox(
-            //   width: 20.0,
-            // ),
-            // Expanded(
-            //   child: _buildSidePanelSection(),
-            // ),
-          ],
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<InventorySummaryBloc, InventorySummaryState>(
+            listener: (context, state) {
+              if (state is InventorySummaryLoaded) {
+                _suppliesCount.value =
+                    state.inventorySummaryEntity.suppliesCount;
+                _equipmentCount.value =
+                    state.inventorySummaryEntity.equipmentCount;
+
+                _suppliesTrends.value = state
+                    .inventorySummaryEntity.supplyWeeklyTrendEntities
+                    .map((e) => e.totalQuantity)
+                    .toList();
+                _equipmentTrends.value = state
+                    .inventorySummaryEntity.equipmentWeeklyTrendEntities
+                    .map((e) => e.totalQuantity)
+                    .toList();
+
+                _supplyPercentageChange.value =
+                    state.inventorySummaryEntity.supplyPercentageChange;
+                _equipmentPercentageChange.value =
+                    state.inventorySummaryEntity.equipmentPercentageChange;
+
+                _inventoryStocks.value =
+                    state.inventorySummaryEntity.inventoryStocks;
+              }
+            },
+          ),
+          BlocListener<RequestsSummaryBloc, RequestsSummaryState>(
+            listener: (context, state) {
+              if (state is RequestsSummaryLoaded) {
+                _ongoingRequestsCount.value =
+                    state.requestsSummaryEntity.ongoingRequestCount;
+                _fulfilledRequestsCount.value =
+                    state.requestsSummaryEntity.fulfilledRequestCount;
+
+                _ongoingRequestsTrends.value = state
+                    .requestsSummaryEntity.ongoingWeeklyTrendEntities
+                    .map((e) => e.requestCount)
+                    .toList();
+                _fulfilledRequestsTrends.value = state
+                    .requestsSummaryEntity.fulfilledWeeklyTrendEntities
+                    .map((e) => e.requestCount)
+                    .toList();
+
+                _ongoingPercentageChange.value =
+                    state.requestsSummaryEntity.ongoingPercentageChange;
+                _fulfilledPercentageChange.value =
+                    state.requestsSummaryEntity.fulfilledPercentageChange;
+
+                _mostRequestedItems.value =
+                    state.requestsSummaryEntity.mostRequestedItemEntities;
+
+                _fulfilledRequestTrendEntities.value =
+                    state.requestsSummaryEntity.fulfilledRequestTrendEntities;
+              }
+            },
+          ),
+          BlocListener<LowStockBloc, LowStockState>(
+            listener: (context, state) {
+              if (state is LowStockLoaded) {
+                _lowStockItemEntities.value = state.items;
+              }
+            },
+          ),
+          BlocListener<OutOfStockBloc, OutOfStockState>(
+            listener: (context, state) {
+              if (state is OutOfStocksLoaded) {
+                _outOfStockItemEntities.value = state.items;
+              }
+            },
+          ),
+        ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildInventorySummarySection(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMainContentSection() {
-    return Column(
-      children: [
-        _buildInventorySummarySection(),
-        const SizedBox(
-          height: 30.0,
-        ),
-        //_buildMostRequestedItemsSection(),
-      ],
-    );
-  }
-
   Widget _buildInventorySummarySection() {
-    return BlocListener<InventorySummaryBloc, InventorySummaryState>(
-      listener: (context, state) {
-        if (state is InventorySummaryLoaded) {
-          _inStocksCount.value = state.inventorySummaryEntity.inStocksCount;
-          _lowStocksCount.value = state.inventorySummaryEntity.lowStocksCount;
-          _outOfStocksCount.value =
-              state.inventorySummaryEntity.outOfStocksCount;
-        }
-      },
-      child: BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
-          builder: (context, state) {
+    return BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
+      builder: (context, state) {
         return Column(
           children: [
             _buildCardsSection(),
             const SizedBox(
               height: 30.0,
             ),
-            if (state is InventorySummaryLoaded)
-              Row(
-                children: [
-                  Expanded(
-                      child: StockLevelPieChart(
-                    inStocksCount: state.inventorySummaryEntity.inStocksCount,
-                    lowStocksCount: state.inventorySummaryEntity.lowStocksCount,
-                    outOfStocksCount:
-                        state.inventorySummaryEntity.outOfStocksCount,
-                  )),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: InventorySummaryPieChart(
-                      inventoryData:
-                          state.inventorySummaryEntity as InventorySummaryModel,
-                    ),
-                  ),
-                ],
-              ),
-            if (state is InventorySummaryLoading)
-              Row(
-                children: [
-                  Expanded(
-                    child: BaseContainer(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Loading graph...',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 13.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                          ),
-                          const SpinKitFadingCircle(
-                            color: AppColor.accent,
-                            size: 50.0,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: BaseContainer(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Loading graph...',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 13.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                          ),
-                          const SpinKitFadingCircle(
-                            color: AppColor.accent,
-                            size: 50.0,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            _buildGraphicalChartsSection(),
+            const SizedBox(
+              height: 30.0,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildRunningOutOfStocksSection(),
+                ),
+                const SizedBox(
+                  width: 20.0,
+                ),
+                Expanded(
+                  child: _buildOutOfStocksSection(),
+                ),
+              ],
+            ),
           ],
         );
-      }),
-    );
-    //cdreturn ;
-  }
-
-  Widget _buildMostRequestedItemsSection() {
-    return BlocListener<RequestsSummaryBloc, RequestsSummaryState>(
-        listener: (context, state) {
-      if (state is RequestsSummaryLoaded) {
-        _ongoingRequestsCount.value =
-            state.requestsSummaryEntity.ongoingRequestCount;
-        _fulfilledRequestsCount.value =
-            state.requestsSummaryEntity.fulfilledRequestCount;
-      }
-    }, child: BlocBuilder<RequestsSummaryBloc, RequestsSummaryState>(
-      builder: (context, state) {
-        if (state is RequestsSummaryLoaded) {
-          return MostRequestedItemsBarChart(
-            mostRequestedItems: state.requestsSummaryEntity.mostRequestedItems
-                as List<RequestedItemModel>,
-          );
-        }
-
-        return BaseContainer(
-          child: Column(
-            children: [
-              Text(
-                'Loading graph...',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-              ),
-              const SpinKitFadingCircle(
-                color: AppColor.accent,
-                size: 50.0,
-              ),
-            ],
-          ),
-        );
       },
-    ));
+    );
   }
 
   Widget _buildCardsSection() {
@@ -246,9 +243,10 @@ class _DashboardViewState extends State<DashboardView> {
       children: [
         Expanded(
           child: DashboardKPICard(
-            title: 'In Stocks',
-            count: _inStocksCount.value,
-            change: 4.8,
+            title: 'Supplies',
+            count: _suppliesCount.value,
+            change: _supplyPercentageChange.value,
+            weeklyTrends: _suppliesTrends.value,
           ),
         ),
         const SizedBox(
@@ -256,9 +254,10 @@ class _DashboardViewState extends State<DashboardView> {
         ),
         Expanded(
           child: DashboardKPICard(
-            title: 'Out of Stocks',
-            count: _outOfStocksCount.value,
-            change: -1.8,
+            title: 'Equipment',
+            count: _equipmentCount.value,
+            change: _equipmentPercentageChange.value,
+            weeklyTrends: _equipmentTrends.value,
           ),
         ),
         const SizedBox(
@@ -267,8 +266,9 @@ class _DashboardViewState extends State<DashboardView> {
         Expanded(
           child: DashboardKPICard(
             title: 'Ongoing Requests',
-            count: _ongoingRequestsCount.value, // add pending and ongoing
-            change: 5.8,
+            count: _ongoingRequestsCount.value,
+            change: _ongoingPercentageChange.value,
+            weeklyTrends: _ongoingRequestsTrends.value,
           ),
         ),
         const SizedBox(
@@ -277,389 +277,120 @@ class _DashboardViewState extends State<DashboardView> {
         Expanded(
           child: DashboardKPICard(
             title: 'Fulfilled Requests',
-            count: _fulfilledRequestsCount.value, // get fulfilled req count
-            change: 5.8,
+            count: _fulfilledRequestsCount.value,
+            change: _fulfilledPercentageChange.value,
+            weeklyTrends: _fulfilledRequestsTrends.value,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInventorySummaryChartsSection() {
-    return Row();
-  }
-
-  Widget _buildSidePanelSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        BaseContainer(
-          height: 500.0,
-          color: Theme.of(context).primaryColor,
-          child: _buildLowStockSection(),
-        ),
-        SizedBox(
-          height: 20.0,
-        ),
-        BaseContainer(
-          height: 400.0,
-          color: Theme.of(context).primaryColor,
-          child: _buildOutOfStockSection(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLowStockSection() {
-    return BlocListener<LowStockBloc, LowStockState>(
-      listener: (context, state) {
-        if (state is LowStockLoaded) {
-          _lowStockItems.clear();
-          _lowStockItems
-              .addAll(state.items.map((item) => item as ItemModel).toList());
-        }
-      },
-      child: BlocBuilder<LowStockBloc, LowStockState>(
-        builder: (context, state) {
-          return Column(
-            children: [
-              _buildLowStockHeader(),
-              const SizedBox(
-                height: 30.0,
-              ),
-              if (state is LowStockLoading)
-                const SpinKitFadingCircle(
-                  color: AppColor.accent,
-                  size: 10.0,
-                ),
-              if (state is LowStockError)
-                CustomMessageBox.error(
-                  message: state.message,
-                ),
-              Expanded(
-                child: _buildLowStockListView(),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildLowStockHeader() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Low Stock Items',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            PaginationControls2(
-              currentPage: 1,
-              totalRecords: 10,
-              pageSize: 10,
-              onPageChanged: (page) {
-                // _currentPage = page;
-                // _fetchNotifications();
-              },
-              onPageSizeChanged: (size) {
-                // _pageSize = size;
-                // _fetchNotifications();
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOutOfStockSection() {
-    return BlocListener<LowStockBloc, LowStockState>(
-      listener: (context, state) {
-        if (state is LowStockLoaded) {
-          _lowStockItems.clear();
-          _lowStockItems
-              .addAll(state.items.map((item) => item as ItemModel).toList());
-        }
-      },
-      child: BlocBuilder<LowStockBloc, LowStockState>(
-        builder: (context, state) {
-          return Column(
-            children: [
-              _buildOutOfStockHeader(),
-              const SizedBox(
-                height: 30.0,
-              ),
-              if (state is LowStockLoading)
-                const SpinKitFadingCircle(
-                  color: AppColor.accent,
-                  size: 10.0,
-                ),
-              if (state is LowStockError)
-                CustomMessageBox.error(
-                  message: state.message,
-                ),
-              Expanded(
-                child: _buildLowStockListView(),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildOutOfStockHeader() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Out of Stock Items',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            PaginationControls2(
-              currentPage: 1,
-              totalRecords: 10,
-              pageSize: 10,
-              onPageChanged: (page) {
-                // _currentPage = page;
-                // _fetchNotifications();
-              },
-              onPageSizeChanged: (size) {
-                // _pageSize = size;
-                // _fetchNotifications();
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLowStockListView() {
-    return RefreshIndicator(
-      color: AppColor.accent,
-      onRefresh: () async {},
-      child: ListView.builder(
-        itemCount: _lowStockItems.length,
-        itemBuilder: (context, index) => ItemCard(
-          item: _lowStockItems[index],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInventorySummaryCardsSection() {
+  Widget _buildGraphicalChartsSection() {
     return Row(
       children: [
         Expanded(
-          child: KPICard(
-            icon: HugeIcons.strokeRoundedPackageAdd,
-            title: 'In Stocks',
-            data: _inStocksCount.value.toString(),
+          child: ValueListenableBuilder(
+            valueListenable: _fulfilledRequestTrendEntities,
+            builder: (context, fulfilledRequestTrendEntities, child) {
+              return FulfilledRequestOverTimeLineChart(
+                fulfilledRequestTrendEntities: fulfilledRequestTrendEntities,
+              );
+            },
           ),
         ),
         const SizedBox(
-          width: 10.0,
+          width: 20.0,
         ),
         Expanded(
-          child: KPICard(
-            icon: HugeIcons.strokeRoundedPackageProcess,
-            title: 'Low Stocks',
-            data: _lowStocksCount.value.toString(),
-          ),
+          child: ValueListenableBuilder(
+              valueListenable: _mostRequestedItems,
+              builder: (context, mostRequestedItems, child) {
+                return MostRequestedItemsBarChart(
+                  mostRequestedItemEntities: mostRequestedItems,
+                );
+              }),
         ),
         const SizedBox(
-          width: 10.0,
+          width: 20.0,
         ),
         Expanded(
-          child: KPICard(
-            icon: HugeIcons.strokeRoundedPackageRemove,
-            title: 'Out of Stocks',
-            data: _outOfStocksCount.value.toString(),
-          ),
+          child: ValueListenableBuilder(
+              valueListenable: _inventoryStocks,
+              builder: (context, inventoryStocks, child) {
+                return InventoryStockPieChart(
+                  inventoryStocks: inventoryStocks,
+                );
+              }),
         ),
       ],
     );
   }
 
-  // Row(
-  // children: [
-  // /// left
-  // Expanded(
-  // flex: 5,
-  // child: Column(
-  // children: [
-  // /// KPI Overview
-  // _buildInventorySummaryCardsSection(),
-  //
-  // const SizedBox(
-  // height: 10.0,
-  // ),
-  //
-  // /// Inventory Overview
-  // Expanded(
-  // child: Row(
-  // children: [
-  // Expanded(child: _buildCategoricalInventoryDataSection()),
-  // const SizedBox(
-  // width: 10.0,
-  // ),
-  // Expanded(child: _buildCategoricalInventoryDataSection()),
-  // ],
-  // ),
-  // ),
-  //
-  // const SizedBox(
-  // height: 10.0,
-  // ),
-  //
-  // /// In-demand Items Overview
-  // Expanded(
-  // child: BaseContainer(
-  // child: Column(
-  // children: [
-  // Row(
-  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  // children: [
-  // Text(
-  // 'In-demand Overview',
-  // style: Theme.of(context).textTheme.titleSmall,
-  // ),
-  // ],
-  // ),
-  // ],
-  // ),
-  // ),
-  // ),
-  // ],
-  // ),
-  // ),
-  //
-  // const SizedBox(
-  // width: 10.0,
-  // ),
-  //
-  // /// right
-  // Expanded(
-  // flex: 2,
-  // child: Column(
-  // children: [
-  // /// Activity Overview
-  // Expanded(
-  // child: BaseContainer(
-  // child: Column(
-  // crossAxisAlignment: CrossAxisAlignment.stretch,
-  // children: [
-  // Text(
-  // 'Recent Activity Logs',
-  // style: Theme.of(context).textTheme.titleSmall,
-  // ),
-  // const Divider(),
-  // Expanded(
-  // child:
-  // BlocBuilder<UserActivityBloc, UserActivityState>(
-  // builder: (context, state) {
-  // if (state is UserActivityLoading &&
-  // state.isFirstFetch) {
-  // return const Loader();
-  // }
-  //
-  // final activities = state is UserActivityLoaded
-  // ? state.userActivities
-  //     : <UserActivityEntity>[];
-  //
-  // return NotificationListener<ScrollNotification>(
-  // onNotification: (ScrollNotification scrollInfo) {
-  // // if reached the scroll end and state is not loading, invoke fetch next page
-  // if (scrollInfo.metrics.pixels ==
-  // scrollInfo.metrics.maxScrollExtent &&
-  // state is! UserActivityLoading) {
-  // context.read<UserActivityBloc>().fetchNextPage(
-  // 1); // todo: replace later using auth bloc builder to get user info
-  // }
-  // return false;
-  // },
-  // child: ListView.builder(
-  // itemCount: activities.length +
-  // (state is UserActivityLoading ? 1 : 0),
-  // itemBuilder: (context, index) {
-  // if (index < activities.length) {
-  // final activity = activities[index];
-  // return ActivityLogCard(
-  // userActivityEntity: activity);
-  // } else {
-  // return const Loader();
-  // }
-  // },
-  // ),
-  // );
-  // // return ListView(
-  // //   // physics: const NeverScrollableScrollPhysics(), // this will disable the scrollable if fixed height
-  // //   shrinkWrap: true,
-  // //   children: const [
-  // //     ActivityLogCard(),
-  // //     ActivityLogCard(),
-  // //     ActivityLogCard(),
-  // //     ActivityLogCard(),
-  // //     ActivityLogCard(),
-  // //   ],
-  // // );
-  // }),
-  // ),
-  // ],
-  // ),
-  // ),
-  // ),
-  //
-  // const SizedBox(
-  // height: 10.0,
-  // ),
-  //
-  // /// Limited Items Overview
-  // Expanded(
-  // child: BaseContainer(
-  // child: Column(
-  // crossAxisAlignment: CrossAxisAlignment.stretch,
-  // children: [
-  // Text(
-  // 'Running Out of Stocks',
-  // style: Theme.of(context).textTheme.titleSmall,
-  // ),
-  // const Divider(),
-  // Expanded(
-  // child: ListView(
-  // // physics: const NeverScrollableScrollPhysics(),
-  // shrinkWrap: true,
-  // children: const [
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // LimitedItemCard(),
-  // ],
-  // ),
-  // ),
-  // ],
-  // ),
-  // ),
-  // ),
-  // ],
-  // ),
-  // ),
-  // ],
-  // ),
+  Widget _buildRunningOutOfStocksSection() {
+    return BlocBuilder<LowStockBloc, LowStockState>(
+      builder: (context, state) {
+        return ChartContainer(
+          title: 'Running-out-of-stocks',
+          description:
+              'Supply items that reached the defined inventory threshold (quantity below 10).',
+          action: PaginationControls2(
+            currentPage: _lowStockCurrentPage,
+            totalRecords: _lowStockTotalRecords,
+            pageSize: _lowStockPageSize,
+            onPageChanged: (page) {
+              _lowStockCurrentPage = page;
+              _fetchLowStockItems();
+            },
+            onPageSizeChanged: (size) {
+              _lowStockPageSize = size;
+              _fetchLowStockItems();
+            },
+          ),
+          child: ListView.builder(
+            itemCount: _lowStockItemEntities.value.length,
+            itemBuilder: (context, index) {
+              return ReusableItemInformationContainer(
+                reusableItemInformationEntity:
+                    _lowStockItemEntities.value[index],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOutOfStocksSection() {
+    return BlocBuilder<OutOfStockBloc, OutOfStockState>(
+      builder: (context, state) {
+        return ChartContainer(
+          title: 'Out-of-stocks',
+          description: 'Supply items that have reached a quantity of 0.',
+          action: PaginationControls2(
+            currentPage: _outOfStockCurrentPage,
+            totalRecords: _outOfStockTotalRecords,
+            pageSize: _outOfStockPageSize,
+            onPageChanged: (page) {
+              _outOfStockCurrentPage = page;
+              _fetchOutOfStockItems();
+            },
+            onPageSizeChanged: (size) {
+              _outOfStockPageSize = size;
+              _fetchOutOfStockItems();
+            },
+          ),
+          child: ListView.builder(
+            itemCount: _outOfStockItemEntities.value.length,
+            itemBuilder: (context, index) {
+              return ReusableItemInformationContainer(
+                reusableItemInformationEntity:
+                    _outOfStockItemEntities.value[index],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }

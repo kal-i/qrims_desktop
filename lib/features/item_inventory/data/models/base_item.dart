@@ -14,6 +14,7 @@ abstract class BaseItemModel extends BaseItemEntity {
       print('supp received');
       return SupplyModel.fromJson(json);
     } else {
+      print('equipment');
       return EquipmentModel.fromJson(json);
     }
   }

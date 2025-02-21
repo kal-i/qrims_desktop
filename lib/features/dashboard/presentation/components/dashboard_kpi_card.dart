@@ -11,11 +11,13 @@ class DashboardKPICard extends StatelessWidget {
     required this.title,
     required this.count,
     required this.change,
+    required this.weeklyTrends,
   });
 
   final String title;
   final int count;
   final double change;
+  final List<int> weeklyTrends;
 
   @override
   Widget build(BuildContext context) {
@@ -30,15 +32,13 @@ class DashboardKPICard extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
-
                 const SizedBox(
                   width: 20.0,
                 ),
-
                 Expanded(
                   child: LineChart(
                     LineChartData(
@@ -47,12 +47,14 @@ class DashboardKPICard extends StatelessWidget {
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
-                          spots: [
-                            FlSpot(0, 1),
-                            FlSpot(1, 1.5),
-                            FlSpot(2, 1.4),
-                            FlSpot(3, 3),
-                          ],
+                          spots: weeklyTrends
+                              .asMap()
+                              .entries
+                              .map((entry) => FlSpot(
+                                    entry.key.toDouble(),
+                                    entry.value.toDouble(),
+                                  ))
+                              .toList(),
                           isCurved: true,
                           color: AppColor.accent,
                           barWidth: 2.0,
@@ -64,15 +66,13 @@ class DashboardKPICard extends StatelessWidget {
               ],
             ),
           ),
-
           Text(
             count.toString(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 32.0,
-              fontWeight: FontWeight.w900,
-            ),
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.w900,
+                ),
           ),
-
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -80,11 +80,10 @@ class DashboardKPICard extends StatelessWidget {
                 Text(
                   'Since last week',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-
                 Row(
                   children: [
                     Icon(

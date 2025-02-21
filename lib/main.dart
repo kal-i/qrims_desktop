@@ -12,11 +12,13 @@ import 'package:window_manager/window_manager.dart';
 import 'core/common/components/custom_filled_button/bloc/button_bloc.dart';
 import 'core/common/components/search_button/bloc/search_button_bloc.dart';
 
+import 'core/services/keyboard_service.dart';
 import 'features/archive/presentation/bloc/archive_user_bloc/archive_users_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/components/custom_auth_password_text_box/bloc/custom_auth_password_text_box_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/inventory_summary/inventory_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/low_stock/low_stock_bloc.dart';
+import 'features/dashboard/presentation/bloc/dashboard/out_of_stock/out_of_stock_bloc.dart';
 import 'features/dashboard/presentation/bloc/dashboard/requests_summary/requests_summary_bloc.dart';
 import 'features/dashboard/presentation/bloc/user_activity/user_activity_bloc.dart';
 import 'features/item_inventory/presentation/bloc/item_inventory_bloc.dart';
@@ -28,14 +30,6 @@ import 'features/officer/presentation/bloc/officers_bloc.dart';
 import 'features/purchase_request/presentation/bloc/purchase_requests_bloc.dart';
 import 'features/users_management/presentation/bloc/users_management_bloc.dart';
 import 'init_dependencies.dart';
-
-// TODO: consider opting for persistent base auth view - done
-// pros: perf and reduce codes rebuilt
-// cons: tight coupled and complex state management;
-// tight coupled - one changes in base auth view will affect the associated views
-
-// TODO: check if the code is still valid even after its expiration // ongoing
-// TODO: validate if otp is expired b4 sending a new one
 
 bool get isDesktop {
   if (kIsWeb) return false;
@@ -80,6 +74,17 @@ void main() async {
       await windowManager.setSkipTaskbar(false);
     });
   }
+  // Initialize KeyboardService to handle key events
+  KeyboardService();
+
+  // Suppress assertion errors for Num Lock issue in debug mode
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (!details.exception
+        .toString()
+        .contains("Attempted to send a key down event")) {
+      FlutterError.dumpErrorToConsole(details);
+    }
+  };
 
   runApp(const MyApp());
 }
@@ -105,14 +110,17 @@ class MyApp extends StatelessWidget {
           BlocProvider<SideNavigationDrawerBloc>(
             create: (_) => serviceLocator<SideNavigationDrawerBloc>(),
           ),
-          BlocProvider(
+          BlocProvider<InventorySummaryBloc>(
             create: (_) => serviceLocator<InventorySummaryBloc>(),
           ),
-          BlocProvider(
+          BlocProvider<RequestsSummaryBloc>(
             create: (_) => serviceLocator<RequestsSummaryBloc>(),
           ),
-          BlocProvider(
+          BlocProvider<LowStockBloc>(
             create: (_) => serviceLocator<LowStockBloc>(),
+          ),
+          BlocProvider<OutOfStockBloc>(
+            create: (_) => serviceLocator<OutOfStockBloc>(),
           ),
           BlocProvider(
             create: (_) => serviceLocator<UsersManagementBloc>(),

@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
@@ -13,6 +14,7 @@ import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
@@ -45,10 +47,13 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   final _specificationController = TextEditingController();
   final _unitController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _unitCostController = TextEditingController();
 
   final ValueNotifier<int> _quantity = ValueNotifier(0);
   final ValueNotifier<String?> _selectedItemName = ValueNotifier(null);
   final ValueNotifier<Unit> _selectedUnit = ValueNotifier(Unit.undetermined);
+
+  final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
 
   bool _isViewOnlyMode() => !widget.isUpdate && widget.itemId != null;
 
@@ -102,6 +107,8 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               specification: _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
+              unitCost: double.parse(_unitCostController.text),
+              acquiredDate: _pickedDate.value,
             ),
           );
     }
@@ -117,6 +124,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               specification: _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
+              acquiredDate: _pickedDate.value,
             ),
           );
     }
@@ -135,6 +143,8 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     _quantity.dispose();
     _selectedItemName.dispose();
     _selectedUnit.dispose();
+
+    _pickedDate.dispose();
 
     super.dispose();
   }
@@ -181,7 +191,8 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                       .productStockEntity.productDescription?.description ??
                   '';
               _specificationController.text =
-                  initItemData.shareableItemInformationEntity.specification;
+                  initItemData.shareableItemInformationEntity.specification ??
+                      'Not specified.';
               _selectedUnit.value = Unit.values.firstWhere(
                 (e) =>
                     e.toString().split('.').last ==
@@ -265,7 +276,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                 fontWeight: FontWeight.w700,
               ),
         ),
-        if (_isViewOnlyMode()) _buildInstruction(),
+        if (!_isViewOnlyMode()) _buildInstruction(),
       ],
     );
   }
@@ -397,11 +408,32 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                 child: _buildUnitSelection(),
               ),
             ),
-            const SizedBox(width: 20.0),
+            const SizedBox(
+              width: 20.0,
+            ),
             Expanded(
               child: SizedBox(
                 height: 100.0,
                 child: _buildQuantityCounterField(),
+              ),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: SizedBox(
+                height: 100.0,
+                child: CustomFormTextField(
+                  label: 'Unit Cost',
+                  placeholderText: 'Enter item\'s unit cost',
+                  controller: _unitCostController,
+                  enabled: !_isViewOnlyMode(),
+                  isNumeric: true,
+                  isCurrency: true,
+                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                      ? AppColor.lightCustomTextBox
+                      : AppColor.darkCustomTextBox),
+                ),
               ),
             ),
           ],
@@ -415,6 +447,10 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+        ),
+        SizedBox(
+          height: 100.0,
+          child: _buildAcquiredDateSelection(),
         ),
       ],
     );
@@ -549,6 +585,30 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAcquiredDateSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _pickedDate,
+      builder: (context, pickedValue, child) {
+        final dateController = TextEditingController(
+          text: pickedValue != null ? dateFormatter(pickedValue) : '',
+        );
+
+        return CustomDatePicker(
+          onDateChanged: (DateTime? date) {
+            if (date != null) {
+              _pickedDate.value = date;
+            }
+          },
+          label: 'Acquired Date',
+          dateController: dateController,
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );

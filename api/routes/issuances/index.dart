@@ -1,19 +1,7 @@
 import 'dart:io';
 
-import 'package:api/src/entity/repository/entity_repository.dart';
 import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
-import 'package:api/src/item/models/item.dart';
-import 'package:api/src/item/repository/item_repository.dart';
-import 'package:api/src/notification/model/notification.dart';
-import 'package:api/src/notification/repository/notification_repository.dart';
-import 'package:api/src/organization_management/repositories/office_repository.dart';
-import 'package:api/src/organization_management/repositories/officer_repository.dart';
-import 'package:api/src/organization_management/repositories/position_repository.dart';
-import 'package:api/src/purchase_request/model/purchase_request.dart';
-import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
-import 'package:api/src/session/session_repository.dart';
-import 'package:api/src/user/repository/user_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
@@ -69,11 +57,15 @@ Future<Response> _getIssuances(
       body: {
         'totalItemCount': issuancesCount,
         'issuances': issuances
-            ?.map((issuance) => issuance is InventoryCustodianSlip
-                ? issuance.toJson()
-                : issuance is PropertyAcknowledgementReceipt
-                    ? issuance.toJson()
-                    : null)
+            ?.map(
+              (issuance) => issuance is InventoryCustodianSlip
+                  ? issuance.toJson()
+                  : issuance is PropertyAcknowledgementReceipt
+                      ? issuance.toJson()
+                      : issuance is RequisitionAndIssueSlip
+                          ? issuance.toJson()
+                          : null,
+            )
             .where((issuanceJson) => issuanceJson != null)
             .toList(),
       },

@@ -62,7 +62,6 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
       suggestionsCallback: (prId) async {
         return await _purchaseRequestSuggestionsService.fetchPurchaseRequestIds(
           prId: prId,
-          type: 'ics',
         );
       },
       onSelected: (value) {

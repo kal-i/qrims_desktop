@@ -2,31 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
+import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/fund_cluster.dart';
-import '../../../../core/enums/unit.dart';
 import '../../../../core/services/entity_suggestions_service.dart';
-import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
+import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
+import '../../../../core/utils/show_confirmation_dialog.dart';
 import '../../../../init_dependencies.dart';
+import '../../../navigation/domain/domain/entities/notification.dart';
+import '../../../purchase_order/presentation/components/request_time_line_tile.dart';
 import '../bloc/purchase_requests_bloc.dart';
+import '../components/add_requested_item_modal.dart';
 import '../components/custom_search_field.dart';
 
 class PurchaseRequestReusableView extends StatefulWidget {
-  const PurchaseRequestReusableView({super.key});
+  const PurchaseRequestReusableView({
+    super.key,
+    this.prId,
+  });
+
+  final String? prId;
 
   @override
   State<PurchaseRequestReusableView> createState() =>
@@ -36,21 +47,16 @@ class PurchaseRequestReusableView extends StatefulWidget {
 class _PurchaseRequestReusableViewState
     extends State<PurchaseRequestReusableView> {
   late EntitySuggestionService _entitySuggestionService;
-  late ItemSuggestionsService _itemSuggestionsService;
   late OfficerSuggestionsService _officerSuggestionsService;
 
   final _formKey = GlobalKey<FormState>();
 
   final _prIdController = TextEditingController();
+  final _responsibilityCenterCodeController = TextEditingController();
   final _officeController = TextEditingController();
   final _dateController = TextEditingController();
   final _entityNameController = TextEditingController();
   final _purposeController = TextEditingController();
-
-  final _itemNameController = TextEditingController();
-  final _itemDescriptionController = TextEditingController();
-  final _quantityController = TextEditingController();
-  final _unitCostController = TextEditingController();
 
   final _requestingOfficerOfficeController = TextEditingController();
   final _requestingOfficerPositionController = TextEditingController();
@@ -60,10 +66,8 @@ class _PurchaseRequestReusableViewState
   final _approvingOfficerPositionController = TextEditingController();
   final _approvingOfficerNameController = TextEditingController();
 
-  final ValueNotifier<FundCluster?> _selectedFundCluster = ValueNotifier(null);
-  final ValueNotifier<String?> _selectedItemName = ValueNotifier(null);
-  final ValueNotifier<Unit?> _selectedUnit = ValueNotifier(null);
-  final ValueNotifier<int> _quantity = ValueNotifier(0);
+  final ValueNotifier<FundCluster?> _selectedFundCluster =
+      ValueNotifier(FundCluster.unknown);
   final ValueNotifier<String?> _selectedRequestingOfficerOffice =
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedRequestingOfficerPosition =
@@ -75,63 +79,129 @@ class _PurchaseRequestReusableViewState
 
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
 
+  final ValueNotifier<List<NotificationEntity>> _notificationEntities =
+      ValueNotifier([]);
+
+  bool _isViewOnlyMode() => widget.prId != null;
+
+  late TableConfig _tableConfig;
+  final List<String> _tableHeaders = [
+    'Item Name',
+    'Description',
+    'Unit',
+    'Quantity',
+    'Unit Cost',
+  ];
+  final ValueNotifier<List<TableData>> _tableRows = ValueNotifier([]);
+
   @override
   void initState() {
     super.initState();
-    _entitySuggestionService = serviceLocator<EntitySuggestionService>();
-    _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
-    _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
-    //_officeScrollController.addListener(_loadMoreOffices);
+    if (widget.prId != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
+          context.read<PurchaseRequestsBloc>().add(
+                GetPurchaseRequestByIdEvent(
+                  prId: widget.prId!,
+                ),
+              );
+        },
+      );
+    } else {
+      _entitySuggestionService = serviceLocator<EntitySuggestionService>();
+      _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
+    }
 
-    _quantityController.addListener(() {
-      final newQuantity = int.tryParse(_quantityController.text) ?? 0;
-      _quantity.value = newQuantity;
-    });
-
-    _quantity.addListener(() {
-      _quantityController.text = _quantity.value.toString();
-    });
+    _initializeTableConfig();
   }
 
-  void _savePurchaseRequest() {
+  void _initializeTableConfig() {
+    _tableConfig = TableConfig(
+      headers: _tableHeaders,
+      rows: _tableRows.value,
+      columnFlex: [
+        2,
+        3,
+        1,
+        1,
+        1,
+      ],
+    );
+  }
+
+  void _savePurchaseRequest() async {
     if (_formKey.currentState!.validate()) {
-      context.read<PurchaseRequestsBloc>().add(
-            RegisterPurchaseRequestEvent(
-              entityName: _entityNameController.text,
-              fundCluster: _selectedFundCluster.value!,
-              officeName: _officeController.text,
-              date: _pickedDate.value,
-              productName: _itemNameController.text,
-              productDescription: _itemDescriptionController.text,
-              unit: _selectedUnit.value!,
-              quantity: int.parse(_quantityController.text),
-              unitCost: double.parse(_unitCostController.text),
-              purpose: _purposeController.text,
-              requestingOfficerOffice: _requestingOfficerOfficeController.text,
-              requestingOfficerPosition:
-                  _requestingOfficerPositionController.text,
-              requestingOfficerName: _requestingOfficerNameController.text,
-              approvingOfficerOffice: _approvingOfficerOfficeController.text,
-              approvingOfficerPosition:
-                  _approvingOfficerPositionController.text,
-              approvingOfficerName: _approvingOfficerNameController.text,
-            ),
-          );
+      if (_tableRows.value.isEmpty) {
+        DelightfulToastUtils.showDelightfulToast(
+          context: context,
+          icon: Icons.error_outline,
+          title: 'Error',
+          subtitle: 'Requested Item(s) cannot be empty.',
+        );
+        return;
+      }
+
+      // Show confirmation dialog before proceeding
+      final shouldProceed = await showConfirmationDialog(
+        context: context,
+        confirmationTitle: 'Register Purchase Request',
+        confirmationMessage:
+            'Are you sure you want to register the purchase request?',
+      );
+
+      if (shouldProceed) {
+        context.read<PurchaseRequestsBloc>().add(
+              RegisterPurchaseRequestEvent(
+                entityName: _entityNameController.text,
+                fundCluster: _selectedFundCluster.value!,
+                officeName: _officeController.text,
+                date: _pickedDate.value,
+                requestedItems: _tableRows.value
+                    .map((e) => e.object as Map<String, dynamic>)
+                    .toList(),
+                purpose: _purposeController.text,
+                requestingOfficerOffice:
+                    _requestingOfficerOfficeController.text,
+                requestingOfficerPosition:
+                    _requestingOfficerPositionController.text,
+                requestingOfficerName: _requestingOfficerNameController.text,
+                approvingOfficerOffice: _approvingOfficerOfficeController.text,
+                approvingOfficerPosition:
+                    _approvingOfficerPositionController.text,
+                approvingOfficerName: _approvingOfficerNameController.text,
+              ),
+            );
+      }
     }
+  }
+
+  void _onTrackingIdTapped(BuildContext context, String trackingId) {
+    print('tracking id: $trackingId');
+    final Map<String, dynamic> extra = {
+      'issuance_id': trackingId.toString().split(' ').last,
+    };
+
+    // if (widget.initLocation ==
+    //     RoutingConstants.nestedHomePurchaseRequestViewRoutePath) {
+    //   context.go(RoutingConstants.nestedHomeIssuanceViewRoutePath,
+    //       extra: extra);
+    // }
+    //
+    // if (widget.initLocation ==
+    //     RoutingConstants.nestedHistoryPurchaseRequestViewRoutePath) {
+    //   context.go(RoutingConstants.nestedHistoryIssuanceViewRoutePath,
+    //       extra: extra);
+    // }
   }
 
   @override
   void dispose() {
     _prIdController.dispose();
+    _responsibilityCenterCodeController.dispose();
     _officeController.dispose();
     _dateController.dispose();
     _entityNameController.dispose();
     _purposeController.dispose();
-
-    _itemNameController.dispose();
-    _itemDescriptionController.dispose();
-    _quantityController.dispose();
-    _unitCostController.dispose();
 
     _requestingOfficerOfficeController.dispose();
     _requestingOfficerPositionController.dispose();
@@ -142,13 +212,13 @@ class _PurchaseRequestReusableViewState
     _approvingOfficerNameController.dispose();
 
     _selectedFundCluster.dispose();
-    _selectedItemName.dispose();
-    _selectedUnit.dispose();
-    _quantity.dispose();
+
     _selectedRequestingOfficerOffice.dispose();
     _selectedRequestingOfficerPosition.dispose();
     _selectedApprovingOfficerOffice.dispose();
     _selectedApprovingOfficerPosition.dispose();
+
+    _notificationEntities.dispose();
 
     super.dispose();
   }
@@ -158,6 +228,106 @@ class _PurchaseRequestReusableViewState
     return Scaffold(
       body: BlocListener<PurchaseRequestsBloc, PurchaseRequestsState>(
         listener: (context, state) async {
+          if (state is PurchaseRequestLoaded) {
+            final purchaseRequestWithNotificationTrailEntity =
+                state.purchaseRequestWithNotificationTrailEntity;
+            final purchaseRequestEntity =
+                purchaseRequestWithNotificationTrailEntity
+                    .purchaseRequestEntity;
+            final notificationEntities =
+                purchaseRequestWithNotificationTrailEntity.notificationEntities;
+            final requestingOfficerEntity =
+                purchaseRequestEntity.requestingOfficerEntity;
+            final approvingOfficerEntity =
+                purchaseRequestEntity.approvingOfficerEntity;
+
+            _prIdController.text = purchaseRequestEntity.id;
+            _responsibilityCenterCodeController.text =
+                purchaseRequestEntity.responsibilityCenterCode ?? 'N/A';
+
+            _officeController.text =
+                purchaseRequestEntity.officeEntity.officeName;
+            _entityNameController.text = purchaseRequestEntity.entity.name;
+            _purposeController.text = purchaseRequestEntity.purpose;
+
+            _requestingOfficerOfficeController.text =
+                requestingOfficerEntity.officeName;
+            _requestingOfficerPositionController.text =
+                requestingOfficerEntity.officeName;
+            _requestingOfficerNameController.text =
+                requestingOfficerEntity.name;
+
+            _approvingOfficerOfficeController.text =
+                approvingOfficerEntity.officeName;
+            _approvingOfficerPositionController.text =
+                approvingOfficerEntity.positionName;
+            _approvingOfficerNameController.text = approvingOfficerEntity.name;
+
+            _tableRows.value.clear();
+            _tableRows.value.addAll(
+              purchaseRequestEntity.requestedItemEntities
+                  .map(
+                    (requestedItem) => TableData(
+                      id: requestedItem.id.toString(),
+                      columns: [
+                        Text(
+                          capitalizeWord(requestedItem.productNameEntity.name),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        Text(
+                          capitalizeWord(
+                              '${requestedItem.productDescriptionEntity.description}${requestedItem.specification != null ? ', ${requestedItem.specification}' : ''}'),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        Text(
+                          readableEnumConverter(requestedItem.unit),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        Text(
+                          capitalizeWord(requestedItem.quantity.toString()),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        Text(
+                          capitalizeWord(requestedItem.unitCost.toString()),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .toList(),
+            );
+
+            _selectedFundCluster.value = FundCluster.values.firstWhere(
+              (e) =>
+                  e.toString().split('.').last ==
+                  purchaseRequestEntity.fundCluster.toString().split('.').last,
+              orElse: () => FundCluster.unknown,
+            );
+            _pickedDate.value = purchaseRequestEntity.date;
+
+            _notificationEntities.value = notificationEntities;
+          }
+
           if (state is PurchaseRequestRegistered) {
             print('triggered');
             DelightfulToastUtils.showDelightfulToast(
@@ -210,13 +380,10 @@ class _PurchaseRequestReusableViewState
       key: _formKey,
       child: Column(
         children: [
-          // _buildHeader(),
-          // const SizedBox(
-          //   height: 50.0,
-          // ),
+          if (_isViewOnlyMode()) _buildViewOnlyWidgets(),
           _buildPurchaseRequestInitialInformationFields(),
           const SizedBox(
-            height: 50.0,
+            height: 20.0,
           ),
           _buildItemInformationFields(),
           const SizedBox(
@@ -236,27 +403,92 @@ class _PurchaseRequestReusableViewState
     );
   }
 
-  // Widget _buildHeader() {
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       Text(
-  //         'Purchase Request',
-  //         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //               fontSize: 18.0,
-  //               fontWeight: FontWeight.w600,
-  //             ),
-  //       ),
-  //       IconButton(
-  //         onPressed: () => context.pop(),
-  //         icon: const Icon(
-  //           HugeIcons.strokeRoundedCancel01,
-  //           size: 20.0,
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+  Widget _buildViewOnlyWidgets() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Purchase Request QR Code',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 20.0),
+        ValueListenableBuilder(
+          valueListenable: _notificationEntities,
+          builder: (contet, notifications, child) {
+            return _buildTimeline(notifications);
+          },
+        ),
+        const SizedBox(height: 20.0),
+        Row(
+          children: [
+            _buildQrContainer(),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  CustomFormTextField(
+                    label: 'PR Id',
+                    controller: _prIdController,
+                    enabled: !_isViewOnlyMode(),
+                    fillColor:
+                        (context.watch<ThemeBloc>().state == AppTheme.light
+                            ? AppColor.lightCustomTextBox
+                            : AppColor.darkCustomTextBox),
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  CustomFormTextField(
+                    label: 'Responsibility Center Code',
+                    controller: _responsibilityCenterCodeController,
+                    enabled: !_isViewOnlyMode(),
+                    fillColor:
+                        (context.watch<ThemeBloc>().state == AppTheme.light
+                            ? AppColor.lightCustomTextBox
+                            : AppColor.darkCustomTextBox),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQrContainer() {
+    return Container(
+      width: 160.0,
+      height: 160.0,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(10.0),
+        color: AppColor.lightPrimary,
+      ),
+      child: QrImageView(
+        data: _prIdController.text,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.circle,
+          color: AppColor.darkPrimary,
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.circle,
+          color: AppColor.darkPrimary,
+        ),
+      ),
+    );
+  }
 
   Widget _buildPurchaseRequestInitialInformationFields() {
     return Column(
@@ -279,10 +511,6 @@ class _PurchaseRequestReusableViewState
                 fontWeight: FontWeight.w400,
               ),
         ),
-        // Divider(
-        //   color: Theme.of(context).dividerColor,
-        //   thickness: 2.5,
-        // ),
         const SizedBox(
           height: 20.0,
         ),
@@ -290,15 +518,6 @@ class _PurchaseRequestReusableViewState
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Expanded(
-              //   child: CustomFormTextField(
-              //     label: 'PR No.',
-              //     controller: _prIdController,
-              //   ),
-              // ),
-              // const SizedBox(
-              //   width: 50.0,
-              // ),
               Expanded(
                 child: _buildOfficeSuggestionField(),
               ),
@@ -314,21 +533,19 @@ class _PurchaseRequestReusableViewState
         const SizedBox(
           height: 15.0,
         ),
-        IntrinsicHeight(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _buildEntitySuggestionField(),
-              ),
-              const SizedBox(
-                width: 50.0,
-              ),
-              Expanded(
-                child: _buildFundClusterSelection(),
-              ),
-            ],
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildEntitySuggestionField(),
+            ),
+            const SizedBox(
+              width: 50.0,
+            ),
+            Expanded(
+              child: _buildFundClusterSelection(),
+            ),
+          ],
         ),
         const SizedBox(
           height: 15.0,
@@ -336,6 +553,7 @@ class _PurchaseRequestReusableViewState
         CustomFormTextField(
           label: 'Purpose',
           controller: _purposeController,
+          enabled: !_isViewOnlyMode(),
           maxLines: 4,
           placeholderText: 'Enter request\'s purpose',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -350,77 +568,141 @@ class _PurchaseRequestReusableViewState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Item Information',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 24.0,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(
-          height: 5.0,
-        ),
-        Text(
-          'Requested Item Information.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w400,
-              ),
-        ),
-        const SizedBox(
-          height: 15.0,
-        ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: _buildItemNameSuggestionField(),
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 15.0,
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildItemDescriptionSuggestionField(),
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 15.0,
-        ),
-        IntrinsicHeight(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _buildUnitSelection(),
-              ),
-              const SizedBox(
-                width: 50.0,
-              ),
-              Expanded(
-                child: _buildQuantityCounterField(),
-                // CustomFormTextField(
-                //   label: 'Quantity',
-                // ),
-              ),
-              const SizedBox(
-                width: 50.0,
-              ),
-              Expanded(
-                child: CustomFormTextField(
-                  label: 'Unit Cost',
-                  controller: _unitCostController,
-                  placeholderText: 'Enter item\'s unit cost',
-                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                      ? AppColor.lightCustomTextBox
-                      : AppColor.darkCustomTextBox),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Item(s) Information',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
+                const SizedBox(
+                  height: 5.0,
+                ),
+                Text(
+                  'Requested Item(s) Information.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w400,
+                      ),
+                ),
+              ],
+            ),
+            if (!_isViewOnlyMode())
+              CustomFilledButton(
+                width: 160.0,
+                height: 40.0,
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => AddRequestedItemModal(
+                    onAdd: (Map<String, dynamic> requestedItem) {
+                      // Ensure existing rows are not null
+                      final existingRows = _tableRows.value ?? [];
+
+                      // Create a new TableData object
+                      final newRow = TableData(
+                        id: '',
+                        object: requestedItem,
+                        columns: [
+                          Text(
+                            capitalizeWord(requestedItem['product_name']),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            capitalizeWord(
+                                '${requestedItem['product_description']}, ${requestedItem['specification']}'),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            readableEnumConverter(requestedItem['unit']),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            capitalizeWord(
+                                requestedItem['quantity'].toString()),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            formatCurrency(requestedItem['unit_cost']),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                        ],
+                        menuItems: [
+                          {
+                            'text': 'Remove',
+                            'icon': HugeIcons.strokeRoundedDelete02,
+                          },
+                        ],
+                      );
+
+                      // Append new row while keeping old ones
+                      _tableRows.value = [...existingRows, newRow];
+
+                      print(_tableRows.value.map((e) => e.object).toList());
+                    },
+                  ),
+                ),
+                prefixWidget: const Icon(
+                  HugeIcons.strokeRoundedAddSquare,
+                  size: 15.0,
+                  color: AppColor.lightPrimary,
+                ),
+                text: 'Add Item',
               ),
-            ],
-          ),
+          ],
+        ),
+        const SizedBox(
+          height: 15.0,
+        ),
+        SizedBox(
+          height: 250.0,
+          child: ValueListenableBuilder(
+              valueListenable: _tableRows,
+              builder: (context, tableRows, child) {
+                return CustomDataTable(
+                  config: _tableConfig.copyWith(
+                    rows: tableRows,
+                  ),
+                  onActionSelected: (index, action) {
+                    if (action.contains('Remove')) {
+                      final updatedRows =
+                          List<TableData>.from(_tableRows.value);
+                      updatedRows.removeAt(index);
+
+                      // Update _tableRows with the modified list
+                      _tableRows.value = updatedRows;
+
+                      print(_tableRows.value.map((e) => e.object).toList());
+                    }
+                  },
+                );
+              }),
         ),
       ],
     );
@@ -549,6 +831,7 @@ class _PurchaseRequestReusableViewState
         _officeController.text = value;
       },
       controller: _officeController,
+      enabled: !_isViewOnlyMode(),
       label: 'Office',
       placeHolderText: 'Enter purchase request\'s office',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -594,6 +877,7 @@ class _PurchaseRequestReusableViewState
         _entityNameController.text = value;
       },
       controller: _entityNameController,
+      enabled: !_isViewOnlyMode(),
       label: 'Entity',
       placeHolderText: 'Enter purchase request\'s entity',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -607,7 +891,7 @@ class _PurchaseRequestReusableViewState
       valueListenable: _selectedFundCluster,
       builder: (context, selectedFundCluster, child) {
         return CustomDropdownField(
-          //value: selectedFundCluster.toString(),
+          value: selectedFundCluster.toString(),
           onChanged: (value) {
             if (value != null && value.isNotEmpty) {
               _selectedFundCluster.value = FundCluster.values.firstWhere(
@@ -633,148 +917,6 @@ class _PurchaseRequestReusableViewState
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
           placeholderText: 'Enter purchase request\'s fund cluster',
-        );
-      },
-    );
-  }
-
-  Widget _buildItemNameSuggestionField() {
-    return CustomSearchField(
-      suggestionsCallback: (productName) async {
-        final productNames = await _itemSuggestionsService.fetchItemNames(
-          productName: productName,
-        );
-
-        if (productNames == []) {
-          _itemDescriptionController.clear();
-          _selectedItemName.value = null;
-          _selectedUnit.value = null;
-        }
-
-        return productNames;
-      },
-      onSelected: (value) {
-        _itemNameController.text = value;
-        _itemDescriptionController.clear();
-        _selectedItemName.value = value;
-      },
-      controller: _itemNameController,
-      label: 'Product Name',
-      placeHolderText: 'Enter product name',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
-    );
-  }
-
-  Widget _buildItemDescriptionSuggestionField() {
-    return ValueListenableBuilder(
-      valueListenable: _selectedItemName,
-      builder: (context, selectedItemName, child) {
-        return CustomSearchField(
-          key: ValueKey(selectedItemName),
-          suggestionsCallback: (productDescription) async {
-            if (selectedItemName != null && selectedItemName.isNotEmpty) {
-              final descriptions =
-                  await _itemSuggestionsService.fetchItemDescriptions(
-                productName: selectedItemName,
-                productDescription: productDescription,
-              );
-
-              return descriptions;
-            }
-            return null;
-          },
-          onSelected: (value) {
-            _itemDescriptionController.text = value;
-          },
-          controller: _itemDescriptionController,
-          label: 'Product Description',
-          placeHolderText: 'Enter product description',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
-          maxLines: 4,
-        );
-      },
-    );
-  }
-
-  Widget _buildUnitSelection() {
-    return ValueListenableBuilder(
-      valueListenable: _selectedUnit,
-      builder: (context, selectedUnit, child) {
-        return CustomDropdownField(
-          //value: selectedUnit.toString(),
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedUnit.value = Unit.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
-          },
-          items: Unit.values
-              .map(
-                (unit) => DropdownMenuItem(
-                  value: unit.toString(),
-                  child: Text(
-                    readableEnumConverter(unit),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ),
-              )
-              .toList(),
-          label: 'Unit',
-          placeholderText: 'Enter item\'s unit',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
-        );
-      },
-    );
-  }
-
-  Widget _buildQuantityCounterField() {
-    return ValueListenableBuilder(
-      valueListenable: _quantity,
-      builder: (BuildContext context, int value, Widget? child) {
-        return CustomFormTextField(
-          label: 'Quantity',
-          placeholderText: 'Enter item\'s quantity',
-          controller: _quantityController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
-          isNumeric: true,
-          suffixWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              InkWell(
-                onTap: () {
-                  _quantity.value++;
-                  _quantityController.text == _quantity.value.toString();
-                },
-                child: const Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 18.0,
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  if (value != 0) {
-                    _quantity.value--;
-                    _quantityController.text == _quantity.value.toString();
-                  }
-                },
-                child: const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 18.0,
-                ),
-              ),
-            ],
-          ),
         );
       },
     );
@@ -806,6 +948,7 @@ class _PurchaseRequestReusableViewState
         _selectedRequestingOfficerPosition.value = null;
       },
       controller: _requestingOfficerOfficeController,
+      enabled: !_isViewOnlyMode(),
       label: 'Requesting Officer Office',
       placeHolderText: 'Enter requesting officer\'s office',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -840,6 +983,7 @@ class _PurchaseRequestReusableViewState
         _selectedApprovingOfficerPosition.value = null;
       },
       controller: _approvingOfficerOfficeController,
+      enabled: !_isViewOnlyMode(),
       label: 'Approving Officer Office',
       placeHolderText: 'Enter approving officer\'s office',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -877,6 +1021,7 @@ class _PurchaseRequestReusableViewState
             _selectedRequestingOfficerPosition.value = value;
           },
           controller: _requestingOfficerPositionController,
+          enabled: !_isViewOnlyMode(),
           label: 'Requesting Officer Position',
           placeHolderText: 'Enter requesting officer\'s position',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -916,6 +1061,7 @@ class _PurchaseRequestReusableViewState
             _selectedApprovingOfficerPosition.value = value;
           },
           controller: _approvingOfficerPositionController,
+          enabled: !_isViewOnlyMode(),
           label: 'Approving Officer Position',
           placeHolderText: 'Enter approving officer\'s position',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -955,6 +1101,7 @@ class _PurchaseRequestReusableViewState
                 _requestingOfficerNameController.text = value;
               },
               controller: _requestingOfficerNameController,
+              enabled: !_isViewOnlyMode(),
               label: 'Requesting Officer Name',
               placeHolderText: 'Enter requesting officer\'s name',
               fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -996,6 +1143,7 @@ class _PurchaseRequestReusableViewState
                 _approvingOfficerNameController.text = value;
               },
               controller: _approvingOfficerNameController,
+              enabled: !_isViewOnlyMode(),
               label: 'Approving Officer Name',
               placeHolderText: 'Enter approving officer\'s name',
               fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -1008,27 +1156,64 @@ class _PurchaseRequestReusableViewState
     );
   }
 
+  Widget _buildTimeline(List<NotificationEntity> notifications) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 200.0,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: notifications.map((notification) {
+                final index = notifications.indexOf(notification);
+                final isFirst = index == 0;
+                final isLast = index == notifications.length - 1;
+
+                return SizedBox(
+                  width: 300.0,
+                  height: 200.0,
+                  child: RequestTimeLineTile(
+                    isFirst: isFirst,
+                    isLast: isLast,
+                    isPast: true,
+                    title: readableEnumConverter(notification.type),
+                    message: notification.message,
+                    date: notification.createdAt!,
+                    onTrackingIdTapped: (trackingId) =>
+                        _onTrackingIdTapped(context, trackingId),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         CustomOutlineButton(
           onTap: () => context.pop(),
-          text: 'Cancel',
+          text: !_isViewOnlyMode() ? 'Cancel' : 'Back',
           width: 180.0,
           height: 40.0,
         ),
         const SizedBox(
           width: 10.0,
         ),
-        CustomFilledButton(
-          onTap: () {
-            _savePurchaseRequest();
-          },
-          text: 'Save',
-          width: 180.0,
-          height: 40.0,
-        ),
+        if (!_isViewOnlyMode())
+          CustomFilledButton(
+            onTap: () {
+              _savePurchaseRequest();
+            },
+            text: 'Save',
+            width: 180.0,
+            height: 40.0,
+          ),
       ],
     );
   }

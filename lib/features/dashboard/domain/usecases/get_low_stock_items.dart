@@ -1,12 +1,15 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../../../../core/error/failure.dart';
-import 'package:fpdart/src/either.dart';
 
 import '../../../../core/usecases/usecase.dart';
-import '../entities/paginated_item_result.dart';
+import '../entities/paginated_reusable_item_information.dart';
 import '../repository/dashboard_repository.dart';
 
 class GetLowStockItems
-    implements UseCase<PaginatedItemResultEntity, GetLowStockItemsParams> {
+    implements
+        UseCase<PaginatedReusableItemInformationEntity,
+            GetLowStockItemsParams> {
   const GetLowStockItems({
     required this.dashboardRepository,
   });
@@ -14,7 +17,7 @@ class GetLowStockItems
   final DashboardRepository dashboardRepository;
 
   @override
-  Future<Either<Failure, PaginatedItemResultEntity>> call(
+  Future<Either<Failure, PaginatedReusableItemInformationEntity>> call(
       GetLowStockItemsParams params) async {
     return await dashboardRepository.getLowStockItems(
       page: params.page,

@@ -1,15 +1,22 @@
-import 'categorical_inventory_data.dart';
+import 'inventory_stock.dart';
+import 'weekly_item_trend.dart';
 
 class InventorySummaryEntity {
   const InventorySummaryEntity({
-    required this.inStocksCount,
-    required this.lowStocksCount,
-    required this.outOfStocksCount,
-    required this.categoricalInventoryData,
+    required this.supplyWeeklyTrendEntities,
+    required this.equipmentWeeklyTrendEntities,
+    required this.inventoryStocks,
+    required this.supplyPercentageChange,
+    required this.equipmentPercentageChange,
+    required this.suppliesCount,
+    required this.equipmentCount,
   });
 
-  final int inStocksCount;
-  final int lowStocksCount;
-  final int outOfStocksCount;
-  final List<CategoricalInventoryDataEntity> categoricalInventoryData;
+  final List<WeeklyItemTrendEntity> supplyWeeklyTrendEntities;
+  final List<WeeklyItemTrendEntity> equipmentWeeklyTrendEntities;
+  final List<InventoryStockEntity> inventoryStocks;
+  final double supplyPercentageChange;
+  final double equipmentPercentageChange;
+  final int suppliesCount;
+  final int equipmentCount;
 }

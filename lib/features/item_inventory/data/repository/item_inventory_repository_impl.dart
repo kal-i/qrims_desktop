@@ -1,5 +1,6 @@
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/base_item.dart';
@@ -56,9 +57,11 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
   Future<Either<Failure, BaseItemEntity>> registerSupplyItem({
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required unit.Unit unit,
     required int quantity,
+    required double unitCost,
+    DateTime? acquiredDate,
   }) async {
     try {
       final response = await itemInventoryRemoteDateSource.registerSupplyItem(
@@ -67,6 +70,8 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
         specification: specification,
         unit: unit,
         quantity: quantity,
+        unitCost: unitCost,
+        acquiredDate: acquiredDate,
       );
 
       return right(response);
@@ -77,9 +82,10 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
 
   @override
   Future<Either<Failure, List<BaseItemEntity>>> registerEquipmentItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required unit.Unit unit,
     required int quantity,
     required String manufacturerName,

@@ -24,9 +24,16 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../item_inventory/data/models/supply.dart';
+import '../../../item_inventory/domain/entities/supply.dart';
+import '../../domain/entities/inventory_custodian_slip.dart';
+import '../../domain/entities/issuance.dart';
+import '../../domain/entities/property_acknowledgement_receipt.dart';
+import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../bloc/issuances_bloc.dart';
 import '../components/create_ics_modal.dart';
 import '../components/create_par_modal.dart';
+import '../components/create_ris_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
@@ -55,7 +62,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     'Requesting Officer Name',
     'Status',
   ];
-  late List<TableData> _tableRows = [];
+  late List<TableData> _tableRows;
 
   final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
 
@@ -76,6 +83,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     _selectedStartDate = null;
     _selectedEndDate = null;
 
+    _tableRows = [];
     _initializeTableConfig();
     _fetchIssuances();
   }
@@ -131,34 +139,37 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
-        bool isAdmin = false;
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          bool isAdmin = false;
 
-        if (state is AuthSuccess) {
-          isAdmin = SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
-              Role.admin;
-        }
+          if (state is AuthSuccess) {
+            isAdmin =
+                SupplyDepartmentEmployeeModel.fromEntity(state.data).role ==
+                    Role.admin;
+          }
 
-        return Column(
-          children: [
-            _buildClickableCardsRow(isAdmin),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildPredefinedDocumentTemplatesRow(),
-            const SizedBox(
-              height: 50.0,
-            ),
-            _buildActionsRow(),
-            const SizedBox(
-              height: 20.0,
-            ),
-            Expanded(
-              child: _buildDataTable(isAdmin),
-            ),
-          ],
-        );
-      }),
+          return Column(
+            children: [
+              _buildClickableCardsRow(isAdmin),
+              const SizedBox(
+                height: 50.0,
+              ),
+              _buildPredefinedDocumentTemplatesRow(),
+              const SizedBox(
+                height: 50.0,
+              ),
+              _buildActionsRow(),
+              const SizedBox(
+                height: 20.0,
+              ),
+              Expanded(
+                child: _buildDataTable(isAdmin),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -169,7 +180,15 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           child: CustomInteractableCard(
             name: 'New RIS',
             icon: CupertinoIcons.folder,
-            onTap: () {},
+            onTap: () => isAdmin
+                ? DelightfulToastUtils.showDelightfulToast(
+                    context: context,
+                    title: 'Information',
+                    subtitle: 'You cannot perform this activity.')
+                : showDialog(
+                    context: context,
+                    builder: (context) => const CreateRisModal(),
+                  ),
           ),
         ),
         const SizedBox(
@@ -212,10 +231,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     );
   }
 
-  // todo: for this, imma fetch few info in the server like the id, file/issuance name, and if possible size
-  // this will then make an http req when wanna be previewed
-  // every time there is a new issuance, it will first the first 3 item issuance info in the db and paste in here
-  // btw let's add an stepper for the status like: prepared a doc for approval - approved/ declined - conclusion if there is like generated
   final predefinedTemplates = [
     {
       'title': 'RCPI',
@@ -378,13 +393,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     );
   }
 
-  Widget _buildSortButton() {
-    return const CustomIconButton(
-      icon: FluentIcons.text_sort_ascending_20_regular,
-      isOutlined: true,
-    );
-  }
-
   Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<IssuancesBloc, IssuancesState>(
       listener: (context, state) {
@@ -398,7 +406,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           _errorMessage = null;
         }
 
-        if (state is ICSRegistered || state is PARRegistered) {
+        if (state is ICSRegistered ||
+            state is PARRegistered ||
+            state is RISRegistered) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();
@@ -502,7 +512,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     'text': 'Generate RIS Document',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
                   },
-                if (!isAdmin)
+                if (!isAdmin && issuance is! RequisitionAndIssueSlipEntity)
                   {
                     'text': 'Generate Sticker',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
@@ -558,12 +568,21 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                             );
                           }
 
-                          // if (action.contains('Generate Issuance Document')) {
-                          //   showCustomDocumentPreview(
-                          //       context: context,
-                          //       documentObject: _tableRows[index].object,
-                          //       docType: DocumentType);
-                          // }
+                          if (action.contains('Generate Issuance Document')) {
+                            final issuanceObj = _tableRows[index].object;
+
+                            showCustomDocumentPreview(
+                              context: context,
+                              documentObject: issuanceObj,
+                              docType: issuanceObj
+                                      is InventoryCustodianSlipEntity
+                                  ? DocumentType.ics
+                                  : issuanceObj
+                                          is PropertyAcknowledgementReceiptEntity
+                                      ? DocumentType.par
+                                      : DocumentType.ris,
+                            );
+                          }
 
                           if (action.contains('Generate RIS Document')) {
                             showCustomDocumentPreview(
@@ -574,9 +593,33 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           }
 
                           if (action.contains('Generate Sticker')) {
+                            final issuanceObj =
+                                _tableRows[index].object as IssuanceEntity;
+
+                            print('Checking items...');
+                            print(
+                                'Items: ${issuanceObj.items.map((e) => e.runtimeType)}'); // Debugging step
+
+                            if (issuanceObj.items.any(
+                                (item) => item.itemEntity is SupplyEntity)) {
+                              // Change to correct type
+                              print(
+                                  'SupplyModel found! Blocking sticker generation.');
+                              DelightfulToastUtils.showDelightfulToast(
+                                context: context,
+                                icon: Icons.error_outline,
+                                title: 'Error',
+                                subtitle:
+                                    'Failed to generate a sticker. This document contains a Supply item.',
+                              );
+                              return;
+                            }
+
+                            print(
+                                'No SupplyEntity found, proceeding with sticker generation.');
                             showCustomDocumentPreview(
                               context: context,
-                              documentObject: _tableRows[index].object,
+                              documentObject: issuanceObj,
                               docType: DocumentType.sticker,
                             );
                           }

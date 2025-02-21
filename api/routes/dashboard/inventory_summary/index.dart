@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:api/src/item/repository/item_repository.dart';
-import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
@@ -23,18 +22,17 @@ Future<Response> _getSummaryInformation(
   ItemRepository itemRepository,
 ) async {
   try {
+    final weeklyTrends = await itemRepository.getWeeklyTrendsWithPercentage();
+    final stockLevels = await itemRepository.getInventoryStockLevels();
     final suppliesCount = await itemRepository.getSuppliesCount();
     final equipmentCount = await itemRepository.getEquipmentCount();
-    final outOfStocksCount = await itemRepository.getOutOfStocksCount();
-
-    final categoricalInventory = await itemRepository.getCategoricalInventory();
 
     return Response.json(
       body: {
+        'weekly_trends': weeklyTrends,
+        'stock_levels': stockLevels,
         'supplies_count': suppliesCount,
         'equipment_count': equipmentCount,
-        'out_of_stocks_count': outOfStocksCount,
-        'categorical_inventory_data': categoricalInventory,
       },
     );
   } catch (e) {

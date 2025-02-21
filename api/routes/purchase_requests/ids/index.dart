@@ -10,15 +10,17 @@ Future<Response> onRequest(RequestContext context) async {
 
   return switch (context.request.method) {
     HttpMethod.get => _getPurchaseRequestIds(
-        context, repository,),
+        context,
+        repository,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
 
 Future<Response> _getPurchaseRequestIds(
-    RequestContext context,
-    PurchaseRequestRepository repository,
-    ) async {
+  RequestContext context,
+  PurchaseRequestRepository repository,
+) async {
   try {
     final queryParams = await context.request.uri.queryParameters;
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
@@ -30,12 +32,10 @@ Future<Response> _getPurchaseRequestIds(
       page: page,
       pageSize: pageSize,
       prId: prId,
-      type: type,
     );
 
     final prIdsCount = await repository.getPurchaseRequestIdsFilteredCount(
       prId: prId,
-      type: type,
     );
 
     return Response.json(

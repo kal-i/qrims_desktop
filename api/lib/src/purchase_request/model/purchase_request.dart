@@ -11,6 +11,95 @@ enum PurchaseRequestStatus {
   fulfilled,
 }
 
+enum FulfillmentStatus {
+  notFulfilled,
+  partiallyFulfilled,
+  fulfilled,
+}
+
+class RequestedItem {
+  const RequestedItem({
+    required this.id,
+    required this.prId,
+    required this.productName,
+    required this.productDescription,
+    this.specification,
+    required this.unit,
+    required this.quantity,
+    required this.remainingQuantity,
+    required this.unitCost,
+    required this.totalCost,
+    this.fulfillmentStatus = FulfillmentStatus.notFulfilled,
+  });
+
+  final int id;
+  final String prId;
+  final ProductName productName;
+  final ProductDescription productDescription;
+  final String? specification;
+  final Unit unit;
+  final int quantity;
+  final int? remainingQuantity;
+  final double unitCost;
+  final double totalCost;
+  final FulfillmentStatus fulfillmentStatus;
+
+  factory RequestedItem.fromJson(Map<String, dynamic> json) {
+    final unitString = json['unit'] as String;
+
+    final unit = Unit.values.firstWhere(
+      (e) => e.toString().split('.').last == unitString,
+    );
+
+    final productName = ProductName.fromJson({
+      'product_name_id': json['product_name_id'],
+      'product_name': json['product_name'],
+    });
+
+    final productDescription = ProductDescription.fromJson({
+      'product_description_id': json['product_description_id'],
+      'product_description': json['product_description'],
+    });
+
+    return RequestedItem(
+      id: json['id'] as int,
+      prId: json['pr_id'] as String,
+      productName: productName,
+      productDescription: productDescription,
+      specification: json['specification'] as String?,
+      unit: unit,
+      quantity: json['quantity'] as int,
+      remainingQuantity: json['remaining_quantity'] as int? ?? 0,
+      unitCost: json['unit_cost'] is String
+          ? double.parse(json['unit_cost'] as String)
+          : json['unit_cost'] as double,
+      totalCost: json['total_cost'] is String
+          ? double.parse(json['total_cost'] as String)
+          : json['total_cost'] as double,
+      fulfillmentStatus: FulfillmentStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+        orElse: () => FulfillmentStatus.notFulfilled,
+      ), //
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'pr_id': prId,
+      'product_name': productName.toJson(),
+      'product_description': productDescription.toJson(),
+      'specification': specification,
+      'unit': unit.toString().split('.').last,
+      'quantity': quantity,
+      'remaining_quantity': remainingQuantity,
+      'unit_cost': unitCost,
+      'total_cost': totalCost,
+      'status': fulfillmentStatus.toString().split('.').last,
+    };
+  }
+}
+
 class PurchaseRequest {
   const PurchaseRequest({
     required this.id,
@@ -19,13 +108,7 @@ class PurchaseRequest {
     required this.office,
     this.responsibilityCenterCode,
     required this.date,
-    required this.productName,
-    required this.productDescription,
-    required this.unit,
-    required this.quantity,
-    this.remainingQuantity,
-    required this.unitCost,
-    required this.totalCost,
+    required this.requestedItems,
     required this.purpose,
     required this.requestingOfficer,
     required this.approvingOfficer,
@@ -39,13 +122,7 @@ class PurchaseRequest {
   final Office office;
   final String? responsibilityCenterCode;
   final DateTime date;
-  final ProductName productName;
-  final ProductDescription productDescription;
-  final Unit unit;
-  final int quantity;
-  final int? remainingQuantity; // to track if qty not yet fulfilled
-  final double unitCost;
-  final double totalCost;
+  final List<RequestedItem> requestedItems;
   final String purpose;
   final Officer requestingOfficer;
   final Officer approvingOfficer;
@@ -53,16 +130,12 @@ class PurchaseRequest {
   final bool? isArchived;
 
   factory PurchaseRequest.fromJson(Map<String, dynamic> json) {
+    print('pr json: $json');
     final fundClusterString = json['fund_cluster'] as String;
-    final unitString = json['unit'] as String;
     final prStatusString = json['status'] as String;
 
     final fundCluster = FundCluster.values.firstWhere(
       (e) => e.toString().split('.').last == fundClusterString,
-    );
-
-    final unit = Unit.values.firstWhere(
-      (e) => e.toString().split('.').last == unitString,
     );
 
     final prStatus = PurchaseRequestStatus.values.firstWhere(
@@ -79,35 +152,34 @@ class PurchaseRequest {
       'office_name': json['office_name'],
     });
 
-    final productName = ProductName.fromJson({
-      'product_name_id': json['product_name_id'],
-      'product_name': json['product_name'],
-    });
+    final requestedItems = (json['requested_items'] as List<dynamic>)
+        .map((requestedItem) => RequestedItem.fromJson({
+              'id': requestedItem['id'],
+              'pr_id': requestedItem['pr_id'],
+              'product_name_id': requestedItem['product_name']
+                  ['product_name_id'],
+              'product_name': requestedItem['product_name']['product_name'],
+              'product_description_id': requestedItem['product_description']
+                  ['product_description_id'],
+              'product_description': requestedItem['product_description']
+                  ['product_description'],
+              'specification': requestedItem['specification'],
+              'unit': requestedItem['unit'],
+              'quantity': requestedItem['quantity'],
+              'remaining_quantity': requestedItem['remaining_quantity'],
+              'unit_cost': requestedItem['unit_cost'],
+              'total_cost': requestedItem['total_cost'],
+              'status': requestedItem['status'],
+            }))
+        .toList();
 
-    final productDescription = ProductDescription.fromJson({
-      'product_description_id': json['product_description_id'],
-      'product_description': json['product_description'],
-    });
+    final requestingOfficer = Officer.fromJson(
+      json['requesting_officer'] as Map<String, dynamic>,
+    );
 
-    final requestingOfficer = Officer.fromJson({
-      'id': json['requesting_officer_id'],
-      'user_id': json['requesting_officer_user_id'],
-      'name': json['requesting_officer_name'],
-      'position_id': json['requesting_officer_position_id'],
-      'office_name': json['requesting_officer_office_name'],
-      'position_name': json['requesting_officer_position_name'],
-      'is_archived': json['requesting_officer_is_archived'],
-    });
-
-    final approvingOfficer = Officer.fromJson({
-      'id': json['approving_officer_id'],
-      'user_id': json['approving_officer_user_id'],
-      'name': json['approving_officer_name'],
-      'position_id': json['approving_officer_position_id'],
-      'office_name': json['approving_officer_office_name'],
-      'position_name': json['approving_officer_position_name'],
-      'is_archived': json['approving_officer_is_archived'],
-    });
+    final approvingOfficer = Officer.fromJson(
+      json['approving_officer'] as Map<String, dynamic>,
+    );
 
     return PurchaseRequest(
       id: json['id'] as String,
@@ -119,17 +191,7 @@ class PurchaseRequest {
       date: json['date'] is String
           ? DateTime.parse(json['date'] as String)
           : json['date'] as DateTime,
-      productName: productName,
-      productDescription: productDescription,
-      unit: unit,
-      quantity: json['quantity'] as int,
-      remainingQuantity: json['remaining_quantity'] as int? ?? 0,
-      unitCost: json['unit_cost'] is String
-          ? double.parse(json['unit_cost'] as String)
-          : json['unit_cost'] as double,
-      totalCost: json['total_cost'] is String
-          ? double.parse(json['total_cost'] as String)
-          : json['total_cost'] as double,
+      requestedItems: requestedItems,
       purpose: json['purpose'] as String,
       requestingOfficer: requestingOfficer,
       approvingOfficer: approvingOfficer,
@@ -146,13 +208,9 @@ class PurchaseRequest {
       'office': office.toJson(),
       'responsibility_center_code': responsibilityCenterCode,
       'date': date.toIso8601String(),
-      'product_name': productName.toJson(),
-      'product_description': productDescription.toJson(),
-      'unit': unit.toString().split('.').last,
-      'quantity': quantity,
-      'remaining_quantity': remainingQuantity,
-      'unit_cost': unitCost,
-      'total_cost': totalCost,
+      'requested_items': requestedItems
+          .map((requestedItem) => requestedItem.toJson())
+          .toList(),
       'purpose': purpose,
       'requesting_officer': requestingOfficer.toJson(),
       'approving_officer': approvingOfficer.toJson(),

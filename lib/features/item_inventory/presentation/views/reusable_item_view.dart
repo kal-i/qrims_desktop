@@ -23,7 +23,6 @@ import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
-import '../../domain/entities/supply.dart';
 import '../bloc/item_inventory_bloc.dart';
 
 class ReusableItemView extends StatefulWidget {

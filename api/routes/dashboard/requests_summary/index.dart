@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:api/src/item/repository/item_repository.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
@@ -24,9 +23,11 @@ Future<Response> _getSummaryInformation(
   PurchaseRequestRepository purchaseRequestRepository,
 ) async {
   try {
-    final queryParams = context.request.uri.queryParameters;
-    final limit = int.tryParse(queryParams['limit'] ?? '10') ?? 10;
-    final period = queryParams['period'] ?? 'month';
+    final weeklyTrends =
+        await purchaseRequestRepository.getPurchaseRequestWeeklyTrends();
+
+    final fulfilledRequestsOverTime =
+        await purchaseRequestRepository.getFulfilledRequestsOverTime();
 
     final pendingRequestCount =
         await purchaseRequestRepository.getPurchaseRequestsCountBasedOnStatus(
@@ -44,16 +45,15 @@ Future<Response> _getSummaryInformation(
     final ongoingRequestCount = pendingRequestCount + incompleteRequestCount;
 
     final mostRequestedItemsData =
-        await purchaseRequestRepository.getTopRequestedItemsByPeriod(
-      limit,
-      period,
-    );
+        await purchaseRequestRepository.getMostRequestedItems();
 
     return Response.json(
       body: {
+        'weekly_trends': weeklyTrends,
+        'fulfilled_requests_over_time': fulfilledRequestsOverTime,
         'ongoing_request_count': ongoingRequestCount,
         'fulfilled_request_count': fulfilledRequestCount,
-        'most_requested_items_data': mostRequestedItemsData,
+        'most_requested_items': mostRequestedItemsData,
       },
     );
   } catch (e) {
@@ -61,7 +61,7 @@ Future<Response> _getSummaryInformation(
       statusCode: HttpStatus.internalServerError,
       body: {
         'message':
-            'An error occurred while processing the request to fetch most requested items: $e',
+            'An error occurred while processing the requests summary: $e',
       },
     );
   }

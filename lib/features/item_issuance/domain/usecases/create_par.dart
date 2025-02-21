@@ -1,8 +1,8 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../../../../core/error/failure.dart';
-import 'package:fpdart/src/either.dart';
 
 import '../../../../core/usecases/usecase.dart';
-import '../entities/inventory_custodian_slip.dart';
 import '../entities/property_acknowledgement_receipt.dart';
 import '../repository/issuance_repository.dart';
 
@@ -16,10 +16,10 @@ class CreatePAR
 
   @override
   Future<Either<Failure, PropertyAcknowledgementReceiptEntity>> call(
-      CreatePARParams params) async {
+    CreatePARParams params,
+  ) async {
     return await issuanceRepository.createPAR(
       prId: params.prId,
-      propertyNumber: params.propertyNumber,
       issuanceItems: params.issuanceItems,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
@@ -34,7 +34,6 @@ class CreatePAR
 class CreatePARParams {
   const CreatePARParams({
     required this.prId,
-    this.propertyNumber,
     required this.issuanceItems,
     required this.receivingOfficerOffice,
     required this.receivingOfficerPosition,
@@ -45,7 +44,6 @@ class CreatePARParams {
   });
 
   final String prId;
-  final String? propertyNumber;
   final List issuanceItems;
   final String receivingOfficerOffice;
   final String receivingOfficerPosition;

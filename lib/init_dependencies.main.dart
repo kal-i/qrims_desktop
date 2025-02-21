@@ -150,6 +150,7 @@ void _registerDashboardDependencies() {
   _registerInventorySummaryDependencies();
   _registerRequestsSummaryDependencies();
   _registerLowStockDependencies();
+  _registerOutOfStockDependencies();
   _registerUserActivityDependencies();
 }
 
@@ -160,7 +161,7 @@ void _registerInventorySummaryDependencies() {
         dashboardRepository: serviceLocator(),
       ),
     )
-    ..registerFactory<InventorySummaryBloc>(
+    ..registerLazySingleton<InventorySummaryBloc>(
       () => InventorySummaryBloc(
         getInventorySummary: serviceLocator(),
       ),
@@ -169,14 +170,28 @@ void _registerInventorySummaryDependencies() {
 
 void _registerRequestsSummaryDependencies() {
   serviceLocator
-    ..registerFactory<GetMostRequestedItems>(
-      () => GetMostRequestedItems(
+    ..registerFactory<GetRequestsSummary>(
+      () => GetRequestsSummary(
         dashboardRepository: serviceLocator(),
       ),
     )
-    ..registerFactory<RequestsSummaryBloc>(
+    ..registerLazySingleton<RequestsSummaryBloc>(
       () => RequestsSummaryBloc(
-        getMostRequestedItems: serviceLocator(),
+        getRequestsSummary: serviceLocator(),
+      ),
+    );
+}
+
+void _registerOutOfStockDependencies() {
+  serviceLocator
+    ..registerFactory<GetOutOfStockItems>(
+      () => GetOutOfStockItems(
+        dashboardRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory<OutOfStockBloc>(
+      () => OutOfStockBloc(
+        getOutOfStockItems: serviceLocator(),
       ),
     );
 }
@@ -346,6 +361,11 @@ void _registerItemIssuanceDependencies() {
         issuanceRepository: serviceLocator(),
       ),
     )
+    ..registerFactory<CreateRIS>(
+      () => CreateRIS(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
     ..registerFactory<UpdateIssuanceArchiveStatus>(
       () => UpdateIssuanceArchiveStatus(
         issuanceRepository: serviceLocator(),
@@ -358,6 +378,7 @@ void _registerItemIssuanceDependencies() {
         matchItemWithPr: serviceLocator(),
         createICS: serviceLocator(),
         createPAR: serviceLocator(),
+        createRIS: serviceLocator(),
         updateIssuanceArchiveStatus: serviceLocator(),
       ),
     );

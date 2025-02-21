@@ -1,3 +1,4 @@
+import '../../../../core/enums/officer_status.dart';
 import '../../../../core/error/failure.dart';
 import 'package:fpdart/src/either.dart';
 
@@ -24,6 +25,7 @@ class GetPaginatedOfficers
       searchQuery: params.searchQuery,
       office: params.office,
       sortBy: params.sortBy,
+      status: params.status,
       sortAscending: params.sortAscending,
       isArchived: params.isArchived,
     );
@@ -37,6 +39,7 @@ class GetPaginatedOfficersParams {
     this.searchQuery,
     this.office,
     this.sortBy,
+    this.status,
     this.sortAscending,
     this.isArchived,
   });
@@ -46,6 +49,8 @@ class GetPaginatedOfficersParams {
   final String? searchQuery;
   final String? office;
   final String? sortBy;
+  final OfficerStatus? status;
+
   final bool? sortAscending;
   final bool? isArchived;
 }

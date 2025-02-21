@@ -285,6 +285,7 @@ class OfficerRepository {
   Future<int> getOfficersFilteredCount({
     String? searchQuery,
     String? office,
+    OfficerStatus status = OfficerStatus.active,
     bool isArchived = false,
   }) async {
     try {
@@ -311,6 +312,10 @@ class OfficerRepository {
         params['office'] = '%$office%';
       }
 
+      // Add status filter if needed
+      whereClause.write(' AND Officers.officer_status = @status');
+      params['status'] = status.toString().split('.').last;
+
       final finalQuery = '''
     $baseQuery
     $whereClause
@@ -334,6 +339,7 @@ class OfficerRepository {
     String? searchQuery,
     String? office,
     String sortBy = 'Officers.name',
+    OfficerStatus status = OfficerStatus.active,
     bool sortAscending = false,
     bool isArchived = false,
   }) async {
@@ -344,37 +350,37 @@ class OfficerRepository {
 
       /// Used JSON_AGG function wich collects a list of row to convert into an a JSON array
       final baseQuery = '''
-    SELECT 
-      Officers.id AS officer_id,
-      Officers.user_id AS user_id,
-      Officers.name AS officer_name,
-      Positions.id AS position_id,
-      Offices.name AS office_name,
-      Positions.position_name AS position_name,
-      Officers.officer_status AS officer_status,
-      Officers.is_archived AS is_archived,
-      JSON_AGG(
-        JSON_BUILD_OBJECT(
-          'id', PositionHistory.id,
-          'officer_id', PositionHistory.officer_id,
-          'position_id', PositionHistory.position_id,
-          'created_at', PositionHistory.created_at,
-          'position_name', HistoricalPositions.position_name,
-          'office_name', HistoricalOffices.name
-        )
-      ) AS position_history
-    FROM 
-      Officers
-    JOIN 
-      Positions ON Officers.position_id = Positions.id
-    JOIN 
-      Offices ON Positions.office_id = Offices.id
-    LEFT JOIN
-      PositionHistory ON Officers.id = PositionHistory.officer_id
-    LEFT JOIN
-      Positions AS HistoricalPositions ON PositionHistory.position_id = HistoricalPositions.id
-    LEFT JOIN
-      Offices AS HistoricalOffices ON HistoricalPositions.office_id = HistoricalOffices.id
+      SELECT 
+        Officers.id AS officer_id,
+        Officers.user_id AS user_id,
+        Officers.name AS officer_name,
+        Positions.id AS position_id,
+        Offices.name AS office_name,
+        Positions.position_name AS position_name,
+        Officers.officer_status AS officer_status,
+        Officers.is_archived AS is_archived,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', PositionHistory.id,
+            'officer_id', PositionHistory.officer_id,
+            'position_id', PositionHistory.position_id,
+            'created_at', PositionHistory.created_at,
+            'position_name', HistoricalPositions.position_name,
+            'office_name', HistoricalOffices.name
+          )
+        ) AS position_history
+      FROM 
+        Officers
+      JOIN 
+        Positions ON Officers.position_id = Positions.id
+      JOIN 
+        Offices ON Positions.office_id = Offices.id
+      LEFT JOIN
+        PositionHistory ON Officers.id = PositionHistory.officer_id
+      LEFT JOIN
+        Positions AS HistoricalPositions ON PositionHistory.position_id = HistoricalPositions.id
+      LEFT JOIN
+        Offices AS HistoricalOffices ON HistoricalPositions.office_id = HistoricalOffices.id
     ''';
 
       final whereClause = StringBuffer();
@@ -390,6 +396,10 @@ class OfficerRepository {
         whereClause.write(' AND Offices.name ILIKE @office');
         params['office'] = '%$office%';
       }
+
+      // Add status filter if needed
+      whereClause.write(' AND Officers.officer_status = @status');
+      params['status'] = status.toString().split('.').last;
 
       final sortDirection = sortAscending ? 'ASC' : 'DESC';
 

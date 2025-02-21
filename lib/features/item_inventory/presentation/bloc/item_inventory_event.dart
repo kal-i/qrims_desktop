@@ -53,6 +53,8 @@ final class SupplyItemRegister extends ItemInventoryEvent {
     required this.specification,
     required this.unit,
     required this.quantity,
+    required this.unitCost,
+    this.acquiredDate,
   });
 
   final String itemName;
@@ -60,6 +62,8 @@ final class SupplyItemRegister extends ItemInventoryEvent {
   final String specification;
   final Unit unit;
   final int quantity;
+  final double unitCost;
+  final DateTime? acquiredDate;
 
   @override
   List<Object?> get props => [
@@ -68,11 +72,14 @@ final class SupplyItemRegister extends ItemInventoryEvent {
         specification,
         unit,
         quantity,
+        unitCost,
+        acquiredDate,
       ];
 }
 
 final class EquipmentItemRegister extends ItemInventoryEvent {
   const EquipmentItemRegister({
+    this.fundCluster,
     required this.itemName,
     required this.description,
     required this.specification,
@@ -89,6 +96,7 @@ final class EquipmentItemRegister extends ItemInventoryEvent {
     this.acquiredDate,
   });
 
+  final FundCluster? fundCluster;
   final String itemName;
   final String description;
   final String specification;

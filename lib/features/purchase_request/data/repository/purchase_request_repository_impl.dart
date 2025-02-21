@@ -55,11 +55,7 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
     required FundCluster fundCluster,
     required String officeName,
     required DateTime date,
-    required String productName,
-    required String productDescription,
-    required unit.Unit unit,
-    required int quantity,
-    required double unitCost,
+    required List<Map<String, dynamic>> requestedItems,
     required String purpose,
     required String requestingOfficerOffice,
     required String requestingOfficerPosition,
@@ -75,11 +71,7 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
         fundCluster: fundCluster,
         officeName: officeName,
         date: date,
-        productName: productName,
-        productDescription: productDescription,
-        unit: unit,
-        quantity: quantity,
-        unitCost: unitCost,
+        requestedItems: requestedItems,
         purpose: purpose,
         requestingOfficerOffice: requestingOfficerOffice,
         requestingOfficerPosition: requestingOfficerPosition,
@@ -115,12 +107,12 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
 
   @override
   Future<Either<Failure, PurchaseRequestWithNotificationTrailEntity>>
-  getPurchaseRequestById({
+      getPurchaseRequestById({
     required String prId,
   }) async {
     try {
       final response =
-      await purchaseRequestRemoteDataSource.getPurchaseRequestById(
+          await purchaseRequestRemoteDataSource.getPurchaseRequestById(
         prId: prId,
       );
 

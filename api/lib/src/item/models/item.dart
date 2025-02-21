@@ -47,6 +47,12 @@ enum Unit {
   undetermined,
 }
 
+enum InventoryActivity {
+  added,
+  updated,
+  issued,
+}
+
 /// Represents the Product Stock
 class ProductStock {
   const ProductStock({
@@ -449,21 +455,25 @@ class ShareableItemInformationModel {
     required this.id,
     required this.productNameId,
     required this.productDescriptionId,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
+    required this.unitCost,
     required this.encryptedId,
     required this.qrCodeImageData,
+    this.acquiredDate,
   });
 
   final String id;
   final String productNameId;
   final String productDescriptionId;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
+  final double unitCost;
   final String encryptedId;
   final String qrCodeImageData;
+  final DateTime? acquiredDate;
 
   factory ShareableItemInformationModel.fromJson(Map<String, dynamic> json) {
     final unit = Unit.values.firstWhere(
@@ -471,16 +481,28 @@ class ShareableItemInformationModel {
       orElse: () => Unit.undetermined,
     );
 
-    return ShareableItemInformationModel(
+    final shareableItemInformationModel = ShareableItemInformationModel(
       id: json['base_item_id'] as String,
       productNameId: json['product_name_id'] as String,
       productDescriptionId: json['product_description_id'] as String,
-      specification: json['specification'] as String,
+      specification: json['specification'] as String?,
       unit: unit,
       quantity: json['quantity'] as int,
+      unitCost: json['unit_cost'] is String
+          ? double.parse(json['unit_cost'] as String)
+          : json['unit_cost'] as double,
       encryptedId: json['encrypted_id'] as String,
       qrCodeImageData: json['qr_code_image_data'] as String,
+      acquiredDate: json['acquired_date'] != null
+          ? json['acquired_date'] is String
+              ? DateTime.parse(json['acquired_date'] as String)
+              : json['acquired_date'] as DateTime
+          : null,
     );
+
+    print('Shareable Item Information Obj converted');
+    ;
+    return shareableItemInformationModel;
   }
 
   Map<String, dynamic> toJson() {
@@ -491,8 +513,10 @@ class ShareableItemInformationModel {
       'specification': specification,
       'unit': unit.toString().split('.').last,
       'quantity': quantity,
+      'unit_cost': unitCost,
       'encrypted_id': encryptedId,
       'qr_code_image_data': qrCodeImageData,
+      'acquired_date': acquiredDate?.toIso8601String(),
     };
   }
 }
@@ -513,6 +537,17 @@ abstract class BaseItemModel {
 
   final ProductStock productStock;
   final ShareableItemInformationModel shareableItemInformationModel;
+
+  factory BaseItemModel.fromJson(Map<String, dynamic> json) {
+    print('json received by base item mod: $json');
+    if (json['supply_id'] != null) {
+      print('supp received');
+      return Supply.fromJson(json);
+    } else {
+      print('equipment');
+      return Equipment.fromJson(json);
+    }
+  }
 }
 
 class Supply extends BaseItemModel {
@@ -539,8 +574,10 @@ class Supply extends BaseItemModel {
       'specification': json['specification'],
       'unit': json['unit'],
       'quantity': json['quantity'],
+      'unit_cost': json['unit_cost'],
       'encrypted_id': json['encrypted_id'],
       'qr_code_image_data': json['qr_code_image_data'],
+      'acquired_date': json['acquired_date'],
     });
 
     return Supply(
@@ -569,9 +606,7 @@ class Equipment extends BaseItemModel {
     required this.serialNo,
     required this.assetClassification,
     required this.assetSubClass,
-    required this.unitCost,
     this.estimatedUsefulLife = 1,
-    this.acquiredDate,
   });
 
   final int id;
@@ -580,11 +615,10 @@ class Equipment extends BaseItemModel {
   final String serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
-  final double unitCost;
   final int? estimatedUsefulLife;
-  final DateTime? acquiredDate;
 
   factory Equipment.fromJson(Map<String, dynamic> json) {
+    print('received json data by equipment model: $json');
     final assetClassificationString = json['asset_classification'] as String?;
     final assetSubClassString = json['asset_sub_class'] as String?;
 
@@ -616,8 +650,10 @@ class Equipment extends BaseItemModel {
       'specification': json['specification'],
       'unit': json['unit'],
       'quantity': json['quantity'],
+      'unit_cost': json['unit_cost'],
       'encrypted_id': json['encrypted_id'],
       'qr_code_image_data': json['qr_code_image_data'],
+      'acquired_date': json['acquired_date'],
     });
 
     final manufacturerBrand = ManufacturerBrand.fromJson({
@@ -634,8 +670,10 @@ class Equipment extends BaseItemModel {
       'model_name': json['model_name'],
     });
 
+    print('almost done processing the equipment model...');
+
     return Equipment(
-      id: json['equipment_id'] as int,
+      id: json['equipment_id'] as int, // this prob
       productStock: productStock,
       shareableItemInformationModel: shareableItemInformation,
       manufacturerBrand: manufacturerBrand,
@@ -643,15 +681,7 @@ class Equipment extends BaseItemModel {
       serialNo: json['serial_no'] as String,
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
-      unitCost: json['unit_cost'] is String
-          ? double.tryParse(json['unit_cost'] as String) ?? 0.0
-          : json['unit_cost'] as double,
       estimatedUsefulLife: json['estimated_useful_life'] as int?,
-      acquiredDate: json['acquired_date'] != null
-          ? json['acquired_date'] is String
-              ? DateTime.parse(json['acquired_date'] as String)
-              : json['acquired_date'] as DateTime
-          : null,
     );
   }
 
@@ -665,9 +695,7 @@ class Equipment extends BaseItemModel {
       'serial_no': serialNo,
       'asset_classification': assetClassification.toString().split('.').last,
       'asset_sub_class': assetSubClass.toString().split('.').last,
-      'unit_cost': unitCost,
       'estimated_useful_life': estimatedUsefulLife,
-      'acquired_date': acquiredDate?.toIso8601String(),
     };
   }
 }

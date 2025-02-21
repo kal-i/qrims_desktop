@@ -428,7 +428,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                       },
                   if (!isAdmin)
                     {
-                      'text': 'Generate PO',
+                      'text': 'Generate PR',
                       'icon': HugeIcons.strokeRoundedDocumentAttachment,
                     },
                 ],
@@ -490,7 +490,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                             );
                           }
 
-                          if (action.contains('Generate PO')) {
+                          if (action.contains('Generate PR')) {
                             final Map<String, dynamic> extra = {
                               'pr_id': selectedRequest,
                             };
@@ -503,7 +503,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                             showCustomDocumentPreview(
                               context: context,
                               documentObject: _tableRows[index].object,
-                              docType: DocumentType.po,
+                              docType: DocumentType.pr,
                             );
                           }
                         }
@@ -561,10 +561,6 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
   }
 
   Widget _buildRegisterButton() {
-    final Map<String, dynamic> extra = {
-      'is_update': false,
-    };
-
     return CustomFilledButton(
       width: 160.0,
       height: 40.0,
@@ -594,7 +590,10 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
         builder: (context) => FilterByDateModal(
           title: 'Filter Request',
           subtitle: 'Filter requests by the following parameters.',
-          onApplyFilters: (DateTime? startDate, DateTime? endDate,) {
+          onApplyFilters: (
+            DateTime? startDate,
+            DateTime? endDate,
+          ) {
             _selectedStartDate = startDate;
             _selectedEndDate = endDate;
             _fetchPurchaseRequests();

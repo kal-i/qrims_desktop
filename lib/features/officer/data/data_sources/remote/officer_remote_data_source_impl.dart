@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../../core/constants/endpoints.dart';
+import '../../../../../core/enums/officer_status.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
@@ -22,6 +23,7 @@ class OfficerRemoteDataSourceImpl implements OfficerRemoteDataSource {
     String? searchQuery,
     String? office,
     String? sortBy,
+    OfficerStatus? status,
     bool? sortAscending,
     bool? isArchived,
   }) async {
@@ -32,6 +34,7 @@ class OfficerRemoteDataSourceImpl implements OfficerRemoteDataSource {
         if (searchQuery != null && searchQuery.isNotEmpty)
           'search_query': searchQuery,
         if (office != null && office.isNotEmpty) 'office': office,
+        if (status != null) 'status': status.toString().split('.').last,
         if (sortBy != null && sortBy.isNotEmpty) 'sort_by': sortBy,
         if (sortAscending != null) 'sort_ascending': sortAscending,
         if (isArchived != null) 'is_archived': isArchived,

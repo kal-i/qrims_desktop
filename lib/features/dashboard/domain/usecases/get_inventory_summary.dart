@@ -1,5 +1,6 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../../../../core/error/failure.dart';
-import 'package:fpdart/src/either.dart';
 
 import '../../../../core/usecases/no_params.dart';
 import '../../../../core/usecases/usecase.dart';

@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/unit.dart';
@@ -32,20 +30,22 @@ class ItemModel extends ItemEntity {
 
     final assetClassification = assetClassificationString != null
         ? AssetClassification.values.firstWhere(
-          (e) => e.toString().split('.').last == assetClassificationString,
-      orElse: () => AssetClassification.unknown,
-    )
+            (e) => e.toString().split('.').last == assetClassificationString,
+            orElse: () => AssetClassification.unknown,
+          )
         : AssetClassification.unknown;
 
     final assetSubClass = assetSubClassString != null
         ? AssetSubClass.values.firstWhere(
-          (e) => e.toString().split('.').last == assetSubClassString,
-      orElse: () => AssetSubClass.unknown,
-    )
+            (e) => e.toString().split('.').last == assetSubClassString,
+            orElse: () => AssetSubClass.unknown,
+          )
         : AssetSubClass.unknown;
 
     final unit = Unit.values.firstWhere(
-          (e) => e.toString().split('.').last == json['unit'], // Provide a default value if necessary
+      (e) =>
+          e.toString().split('.').last ==
+          json['unit'], // Provide a default value if necessary
       orElse: () => Unit.undetermined,
     );
 
@@ -68,14 +68,13 @@ class ItemModel extends ItemEntity {
       estimatedUsefulLife: json['estimated_useful_life'] as int? ?? 0,
       acquiredDate: json['acquired_date'] != null
           ? json['acquired_date'] is String
-          ? DateTime.parse(json['acquired_date'] as String)
-          : json['acquired_date'] as DateTime
+              ? DateTime.parse(json['acquired_date'] as String)
+              : json['acquired_date'] as DateTime
           : null,
       encryptedId: json['encrypted_id'] as String? ?? '',
       qrCodeImageData: json['qr_code_image_data'] as String? ?? '',
     );
   }
-
 
   Map<String, dynamic> toJson() {
     return {

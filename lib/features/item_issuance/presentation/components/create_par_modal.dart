@@ -3,11 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../core/common/components/custom_date_picker.dart';
-import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
-import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
-import '../../../../core/common/components/custom_text_box.dart';
 import '../../../../core/enums/issuance_purpose.dart';
 import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/purchase_request_suggestions_service.dart';
@@ -92,7 +89,6 @@ class _CreateParModalState extends State<CreateParModal> {
       suggestionsCallback: (prId) async {
         return await _purchaseRequestSuggestionsService.fetchPurchaseRequestIds(
           prId: prId,
-          type: 'par',
         );
       },
       onSelected: (value) {

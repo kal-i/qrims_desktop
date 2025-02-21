@@ -5,19 +5,23 @@ class ShareableItemInformationEntity {
     required this.id,
     required this.productNameId,
     required this.productDescriptionId,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
+    required this.unitCost,
     required this.encryptedId,
     required this.qrCodeImageData,
+    this.acquiredDate,
   });
 
   final String id;
   final String productNameId;
   final String productDescriptionId;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
+  final double unitCost;
   final String encryptedId;
   final String qrCodeImageData;
+  final DateTime? acquiredDate;
 }

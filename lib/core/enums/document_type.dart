@@ -1,4 +1,5 @@
 enum DocumentType {
+  pr,
   po,
   ics,
   par,

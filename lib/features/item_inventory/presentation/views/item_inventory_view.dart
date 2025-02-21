@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +25,8 @@ import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/equipment.dart';
 import '../../domain/entities/supply.dart';
@@ -72,13 +73,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   final List<String> _tableHeaders = [
     'Item Name',
     'Description',
-    //'Brand',
-    //'Model',
+    'Unit',
     'Quantity',
-    //'Unit Cost',
-    'Status',
+    'Unit Cost',
   ];
-  late List<TableData> _tableRows = [];
+  late List<TableData> _tableRows;
 
   @override
   void initState() {
@@ -92,6 +91,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_onFilterChanged);
+
+    _tableRows = [];
     _initializeTableConfig();
     _fetchItems();
   }
@@ -100,7 +101,13 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _tableConfig = TableConfig(
       headers: _tableHeaders,
       rows: _tableRows,
-      columnFlex: [2, 3, 2, 2, 2, 2, 2],
+      columnFlex: [
+        2,
+        3,
+        1,
+        1,
+        1,
+      ],
     );
   }
 
@@ -326,10 +333,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   }
 
   Widget _buildRegisterButton() {
-    final Map<String, dynamic> extra = {
-      'is_update': false,
-    };
-
     return CustomFilledButton(
       width: 160.0,
       height: 40.0,
@@ -358,8 +361,12 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       onTap: () => showDialog(
         context: context,
         builder: (context) => FilterItemModal(
-          onApplyFilters: (String? manufacturer, String? brand,
-              AssetClassification? classification, AssetSubClass? subClass) {
+          onApplyFilters: (
+            String? manufacturer,
+            String? brand,
+            AssetClassification? classification,
+            AssetSubClass? subClass,
+          ) {
             _selectedManufacturer = manufacturer;
             _selectedBrand = brand;
             _selectedClassificationFilter = classification;
@@ -426,31 +433,22 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                             ),
                       ),
                       Text(
-                        item.productStockEntity.productDescription
-                                ?.description ??
-                            '',
+                        '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      // Text(
-                      //   item.manufacturerBrandEntity.brand.name,
-                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      //         fontSize: 14.0,
-                      //         fontWeight: FontWeight.w500,
-                      //       ),
-                      //   overflow: TextOverflow.ellipsis,
-                      // ),
-                      // Text(
-                      //   item.modelEntity.modelName,
-                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      //         fontSize: 14.0,
-                      //         fontWeight: FontWeight.w500,
-                      //       ),
-                      //   overflow: TextOverflow.ellipsis,
-                      // ),
+                      Text(
+                        readableEnumConverter(
+                            item.shareableItemInformationEntity.unit),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       Text(
                         item.shareableItemInformationEntity.quantity.toString(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -458,21 +456,13 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontWeight: FontWeight.w500,
                             ),
                       ),
-                      // Text(
-                      //   item.itemEntity.unitCost.toString(),
-                      //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      //         fontSize: 14.0,
-                      //         fontWeight: FontWeight.w500,
-                      //       ),
-                      // ),
-                      SizedBox(
-                        width: 50.0,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: _buildStatusHighlighter(
-                            item.shareableItemInformationEntity.quantity,
-                          ),
-                        ),
+                      Text(
+                        formatCurrency(
+                            item.shareableItemInformationEntity.unitCost),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                     ],
                     menuItems: [

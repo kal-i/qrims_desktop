@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../domain/entities/base_item.dart';
 import '../../domain/usecases/get_item_by_id.dart';
@@ -87,6 +88,8 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
         specification: event.specification,
         unit: event.unit,
         quantity: event.quantity,
+        unitCost: event.unitCost,
+        acquiredDate: event.acquiredDate,
       ),
     );
 
@@ -112,6 +115,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
 
     final response = await _registerEquipmentItem(
       RegisterEquipmentItemParams(
+        fundCluster: event.fundCluster,
         itemName: event.itemName,
         description: event.description,
         specification: event.specification,

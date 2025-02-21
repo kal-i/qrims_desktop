@@ -18,7 +18,6 @@ import '../../features/auth/presentation/views/set_new_password_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
 import '../../features/item_inventory/presentation/views/item_inventory_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_equipment_item_view.dart';
-import '../../features/item_inventory/presentation/views/reusable_item_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_supply_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
@@ -28,7 +27,6 @@ import '../../features/officer/presentation/views/officers_management_view.dart'
 import '../../features/purchase_request/presentation/view/create_purchase_order_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_reusable_view.dart';
 import '../../features/purchase_request/presentation/view/purchase_request_view.dart';
-import '../../features/purchase_request/presentation/view/view_purchase_request.dart';
 import '../../features/settings/presentation/views/account_profile_view.dart';
 import '../../features/settings/presentation/views/general_setting_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
@@ -269,7 +267,7 @@ class AppRoutingConfig {
                   final prId = extras['pr_id'] as String;
 
                   return MaterialPage(
-                    child: ViewPurchaseRequest(
+                    child: PurchaseRequestReusableView(
                       prId: prId,
                     ),
                   );

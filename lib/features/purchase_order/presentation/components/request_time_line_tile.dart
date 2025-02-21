@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
-import '../../../../../config/sizing/sizing_config.dart';
 import '../../../../../config/themes/app_color.dart';
 import '../../../../core/utils/user_friendly_date_formatter.dart';
 
@@ -30,8 +29,9 @@ class RequestTimeLineTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200.0,
+      //height: 60.0,
       child: TimelineTile(
+        axis: TimelineAxis.horizontal,
         alignment: TimelineAlign.manual,
         isFirst: isFirst,
         isLast: isLast,
@@ -67,17 +67,17 @@ class RequestTimeLineTile extends StatelessWidget {
     final match = regExp.firstMatch(message);
 
     return Container(
-      margin: const EdgeInsets.all(20.0),
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.0),
-        color: Theme.of(context).cardColor,
-      ),
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8.0),
+      // decoration: BoxDecoration(
+      //   borderRadius: BorderRadius.circular(10.0),
+      //   color: Theme.of(context).cardColor,
+      // ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        //crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _titleText(context),
-          const SizedBox(height: 0),
+          const SizedBox(height: 4.0),
           match != null
               ? _buildWithTrackingId(
                   context,
@@ -95,7 +95,7 @@ class RequestTimeLineTile extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontSize: 18.0,
+            fontSize: 12.0,
             fontWeight: FontWeight.w500,
           ),
     );
@@ -106,13 +106,17 @@ class RequestTimeLineTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
+          Flexible(
             child: Text(
               message.substring(0, match.start),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 13.0,
+                    fontSize: 10.0,
                     fontWeight: FontWeight.w400,
                   ),
+              textAlign: TextAlign.center,
+              softWrap: true,
+              maxLines: null,
+              overflow: TextOverflow.visible,
             ),
           ),
           GestureDetector(
@@ -122,9 +126,10 @@ class RequestTimeLineTile extends StatelessWidget {
                   0)!, // group(0) returns the full match (ISS-####-##-###)
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColor.accent,
-                    fontSize: 13.0,
+                    fontSize: 10.0,
                     fontWeight: FontWeight.w400,
                   ),
+              textAlign: TextAlign.center,
             ),
           ),
         ],
@@ -133,13 +138,17 @@ class RequestTimeLineTile extends StatelessWidget {
   }
 
   Widget _buildWithoutTrackingId(BuildContext context) {
-    return Expanded(
+    return Flexible(
       child: Text(
         message,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 13.0,
+              fontSize: 10.0,
               fontWeight: FontWeight.w400,
             ),
+        textAlign: TextAlign.center,
+        softWrap: true,
+        maxLines: null,
+        overflow: TextOverflow.visible,
       ),
     );
   }
@@ -148,9 +157,10 @@ class RequestTimeLineTile extends StatelessWidget {
     return Text(
       userFriendlyDateFormatter(date),
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 13.0,
+            fontSize: 10.0,
             fontWeight: FontWeight.w400,
           ),
+      textAlign: TextAlign.center,
     );
   }
 }

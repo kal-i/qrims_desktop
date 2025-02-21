@@ -11,8 +11,10 @@ const bearerLogoutEP = '$bearerAuthEP/logout';
 const bearerUsersEP = '$bearerAuthEP/users';
 const bearerPendingUsersEP = '$bearerUsersEP/pending';
 const bearerUsersUpdateAuthStatusEP = '$bearerUsersEP/update_user_auth_status';
-const bearerUsersUpdateArchiveStatusEP = '$bearerUsersEP/update_user_archive_status';
-const bearerUsersUpdateAdminApprovalStatusEP = '$bearerUsersEP/update_admin_approval_status';
+const bearerUsersUpdateArchiveStatusEP =
+    '$bearerUsersEP/update_user_archive_status';
+const bearerUsersUpdateAdminApprovalStatusEP =
+    '$bearerUsersEP/update_admin_approval_status';
 const updateUserInfoEP = '$bearerUsersEP/update_user_info';
 const otpEP = '$authEP/otp';
 const sendOtpEP = '$otpEP/send_otp';
@@ -21,7 +23,9 @@ const unAuth = '/logout';
 
 const dashboardEP = '/dashboard';
 const inventorySummaryEP = '$dashboardEP/inventory_summary';
-const requestsSummary = '$dashboardEP/requests_summary';
+const lowStockEP = '$inventorySummaryEP/low_stock';
+const outOfStockEP = '$inventorySummaryEP/out_of_stock';
+const requestsSummaryEP = '$dashboardEP/requests_summary';
 
 /// user acts endpoint
 const userActsEP = '/user_activities';
@@ -53,5 +57,6 @@ const matchPurchaseRequestWithInventoryItemEP = '$issuancesEP/match';
 const updateIssuanceArchiveStatusEP = '$issuancesEP/update_archive_status';
 const icsEP = '$issuancesEP/ics';
 const parEP = '$issuancesEP/par';
+const risEP = '$issuancesEP/ris';
 
 const notificationsEP = '/notifications';

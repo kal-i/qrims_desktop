@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../../../../config/sizing/sizing_config.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_message_box.dart';
-import '../../../../core/common/components/filter_table_row.dart';
 import '../../../../core/common/components/pagination_controls_2.dart';
-import '../../../../core/common/components/slideable_container.dart';
 import '../../data/data/models/notification.dart';
 import '../bloc/notifications_bloc.dart';
 import 'notification_card.dart';
@@ -181,9 +178,9 @@ class _NotificationWindowState extends State<NotificationWindow> {
             Text(
               'Notifications',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 24.0,
-                fontWeight: FontWeight.w700,
-              ),
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             PaginationControls2(
               currentPage: _currentPage,

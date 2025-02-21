@@ -17,12 +17,11 @@ class EquipmentModel extends EquipmentEntity implements BaseItemModel {
     required super.serialNo,
     required super.assetClassification,
     required super.assetSubClass,
-    required super.unitCost,
     super.estimatedUsefulLife,
-    super.acquiredDate,
   });
 
   factory EquipmentModel.fromJson(Map<String, dynamic> json) {
+    print('received json by equipment: $json');
     final assetClassificationString = json['asset_classification'] as String?;
     final assetSubClassString = json['asset_sub_class'] as String?;
 
@@ -41,16 +40,21 @@ class EquipmentModel extends EquipmentEntity implements BaseItemModel {
         : AssetSubClass.unknown;
 
     final productStock = ProductStockModel.fromJson(json['product_stock']);
+    print('product stock converted');
 
     final shareableItemInformation = ShareableItemInformationModel.fromJson(
         json['shareable_item_information']);
+    print('shareable item  info converted');
 
     final manufacturerBrand =
         ManufacturerBrandModel.fromJson(json['manufacturer_brand']);
+    print('manufacturer brand item  info converted');
 
     final model = Model.fromJson(json['model']);
+    print('model  info converted');
+    print('${json['equipment_id']}');
 
-    return EquipmentModel(
+    final equipment = EquipmentModel(
       id: json['equipment_id'] as int,
       productStockEntity: productStock,
       shareableItemInformationEntity: shareableItemInformation,
@@ -59,16 +63,10 @@ class EquipmentModel extends EquipmentEntity implements BaseItemModel {
       serialNo: json['serial_no'] as String,
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
-      unitCost: json['unit_cost'] is String
-          ? double.tryParse(json['unit_cost'] as String) ?? 0.0
-          : json['unit_cost'] as double,
       estimatedUsefulLife: json['estimated_useful_life'] as int?,
-      acquiredDate: json['acquired_date'] != null
-          ? json['acquired_date'] is String
-              ? DateTime.parse(json['acquired_date'] as String)
-              : json['acquired_date'] as DateTime
-          : null,
     );
+    print('equipment converted');
+    return equipment;
   }
 
   Map<String, dynamic> toJson() {
@@ -84,9 +82,7 @@ class EquipmentModel extends EquipmentEntity implements BaseItemModel {
       'serial_no': serialNo,
       'asset_classification': assetClassification.toString().split('.').last,
       'asset_sub_class': assetSubClass.toString().split('.').last,
-      'unit_cost': unitCost,
       'estimated_useful_life': estimatedUsefulLife,
-      'acquired_date': acquiredDate?.toIso8601String(),
     };
   }
 }

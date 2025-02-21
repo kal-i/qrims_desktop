@@ -5,6 +5,8 @@ import 'package:api/src/purchase_request/repository/purchase_request_repository.
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
+// disable matching fn
+// instead, create a modal where items in the inventory will be displayed and the user can select from their
 Future<Response> onRequest(RequestContext context) async {
   final connection = context.read<Connection>();
   final prRepository = PurchaseRequestRepository(connection);
@@ -28,18 +30,17 @@ Future<Response> _matchPrItemWithInventory(
   final purchaseRequest = await prRepository.getPurchaseRequestById(
     id: prId,
   );
-  print(purchaseRequest);
 
-  final items = await issuanceRepository.matchingItemFromPurchaseRequest(
-    purchaseRequestId: prId,
-    requestedQuantity: purchaseRequest!.quantity,
-  );
+  // final items = await issuanceRepository.matchingItemFromPurchaseRequest(
+  // purchaseRequestId: prId,
+  // requestedItems: purchaseRequest!.requestedItems,
+  //);
 
   // we need this to show some of the info required by
   return Response.json(
     body: {
-      'purchase_request': purchaseRequest.toJson(),
-      'matched_items': items,
+      'purchase_request': purchaseRequest?.toJson(),
+      // 'matched_items': items,
     },
   );
 }

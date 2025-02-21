@@ -6,6 +6,7 @@ import '../entities/issuance.dart';
 import '../entities/matched_item_with_pr.dart';
 import '../entities/paginated_issuance_result.dart';
 import '../entities/property_acknowledgement_receipt.dart';
+import '../entities/requisition_and_issue_slip.dart';
 
 abstract interface class IssuanceRepository {
   Future<Either<Failure, PaginatedIssuanceResultEntity>> getIssuances({
@@ -35,7 +36,6 @@ abstract interface class IssuanceRepository {
 
   Future<Either<Failure, PropertyAcknowledgementReceiptEntity>> createPAR({
     required String prId,
-    String? propertyNumber,
     required List<dynamic> issuanceItems,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
@@ -43,6 +43,22 @@ abstract interface class IssuanceRepository {
     required String sendingOfficerOffice,
     required String sendingOfficerPosition,
     required String sendingOfficerName,
+  });
+
+  Future<Either<Failure, RequisitionAndIssueSlipEntity>> createRIS({
+    required String prId,
+    required List<dynamic> issuanceItems,
+    String? purpose,
+    String? responsibilityCenterCode,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required String approvingOfficerOffice,
+    required String approvingOfficerPosition,
+    required String approvingOfficerName,
+    required String issuingOfficerOffice,
+    required String issuingOfficerPosition,
+    required String issuingOfficerName,
   });
 
   Future<Either<Failure, IssuanceEntity?>> getIssuanceById({

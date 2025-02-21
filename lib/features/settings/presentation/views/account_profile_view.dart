@@ -324,6 +324,8 @@ class _AccountSecurityState extends State<_AccountSecurity> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+
+    _isExpanded.dispose();
     super.dispose();
   }
 
@@ -349,10 +351,8 @@ class _AccountSecurityState extends State<_AccountSecurity> {
         Expanded(
           child: Column(
             children: [
-
               Row(
                 children: [
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +379,6 @@ class _AccountSecurityState extends State<_AccountSecurity> {
                       ],
                     ),
                   ),
-
                   Expanded(
                     flex: 2,
                     child: CustomLabeledTextBox(
@@ -390,11 +389,9 @@ class _AccountSecurityState extends State<_AccountSecurity> {
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 30.0,
               ),
-
               Expanded(
                 child: ValueListenableBuilder(
                   valueListenable: _isExpanded,
@@ -496,11 +493,11 @@ class _AccountSecurityState extends State<_AccountSecurity> {
         ),
         CustomOutlineButton(
           onTap: () => context.read<AuthBloc>().add(
-            UpdateUserInfo(
-              id: widget.userModel.id,
-              password: _passwordController.text,
-            ),
-          ),
+                UpdateUserInfo(
+                  id: widget.userModel.id,
+                  password: _passwordController.text,
+                ),
+              ),
           text: 'Save Changes',
           height: 40.0,
         ),

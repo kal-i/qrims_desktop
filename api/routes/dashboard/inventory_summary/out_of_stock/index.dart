@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:api/src/item/models/item.dart';
 import 'package:api/src/item/repository/item_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -29,10 +28,14 @@ Future<Response> _getOutOfStockItems(
       pageSize: pageSize,
     );
 
+    final outOfStockItemsFilteredCount =
+        await repository.getOutOfStockItemsFilteredCount();
+
     return Response.json(
       statusCode: 200,
       body: {
         'items': outOfStockItems,
+        'total_item_count': outOfStockItemsFilteredCount,
       },
     );
   } catch (e) {

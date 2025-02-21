@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/error/failure.dart';
 import '../entities/base_item.dart';
 import '../entities/paginated_item_result.dart';
@@ -24,15 +25,18 @@ abstract interface class ItemInventoryRepository {
   Future<Either<Failure, BaseItemEntity>> registerSupplyItem({
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required unit.Unit unit,
     required int quantity,
+    required double unitCost,
+    DateTime? acquiredDate,
   });
 
   Future<Either<Failure, List<BaseItemEntity>>> registerEquipmentItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required unit.Unit unit,
     required int quantity,
     required String manufacturerName,

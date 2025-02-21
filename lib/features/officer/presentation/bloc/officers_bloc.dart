@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/enums/officer_status.dart';
 import '../../domain/entities/officer.dart';
 import '../../domain/usecases/get_paginated_officers.dart';
 import '../../domain/usecases/register_officer.dart';
@@ -40,6 +41,7 @@ class OfficersBloc extends Bloc<OfficersEvent, OfficersState> {
         searchQuery: event.searchQuery,
         office: event.office,
         sortBy: event.sortBy,
+        status: event.status,
         sortAscending: event.sortAscending,
         isArchived: event.isArchived,
       ),

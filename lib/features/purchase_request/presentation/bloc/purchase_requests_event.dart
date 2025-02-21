@@ -47,11 +47,7 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
     required this.fundCluster,
     required this.officeName,
     required this.date,
-    required this.productName,
-    required this.productDescription,
-    required this.unit,
-    required this.quantity,
-    required this.unitCost,
+    required this.requestedItems,
     required this.purpose,
     required this.requestingOfficerOffice,
     required this.requestingOfficerPosition,
@@ -65,11 +61,8 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
   final FundCluster fundCluster;
   final String officeName;
   final DateTime date;
-  final String productName;
-  final String productDescription;
-  final Unit unit;
-  final int quantity;
-  final double unitCost;
+  final List<Map<String, dynamic>> requestedItems;
+
   final String purpose;
   final String requestingOfficerOffice;
   final String requestingOfficerPosition;
@@ -84,11 +77,7 @@ final class RegisterPurchaseRequestEvent extends PurchaseRequestsEvent {
         fundCluster,
         officeName,
         date,
-        productName,
-        productDescription,
-        unit,
-        quantity,
-        unitCost,
+        requestedItems,
         purpose,
         requestingOfficerOffice,
         requestingOfficerPosition,

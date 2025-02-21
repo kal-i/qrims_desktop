@@ -1,6 +1,5 @@
 import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/purchase_request_status.dart';
-import '../../../../../core/enums/unit.dart';
 import '../../models/paginated_purchase_request_result.dart';
 import '../../models/purchase_request.dart';
 import '../../models/purchase_request_with_notification_trail.dart';
@@ -11,11 +10,7 @@ abstract interface class PurchaseRequestRemoteDataSource {
     required FundCluster fundCluster,
     required String officeName,
     required DateTime date,
-    required String productName,
-    required String productDescription,
-    required Unit unit,
-    required int quantity,
-    required double unitCost,
+    required List<Map<String, dynamic>> requestedItems,
     required String purpose,
     required String requestingOfficerOffice,
     required String requestingOfficerPosition,

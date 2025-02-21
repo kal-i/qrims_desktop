@@ -24,6 +24,8 @@ class RegisterSupplyItem
       specification: params.specification,
       unit: params.unit,
       quantity: params.quantity,
+      unitCost: params.unitCost,
+      acquiredDate: params.acquiredDate,
     );
   }
 }
@@ -32,14 +34,18 @@ class RegisterSupplyItemParams {
   const RegisterSupplyItemParams({
     required this.itemName,
     required this.description,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
+    required this.unitCost,
+    this.acquiredDate,
   });
 
   final String itemName;
   final String description;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
+  final double unitCost;
+  final DateTime? acquiredDate;
 }

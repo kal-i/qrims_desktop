@@ -14,9 +14,7 @@ class EquipmentEntity extends BaseItemEntity {
     required this.serialNo,
     required this.assetClassification,
     required this.assetSubClass,
-    required this.unitCost,
     this.estimatedUsefulLife = 1,
-    this.acquiredDate,
   });
 
   final int id;
@@ -25,7 +23,5 @@ class EquipmentEntity extends BaseItemEntity {
   final String serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
-  final double unitCost;
   final int? estimatedUsefulLife;
-  final DateTime? acquiredDate;
 }

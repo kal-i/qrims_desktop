@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
-
-import '../../../../domain/entities/item.dart';
+import '../../../../domain/entities/reusable_item_information.dart';
 import '../../../../domain/usecases/get_low_stock_items.dart';
 
 part 'low_stock_event.dart';
@@ -34,7 +32,9 @@ class LowStockBloc extends Bloc<LowStockEvent, LowStockState> {
     response.fold(
       (l) => emit(LowStockError(message: l.message)),
       (r) => emit(
-        LowStockLoaded(items: r.items),
+        LowStockLoaded(
+          items: r.reusableItemInformationEntities,
+        ),
       ),
     );
   }

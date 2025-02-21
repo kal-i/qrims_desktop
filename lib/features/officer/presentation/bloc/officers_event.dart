@@ -14,6 +14,7 @@ final class GetPaginatedOfficersEvent extends OfficersEvent {
     this.searchQuery,
     this.office,
     this.sortBy,
+    this.status,
     this.sortAscending,
     this.isArchived,
   });
@@ -23,6 +24,7 @@ final class GetPaginatedOfficersEvent extends OfficersEvent {
   final String? searchQuery;
   final String? office;
   final String? sortBy;
+  final OfficerStatus? status;
   final bool? sortAscending;
   final bool? isArchived;
 

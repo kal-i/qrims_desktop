@@ -145,6 +145,8 @@ Future<Response> _registerPurchaseRequest(
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
+    print('raw json received: $json');
+
     // get curr user by bearer token
     final bearerToken = headers['Authorization']?.substring(7) as String;
     final session = await sessionRepository.sessionFromToken(bearerToken);
@@ -159,11 +161,8 @@ Future<Response> _registerPurchaseRequest(
     final date = json['date'] is String
         ? DateTime.parse(json['date'] as String)
         : json['date'] as DateTime;
-    final productName = json['product_name'] as String;
-    final productDescription = json['product_description'] as String;
-    final unitString = json['unit'] as String;
-    final quantity = json['quantity'] as int;
-    final unitCost = json['unit_cost'] as double;
+
+    final requestedItems = json['requested_items'] as List<dynamic>;
     final purpose = json['purpose'] as String;
 
     final requestingOfficerOffice = json['requesting_officer_office'] as String;
@@ -176,6 +175,23 @@ Future<Response> _registerPurchaseRequest(
         json['approving_officer_position'] as String;
     final approvingOfficerName = json['approving_officer_name'] as String;
 
+    print(
+      '''
+      $entityName,
+      $fundClusterString,
+      $officeName,
+      $date,
+      $requestedItems,
+      $purpose,
+      $requestingOfficerOffice,
+      $requestingOfficerPosition,
+      $requestingOfficerName,
+      $approvingOfficerOffice,
+      $approvingOfficerPosition
+      $approvingOfficerName
+      ''',
+    );
+
     final entityId = await entityRepository.checkEntityIfExist(
       entityName: entityName,
     );
@@ -183,37 +199,64 @@ Future<Response> _registerPurchaseRequest(
       officeName: officeName,
     );
 
-    final productNameId = await itemRepository.checkProductNameIfExist(
-          productName: productName,
-        ) ??
-        await itemRepository.registerProductName(
-          productName: productName,
-        );
+    final requestedItemsMap = <Map<String, dynamic>>[];
 
-    final productDescriptionId =
-        await itemRepository.checkProductDescriptionIfExist(
-              productDescription: productDescription,
-            ) ??
-            await itemRepository.registerProductDescription(
-              productDescription: productDescription,
-            );
+    for (int i = 0; i < requestedItems.length; i++) {
+      final requestedItem = requestedItems[i];
+      final productName = requestedItem['product_name'] as String;
+      final productDescription = requestedItem['product_description'] as String;
+      final productSpecification = requestedItem['specification'] as String;
+      final unitString = requestedItem['unit'] as String;
+      final quantity = requestedItem['quantity'] as int;
+      final unitCost = requestedItem['unit_cost'] as double;
 
-    print(
-        'product name id: $productNameId - product desc id: $productDescriptionId');
+      final productNameId = await itemRepository.checkProductNameIfExist(
+            productName: productName,
+          ) ??
+          await itemRepository.registerProductName(
+            productName: productName,
+          );
 
-    final productStockResult = await itemRepository.checkProductStockIfExist(
-      productNameId: productNameId,
-      productDescriptionId: productDescriptionId,
-    );
+      final productDescriptionId =
+          await itemRepository.checkProductDescriptionIfExist(
+                productDescription: productDescription,
+              ) ??
+              await itemRepository.registerProductDescription(
+                productDescription: productDescription,
+              );
 
-    print('product stock count: $productStockResult');
+      print(
+          'product name id: $productNameId - product desc id: $productDescriptionId');
 
-    if (productStockResult == 0) {
-      await itemRepository.registerProductStock(
+      final productStockResult = await itemRepository.checkProductStockIfExist(
         productNameId: productNameId,
         productDescriptionId: productDescriptionId,
       );
-      print('product stock registered.');
+
+      print('product stock count: $productStockResult');
+
+      if (productStockResult == 0) {
+        await itemRepository.registerProductStock(
+          productNameId: productNameId,
+          productDescriptionId: productDescriptionId,
+        );
+        print('product stock registered.');
+      }
+
+      final unit = Unit.values.firstWhere(
+        (e) => e.toString().split('.').last == unitString,
+      );
+
+      requestedItemsMap.add(
+        {
+          'product_name_id': productNameId,
+          'product_description_id': productDescriptionId,
+          'specification': productSpecification,
+          'unit': unit,
+          'quantity': quantity,
+          'unit_cost': unitCost,
+        },
+      );
     }
 
     /// requesting officer info
@@ -259,26 +302,23 @@ Future<Response> _registerPurchaseRequest(
     final fundCluster = FundCluster.values.firstWhere(
       (e) => e.toString().split('.').last == fundClusterString,
     );
-    final unit = Unit.values.firstWhere(
-      (e) => e.toString().split('.').last == unitString,
-    );
 
     final purchaseRequestId = await prRepository.registerPurchaseRequest(
       entityId: entityId,
       fundCluster: fundCluster,
       officeId: officeId,
       date: date,
-      productNameId: productNameId,
-      productDescriptionId: productDescriptionId,
-      unit: unit,
-      quantity: quantity,
-      unitCost: unitCost,
       purpose: purpose,
       requestingOfficerId: requestingOfficerId,
       approvingOfficerId: approvingOfficerId,
     );
 
     print('pr id: $purchaseRequestId');
+
+    await prRepository.registerRequestedItems(
+      prId: purchaseRequestId,
+      requestedItems: requestedItemsMap,
+    );
 
     final recipientOfficer = await officerRepository.getOfficerById(
       officerId: requestingOfficerId,
@@ -287,16 +327,25 @@ Future<Response> _registerPurchaseRequest(
 
     /// notif
     /// must be a user
-    if (recipientOfficer?.userId != null) {
-      await notifRepository.sendNotification(
-        recipientId: recipientOfficer!.userId!,
-        senderId: responsibleUserId,
-        message:
-            'Your purchase request has been registered to the system with a tracking id of $purchaseRequestId.',
-        type: NotificationType.prCreated,
-        referenceId: purchaseRequestId,
-      );
-    }
+    // if (recipientOfficer?.userId != null) {
+    //   await notifRepository.sendNotification(
+    //     recipientId: recipientOfficer!.userId!,
+    //     senderId: responsibleUserId,
+    //     message:
+    //         'Your purchase request has been registered to the system with a tracking id of $purchaseRequestId.',
+    //     type: NotificationType.prCreated,
+    //     referenceId: purchaseRequestId,
+    //   );
+    // } else {
+    await notifRepository.sendNotification(
+      recipientId: '',
+      senderId: responsibleUserId,
+      message:
+          'Purchase request has been registered to the system with a tracking id of $purchaseRequestId.',
+      type: NotificationType.prCreated,
+      referenceId: purchaseRequestId,
+    );
+    //}
     print('after notif');
 
     final purchaseRequest = await prRepository.getPurchaseRequestById(

@@ -137,39 +137,52 @@ Future<Response> _createPAR(
 
     final issuanceId = await issuanceRepository.createPAR(
       propertyNumber: propertyNumber,
-      purchaseRequestId: initPurchaseRequestData.id,
-      requestedQuantity: initPurchaseRequestData.quantity,
+      purchaseRequest: initPurchaseRequestData,
       issuanceItems: issuanceItems,
       receivingOfficerId: receivingOfficerId,
       sendingOfficerId: sendingOfficerId,
       //issuedDate: issuedDate,
     );
 
+    print('issuance id: $issuanceId');
+
+    // todo: solve the problem here
     final par = await issuanceRepository.getParById(
       id: issuanceId,
     );
 
+    print('par id: ${par?.parId}');
+
     final postIssuancePurchaseRequestData =
-    await prRepository.getPurchaseRequestById(
+        await prRepository.getPurchaseRequestById(
       id: prId,
     );
 
-    int issuedQuantity = par?.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
+    int remainingQuantity = postIssuancePurchaseRequestData?.requestedItems
+            .map((item) => item.remainingQuantity)
+            .fold(0, (sum, qty) => sum! + qty!) ??
+        0;
 
-    String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
-        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${par?.id}."
-        : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${par?.id}.";
+    print('remaining qty: $remainingQuantity');
+
+    String message = remainingQuantity == 0
+        ? "Purchase request #$prId has been fulfilled and issued. PAR Tracking ID: ${par?.parId}."
+        : "Purchase request #$prId has been partially issued. PAR Tracking ID: ${par?.parId}.";
 
     /// reference will always refer to the pr id to build a tracking
-    if (recipientOfficer?.userId != null) {
-      await notifRepository.sendNotification(
-        recipientId: recipientOfficer!.userId!,
-        senderId: responsibleUserId,
-        message: message,
-        type: NotificationType.issuanceCreated,
-        referenceId: prId,
-      );
-    }
+    //if (recipientOfficer?.userId != null) {
+    await notifRepository.sendNotification(
+      recipientId: recipientOfficer?.userId ?? '',
+      senderId: responsibleUserId,
+      message: message,
+      type: NotificationType.issuanceCreated,
+      referenceId: prId,
+    );
+    //}
+
+    print('notif done');
+    print('response items: ${par?.items}');
+    print('response: ${par?.toJson()}');
 
     return Response.json(
       statusCode: 200,

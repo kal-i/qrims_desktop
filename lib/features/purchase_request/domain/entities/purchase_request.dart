@@ -2,11 +2,9 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/purchase_request_status.dart';
-import '../../../../core/enums/unit.dart';
-import '../../../item_inventory/domain/entities/product_description.dart';
-import '../../../item_inventory/domain/entities/product_name.dart';
 import '../../../officer/domain/entities/office.dart';
 import '../../../officer/domain/entities/officer.dart';
+import 'requested_item.dart';
 
 class Entity extends Equatable {
   const Entity({
@@ -19,9 +17,9 @@ class Entity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-  ];
+        id,
+        name,
+      ];
 }
 
 class PurchaseRequestEntity extends Equatable {
@@ -32,13 +30,7 @@ class PurchaseRequestEntity extends Equatable {
     required this.officeEntity,
     this.responsibilityCenterCode,
     required this.date,
-    required this.productNameEntity,
-    required this.productDescriptionEntity,
-    required this.unit,
-    required this.quantity,
-    this.remainingQuantity,
-    required this.unitCost,
-    required this.totalCost,
+    required this.requestedItemEntities,
     required this.purpose,
     required this.requestingOfficerEntity,
     required this.approvingOfficerEntity,
@@ -52,13 +44,7 @@ class PurchaseRequestEntity extends Equatable {
   final OfficeEntity officeEntity;
   final String? responsibilityCenterCode;
   final DateTime date;
-  final ProductNameEntity productNameEntity;
-  final ProductDescriptionEntity productDescriptionEntity;
-  final Unit unit;
-  final int quantity;
-  final int? remainingQuantity; // to track if qty not yet fulfilled
-  final double unitCost;
-  final double totalCost;
+  final List<RequestedItemEntity> requestedItemEntities;
   final String purpose;
   final OfficerEntity requestingOfficerEntity;
   final OfficerEntity approvingOfficerEntity;
@@ -67,23 +53,17 @@ class PurchaseRequestEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    entity,
-    fundCluster,
-    officeEntity,
-    responsibilityCenterCode,
-    date,
-    productNameEntity,
-    productDescriptionEntity,
-    unit,
-    quantity,
-    remainingQuantity,
-    unitCost,
-    totalCost,
-    purpose,
-    requestingOfficerEntity,
-    approvingOfficerEntity,
-    purchaseRequestStatus,
-    isArchived,
-  ];
+        id,
+        entity,
+        fundCluster,
+        officeEntity,
+        responsibilityCenterCode,
+        date,
+        requestedItemEntities,
+        purpose,
+        requestingOfficerEntity,
+        approvingOfficerEntity,
+        purchaseRequestStatus,
+        isArchived,
+      ];
 }

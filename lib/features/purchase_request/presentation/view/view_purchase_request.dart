@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../config/routes/app_routing_constants.dart';
-import '../../../../../config/sizing/sizing_config.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/utils/capitalizer.dart';
@@ -247,27 +245,27 @@ class _ViewPurchaseRequestState extends State<ViewPurchaseRequest> {
         _buildTitleSection(
           'Item Details',
         ),
-        _buildInfoText(
-          capitalizeWord(
-            purchaseRequest.productNameEntity.name,
-          ),
-        ),
-        _buildInfoText(
-            purchaseRequest.productDescriptionEntity.description ?? ''),
-        _buildInfoText(
-          readableEnumConverter(
-            purchaseRequest.unit,
-          ),
-        ),
-        _buildInfoText(
-          'QTY: ${purchaseRequest.quantity}',
-        ),
-        _buildInfoText(
-          'UNIT COST: ${purchaseRequest.unitCost}',
-        ),
-        _buildInfoText(
-          'TOTAL: ${purchaseRequest.totalCost}',
-        ),
+        // _buildInfoText(
+        //   capitalizeWord(
+        //     purchaseRequest.productNameEntity.name,
+        //   ),
+        // ),
+        // _buildInfoText(
+        //     purchaseRequest.productDescriptionEntity.description ?? ''),
+        // _buildInfoText(
+        //   readableEnumConverter(
+        //     purchaseRequest.unit,
+        //   ),
+        // ),
+        // _buildInfoText(
+        //   'QTY: ${purchaseRequest.quantity}',
+        // ),
+        // _buildInfoText(
+        //   'UNIT COST: ${purchaseRequest.unitCost}',
+        // ),
+        // _buildInfoText(
+        //   'TOTAL: ${purchaseRequest.totalCost}',
+        // ),
       ],
     );
   }

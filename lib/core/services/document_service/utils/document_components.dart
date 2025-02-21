@@ -86,7 +86,8 @@ class DocumentComponents {
       child: pw.Text(
         data,
         style: pw.TextStyle(
-          font: font,
+          font: font ??
+              serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontStyle: fontStyle,
           fontSize: fontSize ?? 10.0,
         ),
@@ -131,7 +132,8 @@ class DocumentComponents {
         pw.Text(
           text,
           style: pw.TextStyle(
-            font: font ?? FontService().getFont('timesNewRomanBold'),
+            font: font ??
+                serviceLocator<FontService>().getFont('timesNewRomanBold'),
             fontSize: fontSize ?? 10.0,
           ),
         ),
@@ -141,7 +143,8 @@ class DocumentComponents {
         pw.Text(
           value,
           style: pw.TextStyle(
-            font: font ?? FontService().getFont('timesNewRomanBold'),
+            font: font ??
+                serviceLocator<FontService>().getFont('timesNewRomanBold'),
             fontSize: fontSize ?? 10.0,
             decoration: isUnderlined ? pw.TextDecoration.underline : null,
           ),
@@ -169,7 +172,7 @@ class DocumentComponents {
       child: pw.Text(
         data,
         style: pw.TextStyle(
-          //font: FontService().getFont('tahomaRegular'),
+          font: serviceLocator<FontService>().getFont('tahomaRegular'),
           fontSize: fontSize ?? 8.5,
         ),
         textAlign: isAlignCenter ? pw.TextAlign.center : null,
@@ -372,7 +375,7 @@ class DocumentComponents {
           pw.Text(
             title,
             style: pw.TextStyle(
-              font: FontService().getFont(
+              font: serviceLocator<FontService>().getFont(
                 isPAR ? 'timesNewRomanBold' : 'timesNewRomanRegular',
               ),
               fontSize: 10.0,
@@ -387,7 +390,8 @@ class DocumentComponents {
               pw.Text(
                 officerName.toUpperCase(),
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanBold'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanBold'),
                   fontSize: 10.0,
                   decoration: isPAR ? pw.TextDecoration.underline : null,
                 ),
@@ -395,21 +399,24 @@ class DocumentComponents {
               pw.Text(
                 'Signature Over Printed Name',
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanRegular'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
                   fontSize: 10.0,
                 ),
               ),
               pw.Text(
                 '${formatPosition(officerPosition.toUpperCase())} - ${officerOffice.toUpperCase()}',
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanRegular'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
                   fontSize: 10.0,
                 ),
               ),
               pw.Text(
                 'Position/Office',
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanRegular'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
                   fontSize: 10.0,
                 ),
               ),
@@ -420,14 +427,16 @@ class DocumentComponents {
                         ? documentDateFormatter(date)
                         : '\n',
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanRegular'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
                   fontSize: 10.0,
                 ),
               ),
               pw.Text(
                 'Date',
                 style: pw.TextStyle(
-                  font: FontService().getFont('timesNewRomanRegular'),
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
                   fontSize: 10.0,
                 ),
               ),
@@ -539,12 +548,12 @@ class DocumentComponents {
           buildRowTextValue(
             text: row1Title,
             value: row1Value ?? (isRow1Underlined ? '________' : ''),
-            font: FontService().getFont('calibriRegular'),
+            font: serviceLocator<FontService>().getFont('calibriRegular'),
           ),
           buildRowTextValue(
             text: row2Title,
             value: row2Value ?? (isRow2Underlined ? '________' : ''),
-            font: FontService().getFont('calibriRegular'),
+            font: serviceLocator<FontService>().getFont('calibriRegular'),
           ),
         ],
       ),
@@ -558,7 +567,7 @@ class DocumentComponents {
           data: '\nSignature:',
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
-          font: FontService().getFont('calibriRegular'),
+          font: serviceLocator<FontService>().getFont('calibriRegular'),
           isAlignCenter: false,
           borderTop: false,
           borderRight: false,
@@ -567,7 +576,7 @@ class DocumentComponents {
           data: 'Requested by: \n\n',
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
-          font: FontService().getFont('calibriBold'),
+          font: serviceLocator<FontService>().getFont('calibriBold'),
           isAlignCenter: false,
           borderTop: false,
           borderRight: false,
@@ -576,7 +585,7 @@ class DocumentComponents {
           data: 'Approved by: \n\n',
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
-          font: FontService().getFont('calibriBold'),
+          font: serviceLocator<FontService>().getFont('calibriBold'),
           isAlignCenter: false,
           borderTop: false,
           borderRight: false,
@@ -585,7 +594,7 @@ class DocumentComponents {
           data: 'Issued by: \n\n',
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
-          font: FontService().getFont('calibriBold'),
+          font: serviceLocator<FontService>().getFont('calibriBold'),
           isAlignCenter: false,
           borderTop: false,
           borderRight: false,
@@ -594,7 +603,7 @@ class DocumentComponents {
           data: 'Received by: \n\n',
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
-          font: FontService().getFont('calibriBold'),
+          font: serviceLocator<FontService>().getFont('calibriBold'),
           isAlignCenter: false,
           borderTop: false,
         ),
@@ -711,7 +720,7 @@ class DocumentComponents {
           child: pw.Text(
             title,
             style: pw.TextStyle(
-              font: FontService().getFont('calibriBold'),
+              font: serviceLocator<FontService>().getFont('calibriBold'),
               fontSize: 8.5,
             ),
           ),
@@ -727,7 +736,7 @@ class DocumentComponents {
           child: pw.Text(
             value ?? '',
             style: pw.TextStyle(
-              font: FontService().getFont('calibriBold'),
+              font: serviceLocator<FontService>().getFont('calibriBold'),
               fontSize: 8.5,
             ),
           ),
@@ -742,7 +751,7 @@ class DocumentComponents {
         pw.Container(
           height: 48.75,
           width: 48.75,
-          child: ImageService().getImage('depedSeal'),
+          child: serviceLocator<ImageService>().getImage('depedSeal'),
         ),
         pw.SizedBox(
           height: 5.0,
@@ -750,7 +759,7 @@ class DocumentComponents {
         pw.Text(
           'DEPARTMENT OF EDUCATION',
           style: pw.TextStyle(
-            font: FontService().getFont('calibriBold'),
+            font: serviceLocator<FontService>().getFont('calibriBold'),
             fontSize: 10,
             // fontWeight: pw.FontWeight.bold,
           ),
@@ -761,7 +770,7 @@ class DocumentComponents {
         pw.Text(
           'Schools Division of Legazpi City',
           style: pw.TextStyle(
-            font: FontService().getFont('calibriBold'),
+            font: serviceLocator<FontService>().getFont('calibriBold'),
             fontSize: 10,
             //fontWeight: pw.FontWeight.bold,
           ),
@@ -772,7 +781,7 @@ class DocumentComponents {
         pw.Text(
           'Legazpi City',
           style: pw.TextStyle(
-            font: FontService().getFont('calibriBold'),
+            font: serviceLocator<FontService>().getFont('calibriBold'),
             fontSize: 10,
             //fontWeight: pw.FontWeight.bold,
           ),
@@ -789,14 +798,14 @@ class DocumentComponents {
       text: pw.TextSpan(
         text: title,
         style: pw.TextStyle(
-          font: FontService().getFont('calibriBold'),
+          font: serviceLocator<FontService>().getFont('calibriBold'),
           fontSize: 11.0,
         ),
         children: [
           pw.TextSpan(
             text: value,
             style: pw.TextStyle(
-              font: FontService().getFont('calibriRegular'),
+              font: serviceLocator<FontService>().getFont('calibriRegular'),
               fontSize: 11.0,
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:postgres/postgres.dart';
 
 import '../../issuance/models/issuance.dart';
 import '../../item/models/item.dart';
+import '../../organization_management/repositories/officer_repository.dart';
 
 class PurchaseRequestRepository {
   const PurchaseRequestRepository(this._conn);
@@ -78,16 +79,68 @@ class PurchaseRequestRepository {
     return uniqueId;
   }
 
+  Future<bool> registerRequestedItems({
+    required String prId,
+    required List<Map<String, dynamic>> requestedItems,
+  }) async {
+    if (requestedItems.isEmpty) return false;
+
+    try {
+      for (int i = 0; i < requestedItems.length; i++) {
+        final requestedItem = requestedItems[i];
+        final productNameId = requestedItem['product_name_id'] as String;
+        final productDescriptionId =
+            requestedItem['product_description_id'] as String;
+        final productSpecification = requestedItem['specification'] as String?;
+        final unit = requestedItem['unit'] as Unit;
+        final quantity = requestedItem['quantity'] as int;
+        final unitCost = requestedItem['unit_cost'] as double;
+        final totalCost = unitCost * quantity;
+
+        print('requested item: $requestedItem');
+
+        await _conn.execute(
+          Sql.named(
+            '''
+          INSERT INTO RequestedItems (
+            pr_id, product_name_id, product_description_id, specification, unit, quantity, 
+            unit_cost, total_cost
+          ) VALUES (
+            @pr_id, @product_name_id, @product_description_id, @specification, @unit, @quantity,
+            @unit_cost, @total_cost
+          );
+          ''',
+          ),
+          parameters: {
+            'pr_id': prId,
+            'product_name_id': productNameId,
+            'product_description_id': productDescriptionId,
+            'specification': productSpecification,
+            'unit': unit.toString().split('.').last,
+            'quantity': quantity,
+            'unit_cost': unitCost,
+            'total_cost': totalCost,
+          },
+        );
+      }
+
+      return true;
+    } catch (e) {
+      print('Error inserting requested items: $e');
+      return false;
+    }
+  }
+
   Future<String> registerPurchaseRequest({
     required String entityId,
     required FundCluster fundCluster,
     required String officeId,
     required DateTime date,
-    required String productNameId,
-    required String productDescriptionId,
-    required Unit unit,
-    required int quantity,
-    required double unitCost,
+    //required String productNameId,
+    //required String productDescriptionId,
+    //required Unit unit,
+    //required int quantity,
+    //required double unitCost,
     required String purpose,
     required String requestingOfficerId,
     required String approvingOfficerId,
@@ -103,13 +156,10 @@ class PurchaseRequestRepository {
           '''
         INSERT INTO PurchaseRequests (
           id, entity_id, fund_cluster, office_id, responsibility_center_code,
-          date, product_name_id, product_description_id, unit, quantity, 
-          unit_cost, total_cost, purpose, requesting_officer_id, 
-          approving_officer_id
+          date, purpose, requesting_officer_id, approving_officer_id
         ) VALUES (
           @id, @entity_id, @fund_cluster, @office_id, 
-          @responsibility_center_code, @date, @product_name_id, 
-          @product_description_id, @unit, @quantity, @unit_cost, @total_cost,
+          @responsibility_center_code, @date,
           @purpose, @requesting_officer_id, @approving_officer_id
         );
         ''',
@@ -121,12 +171,6 @@ class PurchaseRequestRepository {
           'office_id': officeId,
           'responsibility_center_code': rcc,
           'date': date,
-          'product_name_id': productNameId,
-          'product_description_id': productDescriptionId,
-          'unit': unit.toString().split('.').last,
-          'quantity': quantity,
-          'unit_cost': unitCost,
-          'total_cost': unitCost * quantity,
           'purpose': purpose,
           'requesting_officer_id': requestingOfficerId,
           'approving_officer_id': approvingOfficerId,
@@ -194,27 +238,7 @@ class PurchaseRequestRepository {
           ent.name as entity_name,
           
           -- Purchase Request Office
-          ofc.name AS office_name,
-      
-          -- Product Details
-          pn.name AS product_name,
-          pd.description AS product_description,
-      
-          -- Requesting Officer Details
-          rofc.user_id AS requesting_officer_user_id,
-          rofc.name AS requesting_officer_name,
-          req_pos.id AS requesting_officer_position_id,
-          req_pos.position_name AS requesting_officer_position_name,
-          req_ofc.name AS requesting_officer_office_name,  -- Requesting Officer's Office
-          rofc.is_archived AS requesting_officer_is_archived,
-      
-          -- Approving Officer Details
-          aofc.user_id AS approving_officer_user_id,
-          aofc.name AS approving_officer_name,
-          app_pos.id AS requesting_officer_position_id,
-          app_pos.position_name AS approving_officer_position_name,
-          app_ofc.name AS approving_officer_office_name,  -- Approving Officer's Office
-          aofc.is_archived AS approving_officer_is_archived
+          ofc.name AS office_name
     
         FROM
           PurchaseRequests pr
@@ -226,33 +250,8 @@ class PurchaseRequestRepository {
         LEFT JOIN
           Offices ofc ON pr.office_id = ofc.id
     
-        -- Join Product Names and Descriptions
-        LEFT JOIN
-          ProductNames pn ON pr.product_name_id = pn.id
-        LEFT JOIN
-          ProductDescriptions pd ON pr.product_description_id = pd.id
-    
-        -- Join Requesting Officer Details
-        LEFT JOIN
-          Officers rofc ON pr.requesting_officer_id = rofc.id
-        -- Join the Position of the Requesting Officer
-        LEFT JOIN
-          Positions req_pos ON rofc.position_id = req_pos.id
-        -- Join the Office of the Requesting Officer's Position
-        LEFT JOIN
-          Offices req_ofc ON req_pos.office_id = req_ofc.id
-    
-        -- Join Approving Officer Details
-        LEFT JOIN
-          Officers aofc ON pr.approving_officer_id = aofc.id
-        -- Join the Position of the Approving Officer
-        LEFT JOIN
-          Positions app_pos ON aofc.position_id = app_pos.id
-        -- Join the Office of the Approving Officer's Position
-        LEFT JOIN
-          Offices app_ofc ON app_pos.office_id = app_ofc.id
         WHERE
-          pr.id LIKE @pr_id;
+          pr.id = @pr_id;
         ''',
       ),
       parameters: {
@@ -260,46 +259,93 @@ class PurchaseRequestRepository {
       },
     );
 
-    for (final row in result) {
-      final purchaseRequestMap = {
-        'id': row[0],
-        'entity_id': row[1],
-        'fund_cluster': row[2],
-        'office_id': row[3],
-        'responsibility_center_code': row[4],
-        'date': row[5],
-        'product_name_id': row[6],
-        'product_description_id': row[7],
-        'unit': row[8],
-        'quantity': row[9],
-        'remaining_quantity': row[10],
-        'unit_cost': row[11],
-        'total_cost': row[12],
-        'purpose': row[13],
-        'requesting_officer_id': row[14],
-        'approving_officer_id': row[15],
-        'status': row[16],
-        'is_archived': row[17],
-        'entity_name': row[18],
-        'office_name': row[19],
-        'product_name': row[20],
-        'product_description': row[21],
-        'requesting_officer_user_id': row[22],
-        'requesting_officer_name': row[23],
-        'requesting_officer_position_id': row[24],
-        'requesting_officer_position_name': row[25],
-        'requesting_officer_office_name': row[26],
-        'requesting_officer_is_archived': row[27],
-        'approving_officer_user_id': row[28],
-        'approving_officer_name': row[29],
-        'approving_officer_position_id': row[30],
-        'approving_officer_position_name': row[31],
-        'approving_officer_office_name': row[32],
-        'approving_officer_is_archived': row[33],
-      };
-      return PurchaseRequest.fromJson(purchaseRequestMap);
+    if (result.isEmpty) return null;
+
+    final row = result.first;
+
+    final requestedItems = await _getRequestedItems(
+      prId: id,
+    );
+
+    final officerRepository = OfficerRepository(_conn);
+
+    final requestingOfficer = await officerRepository.getOfficerById(
+      officerId: row[7] as String,
+    );
+
+    final approvingOfficer = await officerRepository.getOfficerById(
+      officerId: row[8] as String,
+    );
+
+    final purchaseRequestMap = {
+      'id': row[0],
+      'entity_id': row[1],
+      'fund_cluster': row[2],
+      'office_id': row[3],
+      'responsibility_center_code': row[4],
+      'date': row[5],
+      'requested_items': requestedItems.map((e) => e.toJson()).toList(),
+      'purpose': row[6],
+      'requesting_officer_id': row[7],
+      'approving_officer_id': row[8],
+      'status': row[9],
+      'is_archived': row[10],
+      'entity_name': row[11],
+      'office_name': row[12],
+      'requesting_officer': requestingOfficer?.toJson(),
+      'approving_officer': approvingOfficer?.toJson(),
+    };
+
+    return PurchaseRequest.fromJson(purchaseRequestMap);
+  }
+
+  Future<List<RequestedItem>> _getRequestedItems({
+    required String prId,
+  }) async {
+    try {
+      final result = await _conn.execute(
+        Sql.named(
+          '''
+          SELECT 
+            ri.*,
+            pn.name AS product_name,
+            pd.description AS product_description
+          FROM 
+            RequestedItems ri
+          LEFT JOIN
+            ProductNames pn ON ri.product_name_id = pn.id
+          LEFT JOIN
+            ProductDescriptions pd ON ri.product_description_id = pd.id
+          WHERE 
+            pr_id = @pr_id
+          ''',
+        ),
+        parameters: {
+          'pr_id': prId,
+        },
+      );
+
+      return result
+          .map((row) => RequestedItem.fromJson({
+                'id': row[0],
+                'pr_id': row[1],
+                'product_name_id': row[2],
+                'product_description_id': row[3],
+                'specification': row[4],
+                'unit': row[5],
+                'quantity': row[6],
+                'remaining_quantity': row[7],
+                'unit_cost': row[8],
+                'total_cost': row[9],
+                'status': row[10],
+                'product_name': row[11],
+                'product_description': row[12],
+              }))
+          .toList();
+    } catch (e, stackTrace) {
+      print('Error fetching requested items: $e\n$stackTrace');
+      return [];
     }
-    return null;
   }
 
   Future<int> getPurchaseRequestsFilteredCount({
@@ -328,12 +374,6 @@ class PurchaseRequestRepository {
         -- Join PurchaseRequest Office
         LEFT JOIN
           Offices ofc ON pr.office_id = ofc.id
-    
-        -- Join Product Names and Descriptions
-        LEFT JOIN
-          ProductNames pn ON pr.product_name_id = pn.id
-        LEFT JOIN
-          ProductDescriptions pd ON pr.product_description_id = pd.id
     
         -- Join Requesting Officer Details
         LEFT JOIN
@@ -471,10 +511,6 @@ class PurchaseRequestRepository {
           -- Purchase Request Office
           ofc.name AS office_name,
       
-          -- Product Details
-          pn.name AS product_name,
-          pd.description AS product_description,
-      
           -- Requesting Officer Details
           rofc.user_id AS requesting_officer_user_id,
           rofc.name AS requesting_officer_name,
@@ -500,12 +536,6 @@ class PurchaseRequestRepository {
         -- Join PurchaseRequest Office
         LEFT JOIN
           Offices ofc ON pr.office_id = ofc.id
-    
-        -- Join Product Names and Descriptions
-        LEFT JOIN
-          ProductNames pn ON pr.product_name_id = pn.id
-        LEFT JOIN
-          ProductDescriptions pd ON pr.product_description_id = pd.id
     
         -- Join Requesting Officer Details
         LEFT JOIN
@@ -558,7 +588,6 @@ class PurchaseRequestRepository {
       final effectiveEndDate = endDate ?? DateTime.now();
       whereClause.write(' AND pr.date <= @end_date');
       params['end_date'] = effectiveEndDate;
-
 
       if (prStatus != null) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
@@ -615,6 +644,20 @@ class PurchaseRequestRepository {
       );
 
       for (final row in results) {
+        final requestedItems = await _getRequestedItems(
+          prId: row[0] as String,
+        );
+
+        final officerRepository = OfficerRepository(_conn);
+
+        final requestingOfficer = await officerRepository.getOfficerById(
+          officerId: row[7] as String,
+        );
+
+        final approvingOfficer = await officerRepository.getOfficerById(
+          officerId: row[8] as String,
+        );
+
         final purchaseRequestMap = {
           'id': row[0],
           'entity_id': row[1],
@@ -622,34 +665,16 @@ class PurchaseRequestRepository {
           'office_id': row[3],
           'responsibility_center_code': row[4],
           'date': row[5],
-          'product_name_id': row[6],
-          'product_description_id': row[7],
-          'unit': row[8],
-          'quantity': row[9],
-          'remaining_quantity': row[10],
-          'unit_cost': row[11],
-          'total_cost': row[12],
-          'purpose': row[13],
-          'requesting_officer_id': row[14],
-          'approving_officer_id': row[15],
-          'status': row[16],
-          'is_archived': row[17],
-          'entity_name': row[18],
-          'office_name': row[19],
-          'product_name': row[20],
-          'product_description': row[21],
-          'requesting_officer_user_id': row[22],
-          'requesting_officer_name': row[23],
-          'requesting_officer_position_id': row[24],
-          'requesting_officer_position_name': row[25],
-          'requesting_officer_office_name': row[26],
-          'requesting_officer_is_archived': row[27],
-          'approving_officer_user_id': row[28],
-          'approving_officer_name': row[29],
-          'approving_officer_position_id': row[30],
-          'approving_officer_position_name': row[31],
-          'approving_officer_office_name': row[32],
-          'approving_officer_is_archived': row[33],
+          'requested_items': requestedItems.map((e) => e.toJson()).toList(),
+          'purpose': row[6],
+          'requesting_officer_id': row[7],
+          'approving_officer_id': row[8],
+          'status': row[9],
+          'is_archived': row[10],
+          'entity_name': row[11],
+          'office_name': row[12],
+          'requesting_officer': requestingOfficer?.toJson(),
+          'approving_officer': approvingOfficer?.toJson(),
         };
         print(purchaseRequestMap);
         prList.add(PurchaseRequest.fromJson(purchaseRequestMap));
@@ -663,7 +688,6 @@ class PurchaseRequestRepository {
 
   Future<int> getPurchaseRequestIdsFilteredCount({
     String? prId,
-    String? type,
     // bool isConsumable - prolly for ris
   }) async {
     try {
@@ -673,23 +697,12 @@ class PurchaseRequestRepository {
       SELECT COUNT(id) FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer('WHERE status != \'fulfilled\' AND status != \'cancelled\'');
+      final whereClause = StringBuffer(
+          'WHERE status != \'fulfilled\' AND status != \'cancelled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('id LIKE @id');
         params['id'] = '%$prId%';
-      }
-
-      if (type != null && type.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-
-        if (type == 'ics') {
-          whereClause.write('unit_cost <= 50000');
-        }
-
-        if (type == 'par') {
-          whereClause.write('unit_cost > 50000');
-        }
       }
 
       final finalQuery = '''
@@ -715,7 +728,6 @@ class PurchaseRequestRepository {
     required int page,
     required int pageSize,
     String? prId,
-    String? type,
     // bool isConsumable - prolly for ris
   }) async {
     try {
@@ -727,23 +739,12 @@ class PurchaseRequestRepository {
       SELECT id FROM PurchaseRequests
       ''';
 
-      final whereClause = StringBuffer('WHERE status != \'fulfilled\' AND status != \'cancelled\'');
+      final whereClause = StringBuffer(
+          'WHERE status != \'fulfilled\' AND status != \'cancelled\'');
       if (prId != null && prId.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('id LIKE @id');
         params['id'] = '%$prId%';
-      }
-
-      if (type != null && type.isNotEmpty) {
-        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
-
-        if (type == 'ics') {
-          whereClause.write('unit_cost <= 50000');
-        }
-
-        if (type == 'par') {
-          whereClause.write('unit_cost > 50000');
-        }
       }
 
       final finalQuery = '''
@@ -995,5 +996,194 @@ class PurchaseRequestRepository {
     print(result);
 
     return result.affectedRows == 1;
+  }
+
+  Future<Map<String, dynamic>> getPurchaseRequestWeeklyTrends() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      WITH weekly_purchase_trends AS (
+          SELECT
+              DATE_TRUNC('week', pr.date) AS week_start,
+              CASE
+                  WHEN pr.status IN ('pending', 'partiallyFulfilled') THEN 'Ongoing'
+                  WHEN pr.status = 'fulfilled' THEN 'Fulfilled'
+                  ELSE 'Other'
+              END AS status,
+              COUNT(pr.id) AS request_count
+          FROM
+              PurchaseRequests pr
+          WHERE
+              pr.date >= NOW() - INTERVAL '6 weeks'
+              AND pr.status != 'cancelled'
+          GROUP BY
+              week_start, status
+          ORDER BY
+              week_start ASC
+      )
+      SELECT
+          week_start,
+          status,
+          request_count
+      FROM
+          weekly_purchase_trends;
+      ''',
+      ),
+    );
+
+    if (result.isEmpty || result.length < 2) {
+      return {
+        'trends': [],
+        'percentage_change': null,
+      };
+    }
+
+    // Extract trends for Ongoing and Fulfilled requests
+    var ongoingTrends = <Map<String, dynamic>>[];
+    var fulfilledTrends = <Map<String, dynamic>>[];
+
+    for (var row in result) {
+      final trend = {
+        'week_start': (row[0] as DateTime).toIso8601String(),
+        'status': row[1],
+        'request_count': row[2],
+      };
+      if (row[1] == 'Ongoing') {
+        ongoingTrends.add(trend);
+      } else if (row[1] == 'Fulfilled') {
+        fulfilledTrends.add(trend);
+      }
+    }
+
+    // Calculate percentage change for Ongoing and Fulfilled requests
+    double ongoingPercentageChange = 0;
+    double fulfilledPercentageChange = 0;
+
+    if (ongoingTrends.length > 1) {
+      final currentWeekOngoing =
+          (ongoingTrends[0]['request_count'] as int?) ?? 0;
+      final previousWeekOngoing =
+          (ongoingTrends[1]['request_count'] as int?) ?? 0;
+      ongoingPercentageChange = previousWeekOngoing == 0
+          ? 0
+          : ((currentWeekOngoing - previousWeekOngoing) / previousWeekOngoing) *
+              100;
+      ongoingPercentageChange =
+          double.parse(ongoingPercentageChange.toStringAsFixed(2));
+    }
+
+    if (fulfilledTrends.length > 1) {
+      final currentWeekFulfilled =
+          (fulfilledTrends[0]['request_count'] as int?) ?? 0;
+      final previousWeekFulfilled =
+          (fulfilledTrends[1]['request_count'] as int?) ?? 0;
+      fulfilledPercentageChange = previousWeekFulfilled == 0
+          ? 0
+          : ((currentWeekFulfilled - previousWeekFulfilled) /
+                  previousWeekFulfilled) *
+              100;
+      fulfilledPercentageChange =
+          double.parse(fulfilledPercentageChange.toStringAsFixed(2));
+    }
+
+    return {
+      'ongoing_trends': ongoingTrends,
+      'fulfilled_trends': fulfilledTrends,
+      'ongoing_percentage_change': ongoingPercentageChange,
+      'fulfilled_percentage_change': fulfilledPercentageChange,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getMostRequestedItems() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT
+          pn.name AS product_name,
+          COUNT(ri.product_name_id) AS request_count
+      FROM
+          RequestedItems ri
+      JOIN
+          ProductNames pn ON ri.product_name_id = pn.id
+      GROUP BY
+          pn.name
+      ORDER BY
+          request_count DESC
+      LIMIT 10;
+      ''',
+      ),
+    );
+
+    final List<Map<String, dynamic>> mostRequestedItems = [];
+    for (var row in result) {
+      mostRequestedItems.add(
+        {
+          'product_name': row[0] as String, // Product name
+          'request_count': row[1] as int, // Request count
+        },
+      );
+    }
+
+    return mostRequestedItems;
+  }
+
+  Future<List<Map<String, dynamic>>> getFulfilledRequestsOverTime() async {
+    // String timePeriod = 'daily';
+
+    // String query;
+    // switch (timePeriod) {
+    //   case 'daily':
+    //     query = '''
+    //     SELECT DATE(date) as request_date, COUNT(*) as fulfilled_count
+    //     FROM purchaserequests
+    //     WHERE status = 'fulfilled'
+    //     GROUP BY request_date
+    //     ORDER BY request_date;
+    //   ''';
+    //     break;
+    //   case 'weekly':
+    //     query = '''
+    //     SELECT DATE_TRUNC('week', date) as request_week, COUNT(*) as fulfilled_count
+    //     FROM purchaserequests
+    //     WHERE status = 'fulfilled'
+    //     GROUP BY request_week
+    //     ORDER BY request_week;
+    //   ''';
+    //     break;
+    //   case 'monthly':
+    //     query = '''
+    //     SELECT DATE_TRUNC('month', date) as request_month, COUNT(*) as fulfilled_count
+    //     FROM purchaserequests
+    //     WHERE status = 'fulfilled'
+    //     GROUP BY request_month
+    //     ORDER BY request_month;
+    //   ''';
+    //     break;
+    //   default:
+    //     throw ArgumentError(
+    //         'Invalid time period. Use "daily", "weekly", or "monthly".');
+    // }
+
+    // Execute the query
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT DATE(date) as request_date, COUNT(*) as fulfilled_count
+        FROM PurchaseRequests
+        WHERE status = 'fulfilled'
+        GROUP BY request_date
+        ORDER BY request_date;
+        ''',
+      ),
+    );
+
+    // Format the result as a list of maps
+    final data = result.map((row) {
+      return {
+        'date': (row[0] as DateTime).toIso8601String(), // The date/week/month
+        'count': row[1], // The count of fulfilled requests
+      };
+    }).toList();
+    return data;
   }
 }

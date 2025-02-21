@@ -10,7 +10,8 @@ import 'models/inventory_custodian_slip.dart';
 import 'models/property_acknowledgement_receipt.dart';
 import 'models/property_card.dart';
 import 'models/purchase_order.dart';
-import 'models/requisition_and_issuance_slip.dart';
+import 'models/purchase_request.dart';
+import 'models/requisition_and_issue_slip.dart';
 import 'models/rpci.dart';
 import 'models/rspi.dart';
 import 'models/spc.dart';
@@ -23,10 +24,11 @@ class DocumentFactory {
 
   DocumentFactory()
       : _documentMap = {
+          DocumentType.pr: () => PurchaseRequest(),
           DocumentType.po: () => PurchaseOrder(),
           DocumentType.ics: () => InventoryCustodianSlip(),
           DocumentType.par: () => PropertyAcknowledgementReceipt(),
-          DocumentType.ris: () => RequisitionAndIssuanceSlip(),
+          DocumentType.ris: () => RequisitionAndIssueSlip(),
           DocumentType.sticker: () => Sticker(),
           DocumentType.rpci: () => RPCI(),
           DocumentType.annexA8: () => AnnexA8(),

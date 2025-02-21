@@ -27,7 +27,7 @@ class PurchaseRequestsBloc
         _registerPurchaseRequest = registerPurchaseRequest,
         _updatePurchaseRequestStatus = updatePurchaseRequestStatus,
         _getPurchaseRequestById = getPurchaseRequestById,
-      super(PurchaseRequestsInitial()) {
+        super(PurchaseRequestsInitial()) {
     on<GetPurchaseRequestsEvent>(_onGetPurchaseRequests);
     on<RegisterPurchaseRequestEvent>(_onRegisterPurchaseRequest);
     on<UpdatePurchaseRequestEvent>(_onUpdatePurchaseRequestEvent);
@@ -90,11 +90,7 @@ class PurchaseRequestsBloc
         fundCluster: event.fundCluster,
         officeName: event.officeName,
         date: event.date,
-        productName: event.productName,
-        productDescription: event.productDescription,
-        unit: event.unit,
-        quantity: event.quantity,
-        unitCost: event.unitCost,
+        requestedItems: event.requestedItems,
         purpose: event.purpose,
         requestingOfficerOffice: event.requestingOfficerOffice,
         requestingOfficerPosition: event.requestingOfficerPosition,
@@ -143,20 +139,20 @@ class PurchaseRequestsBloc
   }
 
   void _onGetPurchaseRequestById(
-      GetPurchaseRequestByIdEvent event,
-      Emitter<PurchaseRequestsState> emit,
-      ) async {
+    GetPurchaseRequestByIdEvent event,
+    Emitter<PurchaseRequestsState> emit,
+  ) async {
     emit(PurchaseRequestsLoading());
 
     final response = await _getPurchaseRequestById(event.prId);
 
     response.fold(
-          (l) => emit(
+      (l) => emit(
         PurchaseRequestsError(
           message: l.message,
         ),
       ),
-          (r) {
+      (r) {
         emit(
           PurchaseRequestLoaded(
             purchaseRequestWithNotificationTrailEntity: r,

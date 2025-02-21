@@ -1,13 +1,15 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../enums/unit.dart';
+import '../../../../features/item_inventory/domain/entities/equipment.dart';
+import '../../../../features/item_issuance/domain/entities/property_acknowledgement_receipt.dart';
+import '../../../../init_dependencies.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
-import '../image_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -22,65 +24,123 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
   }) async {
     final pdf = pw.Document();
 
-    List<Map<String, dynamic>> issuedItemsMap = [];
-    List<String> descriptionColumn = [];
-    Unit? unit;
-    double? unitCost;
-    double? totalCost;
-    int? estimatedUsefulLife;
+    final par = data as PropertyAcknowledgementReceiptEntity;
 
-    /// extract the issued items, to displayed on table row 0 - qty and row 5 - id
-    /// the row count will correspond to the description
-    for (int i = 0; i < data.items.length; i++) {
-      // we need to extract each info and skip some
-      final item = data.items[i];
+    // List to store all rows for the table
+    List<pw.TableRow> tableRows = [];
 
-      /// in the first index, we will display all info
-      /// but there is a catch, for the description column
-      /// we will extract it and display the extracted info one by one in
-      /// the description column
+    tableRows.add(
+      pw.TableRow(
+        children: [
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Quantity',
+            horizontalPadding: 3.0,
+            verticalPadding: 8.6,
+            borderRight: false,
+          ),
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Unit',
+            verticalPadding: 8.6,
+            borderRight: false,
+          ),
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Description',
+            verticalPadding: 8.6,
+            borderRight: false,
+          ),
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Property Number',
+            horizontalPadding: 3.0,
+            verticalPadding: 3.0,
+            borderRight: false,
+          ),
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Date Acquired',
+            horizontalPadding: 3.0,
+            verticalPadding: 3.0,
+            borderRight: false,
+          ),
+          DocumentComponents.buildHeaderContainerCell(
+            data: 'Amount',
+            horizontalPadding: 3.0,
+            verticalPadding: 8.6,
+          ),
+        ],
+      ),
+    );
 
-      /// extract similar info in the first iteration
-      if (i == 0) {
-        descriptionColumn.addAll([
-          item.itemEntity.productStockEntity.productDescription!.description!,
-          'Specifications:',
-          ...extractSpecification(item.itemEntity.itemEntity.specification,
-              ' - '), // Append the list of specifications
-          'Brand: ${item.itemEntity.manufacturerBrandEntity.brand.name}',
-          'Model: ${item.itemEntity.modelEntity.modelName}',
-          'SN: ${item.itemEntity.itemEntity.serialNo}',
-          'PR: ${data.purchaseRequestEntity.id}',
-          'Date Acquired: ${documentDateFormatter(item.itemEntity.itemEntity.acquiredDate!)}'
-        ]);
+    // Loop through each item to generate rows
+    for (final issuedItem in par.items) {
+      // Extract common information
+      final descriptionColumn = [
+        issuedItem.itemEntity.productStockEntity.productDescription
+                ?.description ??
+            'No Description',
+        'Specifications',
+      ];
 
-        unit = item.itemEntity.itemEntity.unit;
-        unitCost = item.itemEntity.itemEntity.unitCost;
-        estimatedUsefulLife = item.itemEntity.itemEntity.estimatedUsefulLife;
+      // Add specifications
+      descriptionColumn.addAll(
+        extractSpecification(
+          issuedItem.itemEntity.shareableItemInformationEntity.specification ??
+              'N/A',
+          ' - ',
+        ),
+      );
+
+      // Add equipment-specific details if the item is EquipmentEntity
+      if (issuedItem is EquipmentEntity) {
+        final equipmentItem = issuedItem as EquipmentEntity;
+        descriptionColumn.addAll(
+          [
+            'Brand: ${equipmentItem.manufacturerBrandEntity.brand.name}',
+            'Model: ${equipmentItem.modelEntity.modelName}',
+            'SN: ${equipmentItem.serialNo}',
+            'Date Acquired: ${documentDateFormatter(issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate!)}',
+          ],
+        );
       }
 
-      totalCost = unitCost! * data.items.length;
+      // Add PR information
+      descriptionColumn.add('PR: ${par.purchaseRequestEntity.id}');
 
-      issuedItemsMap.add({
-        'item_id': item.itemEntity.itemEntity.id,
-        'issued_quantity': item.quantity,
-      });
+      // Calculate row heights for description
+      final rowHeights = descriptionColumn.map((row) {
+        return DocumentService.getRowHeight(row, fontSize: 8.5);
+      }).toList();
+
+      // Add rows for this item
+      for (int i = 0; i < descriptionColumn.length; i++) {
+        tableRows.add(
+          DocumentComponents.buildParTableRow(
+            quantity: i == 0 ? issuedItem.quantity.toString() : '\n',
+            unit: i == 0
+                ? readableEnumConverter(
+                    issuedItem.itemEntity.shareableItemInformationEntity.unit)
+                : '\n',
+            description: descriptionColumn[i],
+            propertyNumber: i == 0
+                ? issuedItem.itemEntity.shareableItemInformationEntity.id
+                : '\n',
+            dateAcquired: i == 0
+                ? issuedItem is EquipmentEntity
+                    ? documentDateFormatter(issuedItem.itemEntity
+                        .shareableItemInformationEntity.acquiredDate!)
+                    : '\n'
+                : '\n',
+            amount: i == 0
+                ? issuedItem.itemEntity.shareableItemInformationEntity.unitCost
+                    .toString()
+                : '\n',
+            rowHeight: rowHeights[i],
+            borderBottom: i == descriptionColumn.length - 1 ? false : true,
+          ),
+        );
+      }
     }
 
-    int itemIndexForQuantity = 0;
-    int itemIndex = 0;
-
-    print('desc length: ${descriptionColumn.length}');
-
-    final rowHeights = descriptionColumn.map((row) {
-      return DocumentService.getRowHeight(
-        row,
-        fontSize: 8.5,
-      );
-    }).toList();
-
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
           orientation: pw.PageOrientation.portrait,
@@ -89,175 +149,113 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
           marginBottom: 1.3,
           marginLeft: 3.2,
         ),
-        build: (context) => pw.Column(
-          children: [
-            DocumentComponents.buildDocumentHeader(),
-
-            pw.SizedBox(
-              height: 20.0,
-            ),
-
-            pw.Text(
-              'PROPERTY ACKNOWLEDGEMENT RECEIPT',
-              style: pw.TextStyle(
-                font: FontService().getFont('timesNewRomanBold'),
-                fontSize: 14.0,
-                //fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-
-            pw.SizedBox(
-              height: 20.0,
-            ),
-
-            DocumentComponents.buildRowTextValue(
-              text: 'Entity Name:',
-              value: data.purchaseRequestEntity.entity.name,
-              isUnderlined: true,
-            ),
-
-            pw.SizedBox(
-              height: 3.0,
-            ),
-
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        build: (context) => [
+          pw.Center(
+            child: pw.Column(
               children: [
-                DocumentComponents.buildRowTextValue(
-                  text: 'Fund Cluster:',
-                  value: readableEnumConverter(
-                      data.purchaseRequestEntity.fundCluster),
+                DocumentComponents.buildDocumentHeader(),
+                pw.SizedBox(
+                  height: 20.0,
                 ),
-                DocumentComponents.buildRowTextValue(
-                  text: 'PAR No:',
-                  value: data.parId,
-                  isUnderlined: true,
-                ),
-              ],
-            ),
-
-            pw.SizedBox(
-              height: 3.0,
-            ),
-
-            /// Table
-            pw.Table(
-              columnWidths: {
-                0: const pw.FixedColumnWidth(80),
-                1: const pw.FixedColumnWidth(40),
-                2: const pw.FixedColumnWidth(240),
-                3: const pw.FixedColumnWidth(90),
-                4: const pw.FixedColumnWidth(90),
-                5: const pw.FixedColumnWidth(90),
-              },
-              children: [
-                // Header part
-                pw.TableRow(
-                  children: [
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Quantity',
-                      horizontalPadding: 3.0,
-                      verticalPadding: 8.6,
-                      borderRight: false,
-                    ),
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Unit',
-                      verticalPadding: 8.6,
-                      borderRight: false,
-                    ),
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Description',
-                      verticalPadding: 8.6,
-                      borderRight: false,
-                    ),
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Property Number',
-                      horizontalPadding: 3.0,
-                      verticalPadding: 3.0,
-                      borderRight: false,
-                    ),
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Date Acquired',
-                      horizontalPadding: 3.0,
-                      verticalPadding: 3.0,
-                      borderRight: false,
-                    ),
-                    DocumentComponents.buildHeaderContainerCell(
-                      data: 'Amount',
-                      horizontalPadding: 3.0,
-                      verticalPadding: 8.6,
-                    ),
-                  ],
-                ),
-
-                // Add more rows for your table data here...
-                for (int i = 0; i < descriptionColumn.length; i++)
-                  DocumentComponents.buildParTableRow(
-                    quantity: (i == 0 ||
-                            (i >= 5 &&
-                                itemIndexForQuantity < issuedItemsMap.length))
-                        ? issuedItemsMap[itemIndexForQuantity++]
-                                    ['issued_quantity']
-                                ?.toString() ??
-                            '\n'
-                        : '\n',
-                    unit: i == 0 ? readableEnumConverter(unit) : '\n',
-                    description: descriptionColumn[i],
-                    propertyNumber: (i == 0 ||
-                            (i >= 5 && itemIndex < issuedItemsMap.length))
-                        ? issuedItemsMap[itemIndex++]['item_id']?.toString() ??
-                            '\n'
-                        : '\n',
-                    dateAcquired:
-                        i == 0 ? documentDateFormatter(DateTime.now()) : null,
-                    amount: i == 0 ? '' : '\n',
-                    borderBottom:
-                        i == descriptionColumn.length - 1 ? false : true,
-                    rowHeight: rowHeights[i],
+                pw.Text(
+                  'PROPERTY ACKNOWLEDGEMENT RECEIPT',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 14.0,
+                    //fontWeight: pw.FontWeight.bold,
                   ),
-              ],
-            ),
-
-            /// footer
-            pw.Table(
-              columnWidths: {
-                0: const pw.FixedColumnWidth(360.0),
-                1: const pw.FixedColumnWidth(270.0),
-              },
-              children: [
-                pw.TableRow(
-                  children: [
-                    DocumentComponents.buildReusableIssuanceFooterContainer(
-                      title: 'Received from:',
-                      officerName: data.sendingOfficerEntity.name,
-                      officerPosition: data.sendingOfficerEntity.positionName,
-                      officerOffice: data.sendingOfficerEntity.officeName,
-                      borderRight: false,
-                      isPAR: true,
-                    ),
-                    DocumentComponents.buildReusableIssuanceFooterContainer(
-                      title: 'Received by:',
-                      officerName: data.receivingOfficerEntity.name,
-                      officerPosition: data.receivingOfficerEntity.positionName,
-                      officerOffice: data.receivingOfficerEntity.officeName,
-                      isPAR: true,
-                    ),
-                  ],
                 ),
               ],
             ),
+          ),
 
-            pw.SizedBox(height: 30.0),
+          pw.SizedBox(
+            height: 20.0,
+          ),
 
-            if (withQr)
-              pw.Align(
-                alignment: pw.AlignmentDirectional.bottomEnd,
-                child: DocumentComponents.buildQrContainer(
-                  data: data.id,
-                ),
+          DocumentComponents.buildRowTextValue(
+            text: 'Entity Name:',
+            value: data.purchaseRequestEntity.entity.name,
+            isUnderlined: true,
+          ),
+
+          pw.SizedBox(
+            height: 3.0,
+          ),
+
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              DocumentComponents.buildRowTextValue(
+                text: 'Fund Cluster:',
+                value:
+                    data.purchaseRequestEntity.fundCluster.toReadableString(),
               ),
-          ],
-        ),
+              DocumentComponents.buildRowTextValue(
+                text: 'PAR No:',
+                value: data.parId,
+                isUnderlined: true,
+              ),
+            ],
+          ),
+
+          pw.SizedBox(
+            height: 3.0,
+          ),
+
+          /// Table
+          pw.Table(
+            columnWidths: {
+              0: const pw.FixedColumnWidth(80),
+              1: const pw.FixedColumnWidth(40),
+              2: const pw.FixedColumnWidth(240),
+              3: const pw.FixedColumnWidth(90),
+              4: const pw.FixedColumnWidth(90),
+              5: const pw.FixedColumnWidth(90),
+            },
+            children: tableRows,
+          ),
+
+          /// footer
+          pw.Table(
+            columnWidths: {
+              0: const pw.FixedColumnWidth(360.0),
+              1: const pw.FixedColumnWidth(270.0),
+            },
+            children: [
+              pw.TableRow(
+                children: [
+                  DocumentComponents.buildReusableIssuanceFooterContainer(
+                    title: 'Received from:',
+                    officerName: data.sendingOfficerEntity.name,
+                    officerPosition: data.sendingOfficerEntity.positionName,
+                    officerOffice: data.sendingOfficerEntity.officeName,
+                    borderRight: false,
+                    isPAR: true,
+                  ),
+                  DocumentComponents.buildReusableIssuanceFooterContainer(
+                    title: 'Received by:',
+                    officerName: data.receivingOfficerEntity.name,
+                    officerPosition: data.receivingOfficerEntity.positionName,
+                    officerOffice: data.receivingOfficerEntity.officeName,
+                    isPAR: true,
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 30.0),
+
+          if (withQr)
+            pw.Align(
+              alignment: pw.AlignmentDirectional.bottomEnd,
+              child: DocumentComponents.buildQrContainer(
+                data: data.id,
+              ),
+            ),
+        ],
       ),
     );
 

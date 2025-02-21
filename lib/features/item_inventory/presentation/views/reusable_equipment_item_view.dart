@@ -14,10 +14,12 @@ import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_order/presentation/components/custom_search_field.dart';
@@ -57,6 +59,8 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
   final _unitCostController = TextEditingController();
   final _estimatedUsefulLifeController = TextEditingController();
 
+  final ValueNotifier<FundCluster> _selectedFundCluster =
+      ValueNotifier(FundCluster.unknown);
   final ValueNotifier<int> _quantity = ValueNotifier(0);
   final ValueNotifier<AssetClassification> _selectedAssetClassification =
       ValueNotifier(AssetClassification.unknown);
@@ -126,6 +130,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
     if (_formKey.currentState!.validate()) {
       context.read<ItemInventoryBloc>().add(
             EquipmentItemRegister(
+              fundCluster: _selectedFundCluster.value,
               itemName: _itemNameController.text,
               description: _itemDescriptionsController.text,
               specification: _specificationController.text,
@@ -245,7 +250,8 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                       .productStockEntity.productDescription?.description ??
                   '';
               _specificationController.text =
-                  initItemData.shareableItemInformationEntity.specification;
+                  initItemData.shareableItemInformationEntity.specification ??
+                      'Not specified.';
               _brandController.text =
                   initItemData.manufacturerBrandEntity.brand.name;
               _modelController.text = initItemData.modelEntity.modelName;
@@ -282,10 +288,14 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
               _quantityController.text = initItemData
                   .shareableItemInformationEntity.quantity
                   .toString();
-              _unitCostController.text = initItemData.unitCost.toString();
+              _unitCostController.text = initItemData
+                  .shareableItemInformationEntity.unitCost
+                  .toString();
               _estimatedUsefulLifeController.text =
                   initItemData.estimatedUsefulLife.toString();
-              _pickedDate.value = initItemData.acquiredDate ?? DateTime.now();
+              _pickedDate.value =
+                  initItemData.shareableItemInformationEntity.acquiredDate ??
+                      DateTime.now();
             }
           }
 
@@ -417,7 +427,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                 fontWeight: FontWeight.w700,
               ),
         ),
-        if (_isViewOnlyMode()) _buildInstruction(),
+        if (!_isViewOnlyMode()) _buildInstruction(),
       ],
     );
   }
@@ -599,6 +609,11 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           height: 100.0,
           child: _buildAcquiredDateSelection(),
         ),
+
+        SizedBox(
+          height: 100.0,
+          child: _buildFundClusterSelection(),
+        ),
       ],
     );
   }
@@ -660,6 +675,42 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),
+    );
+  }
+
+  Widget _buildFundClusterSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedFundCluster,
+      builder: (context, selectedFundCluster, child) {
+        return CustomDropdownField(
+          value: selectedFundCluster.toString(),
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) {
+              _selectedFundCluster.value = FundCluster.values.firstWhere(
+                  (e) => e.toString().split('.').last == value.split('.').last);
+            }
+          },
+          items: FundCluster.values
+              .map(
+                (fundCluster) => DropdownMenuItem(
+                  value: fundCluster.toString(),
+                  child: Text(
+                    fundCluster.toReadableString(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+              )
+              .toList(),
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+          label: 'Fund Cluster',
+          placeholderText: 'Enter purchase request\'s fund cluster',
+        );
+      },
     );
   }
 

@@ -55,7 +55,11 @@ Future<Response> _getIssuanceById(
           ? issuance.toJson()
           : issuance is PropertyAcknowledgementReceipt
               ? issuance.toJson()
-              : {'message': 'Unrecognized issuance type'};
+              : issuance is RequisitionAndIssueSlip
+                  ? issuance.toJson()
+                  : {
+                      'message': 'Unrecognized issuance type',
+                    };
 
       return Response.json(
         statusCode: 200,
@@ -175,7 +179,7 @@ Future<Response> _receiveIssuance(
       recipientId: recipient.id,
       senderId: currentUserId,
       message:
-          'The issuance for Purchase Request #${issuance.purchaseRequest.id} has been received. Quantity received: $issuedQuantity out of ${issuance.purchaseRequest.quantity}. Tracking ID: $id',
+          '', // 'The issuance for Purchase Request #${issuance.purchaseRequest.id} has been received. Quantity received: $issuedQuantity out of ${issuance.purchaseRequest.quantity}. Tracking ID: $id',
       type: NotificationType.issuanceReceived,
       referenceId: issuance.purchaseRequest.id,
     );

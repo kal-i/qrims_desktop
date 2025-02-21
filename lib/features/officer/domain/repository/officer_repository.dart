@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/enums/officer_status.dart';
 import '../../../../core/error/failure.dart';
 import '../entities/officer.dart';
 import '../entities/paginated_officer_result.dart';
@@ -11,6 +12,7 @@ abstract interface class OfficerRepository {
     String? searchQuery,
     String? office,
     String? sortBy,
+    OfficerStatus? status,
     bool? sortAscending,
     bool? isArchived,
   });

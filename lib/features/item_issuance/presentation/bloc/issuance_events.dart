@@ -81,6 +81,38 @@ final class CreatePAREvent extends IssuancesEvent {
   final String sendingOfficerName;
 }
 
+final class CreateRISEvent extends IssuancesEvent {
+  const CreateRISEvent({
+    required this.prId,
+    required this.issuanceItems,
+    this.purpose,
+    this.responsibilityCenterCode,
+    required this.receivingOfficerOffice,
+    required this.receivingOfficerPosition,
+    required this.receivingOfficerName,
+    required this.approvingOfficerOffice,
+    required this.approvingOfficerPosition,
+    required this.approvingOfficerName,
+    required this.issuingOfficerOffice,
+    required this.issuingOfficerPosition,
+    required this.issuingOfficerName,
+  });
+
+  final String prId;
+  final List issuanceItems;
+  final String? purpose;
+  final String? responsibilityCenterCode;
+  final String receivingOfficerOffice;
+  final String receivingOfficerPosition;
+  final String receivingOfficerName;
+  final String approvingOfficerOffice;
+  final String approvingOfficerPosition;
+  final String approvingOfficerName;
+  final String issuingOfficerOffice;
+  final String issuingOfficerPosition;
+  final String issuingOfficerName;
+}
+
 final class GetIssuanceByIdEvent extends IssuancesEvent {
   const GetIssuanceByIdEvent({
     required this.id,

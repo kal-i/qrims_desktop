@@ -5,7 +5,6 @@ class PropertyAcknowledgementReceiptEntity extends IssuanceEntity {
   const PropertyAcknowledgementReceiptEntity({
     required super.id,
     required this.parId,
-    this.propertyNumber,
     required super.items,
     required super.purchaseRequestEntity,
     required super.issuedDate,
@@ -18,6 +17,5 @@ class PropertyAcknowledgementReceiptEntity extends IssuanceEntity {
   });
 
   final String parId;
-  final String? propertyNumber;
   final OfficerEntity sendingOfficerEntity;
 }

@@ -5,8 +5,10 @@ import '../../domain/entities/inventory_custodian_slip.dart';
 import '../../domain/entities/issuance.dart';
 import '../../domain/entities/matched_item_with_pr.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
+import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../../domain/usecases/create_ics.dart';
 import '../../domain/usecases/create_par.dart';
+import '../../domain/usecases/create_ris.dart';
 import '../../domain/usecases/get_issuance_by_id.dart';
 import '../../domain/usecases/get_paginated_issuances.dart';
 import '../../domain/usecases/match_item_with_pr.dart';
@@ -22,12 +24,14 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required MatchItemWithPr matchItemWithPr,
     required CreateICS createICS,
     required CreatePAR createPAR,
+    required CreateRIS createRIS,
     required UpdateIssuanceArchiveStatus updateIssuanceArchiveStatus,
   })  : _getIssuanceById = getIssuanceById,
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
         _createICS = createICS,
         _createPar = createPAR,
+        _createRIS = createRIS,
         _updateIssuanceArchiveStatus = updateIssuanceArchiveStatus,
         super(IssuancesInitial()) {
     on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
@@ -35,6 +39,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<MatchItemWithPrEvent>(_onMatchItemWithPrEvent);
     on<CreateICSEvent>(_onCreateICS);
     on<CreatePAREvent>(_onCreatePAR);
+    on<CreateRISEvent>(_onCreateRIS);
     on<UpdateIssuanceArchiveStatusEvent>(_onUpdateIssuanceArchiveStatus);
   }
 
@@ -43,6 +48,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final MatchItemWithPr _matchItemWithPr;
   final CreateICS _createICS;
   final CreatePAR _createPar;
+  final CreateRIS _createRIS;
   final UpdateIssuanceArchiveStatus _updateIssuanceArchiveStatus;
 
   void _onGetIssuanceByIdEvent(
@@ -160,7 +166,6 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     final response = await _createPar(
       CreatePARParams(
         prId: event.prId,
-        propertyNumber: event.propertyNumber,
         issuanceItems: event.issuanceItems,
         receivingOfficerOffice: event.receivingOfficerOffice,
         receivingOfficerPosition: event.receivingOfficerPosition,
@@ -178,6 +183,42 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         PARRegistered(
           par: r,
+        ),
+      ),
+    );
+  }
+
+  void _onCreateRIS(
+    CreateRISEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _createRIS(
+      CreateRISParams(
+        prId: event.prId,
+        issuanceItems: event.issuanceItems,
+        purpose: event.purpose,
+        responsibilityCenterCode: event.responsibilityCenterCode,
+        receivingOfficerOffice: event.receivingOfficerOffice,
+        receivingOfficerPosition: event.receivingOfficerPosition,
+        receivingOfficerName: event.receivingOfficerName,
+        approvingOfficerOffice: event.approvingOfficerOffice,
+        approvingOfficerPosition: event.approvingOfficerPosition,
+        approvingOfficerName: event.approvingOfficerName,
+        issuingOfficerOffice: event.issuingOfficerOffice,
+        issuingOfficerPosition: event.issuingOfficerPosition,
+        issuingOfficerName: event.issuingOfficerName,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(
+        IssuancesError(message: l.message),
+      ),
+      (r) => emit(
+        RISRegistered(
+          ris: r,
         ),
       ),
     );

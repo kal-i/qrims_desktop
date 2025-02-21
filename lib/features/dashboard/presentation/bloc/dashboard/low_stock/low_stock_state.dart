@@ -16,7 +16,7 @@ final class LowStockLoaded extends LowStockState {
     required this.items,
   });
 
-  final List<ItemEntity> items;
+  final List<ReusableItemInformationEntity> items;
 
   @override
   List<Object?> get props => [

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/item/models/item.dart';
 import 'package:api/src/item/repository/item_repository.dart';
 import 'package:api/src/session/session_repository.dart';
@@ -145,23 +146,28 @@ Future<Response> _registerItem(
     final description = json['description'] as String?;
     final specification = json['specification'] as String?;
     final quantity = json['quantity'] as int;
+    final unitCost = json['unit_cost'] as double;
 
     final manufacturerName = json['manufacturer_name'] as String?;
     final brandName = json['brand_name'] as String?;
     final modelName = json['model_name'] as String?;
     final serialNoInput = json['serial_no'] as String?;
 
-    final unitCost = json['unit_cost'] as double?;
     final estimatedUsefulLife = json['estimated_useful_life'] as int?;
     final acquiredDate = json['acquired_date'] is String
         ? DateTime.parse(json['acquired_date'] as String)
         : json['acquired_date'] as DateTime?;
 
+    FundCluster? fundCluster;
     AssetClassification? assetClassification;
     AssetSubClass? assetSubClass;
     Unit? unit;
 
     try {
+      fundCluster = json['fund_cluster'] != null
+          ? FundCluster.values.firstWhere(
+              (e) => e.toString().split('.').last == json['fund_cluster'])
+          : FundCluster.unknown;
       assetClassification = json['asset_classification'] != null
           ? AssetClassification.values.firstWhere((e) =>
               e.toString().split('.').last == json['asset_classification'])
@@ -199,7 +205,6 @@ Future<Response> _registerItem(
         productName: productName,
       );
     }
-    print('product name id: $productNameId');
 
     final productDescriptionResult =
         await itemRepository.checkProductDescriptionIfExist(
@@ -231,18 +236,7 @@ Future<Response> _registerItem(
         (brandName != null && brandName.isNotEmpty) &&
         (modelName != null && modelName.isNotEmpty) &&
         (serialNoInput != null && serialNoInput.isNotEmpty) &&
-        (unitCost != null) &&
         (estimatedUsefulLife != null)) {
-      /// register base item model
-      final baseItemModelId = await itemRepository.registerBaseItem(
-        productName: productName,
-        productNameId: productNameId,
-        productDescriptionId: productDescriptionId,
-        specification: specification,
-        unit: unit,
-        quantity: quantity,
-      );
-
       // Split the serial number input if provided
       final serialNos =
           serialNoInput.split(' - ').map((s) => s.trim()).toList() ?? [];
@@ -253,6 +247,19 @@ Future<Response> _registerItem(
 
       for (final serialNo in serialNos) {
         try {
+          /// register base item model
+          final baseItemModelId = await itemRepository.registerBaseItem(
+            fundCluster: fundCluster,
+            productName: productName,
+            productNameId: productNameId,
+            productDescriptionId: productDescriptionId,
+            specification: specification,
+            unit: unit,
+            quantity: quantity,
+            unitCost: unitCost,
+            acquiredDate: acquiredDate,
+          );
+
           final baseItemId = await itemRepository.registerEquipment(
             baseItemModelId: baseItemModelId,
             productNameId: productNameId,
@@ -262,9 +269,7 @@ Future<Response> _registerItem(
             serialNo: serialNo,
             assetClassification: assetClassification,
             assetSubClass: assetSubClass,
-            unitCost: unitCost,
             estimatedUsefulLife: estimatedUsefulLife,
-            acquiredDate: acquiredDate,
           );
 
           final equipmentItem =
@@ -272,8 +277,16 @@ Future<Response> _registerItem(
             baseItemId: baseItemId,
           );
 
+          await itemRepository.registerInventoryActivity(
+            baseItemId: baseItemId,
+            action: InventoryActivity.added,
+            quantity: quantity,
+          );
+
           if (equipmentItem != null) {
-            registeredItems.add((equipmentItem as Equipment).toJson());
+            registeredItems.add(
+              (equipmentItem as Equipment).toJson(),
+            );
 
             // await userActivityRepository.logUserActivity(
             //   userId: responsibleUserId,
@@ -309,17 +322,20 @@ Future<Response> _registerItem(
         productDescriptionId: productDescriptionId,
         specification: specification,
         unit: unit,
+        unitCost: unitCost,
+        acquiredDate: acquiredDate,
       );
-
       String? baseItemId;
 
       if (supplyItemResult != null) {
+        print('Supply item checked result is not null');
         baseItemId = supplyItemResult;
         await itemRepository.updateSupplyItemQuantityByBaseItemId(
           baseItemId: baseItemId,
           quantity: quantity,
         );
       } else {
+        print('Supply item checked is null');
         baseItemId = await itemRepository.registerBaseItem(
           productName: productName,
           productNameId: productNameId,
@@ -327,6 +343,8 @@ Future<Response> _registerItem(
           specification: specification,
           unit: unit,
           quantity: quantity,
+          unitCost: unitCost,
+          acquiredDate: acquiredDate,
         );
 
         await itemRepository.registerSupply(
@@ -336,6 +354,12 @@ Future<Response> _registerItem(
 
       final supplyItem = await itemRepository.getConcreteItemByBaseItemId(
         baseItemId: baseItemId,
+      );
+
+      await itemRepository.registerInventoryActivity(
+        baseItemId: baseItemId,
+        action: InventoryActivity.added,
+        quantity: quantity,
       );
 
       return Response.json(

@@ -31,7 +31,7 @@ class RegisterNewItemModal extends StatelessWidget {
                 },
                 items: [
                   'Supply (Consumables)',
-                  'Equipment (Useful life of more than 1)',
+                  'Equipment',
                 ]
                     .map(
                       (type) => DropdownMenuItem(

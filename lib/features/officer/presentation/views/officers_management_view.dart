@@ -14,6 +14,7 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
+import '../../../../core/enums/officer_status.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
@@ -24,6 +25,7 @@ import '../components/filter_officer_modal.dart';
 import '../components/reusable_officer_modal.dart';
 import '../components/view_officer_modal.dart';
 
+// todo: implement filter
 class OfficersManagementView extends StatefulWidget {
   const OfficersManagementView({super.key});
 
@@ -49,7 +51,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   ];
   late List<TableData> _tableRows = [];
 
-  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
+  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('active');
   final ValueNotifier<int> _totalRecords = ValueNotifier(0);
 
   int _currentPage = 1;
@@ -64,6 +66,8 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     _officersBloc = context.read<OfficersBloc>();
 
     _searchController.addListener(_onSearchChanged);
+    _selectedFilterNotifier.addListener(_onFilterChanged);
+
     _selectedOffice = null;
 
     _initializeTableConfig();
@@ -84,12 +88,22 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   }
 
   void _fetchOfficers() {
+    // Convert the selected filter value (String) to OfficerStatus enum
+    final selectedStatus = OfficerStatus.values.firstWhere(
+      (e) =>
+          e.toString().split('.').last ==
+          _selectedFilterNotifier.value.toString().split('.').last,
+      orElse: () =>
+          OfficerStatus.active, // Default to 'active' if no match is found
+    );
+
     _officersBloc.add(
       GetPaginatedOfficersEvent(
         page: _currentPage,
         pageSize: _pageSize,
         searchQuery: _searchController.text,
         office: _selectedOffice,
+        status: selectedStatus, // Pass the correct OfficerStatus enum value
       ),
     );
   }
@@ -98,6 +112,12 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     _searchController.clear();
     _currentPage = 1;
     _selectedOffice = null;
+    _fetchOfficers();
+  }
+
+  void _onFilterChanged() {
+    _searchController.clear();
+    _currentPage = 1;
     _fetchOfficers();
   }
 
@@ -231,10 +251,10 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   // todo: to be implement
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
-      'Active': '',
-      'Suspended': '',
-      'Resigned': '',
-      'Retired': '',
+      'Active': OfficerStatus.active.toString(),
+      'Suspended': OfficerStatus.suspended.toString(),
+      'Resigned': OfficerStatus.resigned.toString(),
+      'Retired': OfficerStatus.retired.toString(),
     };
     return FilterTableRow(
       selectedFilterNotifier: _selectedFilterNotifier,

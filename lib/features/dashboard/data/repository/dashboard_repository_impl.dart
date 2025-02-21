@@ -1,10 +1,11 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../../../../core/enums/period.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/inventory_summary.dart';
-import 'package:fpdart/src/either.dart';
 
-import '../../domain/entities/paginated_item_result.dart';
+import '../../domain/entities/paginated_reusable_item_information.dart';
 import '../../domain/entities/requests_summary.dart';
 import '../../domain/repository/dashboard_repository.dart';
 import '../data_sources/remote/dashboard_remote_data_source.dart';
@@ -27,15 +28,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, RequestsSummaryEntity>> getMostRequestedItems({
-    int? limit,
-    Period? period,
-  }) async {
+  Future<Either<Failure, RequestsSummaryEntity>> getRequestsSummary() async {
     try {
-      final response = await dashboardRemoteDataSource.getMostRequestedItems(
-        limit: limit,
-        period: period,
-      );
+      final response = await dashboardRemoteDataSource.getRequestsSummary();
 
       return right(response);
     } on ServerException catch (e) {
@@ -44,7 +39,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedItemResultEntity>> getLowStockItems({
+  Future<Either<Failure, PaginatedReusableItemInformationEntity>>
+      getLowStockItems({
     required int page,
     required int pageSize,
   }) async {
@@ -61,7 +57,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedItemResultEntity>> getOutOfStockItems({
+  Future<Either<Failure, PaginatedReusableItemInformationEntity>>
+      getOutOfStockItems({
     required int page,
     required int pageSize,
   }) async {

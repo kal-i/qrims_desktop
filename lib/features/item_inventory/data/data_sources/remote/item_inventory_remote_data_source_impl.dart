@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/asset_classification.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
+import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/unit.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
@@ -71,17 +72,23 @@ class ItemInventoryRemoteDataSourceImpl
   Future<BaseItemModel> registerSupplyItem({
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required Unit unit,
     required int quantity,
+    required double unitCost,
+    DateTime? acquiredDate,
   }) async {
     try {
       final Map<String, dynamic> params = {
         'product_name': itemName,
         'description': description,
-        'specification': specification,
+        if (specification != null && specification.isNotEmpty)
+          'specification': specification,
         'unit': unit.toString().split('.').last,
         'quantity': quantity,
+        'unit_cost': unitCost,
+        if (acquiredDate != null)
+          'acquired_date': acquiredDate.toIso8601String(),
       };
 
       final response = await httpService.post(
@@ -118,9 +125,10 @@ class ItemInventoryRemoteDataSourceImpl
 
   @override
   Future<List<BaseItemModel>> registerEquipmentItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required Unit unit,
     required int quantity,
     required String manufacturerName,
@@ -135,20 +143,23 @@ class ItemInventoryRemoteDataSourceImpl
   }) async {
     try {
       final Map<String, dynamic> params = {
+        if (fundCluster != null) 'fund_cluster': fundCluster,
         'product_name': itemName,
         'description': description,
         'manufacturer_name': manufacturerName,
         'brand_name': brandName,
         'model_name': modelName,
         'serial_no': serialNo,
-        'specification': specification,
+        if (specification != null && specification.isNotEmpty)
+          'specification': specification,
         'asset_classification': assetClassification.toString().split('.').last,
         'asset_sub_class': assetSubClass.toString().split('.').last,
         'unit': unit.toString().split('.').last,
         'quantity': quantity,
         'unit_cost': unitCost,
         'estimated_useful_life': estimatedUsefulLife,
-        'acquired_date': acquiredDate?.toIso8601String(),
+        if (acquiredDate != null)
+          'acquired_date': acquiredDate.toIso8601String(),
       };
 
       final response = await httpService.post(

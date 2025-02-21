@@ -1,16 +1,11 @@
-import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:qrims_desktop/core/common/components/test_popup.dart';
 
 import '../../../config/themes/app_color.dart';
 import '../../../config/themes/app_theme.dart';
 import '../../../config/themes/bloc/theme_bloc.dart';
-import 'custom_popup_menu.dart';
-import 'reusable_popup_menu_button.dart';
 
 /// Model class representing the row's data
 /// This class holds data for each row in the table, including its ID, content (columns),
@@ -78,6 +73,7 @@ class CustomDataTable extends StatefulWidget {
     super.key,
     required this.config,
     this.onActionSelected,
+    this.onRowSelected,
   });
 
   /// The configuration of the table, including headers and rows.
@@ -85,6 +81,7 @@ class CustomDataTable extends StatefulWidget {
 
   /// Callback function triggered when a menu action is selected for a row.
   final void Function(int rowIndex, String action)? onActionSelected;
+  final void Function(int rowIndex)? onRowSelected;
 
   @override
   State<CustomDataTable> createState() => _CustomDataTableState();
@@ -199,10 +196,24 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              _selectedRowIndex =
-                                  _selectedRowIndex == index ? null : index;
-                              rowData.isSelected = _selectedRowIndex == index;
+                              if (_selectedRowIndex == index) {
+                                // If already selected, deselect
+                                _selectedRowIndex = null;
+                                rowData.isSelected = false;
+                              } else {
+                                // Select this row
+                                _selectedRowIndex = index;
+                                rowData.isSelected = true;
+                              }
                             });
+
+                            // Trigger callback after updating state
+                            widget.onRowSelected?.call(index);
+                            //setState(() {
+                            ///_selectedRowIndex =
+                            // _selectedRowIndex == index ? null : index;
+                            //rowData.isSelected = _selectedRowIndex == index;
+                            //});
                           },
                           child: Container(
                             padding:

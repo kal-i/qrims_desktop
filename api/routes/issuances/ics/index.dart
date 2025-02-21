@@ -65,6 +65,8 @@ Future<Response> _createICS(
     final prId = json['pr_id'] as String?;
     final issuanceItems = json['issuance_items'] as List<dynamic>?;
 
+    print('issuance items from route: $issuanceItems');
+
     if (prId == null || issuanceItems == null) {
       return Response.json(
         statusCode: HttpStatus.badRequest,
@@ -135,8 +137,7 @@ Future<Response> _createICS(
     }
 
     final issuanceId = await issuanceRepository.createICS(
-      purchaseRequestId: initPurchaseRequestData.id,
-      requestedQuantity: initPurchaseRequestData.quantity,
+      purchaseRequest: initPurchaseRequestData,
       issuanceItems: issuanceItems,
       receivingOfficerId: receivingOfficerId,
       sendingOfficerId: sendingOfficerId,
@@ -152,25 +153,25 @@ Future<Response> _createICS(
       id: prId,
     );
 
-    int issuedQuantity =
-        ics?.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
+    int remainingQuantity = postIssuancePurchaseRequestData?.requestedItems
+            .map((item) => item.remainingQuantity)
+            .fold(0, (sum, qty) => sum! + qty!) ??
+        0;
 
-    print('base ics id: ${ics?.id}');
-
-    String message = postIssuancePurchaseRequestData?.remainingQuantity == 0
-        ? "Your purchase request #$prId has been fully fulfilled and issued. Tracking ID: ${ics?.id}."
-        : "Your purchase request #$prId has been partially issued. Issued quantity: $issuedQuantity out of ${initPurchaseRequestData.quantity}. Tracking ID: ${ics?.id}.";
+    String message = remainingQuantity == 0
+        ? "Purchase request #$prId has been fulfilled and issued. ICS Tracking ID: ${ics?.id}."
+        : "Purchase request #$prId has been partially issued. ICS Tracking ID: ${ics?.id}.";
 
     /// reference will always refer to the pr id to build a tracking
-    if (recipientOfficer?.userId != null) {
-      await notifRepository.sendNotification(
-        recipientId: recipientOfficer!.userId!,
-        senderId: responsibleUserId,
-        message: message,
-        type: NotificationType.issuanceCreated,
-        referenceId: prId,
-      );
-    }
+    //if (recipientOfficer?.userId != null) {
+    await notifRepository.sendNotification(
+      recipientId: recipientOfficer?.userId ?? '',
+      senderId: responsibleUserId,
+      message: message,
+      type: NotificationType.issuanceCreated,
+      referenceId: prId,
+    );
+    //}
 
     return Response.json(
       statusCode: 200,

@@ -2,6 +2,7 @@ import 'package:fpdart/src/either.dart';
 
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -21,6 +22,7 @@ class RegisterEquipmentItem
     RegisterEquipmentItemParams params,
   ) async {
     return await itemInventoryRepository.registerEquipmentItem(
+      fundCluster: params.fundCluster,
       itemName: params.itemName,
       description: params.description,
       specification: params.specification,
@@ -41,6 +43,7 @@ class RegisterEquipmentItem
 
 class RegisterEquipmentItemParams {
   const RegisterEquipmentItemParams({
+    this.fundCluster,
     required this.itemName,
     required this.description,
     required this.specification,
@@ -57,6 +60,7 @@ class RegisterEquipmentItemParams {
     this.acquiredDate,
   });
 
+  final FundCluster? fundCluster;
   final String itemName;
   final String description;
   final String specification;

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:api/src/item/models/item.dart';
 import 'package:api/src/item/repository/item_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -16,9 +15,9 @@ Future<Response> onRequest(RequestContext context) async {
 }
 
 Future<Response> _getOutOfStockItems(
-    RequestContext context,
-    ItemRepository repository,
-    ) async {
+  RequestContext context,
+  ItemRepository repository,
+) async {
   try {
     final queryParams = await context.request.uri.queryParameters;
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
@@ -29,10 +28,14 @@ Future<Response> _getOutOfStockItems(
       pageSize: pageSize,
     );
 
+    final lowStockItemsFilteredCount =
+        await repository.getLowStockItemsFilteredCount();
+
     return Response.json(
       statusCode: 200,
       body: {
         'items': lowStockItems,
+        'total_item_count': lowStockItemsFilteredCount,
       },
     );
   } catch (e) {

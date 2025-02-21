@@ -1,3 +1,4 @@
+import '../../../../core/enums/officer_status.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/officer.dart';
@@ -21,6 +22,7 @@ class OfficerRepositoryImpl implements OfficerRepository {
     String? searchQuery,
     String? office,
     String? sortBy,
+    OfficerStatus? status,
     bool? sortAscending,
     bool? isArchived,
   }) async {
@@ -30,6 +32,7 @@ class OfficerRepositoryImpl implements OfficerRepository {
         pageSize: pageSize,
         searchQuery: searchQuery,
         office: office,
+        status: status,
         sortBy: sortBy,
         sortAscending: sortAscending,
         isArchived: isArchived,

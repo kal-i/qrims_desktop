@@ -1,5 +1,6 @@
 import '../../../../../core/enums/asset_classification.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
+import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/unit.dart';
 import '../../models/base_item.dart';
 import '../../models/paginated_item_result.dart';
@@ -21,15 +22,18 @@ abstract interface class ItemInventoryRemoteDateSource {
   Future<BaseItemModel> registerSupplyItem({
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required Unit unit,
     required int quantity,
+    required double unitCost,
+    DateTime? acquiredDate,
   });
 
   Future<List<BaseItemModel>> registerEquipmentItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
-    required String specification,
+    String? specification,
     required Unit unit,
     required int quantity,
     required String manufacturerName,

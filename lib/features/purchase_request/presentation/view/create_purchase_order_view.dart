@@ -98,28 +98,28 @@ class _CreatePurchaseOrderViewState extends State<CreatePurchaseOrderView> {
 
   void _savePurchaseRequest() {
     if (_formKey.currentState!.validate()) {
-      context.read<PurchaseRequestsBloc>().add(
-            RegisterPurchaseRequestEvent(
-              entityName: _entityNameController.text,
-              fundCluster: _selectedFundCluster.value!,
-              officeName: _officeController.text,
-              date: _pickedDate.value,
-              productName: _itemNameController.text,
-              productDescription: _itemDescriptionController.text,
-              unit: _selectedUnit.value!,
-              quantity: int.parse(_quantityController.text),
-              unitCost: double.parse(_unitCostController.text),
-              purpose: _purposeController.text,
-              requestingOfficerOffice: _requestingOfficerOfficeController.text,
-              requestingOfficerPosition:
-                  _requestingOfficerPositionController.text,
-              requestingOfficerName: _requestingOfficerNameController.text,
-              approvingOfficerOffice: _approvingOfficerOfficeController.text,
-              approvingOfficerPosition:
-                  _approvingOfficerPositionController.text,
-              approvingOfficerName: _approvingOfficerNameController.text,
-            ),
-          );
+      // context.read<PurchaseRequestsBloc>().add(
+      //       RegisterPurchaseRequestEvent(
+      //         entityName: _entityNameController.text,
+      //         fundCluster: _selectedFundCluster.value!,
+      //         officeName: _officeController.text,
+      //         date: _pickedDate.value,
+      //         productName: _itemNameController.text,
+      //         productDescription: _itemDescriptionController.text,
+      //         unit: _selectedUnit.value!,
+      //         quantity: int.parse(_quantityController.text),
+      //         unitCost: double.parse(_unitCostController.text),
+      //         purpose: _purposeController.text,
+      //         requestingOfficerOffice: _requestingOfficerOfficeController.text,
+      //         requestingOfficerPosition:
+      //             _requestingOfficerPositionController.text,
+      //         requestingOfficerName: _requestingOfficerNameController.text,
+      //         approvingOfficerOffice: _approvingOfficerOfficeController.text,
+      //         approvingOfficerPosition:
+      //             _approvingOfficerPositionController.text,
+      //         approvingOfficerName: _approvingOfficerNameController.text,
+      //       ),
+      //     );
     }
   }
 

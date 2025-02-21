@@ -1,4 +1,6 @@
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/utils/encryption_utils.dart';
+import 'package:api/src/utils/fund_cluster_value_extension.dart';
 import 'package:api/src/utils/generate_id.dart';
 import 'package:api/src/utils/qr_code_utils.dart';
 import 'package:postgres/postgres.dart';
@@ -52,9 +54,16 @@ class ItemRepository {
     }
   }
 
-  Future<String> _generateUniqueItemId(String itemName) async {
+  Future<String> _generateUniqueItemId(
+    String itemName,
+    FundCluster? fundCluster,
+    DateTime? acquiredDate,
+  ) async {
     final now = DateTime.now();
-    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+    final yearMonth = acquiredDate != null
+        ? "${acquiredDate.year}-${acquiredDate.month.toString().padLeft(2, '0')}"
+        : "${now.year}-${now.month.toString().padLeft(2, '0')}";
 
     // Format the item name: remove spaces and capitalize each word's first letter
     final formattedItemName = itemName
@@ -62,60 +71,27 @@ class ItemRepository {
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join('');
 
-    print('Current year-month: $yearMonth for item: $itemName');
-
-    // Step 1: Fetch the latest record for the month to get cumulative count
-    final monthResult = await _conn.execute(
-      Sql.named(
-        '''
-    SELECT id FROM Items
-    WHERE id LIKE '%-' || @year_month || '-%'
-    ORDER BY id DESC
-    LIMIT 1;
-    ''',
-      ),
-      parameters: {
-        'year_month': '%$yearMonth%',
-      },
+    // Fetch the next value from the sequence for the cumulative count
+    final sequenceResult = await _conn.execute(
+      Sql.named('SELECT nextval(\'item_id_seq\')'),
     );
-    print('month result: ${monthResult}');
-    // we need to extract the
+    final cumulativeCount = sequenceResult.first[0] as int;
 
-    int cumulativeCount;
-    if (monthResult.isNotEmpty) {
-      final extractedResult =
-          monthResult.first[0].toString().split('-').last.split('(').first;
-      print('month result is not empty: ${monthResult.first[0]}');
-      print('extracted result: $extractedResult');
-      print('extracted result after + 1: ${int.parse(extractedResult) + 1}');
-      cumulativeCount = int.parse(monthResult.first[0]
-              .toString()
-              .split('-')
-              .last
-              .split('(')
-              .first) +
-          1;
-    } else {
-      cumulativeCount = 1;
-    }
-    print('cumulative count: $cumulativeCount');
-
-    // Step 2: Fetch the latest record for the specific item this month
+    // Fetch the latest record for the specific item this month
     final itemResult = await _conn.execute(
       Sql.named(
         '''
-    SELECT id FROM Items
-    WHERE id ILIKE @item_name || '-' || @year_month || '-%'
-    ORDER BY id DESC
-    LIMIT 1;
-    ''',
+      SELECT id FROM Items
+      WHERE id ILIKE @item_name || '-' || @year_month || '-%'
+      ORDER BY id DESC
+      LIMIT 1;
+      ''',
       ),
       parameters: {
         'item_name': itemName,
         'year_month': yearMonth,
       },
     );
-    print('item result: $itemResult');
 
     int itemSpecificCount;
     if (itemResult.isNotEmpty && itemResult.first[0] != null) {
@@ -128,14 +104,185 @@ class ItemRepository {
     } else {
       itemSpecificCount = 1;
     }
-    print('item specific count: $itemSpecificCount');
 
     // Construct the unique ID with zero-padded cumulative count
-    final uniqueId =
-        '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
-    print('Generated unique ID: $uniqueId');
+    final uniqueId = fundCluster != null
+        ? '$formattedItemName-${fundCluster.value}-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
+        : '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
     return uniqueId;
   }
+
+  // Future<String> _generateUniqueItemId(String itemName) async {
+  //   final now = DateTime.now();
+  //   final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+  //   // Format the item name: remove spaces and capitalize each word's first letter
+  //   final formattedItemName = itemName
+  //       .split(' ')
+  //       .map((word) => word[0].toUpperCase() + word.substring(1))
+  //       .join('');
+
+  //   print('Current year-month: $yearMonth for item: $itemName');
+
+  //   // Start a transaction to ensure atomicity
+  //   return await _conn.runTx((ctx) async {
+  //     // Step 1: Fetch the latest record for the month to get cumulative count
+  //     final monthResult = await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //   SELECT id FROM Items
+  //   WHERE id LIKE '%-' || @year_month || '-%'
+  //   ORDER BY id DESC
+  //   LIMIT 1;
+  //   ''',
+  //       ),
+  //       parameters: {
+  //         'year_month': '%$yearMonth%',
+  //       },
+  //     );
+  //     print('month result: ${monthResult}');
+
+  //     int cumulativeCount;
+  //     if (monthResult.isNotEmpty) {
+  //       final extractedResult =
+  //           monthResult.first[0].toString().split('-').last.split('(').first;
+  //       print('month result is not empty: ${monthResult.first[0]}');
+  //       print('extracted result: $extractedResult');
+  //       print('extracted result after + 1: ${int.parse(extractedResult) + 1}');
+  //       cumulativeCount = int.parse(monthResult.first[0]
+  //               .toString()
+  //               .split('-')
+  //               .last
+  //               .split('(')
+  //               .first) +
+  //           1;
+  //     } else {
+  //       cumulativeCount = 1;
+  //     }
+  //     print('cumulative count: $cumulativeCount');
+
+  //     // Step 2: Fetch the latest record for the specific item this month
+  //     final itemResult = await ctx.execute(
+  //       Sql.named(
+  //         '''
+  //   SELECT id FROM Items
+  //   WHERE id ILIKE @item_name || '-' || @year_month || '-%'
+  //   ORDER BY id DESC
+  //   LIMIT 1;
+  //   ''',
+  //       ),
+  //       parameters: {
+  //         'item_name': itemName,
+  //         'year_month': yearMonth,
+  //       },
+  //     );
+  //     print('item result: $itemResult');
+
+  //     int itemSpecificCount;
+  //     if (itemResult.isNotEmpty && itemResult.first[0] != null) {
+  //       itemSpecificCount = int.parse(itemResult.first[0]
+  //               .toString()
+  //               .split('(')
+  //               .last
+  //               .replaceAll(')', '')) +
+  //           1;
+  //     } else {
+  //       itemSpecificCount = 1;
+  //     }
+  //     print('item specific count: $itemSpecificCount');
+
+  //     // Construct the unique ID with zero-padded cumulative count
+  //     final uniqueId =
+  //         '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+  //     print('Generated unique ID: $uniqueId');
+  //     return uniqueId;
+  //   });
+  // }
+
+  // Future<String> _generateUniqueItemId(String itemName) async {
+  //   final now = DateTime.now();
+  //   final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+  //   // Format the item name: remove spaces and capitalize each word's first letter
+  //   final formattedItemName = itemName
+  //       .split(' ')
+  //       .map((word) => word[0].toUpperCase() + word.substring(1))
+  //       .join('');
+
+  //   print('Current year-month: $yearMonth for item: $itemName');
+
+  //   // Step 1: Fetch the latest record for the month to get cumulative count
+  //   final monthResult = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //   SELECT id FROM Items
+  //   WHERE id LIKE '%-' || @year_month || '-%'
+  //   ORDER BY id DESC
+  //   LIMIT 1;
+  //   ''',
+  //     ),
+  //     parameters: {
+  //       'year_month': '%$yearMonth%',
+  //     },
+  //   );
+  //   print('month result: ${monthResult}');
+  //   // we need to extract the
+
+  //   int cumulativeCount;
+  //   if (monthResult.isNotEmpty) {
+  //     final extractedResult =
+  //         monthResult.first[0].toString().split('-').last.split('(').first;
+  //     print('month result is not empty: ${monthResult.first[0]}');
+  //     print('extracted result: $extractedResult');
+  //     print('extracted result after + 1: ${int.parse(extractedResult) + 1}');
+  //     cumulativeCount = int.parse(monthResult.first[0]
+  //             .toString()
+  //             .split('-')
+  //             .last
+  //             .split('(')
+  //             .first) +
+  //         1;
+  //   } else {
+  //     cumulativeCount = 1;
+  //   }
+  //   print('cumulative count: $cumulativeCount');
+
+  //   // Step 2: Fetch the latest record for the specific item this month
+  //   final itemResult = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //   SELECT id FROM Items
+  //   WHERE id ILIKE @item_name || '-' || @year_month || '-%'
+  //   ORDER BY id DESC
+  //   LIMIT 1;
+  //   ''',
+  //     ),
+  //     parameters: {
+  //       'item_name': itemName,
+  //       'year_month': yearMonth,
+  //     },
+  //   );
+  //   print('item result: $itemResult');
+
+  //   int itemSpecificCount;
+  //   if (itemResult.isNotEmpty && itemResult.first[0] != null) {
+  //     itemSpecificCount = int.parse(itemResult.first[0]
+  //             .toString()
+  //             .split('(')
+  //             .last
+  //             .replaceAll(')', '')) +
+  //         1;
+  //   } else {
+  //     itemSpecificCount = 1;
+  //   }
+  //   print('item specific count: $itemSpecificCount');
+
+  //   // Construct the unique ID with zero-padded cumulative count
+  //   final uniqueId =
+  //       '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+  //   print('Generated unique ID: $uniqueId');
+  //   return uniqueId;
+  // }
 
   // Future<String> _generateUniqueItemId() async {
   //   while (true) {
@@ -222,6 +369,7 @@ class ItemRepository {
   }
 
   Future<String> registerItemWithStock({
+    FundCluster? fundCluster,
     required String productName,
     String? description,
     required String manufacturerName,
@@ -239,7 +387,11 @@ class ItemRepository {
   }) async {
     try {
       /// generate an item id
-      final itemId = await _generateUniqueItemId(productName);
+      final itemId = await _generateUniqueItemId(
+        productName,
+        fundCluster,
+        acquiredDate,
+      );
       print('item id: $itemId');
 
       /// generate encrypted id
@@ -404,16 +556,23 @@ class ItemRepository {
   }
 
   Future<String> registerBaseItem({
+    FundCluster? fundCluster,
     required String productName,
     required String productNameId,
     String? productDescriptionId,
     String? specification,
     required Unit unit,
     required int quantity,
+    required double unitCost,
+    DateTime? acquiredDate,
   }) async {
     try {
       /// generate an item id
-      final itemId = await _generateUniqueItemId(productName);
+      final itemId = await _generateUniqueItemId(
+        productName,
+        fundCluster,
+        acquiredDate,
+      );
       print('item id: $itemId');
 
       /// generate encrypted id
@@ -429,10 +588,10 @@ class ItemRepository {
           '''
         INSERT INTO Items (
           id, product_name_id, product_description_id, specification, unit, 
-          quantity, encrypted_id, qr_code_image_data
+          quantity, unit_cost, encrypted_id, qr_code_image_data, acquired_date
         ) VALUES (
           @id, @product_name_id, @product_description_id, @specification, @unit,
-          @quantity, @encrypted_id, @qr_code_image_data
+          @quantity, @unit_cost, @encrypted_id, @qr_code_image_data, @acquired_date
         );
         ''',
         ),
@@ -443,10 +602,14 @@ class ItemRepository {
           'specification': specification,
           'unit': unit.toString().split('.').last,
           'quantity': quantity,
+          'unit_cost': unitCost,
           'encrypted_id': encryptedId,
           'qr_code_image_data': qrCodeImageData,
+          'acquired_date': acquiredDate ?? DateTime.now().toIso8601String(),
         },
       );
+
+      print('insertion successful');
 
       return itemId;
     } catch (e) {
@@ -459,6 +622,8 @@ class ItemRepository {
     required String productDescriptionId,
     String? specification,
     required Unit unit,
+    required double unitCost,
+    DateTime? acquiredDate,
   }) async {
     final baseItemResult = await _conn.execute(
       Sql.named(
@@ -474,7 +639,11 @@ class ItemRepository {
         AND
           (specification IS NULL OR specification ILIKE @specification)
         AND
-          unit = @unit;
+          unit = @unit
+        AND
+          unit_cost = @unit_cost
+        AND
+          acquired_date = @acquired_date
         ''',
       ),
       parameters: {
@@ -482,6 +651,8 @@ class ItemRepository {
         'product_description_id': productDescriptionId,
         'specification': specification,
         'unit': unit.toString().split('.').last,
+        'unit_cost': unitCost,
+        'acquired_date': acquiredDate,
       },
     );
 
@@ -556,9 +727,7 @@ class ItemRepository {
     required String serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
-    required double unitCost,
     int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   }) async {
     try {
       String? manufacturerId;
@@ -627,11 +796,10 @@ class ItemRepository {
           '''
         INSERT INTO Equipment (
           base_item_id, manufacturer_id, brand_id, model_id, serial_no, asset_classification,
-          asset_sub_class, unit_cost, estimated_useful_life, acquired_date
+          asset_sub_class, estimated_useful_life
         ) VALUES (
           @base_item_id, @manufacturer_id, @brand_id, @model_id, @serial_no, 
-          @asset_classification, @asset_sub_class, @unit_cost, 
-          @estimated_useful_life, @acquired_date
+          @asset_classification, @asset_sub_class, @estimated_useful_life
         );
         ''',
         ),
@@ -644,9 +812,7 @@ class ItemRepository {
           'asset_classification':
               assetClassification.toString().split('.').last,
           'asset_sub_class': assetSubClass.toString().split('.').last,
-          'unit_cost': unitCost,
           'estimated_useful_life': estimatedUsefulLife,
-          'acquired_date': acquiredDate ?? DateTime.now().toIso8601String(),
         },
       );
 
@@ -657,6 +823,7 @@ class ItemRepository {
   }
 
   Future<String> registerItem({
+    FundCluster? fundCluster,
     required String productName,
     String? description,
     required String manufacturerName,
@@ -674,7 +841,11 @@ class ItemRepository {
   }) async {
     try {
       /// generate an item id
-      final itemId = await _generateUniqueItemId(productName);
+      final itemId = await _generateUniqueItemId(
+        productName,
+        fundCluster,
+        acquiredDate,
+      );
       print('item id: $itemId');
 
       /// generate encrypted id
@@ -1307,9 +1478,7 @@ class ItemRepository {
           e.serial_no,
           e.asset_classification,
           e.asset_sub_class,
-          e.unit_cost,
           e.estimated_useful_life,
-          e.acquired_date,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
           md.model_name
@@ -1340,9 +1509,9 @@ class ItemRepository {
 
     final row = result.first;
 
-    if (row[10] != null) {
+    if (row[12] != null) {
       final supplyMap = {
-        'supply_id': row[10],
+        'supply_id': row[12],
         'base_item_id': row[0],
         'product_name_id': row[1],
         'product_description_id': row[2],
@@ -1351,13 +1520,15 @@ class ItemRepository {
         'quantity': row[5],
         'encrypted_id': row[6],
         'qr_code_image_data': row[7],
-        'product_name': row[8],
-        'product_description': row[9],
+        'unit_cost': row[8],
+        'acquired_date': row[9],
+        'product_name': row[10],
+        'product_description': row[11],
       };
       return Supply.fromJson(supplyMap);
-    } else if (row[11] != null) {
+    } else if (row[13] != null) {
       final equipmentMap = {
-        'equipment_id': row[11],
+        'equipment_id': row[13],
         'base_item_id': row[0],
         'product_name_id': row[1],
         'product_description_id': row[2],
@@ -1366,17 +1537,17 @@ class ItemRepository {
         'quantity': row[5],
         'encrypted_id': row[6],
         'qr_code_image_data': row[7],
-        'product_name': row[8],
-        'product_description': row[9],
-        'manufacturer_id': row[12],
-        'brand_id': row[13],
-        'model_id': row[14],
-        'serial_no': row[15],
-        'asset_classification': row[16],
-        'asset_sub_class': row[17],
-        'unit_cost': row[18],
-        'estimated_useful_life': row[19],
-        'acquired_date': row[20],
+        'unit_cost': row[8],
+        'acquired_date': row[9],
+        'product_name': row[10],
+        'product_description': row[11],
+        'manufacturer_id': row[14],
+        'brand_id': row[15],
+        'model_id': row[16],
+        'serial_no': row[17],
+        'asset_classification': row[18],
+        'asset_sub_class': row[19],
+        'estimated_useful_life': row[20],
         'manufacturer_name': row[21],
         'brand_name': row[22],
         'model_name': row[23],
@@ -1524,13 +1695,14 @@ class ItemRepository {
       if (filter != null && filter.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND (' : 'WHERE (');
         if (filter == 'supply') {
-          whereClause.write('s.id IS NOT NULL');
+          whereClause.write('s.id IS NOT NULL AND i.quantity > 0');
         } else if (filter == 'equipment') {
-          whereClause.write('e.id IS NOT NULL');
+          whereClause.write('e.id IS NOT NULL AND i.quantity > 0');
         } else if (filter == 'out') {
           whereClause.write('i.quantity = 0');
         } else {
-          whereClause.write('s.id IS NOT NULL OR e.id IS NOT NULL');
+          whereClause.write(
+              '(s.id IS NOT NULL OR e.id IS NOT NULL) AND i.quantity > 0');
         }
         whereClause.write(')');
       }
@@ -1617,9 +1789,7 @@ class ItemRepository {
           e.serial_no,
           e.asset_classification,
           e.asset_sub_class,
-          e.unit_cost,
           e.estimated_useful_life,
-          e.acquired_date,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
           md.model_name
@@ -1680,13 +1850,14 @@ class ItemRepository {
       if (filter != null && filter.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND (' : 'WHERE (');
         if (filter == 'supply') {
-          whereClause.write('s.id IS NOT NULL');
+          whereClause.write('s.id IS NOT NULL AND i.quantity > 0');
         } else if (filter == 'equipment') {
-          whereClause.write('e.id IS NOT NULL');
+          whereClause.write('e.id IS NOT NULL AND i.quantity > 0');
         } else if (filter == 'out') {
           whereClause.write('i.quantity = 0');
         } else {
-          whereClause.write('s.id IS NOT NULL OR e.id IS NOT NULL');
+          whereClause.write(
+              '(s.id IS NOT NULL OR e.id IS NOT NULL) AND i.quantity > 0');
         }
         whereClause.write(')');
       }
@@ -1715,9 +1886,9 @@ class ItemRepository {
       print('raw res: $results');
 
       for (final row in results) {
-        if (row[10] != null) {
+        if (row[12] != null) {
           final supplyMap = {
-            'supply_id': row[10],
+            'supply_id': row[12],
             'base_item_id': row[0],
             'product_name_id': row[1],
             'product_description_id': row[2],
@@ -1726,13 +1897,15 @@ class ItemRepository {
             'quantity': row[5],
             'encrypted_id': row[6],
             'qr_code_image_data': row[7],
-            'product_name': row[8],
-            'product_description': row[9],
+            'unit_cost': row[8],
+            'acquired_date': row[9],
+            'product_name': row[10],
+            'product_description': row[11],
           };
           itemList.add(Supply.fromJson(supplyMap));
-        } else if (row[11] != null) {
+        } else if (row[13] != null) {
           final equipmentMap = {
-            'equipment_id': row[11],
+            'equipment_id': row[13],
             'base_item_id': row[0],
             'product_name_id': row[1],
             'product_description_id': row[2],
@@ -1741,17 +1914,17 @@ class ItemRepository {
             'quantity': row[5],
             'encrypted_id': row[6],
             'qr_code_image_data': row[7],
-            'product_name': row[8],
-            'product_description': row[9],
-            'manufacturer_id': row[12],
-            'brand_id': row[13],
-            'model_id': row[14],
-            'serial_no': row[15],
-            'asset_classification': row[16],
-            'asset_sub_class': row[17],
-            'unit_cost': row[18],
-            'estimated_useful_life': row[19],
-            'acquired_date': row[20],
+            'unit_cost': row[8],
+            'acquired_date': row[9],
+            'product_name': row[10],
+            'product_description': row[11],
+            'manufacturer_id': row[14],
+            'brand_id': row[15],
+            'model_id': row[16],
+            'serial_no': row[17],
+            'asset_classification': row[18],
+            'asset_sub_class': row[19],
+            'estimated_useful_life': row[20],
             'manufacturer_name': row[21],
             'brand_name': row[22],
             'model_name': row[23],
@@ -1953,9 +2126,7 @@ class ItemRepository {
             e.serial_no,
             e.asset_classification,
             e.asset_sub_class,
-            e.unit_cost,
             e.estimated_useful_life,
-            e.acquired_date,
             mnf.name as manufacturer_name,
             brnd.name as brand_name,
             md.model_name
@@ -1986,9 +2157,9 @@ class ItemRepository {
 
       final row = result.first;
 
-      if (row[10] != null) {
+      if (row[12] != null) {
         final supplyMap = {
-          'supply_id': row[10],
+          'supply_id': row[12],
           'base_item_id': row[0],
           'product_name_id': row[1],
           'product_description_id': row[2],
@@ -1997,13 +2168,15 @@ class ItemRepository {
           'quantity': row[5],
           'encrypted_id': row[6],
           'qr_code_image_data': row[7],
-          'product_name': row[8],
-          'product_description': row[9],
+          'unit_cost': row[8],
+          'acquired_date': row[9],
+          'product_name': row[10],
+          'product_description': row[11],
         };
         return Supply.fromJson(supplyMap);
-      } else if (row[11] != null) {
+      } else if (row[13] != null) {
         final equipmentMap = {
-          'equipment_id': row[11],
+          'equipment_id': row[13],
           'base_item_id': row[0],
           'product_name_id': row[1],
           'product_description_id': row[2],
@@ -2012,17 +2185,17 @@ class ItemRepository {
           'quantity': row[5],
           'encrypted_id': row[6],
           'qr_code_image_data': row[7],
-          'product_name': row[8],
-          'product_description': row[9],
-          'manufacturer_id': row[12],
-          'brand_id': row[13],
-          'model_id': row[14],
-          'serial_no': row[15],
-          'asset_classification': row[16],
-          'asset_sub_class': row[17],
-          'unit_cost': row[18],
-          'estimated_useful_life': row[19],
-          'acquired_date': row[20],
+          'unit_cost': row[8],
+          'acquired_date': row[9],
+          'product_name': row[10],
+          'product_description': row[11],
+          'manufacturer_id': row[14],
+          'brand_id': row[15],
+          'model_id': row[16],
+          'serial_no': row[17],
+          'asset_classification': row[18],
+          'asset_sub_class': row[19],
+          'estimated_useful_life': row[20],
           'manufacturer_name': row[21],
           'brand_name': row[22],
           'model_name': row[23],
@@ -2056,8 +2229,12 @@ class ItemRepository {
       final List<String> baseItemSetClauses = [];
       final List<String> equipmentSetClauses = [];
 
-      final Map<String, dynamic> baseItemParams = {'id': id};
-      final Map<String, dynamic> equipmentParams = {'id': id};
+      final Map<String, dynamic> baseItemParams = {
+        'id': id,
+      };
+      final Map<String, dynamic> equipmentParams = {
+        'id': id,
+      };
 
       String? productNameId;
       String? productDescriptionId;
@@ -2117,6 +2294,37 @@ class ItemRepository {
         baseItemParams['product_description_id'] = productDescriptionId;
       }
 
+      if (specification != null) {
+        baseItemSetClauses.add('specification = @specification');
+        baseItemParams['specification'] = specification;
+      }
+
+      if (unit != null) {
+        baseItemSetClauses.add('unit = @unit');
+        baseItemParams['unit'] = unit.toString().split('.').last;
+      }
+
+      if (quantity != null) {
+        baseItemSetClauses.add('quantity = @quantity');
+        baseItemParams['quantity'] = quantity;
+
+        /// log update to inventory activity
+        await updateInventoryQuantity(
+          baseItemId: id,
+          newQuantity: quantity,
+        );
+      }
+
+      if (unitCost != null) {
+        baseItemSetClauses.add('unit_cost = @unit_cost');
+        baseItemParams['unit_cost'] = unitCost;
+      }
+
+      if (acquiredDate != null) {
+        baseItemSetClauses.add('acquired_date = @acquired_date');
+        baseItemParams['acquired_date'] = acquiredDate;
+      }
+
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
         final manufacturerResult = await checkManufacturerIfExist(
           manufacturerName: manufacturerName,
@@ -2135,11 +2343,6 @@ class ItemRepository {
         equipmentParams['manufacturer_id'] = manufacturerId;
       }
 
-      if (specification != null) {
-        baseItemSetClauses.add('specification = @specification');
-        baseItemParams['specification'] = specification;
-      }
-
       if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
           (brandName != null && brandName.isNotEmpty)) {
         final brandResult = await checkBrandIfExist(
@@ -2154,7 +2357,6 @@ class ItemRepository {
           );
           print('brand does not exist; created id: $brandId');
         }
-        print('brand id: $brandId');
 
         final manufacturerBrandResult = await checkManufacturerBrandIfExist(
           manufacturerId: manufacturerId,
@@ -2203,16 +2405,6 @@ class ItemRepository {
         equipmentParams['serial_no'] = serialNo;
       }
 
-      if (unit != null) {
-        baseItemSetClauses.add('unit = @unit');
-        baseItemParams['unit'] = unit.toString().split('.').last;
-      }
-
-      if (quantity != null) {
-        baseItemSetClauses.add('quantity = @quantity');
-        baseItemParams['quantity'] = quantity;
-      }
-
       if (assetClassification != null) {
         equipmentSetClauses.add('asset_classification = @asset_classification');
         equipmentParams['asset_classification'] =
@@ -2225,23 +2417,13 @@ class ItemRepository {
             assetSubClass.toString().split('.').last;
       }
 
-      if (unitCost != null) {
-        equipmentSetClauses.add('unit_cost = @unit_cost');
-        equipmentParams['unit_cost'] = unitCost;
-      }
-
       if (estimatedUsefulLife != null) {
         equipmentSetClauses
             .add('estimated_useful_life = @estimated_useful_life');
         equipmentParams['estimated_useful_life'] = estimatedUsefulLife;
       }
 
-      if (acquiredDate != null) {
-        equipmentSetClauses.add('acquired_date = @acquired_date');
-        equipmentParams['acquired_date'] = acquiredDate;
-      }
-
-      final baseItemUpdated = await _conn.execute(
+      await _conn.execute(
         Sql.named(
           '''
           UPDATE Items
@@ -2252,25 +2434,26 @@ class ItemRepository {
         parameters: baseItemParams,
       );
 
-      final equipmentUpdated = await _conn.execute(
-        Sql.named(
-          '''
+      if (equipmentSetClauses.isNotEmpty) {
+        await _conn.execute(
+          Sql.named(
+            '''
           UPDATE Equipment
           SET ${equipmentSetClauses.join(', ')}
           WHERE base_item_id = @id;
           ''',
-        ),
-        parameters: equipmentParams,
-      );
+          ),
+          parameters: equipmentParams,
+        );
+      }
 
-      return baseItemUpdated.affectedRows == 1 ||
-          equipmentUpdated.affectedRows == 1;
+      return true;
     } catch (e) {
       if (e.toString().contains(
           'duplicate key value violates unique constraints "items_serial_no_key"')) {
         throw Exception('Serial no. already exists.');
       }
-      throw Exception('Error registering item: $e');
+      throw Exception('Error updating item: $e');
     }
   }
 
@@ -2749,20 +2932,25 @@ class ItemRepository {
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT
+        SELECT 
           pn.name AS product_name,
-          SUM(i.quantity) AS total_quantity
-        FROM
+          pd.description AS product_description,
+          i.specification,
+          i.quantity
+        FROM 
           Items i
-        JOIN
+        JOIN 
+          Supplies s ON i.id = s.base_item_id
+        JOIN 
           ProductNames pn ON i.product_name_id = pn.id
-        GROUP BY
-          pn.name
-        HAVING
-          SUM(i.quantity) > 0 AND SUM(i.quantity) <= 5
+        JOIN 
+          ProductDescriptions pd ON i.product_description_id = pd.id
+        WHERE 
+          i.quantity > 0 AND i.quantity < 10
         ORDER BY
-          name ASC 
-        LIMIT @page_size OFFSET @offset;
+          product_name ASC 
+        LIMIT 
+          @page_size OFFSET @offset;
         ''',
       ),
       parameters: {
@@ -2773,12 +2961,33 @@ class ItemRepository {
 
     for (var row in result) {
       lowStockItems.add({
-        'product_name': row[0], // pn.name
-        'total_quantity': row[1], // SUM(i.quantity)
+        'product_name': row[0],
+        'product_description': row[1],
+        'specification': row[2],
+        'quantity': row[3],
       });
     }
 
     return lowStockItems;
+  }
+
+  Future<int> getLowStockItemsFilteredCount() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          COUNT(*)
+        FROM
+          Items i
+        JOIN
+          Supplies s ON i.id = s.base_item_id
+        WHERE 
+          i.quantity > 0 AND i.quantity < 10
+        ''',
+      ),
+    );
+
+    return result.first[0] as int;
   }
 
   Future<List<Map<String, dynamic>>> getOutOfStockItems({
@@ -2791,19 +3000,22 @@ class ItemRepository {
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT
+        SELECT 
           pn.name AS product_name,
-          SUM(i.quantity) AS total_quantity
-        FROM
+          pd.description AS product_description,
+          i.specification
+        FROM 
           Items i
-        JOIN
+        JOIN 
+          Supplies s ON i.id = s.base_item_id
+        JOIN 
           ProductNames pn ON i.product_name_id = pn.id
-        GROUP BY
-          pn.name
-        HAVING
-          SUM(i.quantity) = 0
+        JOIN 
+          ProductDescriptions pd ON i.product_description_id = pd.id
+        WHERE 
+          i.quantity = 0
         ORDER BY
-          name ASC 
+          product_name ASC 
         LIMIT @page_size OFFSET @offset;
         ''',
       ),
@@ -2815,11 +3027,272 @@ class ItemRepository {
 
     for (var row in result) {
       outOfStockItems.add({
-        'product_name': row[0], // pn.name
-        'total_quantity': row[1], // SUM(i.quantity)
+        'product_name': row[0],
+        'product_description': row[1],
+        'specification': row[2],
       });
     }
 
     return outOfStockItems;
+  }
+
+  Future<int> getOutOfStockItemsFilteredCount() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT
+          COUNT(*)
+        FROM
+          Items i
+        JOIN
+          Supplies s ON i.id = s.base_item_id
+        WHERE 
+          i.quantity = 0
+        ''',
+      ),
+    );
+
+    return result.first[0] as int;
+  }
+
+  Future<Map<String, dynamic>> getWeeklyTrendsWithPercentage() async {
+    // final result = await _conn.execute(
+    //   Sql.named(
+    //     '''
+    //   WITH weekly_totals AS (
+    //       SELECT
+    //           DATE_TRUNC('week', ia.timestamp) AS week_start,
+    //           CASE
+    //               WHEN s.id IS NOT NULL THEN 'Supply'
+    //               WHEN e.id IS NOT NULL THEN 'Equipment'
+    //               ELSE 'Unknown'
+    //           END AS item_type,
+    //           SUM(ia.quantity) AS total_quantity
+    //       FROM
+    //           inventoryactivities ia
+    //       JOIN
+    //           items i ON ia.base_item_id = i.id
+    //       LEFT JOIN
+    //           supplies s ON i.id = s.base_item_id
+    //       LEFT JOIN
+    //           equipment e ON i.id = e.base_item_id
+    //       GROUP BY
+    //           week_start, item_type
+    //       ORDER BY
+    //           week_start DESC
+    //       LIMIT 6 -- Fetch data for the last 6 weeks
+    //   )
+    //   SELECT
+    //       week_start,
+    //       item_type,
+    //       total_quantity
+    //   FROM
+    //       weekly_totals;
+    // ''',
+    //   ),
+    // );
+
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      WITH weekly_totals AS (
+          SELECT
+              DATE_TRUNC('week', ia.timestamp) AS week_start,
+              CASE 
+                  WHEN s.id IS NOT NULL THEN 'Supply'
+                  WHEN e.id IS NOT NULL THEN 'Equipment'
+                  ELSE 'Unknown'
+              END AS item_type,
+              SUM(ia.quantity) AS total_quantity
+          FROM
+              inventoryactivities ia
+          JOIN
+              items i ON ia.base_item_id = i.id
+          LEFT JOIN 
+              supplies s ON i.id = s.base_item_id
+          LEFT JOIN 
+              equipment e ON i.id = e.base_item_id
+          WHERE ia.timestamp >= NOW() - INTERVAL '6 weeks'
+          GROUP BY
+              week_start, item_type
+      )
+      SELECT
+          week_start,
+          item_type,
+          total_quantity
+      FROM
+          weekly_totals
+      ORDER BY
+          week_start ASC;
+    ''',
+      ),
+    );
+
+    if (result.isEmpty || result.length < 2) {
+      return {
+        'trends': [],
+        'percentage_change': null,
+      };
+    }
+
+    // Extract trends for Supply and Equipment
+    var supplyTrends = <Map<String, dynamic>>[];
+    var equipmentTrends = <Map<String, dynamic>>[];
+
+    for (var row in result) {
+      final trend = {
+        'week_start': (row[0] as DateTime).toIso8601String(),
+        'item_type': row[1],
+        'total_quantity': row[2],
+      };
+      if (row[1] == 'Supply') {
+        supplyTrends.add(trend);
+      } else if (row[1] == 'Equipment') {
+        equipmentTrends.add(trend);
+      }
+    }
+
+    // Calculate percentage change for Supply and Equipment separately
+    double supplyPercentageChange = 0;
+    double equipmentPercentageChange = 0;
+
+    if (supplyTrends.length > 1) {
+      final currentWeekSupply =
+          (supplyTrends[0]['total_quantity'] as int?) ?? 0;
+      final previousWeekSupply =
+          (supplyTrends[1]['total_quantity'] as int?) ?? 0;
+      supplyPercentageChange = previousWeekSupply == 0
+          ? 0
+          : ((currentWeekSupply - previousWeekSupply) / previousWeekSupply) *
+              100;
+      supplyPercentageChange =
+          double.parse(supplyPercentageChange.toStringAsFixed(2));
+    }
+
+    if (equipmentTrends.length > 1) {
+      final currentWeekEquipment =
+          (equipmentTrends[0]['total_quantity'] as int?) ?? 0;
+      final previousWeekEquipment =
+          (equipmentTrends[1]['total_quantity'] as int?) ?? 0;
+      equipmentPercentageChange = previousWeekEquipment == 0
+          ? 0
+          : ((currentWeekEquipment - previousWeekEquipment) /
+                  previousWeekEquipment) *
+              100;
+      equipmentPercentageChange =
+          double.parse(equipmentPercentageChange.toStringAsFixed(2));
+    }
+
+    return {
+      'supply_trends': supplyTrends,
+      'equipment_trends': equipmentTrends,
+      'supply_percentage_change': supplyPercentageChange,
+      'equipment_percentage_change': equipmentPercentageChange,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getInventoryStockLevels() async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT
+          CASE
+              WHEN s.id IS NOT NULL THEN 'Supply'
+              WHEN e.id IS NOT NULL THEN 'Equipment'
+              ELSE 'Unknown'
+          END AS item_type,
+          SUM(i.quantity) AS total_stock
+      FROM
+          items i
+      LEFT JOIN
+          supplies s ON i.id = s.base_item_id
+      LEFT JOIN
+          equipment e ON i.id = e.base_item_id
+      GROUP BY
+          item_type;
+      ''',
+      ),
+    );
+
+    final List<Map<String, dynamic>> stockLevels = [];
+    for (var row in result) {
+      stockLevels.add(
+        {
+          'item_type': row[0] as String,
+          'total_stock': row[1] as int,
+        },
+      );
+    }
+
+    return stockLevels;
+  }
+
+  Future<bool> registerInventoryActivity({
+    required String baseItemId,
+    required InventoryActivity action,
+    required int quantity,
+  }) async {
+    try {
+      final result = await _conn.execute(
+        Sql.named(
+          '''
+          INSERT INTO InventoryActivities (
+            base_item_id, action, quantity, timestamp
+          ) VALUES (
+            @base_item_id, @action, @quantity, @timestamp
+          );
+          ''',
+        ),
+        parameters: {
+          'base_item_id': baseItemId,
+          'action': action.toString().split('.').last,
+          'quantity': quantity,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+
+      return result.affectedRows == 1;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<bool> updateInventoryQuantity({
+    required String baseItemId,
+    required int newQuantity,
+  }) async {
+    try {
+      final currentQuantityResult = await _conn.execute(
+        Sql.named(
+          '''
+        SELECT SUM(quantity) AS current_quantity
+        FROM InventoryActivities
+        WHERE base_item_id = @base_item_id;
+        ''',
+        ),
+        parameters: {
+          'base_item_id': baseItemId,
+        },
+      );
+
+      final currentQuantity =
+          currentQuantityResult.firstOrNull?[0] as int? ?? 0;
+
+      print('curr qty: $currentQuantity');
+
+      final quantityDifference = newQuantity - currentQuantity;
+
+      print('qty diff: $quantityDifference');
+
+      final result = await registerInventoryActivity(
+        baseItemId: baseItemId,
+        action: InventoryActivity.updated,
+        quantity: quantityDifference,
+      );
+
+      return result;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 }

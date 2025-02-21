@@ -7,6 +7,8 @@ sealed class RequestsSummaryEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+final class GetRequestsSummaryEvent extends RequestsSummaryEvent {}
+
 final class GetMostRequestedItemsEvent extends RequestsSummaryEvent {
   const GetMostRequestedItemsEvent({
     this.limit,

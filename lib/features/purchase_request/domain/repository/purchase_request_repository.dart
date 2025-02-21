@@ -2,7 +2,6 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/purchase_request_status.dart';
-import '../../../../core/enums/unit.dart' as unit;
 import '../../../../core/error/failure.dart';
 import '../entities/paginated_purchase_request_result.dart';
 import '../entities/purchase_request.dart';
@@ -14,11 +13,7 @@ abstract interface class PurchaseRequestRepository {
     required FundCluster fundCluster,
     required String officeName,
     required DateTime date,
-    required String productName,
-    required String productDescription,
-    required unit.Unit unit,
-    required int quantity,
-    required double unitCost,
+    required List<Map<String, dynamic>> requestedItems,
     required String purpose,
     required String requestingOfficerOffice,
     required String requestingOfficerPosition,
@@ -45,7 +40,8 @@ abstract interface class PurchaseRequestRepository {
     required PurchaseRequestStatus status,
   });
 
-  Future<Either<Failure, PurchaseRequestWithNotificationTrailEntity>> getPurchaseRequestById({
+  Future<Either<Failure, PurchaseRequestWithNotificationTrailEntity>>
+      getPurchaseRequestById({
     required String prId,
   });
 }

@@ -1,7 +1,6 @@
 import 'package:fpdart/src/either.dart';
 
 import '../../../../core/enums/fund_cluster.dart';
-import '../../../../core/enums/unit.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/purchase_request.dart';
@@ -21,12 +20,9 @@ class RegisterPurchaseRequest
     return purchaseRequestRepository.registerPurchaseRequest(
       entityName: params.entityName,
       fundCluster: params.fundCluster,
-      officeName: params.officeName, date: params.date,
-      productName: params.productName,
-      productDescription: params.productDescription,
-      unit: params.unit,
-      quantity: params.quantity,
-      unitCost: params.unitCost,
+      officeName: params.officeName,
+      date: params.date,
+      requestedItems: params.requestedItems,
       purpose: params.purpose,
       requestingOfficerOffice: params.requestingOfficerOffice,
       requestingOfficerPosition: params.requestingOfficerPosition,
@@ -44,11 +40,7 @@ class RegisterPurchaseRequestParams {
     required this.fundCluster,
     required this.officeName,
     required this.date,
-    required this.productName,
-    required this.productDescription,
-    required this.unit,
-    required this.quantity,
-    required this.unitCost,
+    required this.requestedItems,
     required this.purpose,
     required this.requestingOfficerOffice,
     required this.requestingOfficerPosition,
@@ -62,11 +54,7 @@ class RegisterPurchaseRequestParams {
   final FundCluster fundCluster;
   final String officeName;
   final DateTime date;
-  final String productName;
-  final String productDescription;
-  final Unit unit;
-  final int quantity;
-  final double unitCost;
+  final List<Map<String, dynamic>> requestedItems;
   final String purpose;
   final String requestingOfficerOffice;
   final String requestingOfficerPosition;

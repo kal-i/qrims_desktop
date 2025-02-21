@@ -5,9 +5,9 @@ import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(
-    RequestContext context,
-    String id,
-    ) async {
+  RequestContext context,
+  String id,
+) async {
   final connection = context.read<Connection>();
   final repository = IssuanceRepository(connection);
 
@@ -18,10 +18,10 @@ Future<Response> onRequest(
 }
 
 Future<Response> _getParInformation(
-    RequestContext context,
-    IssuanceRepository repository,
-    String id,
-    ) async {
+  RequestContext context,
+  IssuanceRepository repository,
+  String id,
+) async {
   try {
     final par = await repository.getParById(
       id: id,
@@ -31,7 +31,7 @@ Future<Response> _getParInformation(
       return Response.json(
         statusCode: 200,
         body: {
-          'ics': par.toJson(),
+          'par': par.toJson(),
         },
       );
     }

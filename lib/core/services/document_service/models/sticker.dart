@@ -1,15 +1,18 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../features/item_inventory/domain/entities/equipment.dart';
 import '../../../../features/item_issuance/data/models/inventory_custodian_slip.dart';
-import '../../../../features/item_issuance/data/models/issuance_item.dart';
-import '../../../../features/item_issuance/data/models/property_acknowledgement_receipt.dart';
+import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
+import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
+import '../../../../features/item_issuance/domain/entities/property_acknowledgement_receipt.dart';
+import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
-import '../image_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -23,23 +26,21 @@ class Sticker implements BaseDocument {
   }) async {
     final pdf = pw.Document();
 
-    final List<IssuanceItemModel> items;
+    final List<IssuanceItemEntity> items;
     final List<String> mappableData = [];
 
     final String fundSource;
     final String acquisitionDate;
     final String personAccountable;
 
-    if (data is InventoryCustodianSlipModel) {
-      items = data.items as List<IssuanceItemModel>;
-      fundSource =
-          readableEnumConverter(data.purchaseRequestEntity.fundCluster);
+    if (data is InventoryCustodianSlipEntity) {
+      items = data.items;
+      fundSource = data.purchaseRequestEntity.fundCluster.toReadableString();
       personAccountable = data.receivingOfficerEntity.name;
       acquisitionDate = documentDateFormatter(data.issuedDate);
-    } else if (data is PropertyAcknowledgementReceiptModel) {
-      items = data.items as List<IssuanceItemModel>;
-      fundSource =
-          readableEnumConverter(data.purchaseRequestEntity.fundCluster);
+    } else if (data is PropertyAcknowledgementReceiptEntity) {
+      items = data.items;
+      fundSource = data.purchaseRequestEntity.fundCluster.toReadableString();
       personAccountable = data.receivingOfficerEntity.name;
       acquisitionDate = documentDateFormatter(data.issuedDate);
     } else {
@@ -47,16 +48,35 @@ class Sticker implements BaseDocument {
     }
 
     for (int i = 0; i < items.length; i++) {
-      final item = items[i];
+      final equipmentEntity = items[i].itemEntity as EquipmentEntity;
+      final productStockEntity = equipmentEntity.productStockEntity;
+      final shareableItemInformationEntity =
+          equipmentEntity.shareableItemInformationEntity;
+      final manufacturerBrandEntity = equipmentEntity.manufacturerBrandEntity;
+      final modelEntity = equipmentEntity.modelEntity;
+
+      final productNameEntity = productStockEntity.productName;
+      final productName = productNameEntity.name;
+
+      final brandEntity = manufacturerBrandEntity.brand;
+      final brandName = brandEntity.name;
+
+      final encryptedId = shareableItemInformationEntity.encryptedId;
+      final baseItemId = shareableItemInformationEntity.id;
+      final modelName = modelEntity.modelName;
+
+      final serialNo = equipmentEntity.serialNo;
+      final assetClassification =
+          readableEnumConverter(equipmentEntity.assetClassification);
+      final unitCost = shareableItemInformationEntity.unitCost;
 
       mappableData.addAll([
-        '\n${item.itemEntity.itemEntity.id}',
-        readableEnumConverter(item.itemEntity.itemEntity.assetClassification),
+        '\n$baseItemId',
+        readableEnumConverter(assetClassification),
         fundSource,
-        '${item.itemEntity.productStockEntity.productName.name}/ ${item.itemEntity.manufacturerBrandEntity.brand.name}/ ${item.itemEntity.modelEntity.modelName}'
-            .toUpperCase(),
-        item.itemEntity.itemEntity.serialNo!,
-        item.itemEntity.itemEntity.unitCost.toString(),
+        '$productName/ $brandName/ $modelName'.toUpperCase(),
+        serialNo,
+        unitCost.toString(),
         acquisitionDate,
         capitalizeWord(personAccountable),
       ]);
@@ -102,7 +122,8 @@ class Sticker implements BaseDocument {
                         child: pw.Text(
                           'PHYSICAL PROPERTY INVENTORY',
                           style: pw.TextStyle(
-                            font: FontService().getFont('calibriBold'),
+                            font: serviceLocator<FontService>()
+                                .getFont('calibriBold'),
                             fontSize: 12.0,
                             color: PdfColors.white,
                             //fontWeight: pw.FontWeight.bold,
@@ -190,7 +211,8 @@ class Sticker implements BaseDocument {
                     child: pw.Align(
                       alignment: pw.AlignmentDirectional.bottomEnd,
                       child: DocumentComponents.buildQrContainer(
-                          data: item.itemEntity.itemEntity.encryptedId),
+                        data: encryptedId,
+                      ),
                     ),
                   ),
               ],

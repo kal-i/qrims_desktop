@@ -9,6 +9,7 @@ import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
 import '../../models/paginated_issuance_result.dart';
 import '../../models/property_acknowledgement_receipt.dart';
+import '../../models/requisition_and_issue_slip.dart';
 import 'issuance_remote_data_source.dart';
 
 class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
@@ -92,6 +93,56 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
             response.data['par']);
       } else {
         throw const ServerException('PAR registration failed.');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<RequisitionAndIssuanceSlipModel> createRIS({
+    required String prId,
+    required List issuanceItems,
+    String? purpose,
+    String? responsibilityCenterCode,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required String approvingOfficerOffice,
+    required String approvingOfficerPosition,
+    required String approvingOfficerName,
+    required String issuingOfficerOffice,
+    required String issuingOfficerPosition,
+    required String issuingOfficerName,
+  }) async {
+    try {
+      final Map<String, dynamic> params = {
+        'pr_id': prId,
+        'issuance_items': issuanceItems,
+        if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
+        if (responsibilityCenterCode != null &&
+            responsibilityCenterCode.isNotEmpty)
+          'responsibility_center_code': responsibilityCenterCode,
+        "receiving_officer_office": receivingOfficerOffice,
+        "receiving_officer_position": receivingOfficerPosition,
+        "receiving_officer_name": receivingOfficerName,
+        "approving_officer_office": approvingOfficerOffice,
+        "approving_officer_position": approvingOfficerPosition,
+        "approving_officer_name": approvingOfficerName,
+        "issuing_officer_office": issuingOfficerOffice,
+        "issuing_officer_position": issuingOfficerPosition,
+        "issuing_officer_name": issuingOfficerName,
+      };
+
+      final response = await httpService.post(
+        endpoint: risEP,
+        params: params,
+      );
+
+      if (response.statusCode == 200) {
+        return RequisitionAndIssuanceSlipModel.fromJson(response.data['ris']);
+      } else {
+        throw const ServerException('RIS registration failed.');
       }
     } catch (e) {
       throw ServerException(e.toString());

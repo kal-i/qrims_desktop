@@ -50,17 +50,18 @@ class CustomDropdownField<T> extends StatelessWidget {
           hint: Text(
             placeholderText ?? '',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColor.darkPlaceHolderText,
-            ),
+                  color: AppColor.darkPlaceHolderText,
+                ),
           ),
           isExpanded: true,
           onChanged: onChanged,
           value: value,
           decoration: InputDecoration(
             filled: true,
-            fillColor: fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
-                ? AppColor.lightBackground
-                : AppColor.darkBackground),
+            fillColor: fillColor ??
+                (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightBackground
+                    : AppColor.darkBackground),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide.none,
               // borderSide: BorderSide(

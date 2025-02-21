@@ -1,4 +1,3 @@
-import '../../../item_inventory/data/models/item_with_stock.dart';
 import '../../../officer/data/models/officer.dart';
 import '../../../purchase_request/data/models/purchase_request.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
@@ -10,7 +9,6 @@ class PropertyAcknowledgementReceiptModel
   const PropertyAcknowledgementReceiptModel({
     required super.id,
     required super.parId,
-    super.propertyNumber,
     required super.items,
     required super.purchaseRequestEntity,
     required super.issuedDate,
@@ -27,7 +25,8 @@ class PropertyAcknowledgementReceiptModel
     print('par model: $json');
     final purchaseRequest =
         PurchaseRequestModel.fromJson(json['purchase_request']);
-    print('converted pr -----');
+    print('converted pr ----- $purchaseRequest');
+    print('moving on items');
 
     final items = (json['items'] as List<dynamic>).map((item) {
       final issuanceItem = IssuanceItemModel.fromJson(item);
@@ -44,7 +43,6 @@ class PropertyAcknowledgementReceiptModel
     final par = PropertyAcknowledgementReceiptModel(
       id: json['id'] as String,
       parId: json['par_id'] as String,
-      propertyNumber: json['property_number'] as String?,
       items: items,
       purchaseRequestEntity: purchaseRequest,
       issuedDate: json['issued_date'] is String
@@ -71,9 +69,11 @@ class PropertyAcknowledgementReceiptModel
       id: propertyAcknowledgementReceipt.id,
       parId: propertyAcknowledgementReceipt.parId,
       items: propertyAcknowledgementReceipt.items,
-      purchaseRequestEntity: propertyAcknowledgementReceipt.purchaseRequestEntity,
+      purchaseRequestEntity:
+          propertyAcknowledgementReceipt.purchaseRequestEntity,
       issuedDate: propertyAcknowledgementReceipt.issuedDate,
-      receivingOfficerEntity: propertyAcknowledgementReceipt.receivingOfficerEntity,
+      receivingOfficerEntity:
+          propertyAcknowledgementReceipt.receivingOfficerEntity,
       sendingOfficerEntity: propertyAcknowledgementReceipt.sendingOfficerEntity,
       qrCodeImageData: propertyAcknowledgementReceipt.qrCodeImageData,
     );
@@ -84,9 +84,8 @@ class PropertyAcknowledgementReceiptModel
     return {
       'id': id,
       'par_id': parId,
-      'property_number': propertyNumber,
       'items':
-          items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
+          items.map((item) => (item as IssuanceItemModel).toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
       'purchase_request':

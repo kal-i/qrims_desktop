@@ -3,6 +3,7 @@ import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
 import '../../models/paginated_issuance_result.dart';
 import '../../models/property_acknowledgement_receipt.dart';
+import '../../models/requisition_and_issue_slip.dart';
 
 abstract interface class IssuanceRemoteDataSource {
   Future<PaginatedIssuanceResultModel> getIssuances({
@@ -32,7 +33,6 @@ abstract interface class IssuanceRemoteDataSource {
 
   Future<PropertyAcknowledgementReceiptModel> createPAR({
     required String prId,
-    String? propertyNumber,
     required List<dynamic> issuanceItems,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
@@ -40,6 +40,22 @@ abstract interface class IssuanceRemoteDataSource {
     required String sendingOfficerOffice,
     required String sendingOfficerPosition,
     required String sendingOfficerName,
+  });
+
+  Future<RequisitionAndIssuanceSlipModel> createRIS({
+    required String prId,
+    required List<dynamic> issuanceItems,
+    String? purpose,
+    String? responsibilityCenterCode,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required String approvingOfficerOffice,
+    required String approvingOfficerPosition,
+    required String approvingOfficerName,
+    required String issuingOfficerOffice,
+    required String issuingOfficerPosition,
+    required String issuingOfficerName,
   });
 
   Future<IssuanceModel?> getIssuanceById({

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/organization_management/models/officer.dart';
 import 'package:api/src/organization_management/repositories/office_repository.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
 import 'package:api/src/organization_management/repositories/position_repository.dart';
@@ -30,15 +31,24 @@ Future<Response> _getOfficers(
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final searchQuery = queryParams['search_query']?.trim() ?? '';
     final office = queryParams['office'];
+    final statusString = queryParams['status'];
     final sortAscending =
         bool.tryParse(queryParams['sort_ascending'] ?? 'true') ?? true;
-    final isArchived = bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
+    final isArchived =
+        bool.tryParse(queryParams['is_archived'] ?? 'false') ?? false;
+
+    final status = statusString != null
+        ? OfficerStatus.values.firstWhere(
+            (e) => e.toString().split('.').last == statusString,
+          )
+        : OfficerStatus.active;
 
     final officers = await repository.getOfficers(
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
       office: office,
+      status: status,
       sortAscending: sortAscending,
       isArchived: isArchived,
     );
@@ -46,6 +56,7 @@ Future<Response> _getOfficers(
     final officersCount = await repository.getOfficersFilteredCount(
       searchQuery: searchQuery,
       office: office,
+      status: status,
     );
 
     return Response.json(
@@ -95,7 +106,9 @@ Future<Response> _registerOfficer(
           positionId: positionId,
         );
 
-    final officer = await officerRepository.getOfficerById(officerId: officerId,);
+    final officer = await officerRepository.getOfficerById(
+      officerId: officerId,
+    );
 
     return Response.json(
       statusCode: 200,

@@ -71,7 +71,8 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
       items: inventoryCustodianSlipEntity.items,
       purchaseRequestEntity: inventoryCustodianSlipEntity.purchaseRequestEntity,
       issuedDate: inventoryCustodianSlipEntity.issuedDate,
-      receivingOfficerEntity: inventoryCustodianSlipEntity.receivingOfficerEntity,
+      receivingOfficerEntity:
+          inventoryCustodianSlipEntity.receivingOfficerEntity,
       sendingOfficerEntity: inventoryCustodianSlipEntity.sendingOfficerEntity,
       qrCodeImageData: inventoryCustodianSlipEntity.qrCodeImageData,
     );
@@ -83,7 +84,7 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
       'id': id,
       'ics_id': icsId,
       'items':
-          items.map((item) => (item as ItemWithStockModel).toJson()).toList(),
+          items.map((item) => (item as IssuanceItemModel).toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
       'purchase_request':
