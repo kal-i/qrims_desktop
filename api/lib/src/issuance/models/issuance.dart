@@ -1,6 +1,7 @@
 import 'package:api/src/item/models/item.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 
+import '../../entity/model/entity.dart';
 import '../../organization_management/models/officer.dart';
 import '../../organization_management/models/position_history.dart';
 
@@ -15,6 +16,13 @@ enum FundCluster {
   assetIsOwnedByOtherEntity,
   assetIsLeased,
   unknown,
+}
+
+enum IssuanceStatus {
+  unreceived,
+  received,
+  cancelled,
+  returned,
 }
 
 class IssuanceItem {
@@ -142,29 +150,33 @@ class IssuanceItem {
 }
 
 /// Represents an abstract entity base class for issuance
-/// Todos: make pr and receiving officer  nullable and update the table schema
 abstract class Issuance {
   const Issuance({
     required this.id,
-    required this.items,
-    required this.purchaseRequest,
-    required this.receivingOfficer,
     required this.issuedDate,
     this.returnDate,
+    required this.items,
+    required this.purchaseRequest,
+    this.entity,
+    this.fundCluster,
+    this.receivingOfficer,
+    this.issuingOfficer,
     required this.qrCodeImageData,
-    this.isReceived = false,
+    this.status = IssuanceStatus.unreceived,
     this.isArchived = false,
   });
 
   final String id;
-  final List<IssuanceItem> items;
-  final PurchaseRequest purchaseRequest;
-  final Officer receivingOfficer;
   final DateTime issuedDate;
   final DateTime? returnDate;
+  final List<IssuanceItem> items;
+  final PurchaseRequest? purchaseRequest;
+  final Entity? entity;
+  final FundCluster? fundCluster;
+  final Officer? receivingOfficer;
+  final Officer? issuingOfficer; // issuing officer or received from officer
   final String qrCodeImageData;
-  final bool
-      isReceived; // represents if the receiving officer has received the item
+  final IssuanceStatus status;
   final bool isArchived;
 }
 
@@ -185,19 +197,20 @@ class InventoryCustodianSlip extends Issuance {
   const InventoryCustodianSlip({
     required super.id, // refer to the parent/ issuance id
     required this.icsId,
-    required super.items,
     required super.issuedDate,
     super.returnDate,
-    required super.purchaseRequest,
-    required super.receivingOfficer,
-    required this.sendingOfficer,
+    required super.items,
+    super.purchaseRequest,
+    super.entity,
+    super.fundCluster,
+    super.receivingOfficer,
+    super.issuingOfficer,
     required super.qrCodeImageData,
-    super.isReceived,
+    super.status,
     super.isArchived,
   });
 
   final String icsId;
-  final Officer sendingOfficer; // represents the receive from
 
   factory InventoryCustodianSlip.fromJson(Map<String, dynamic> json) {
     print('received raw json by ics: $json'); //
@@ -409,25 +422,29 @@ class InventoryCustodianSlip extends Issuance {
         Officer.fromJson(json['receiving_officer'] as Map<String, dynamic>);
     print('return receiving off: $receivingOfficer');
 
-    final sendingOfficer =
-        Officer.fromJson(json['sending_officer'] as Map<String, dynamic>);
-    print('return sending off: $sendingOfficer');
+    final issuingOfficer =
+        Officer.fromJson(json['issuing_officer'] as Map<String, dynamic>);
+    print('return sending off: $issuingOfficer');
 
     return InventoryCustodianSlip(
       id: json['id'] as String,
       icsId: json['ics_id'] as String,
-      items: items,
       issuedDate: json['issued_date'] is String
           ? DateTime.parse(json['issued_date'] as String)
           : json['issued_date'] as DateTime,
       returnDate: json['return_date'] != null && json['return_date'] is String
           ? DateTime.tryParse(json['return_date'] as String)
           : json['return_date'] as DateTime?,
+      items: items,
       purchaseRequest: purchaseRequest,
+      entity: Entity.fromJson(json['entity'] as Map<String, dynamic>),
+      fundCluster: FundCluster.values.firstWhere(
+          (e) => e.toString().split('.').last == json['fund_cluster']),
       receivingOfficer: receivingOfficer,
-      sendingOfficer: sendingOfficer,
+      issuingOfficer: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
-      isReceived: json['is_received'] as bool,
+      status: IssuanceStatus.values
+          .firstWhere((e) => e.toString().split('.').last == json['status']),
       isArchived: json['is_archived'] as bool,
     );
   }
@@ -436,14 +453,16 @@ class InventoryCustodianSlip extends Issuance {
     return {
       'id': id,
       'ics_id': icsId,
-      'items': items.map((item) => item.toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
-      'purchase_request': purchaseRequest.toJson(),
-      'receiving_officer': receivingOfficer.toJson(),
-      'sending_officer': sendingOfficer.toJson(),
+      'items': items.map((item) => item.toJson()).toList(),
+      'purchase_request': purchaseRequest?.toJson(),
+      'entity': entity?.toJson(),
+      'fund_cluster': fundCluster.toString().split('.').last,
+      'receiving_officer': receivingOfficer?.toJson(),
+      'issuing_officer': issuingOfficer?.toJson(),
       'qr_code_image_data': qrCodeImageData,
-      'is_received': isReceived,
+      'status': status.toString().split('.').last,
       'is_archived': isArchived,
     };
   }
@@ -455,19 +474,20 @@ class PropertyAcknowledgementReceipt extends Issuance {
   const PropertyAcknowledgementReceipt({
     required super.id, // refer to the parent/ issuance id
     required this.parId,
-    required super.items,
     required super.issuedDate,
     super.returnDate,
-    required super.purchaseRequest,
-    required super.receivingOfficer,
-    required this.sendingOfficer,
+    required super.items,
+    super.purchaseRequest,
+    super.entity,
+    super.fundCluster,
+    super.receivingOfficer,
+    super.issuingOfficer,
     required super.qrCodeImageData,
-    super.isReceived,
+    super.status,
     super.isArchived,
   });
 
   final String parId;
-  final Officer sendingOfficer;
 
   factory PropertyAcknowledgementReceipt.fromJson(Map<String, dynamic> json) {
     final prJson = json['purchase_request'];
@@ -670,24 +690,28 @@ class PropertyAcknowledgementReceipt extends Issuance {
     final receivingOfficer =
         Officer.fromJson(json['receiving_officer'] as Map<String, dynamic>);
 
-    final sendingOfficer =
-        Officer.fromJson(json['sending_officer'] as Map<String, dynamic>);
+    final issuingOfficer =
+        Officer.fromJson(json['issuing_officer'] as Map<String, dynamic>);
 
     final par = PropertyAcknowledgementReceipt(
       id: json['id'] as String,
       parId: json['par_id'] as String,
-      items: items,
       issuedDate: json['issued_date'] is String
           ? DateTime.parse(json['issued_date'] as String)
           : json['issued_date'] as DateTime,
       returnDate: json['return_date'] != null && json['return_date'] is String
           ? DateTime.tryParse(json['return_date'] as String)
           : json['return_date'] as DateTime?,
+      items: items,
       purchaseRequest: purchaseRequest,
+      entity: Entity.fromJson(json['entity'] as Map<String, dynamic>),
+      fundCluster: FundCluster.values.firstWhere(
+          (e) => e.toString().split('.').last == json['fund_cluster']),
       receivingOfficer: receivingOfficer,
-      sendingOfficer: sendingOfficer,
+      issuingOfficer: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
-      isReceived: json['is_received'] as bool,
+      status: IssuanceStatus.values
+          .firstWhere((e) => e.toString().split('.').last == json['status']),
       isArchived: json['is_archived'] as bool,
     );
 
@@ -699,14 +723,16 @@ class PropertyAcknowledgementReceipt extends Issuance {
     return {
       'id': id,
       'par_id': parId,
-      'items': items.map((item) => item.toJson()).toList(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
-      'purchase_request': purchaseRequest.toJson(),
-      'receiving_officer': receivingOfficer.toJson(),
-      'sending_officer': sendingOfficer.toJson(),
+      'items': items.map((item) => item.toJson()).toList(),
+      'purchase_request': purchaseRequest?.toJson(),
+      'entity': entity?.toJson(),
+      'fund_cluster': fundCluster.toString().split('.').last,
+      'receiving_officer': receivingOfficer?.toJson(),
+      'issung_officer': issuingOfficer?.toJson(),
       'qr_code_image_data': qrCodeImageData,
-      'is_received': isReceived,
+      'status': status.toString().split('.').last,
       'is_archived': isArchived,
     };
   }
@@ -716,25 +742,32 @@ class RequisitionAndIssueSlip extends Issuance {
   const RequisitionAndIssueSlip({
     required super.id,
     required this.risId,
-    required super.items,
-    required super.purchaseRequest, // get the requesting officer here
-    this.responsibilityCenterCode,
-    this.purpose,
-    required this.approvingOfficer,
-    required this.issuingOfficer,
-    required super.receivingOfficer,
     required super.issuedDate,
     super.returnDate,
+    required super.items,
+    super.purchaseRequest, // get the requesting officer here
+    super.entity,
+    super.fundCluster,
+    this.division,
+    this.responsibilityCenterCode,
+    this.office,
+    this.purpose,
+    super.receivingOfficer,
+    super.issuingOfficer,
+    this.approvingOfficer,
+    this.requestingOfficer,
     required super.qrCodeImageData,
-    super.isReceived,
+    super.status,
     super.isArchived,
   });
 
   final String risId;
-  final String? purpose; // can be extracted from PO if they want
+  final String? division;
   final String? responsibilityCenterCode;
-  final Officer approvingOfficer;
-  final Officer issuingOfficer;
+  final String? office;
+  final String? purpose;
+  final Officer? approvingOfficer;
+  final Officer? requestingOfficer;
 
   factory RequisitionAndIssueSlip.fromJson(Map<String, dynamic> json) {
     final prJson = json['purchase_request'];
@@ -934,33 +967,43 @@ class RequisitionAndIssueSlip extends Issuance {
       'is_archived': prJson['is_archived'],
     });
 
-    final approvingOfficer =
-        Officer.fromJson(json['approving_officer'] as Map<String, dynamic>);
-
     final receivingOfficer =
         Officer.fromJson(json['receiving_officer'] as Map<String, dynamic>);
 
     final issuingOfficer =
         Officer.fromJson(json['issuing_officer'] as Map<String, dynamic>);
 
+    final approvingOfficer =
+        Officer.fromJson(json['approving_officer'] as Map<String, dynamic>);
+
+    final requestingOfficer =
+        Officer.fromJson(json['requesting_officer'] as Map<String, dynamic>);
+
     return RequisitionAndIssueSlip(
       id: json['id'] as String,
       risId: json['ris_id'] as String,
-      items: items,
-      purchaseRequest: purchaseRequest,
-      responsibilityCenterCode: json['responsibility_center_code'] as String?,
-      purpose: json['purpose'] as String?,
-      approvingOfficer: approvingOfficer,
-      issuingOfficer: issuingOfficer,
-      receivingOfficer: receivingOfficer,
       issuedDate: json['issued_date'] is String
           ? DateTime.parse(json['issued_date'] as String)
           : json['issued_date'] as DateTime,
       returnDate: json['return_date'] is String
           ? DateTime.parse(json['return_date'] as String)
           : json['issued_date'] as DateTime,
+      items: items,
+      purchaseRequest: purchaseRequest,
+      entity: Entity.fromJson(json['entity'] as Map<String, dynamic>),
+      fundCluster: FundCluster.values.firstWhere(
+          (e) => e.toString().split('.').last == json['fund_cluster']),
+      division: json['division'] as String?,
+      responsibilityCenterCode: json['responsibility_center_code'] as String?,
+      office: json['office'] as String?,
+      purpose: json['purpose'] as String?,
+      approvingOfficer: approvingOfficer,
+      issuingOfficer: issuingOfficer,
+      receivingOfficer: receivingOfficer,
+      requestingOfficer: requestingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
-      isReceived: json['is_received'] as bool,
+      status: IssuanceStatus.values
+          .firstWhere((e) => e.toString().split('.').last == json['status']),
       isArchived: json['is_archived'] as bool,
     );
   }
@@ -969,17 +1012,22 @@ class RequisitionAndIssueSlip extends Issuance {
     return {
       'id': id,
       'ris_id': risId,
-      'items': items.map((item) => item.toJson()).toList(),
-      'purchase_request': purchaseRequest.toJson(),
-      'responsibility_center_code': responsibilityCenterCode,
-      'purpose': purpose,
-      'approving_officer': approvingOfficer.toJson(),
-      'issuing_officer': issuingOfficer.toJson(),
-      'receiving_officer': receivingOfficer.toJson(),
       'issued_date': issuedDate.toIso8601String(),
       'return_date': returnDate?.toIso8601String(),
+      'items': items.map((item) => item.toJson()).toList(),
+      'purchase_request': purchaseRequest?.toJson(),
+      'entity': entity?.toJson(),
+      'fund_cluster': fundCluster.toString().split('.').last,
+      'division': division,
+      'responsibility_center_code': responsibilityCenterCode,
+      'office': office,
+      'purpose': purpose,
+      'approving_officer': approvingOfficer?.toJson(),
+      'requesting_officer': requestingOfficer?.toJson(),
+      'receiving_officer': receivingOfficer?.toJson(),
+      'issuing_officer': issuingOfficer?.toJson(),
       'qr_code_image_data': qrCodeImageData,
-      'is_received': isReceived,
+      'status': status.toString().split('.').last,
       'is_archived': isArchived,
     };
   }
