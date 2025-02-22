@@ -175,14 +175,16 @@ Future<Response> _receiveIssuance(
         issuance.items.fold(0, (sum, item) => sum! + item.quantity) ?? 0;
 
     // Send notification to supply custodian
-    await notifRepository.sendNotification(
-      recipientId: recipient.id,
-      senderId: currentUserId,
-      message:
-          '', // 'The issuance for Purchase Request #${issuance.purchaseRequest.id} has been received. Quantity received: $issuedQuantity out of ${issuance.purchaseRequest.quantity}. Tracking ID: $id',
-      type: NotificationType.issuanceReceived,
-      referenceId: issuance.purchaseRequest.id,
-    );
+    if (issuance.purchaseRequest != null) {
+      await notifRepository.sendNotification(
+        recipientId: recipient.id,
+        senderId: currentUserId,
+        message:
+            '', // 'The issuance for Purchase Request #${issuance.purchaseRequest.id} has been received. Quantity received: $issuedQuantity out of ${issuance.purchaseRequest.quantity}. Tracking ID: $id',
+        type: NotificationType.issuanceReceived,
+        referenceId: issuance.purchaseRequest!.id,
+      );
+    }
 
     final updatedIssuance = await issuanceRepository.getIssuanceById(
       id: id,

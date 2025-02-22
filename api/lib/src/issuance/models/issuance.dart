@@ -2,6 +2,7 @@ import 'package:api/src/item/models/item.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 
 import '../../entity/model/entity.dart';
+import '../../organization_management/models/office.dart';
 import '../../organization_management/models/officer.dart';
 import '../../organization_management/models/position_history.dart';
 
@@ -764,7 +765,7 @@ class RequisitionAndIssueSlip extends Issuance {
   final String risId;
   final String? division;
   final String? responsibilityCenterCode;
-  final String? office;
+  final Office? office;
   final String? purpose;
   final Officer? approvingOfficer;
   final Officer? requestingOfficer;
@@ -979,6 +980,9 @@ class RequisitionAndIssueSlip extends Issuance {
     final requestingOfficer =
         Officer.fromJson(json['requesting_officer'] as Map<String, dynamic>);
 
+    final office = Office.fromJson(json['office'] as Map<String, dynamic>);
+    print('office: $office');
+
     return RequisitionAndIssueSlip(
       id: json['id'] as String,
       risId: json['ris_id'] as String,
@@ -995,7 +999,7 @@ class RequisitionAndIssueSlip extends Issuance {
           (e) => e.toString().split('.').last == json['fund_cluster']),
       division: json['division'] as String?,
       responsibilityCenterCode: json['responsibility_center_code'] as String?,
-      office: json['office'] as String?,
+      office: office,
       purpose: json['purpose'] as String?,
       approvingOfficer: approvingOfficer,
       issuingOfficer: issuingOfficer,
@@ -1020,7 +1024,7 @@ class RequisitionAndIssueSlip extends Issuance {
       'fund_cluster': fundCluster.toString().split('.').last,
       'division': division,
       'responsibility_center_code': responsibilityCenterCode,
-      'office': office,
+      'office': office?.toJson(),
       'purpose': purpose,
       'approving_officer': approvingOfficer?.toJson(),
       'requesting_officer': requestingOfficer?.toJson(),

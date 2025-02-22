@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:api/src/entity/repository/entity_repository.dart';
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
 import 'package:api/src/notification/model/notification.dart';
 import 'package:api/src/notification/repository/notification_repository.dart';
 import 'package:api/src/organization_management/repositories/office_repository.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
 import 'package:api/src/organization_management/repositories/position_repository.dart';
+import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:api/src/session/session_repository.dart';
 import 'package:api/src/user/repository/user_repository.dart';
@@ -14,6 +17,7 @@ import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   final connection = context.read<Connection>();
+  final entityRepository = EntityRepository(connection);
   final notifRepository = NotificationRepository(connection);
   final issuanceRepository = IssuanceRepository(connection);
   final officeRepository = OfficeRepository(connection);
@@ -26,6 +30,7 @@ Future<Response> onRequest(RequestContext context) async {
   return switch (context.request.method) {
     HttpMethod.post => _createPAR(
         context,
+        entityRepository,
         notifRepository,
         issuanceRepository,
         officeRepository,
@@ -41,6 +46,7 @@ Future<Response> onRequest(RequestContext context) async {
 
 Future<Response> _createPAR(
   RequestContext context,
+  EntityRepository entityRepository,
   NotificationRepository notifRepository,
   IssuanceRepository issuanceRepository,
   OfficeRepository officeRepository,
@@ -54,135 +60,164 @@ Future<Response> _createPAR(
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
-    // get curr user by bearer token
-    final bearerToken = headers['Authorization']?.substring(7) as String;
-    final session = await sessionRepository.sessionFromToken(bearerToken);
-    final responsibleUserId = session!.userId;
-    final responsibleUser = await userRepository.getUserInformation(
-      id: responsibleUserId,
-    );
-
-    final prId = json['pr_id'] as String?;
-    final propertyNumber = json['property_number'] as String?;
-    final issuanceItems = json['issuance_items'] as List<dynamic>?;
-
-    if (prId == null || issuanceItems == null) {
+    /// Get current user from session
+    final bearerToken = headers['Authorization']?.substring(7);
+    if (bearerToken == null) {
       return Response.json(
-        statusCode: HttpStatus.badRequest,
-        body: {'message': 'Missing required fields: pr_id or issuance_items.'},
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'message': 'Authorization token is missing.',
+        },
       );
     }
 
-    final receivingOfficerOffice = json['receiving_officer_office'] as String;
-    final receivingOfficerPosition =
-        json['receiving_officer_position'] as String;
-    final receivingOfficerName = json['receiving_officer_name'] as String;
+    final session = await sessionRepository.sessionFromToken(bearerToken);
+    if (session == null) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'message': 'Invalid or expired token.',
+        },
+      );
+    }
 
-    final sendingOfficerOffice = json['sending_officer_office'] as String;
-    final sendingOfficerPosition = json['sending_officer_position'] as String;
-    final sendingOfficerName = json['sending_officer_name'] as String;
+    final responsibleUser = await userRepository.getUserInformation(
+      id: session.userId,
+    );
+
+    /// Process issuance data
+    final issuanceItems = json['issuance_items'] as List<dynamic>?;
+    final prId = json['pr_id'] as String?;
+    final entity = json['entity'] as String?;
+    final fundClusterData = json['fund_cluster'] as String?;
+
+    if (issuanceItems == null) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {'message': 'Missing required fields: issuance_items.'},
+      );
+    }
+
+    final receivingOfficerOffice = json['receiving_officer_office'] as String?;
+    final receivingOfficerPosition =
+        json['receiving_officer_position'] as String?;
+    final receivingOfficerName = json['receiving_officer_name'] as String?;
+
+    final issuingOfficerOffice = json['issuing_officer_office'] as String?;
+    final issuingOfficerPosition = json['issuing_officer_position'] as String?;
+    final issuingOfficerName = json['issuing_officer_name'] as String?;
 
     // final issuedDate = json['issued_date'] is String
     //     ? DateTime.parse(json['issued_date'] as String)
     //     : json['issued_date'] as DateTime;
 
-    final receivingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
-      officeName: receivingOfficerOffice,
-    );
-    final receivingOfficerPositionId =
-        await positionRepository.checkIfPositionExist(
-      officeId: receivingOfficerOfficeId,
-      positionName: receivingOfficerPosition,
-    );
-    final receivingOfficerId = await officerRepository.checkOfficerIfExist(
-          name: receivingOfficerName,
-          positionId: receivingOfficerPositionId,
-        ) ??
-        await officerRepository.registerOfficer(
-          name: receivingOfficerName,
-          positionId: receivingOfficerPositionId,
-        );
+    String? receivingOfficerOfficeId;
+    String? receivingOfficerPositionId;
+    String? receivingOfficerId;
+    String? issuingOfficerOfficeId;
+    String? issuingOfficerPositionId;
+    String? issuingOfficerId;
 
-    final sendingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
-      officeName: sendingOfficerOffice,
-    );
-    final sendingOfficerPositionId =
-        await positionRepository.checkIfPositionExist(
-      officeId: sendingOfficerOfficeId,
-      positionName: sendingOfficerPosition,
-    );
-    final sendingOfficerId = await officerRepository.checkOfficerIfExist(
-          name: sendingOfficerName,
-          positionId: sendingOfficerPositionId,
-        ) ??
-        await officerRepository.registerOfficer(
-          name: sendingOfficerName,
-          positionId: sendingOfficerPositionId,
-        );
-
-    final recipientOfficer = await officerRepository.getOfficerById(
-      officerId: receivingOfficerId,
-    );
-
-    final initPurchaseRequestData = await prRepository.getPurchaseRequestById(
-      id: prId,
-    );
-
-    if (initPurchaseRequestData == null) {
-      return Response.json(
-        statusCode: HttpStatus.notFound,
-        body: {'message': 'Purchase request not found.'},
+    if (receivingOfficerOffice != null) {
+      receivingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
+        officeName: receivingOfficerOffice,
       );
     }
 
+    if (receivingOfficerPosition != null && receivingOfficerOfficeId != null) {
+      receivingOfficerPositionId =
+          await positionRepository.checkIfPositionExist(
+        officeId: receivingOfficerOfficeId,
+        positionName: receivingOfficerPosition,
+      );
+    }
+
+    if (receivingOfficerName != null && receivingOfficerPositionId != null) {
+      receivingOfficerId = await officerRepository.checkOfficerIfExist(
+            name: receivingOfficerName,
+            positionId: receivingOfficerPositionId,
+          ) ??
+          await officerRepository.registerOfficer(
+            name: receivingOfficerName,
+            positionId: receivingOfficerPositionId,
+          );
+    }
+
+    if (issuingOfficerOffice != null) {
+      issuingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
+        officeName: issuingOfficerOffice,
+      );
+    }
+
+    if (issuingOfficerPosition != null && issuingOfficerOfficeId != null) {
+      issuingOfficerPositionId = await positionRepository.checkIfPositionExist(
+        officeId: issuingOfficerOfficeId,
+        positionName: issuingOfficerPosition,
+      );
+    }
+
+    if (issuingOfficerName != null && issuingOfficerPositionId != null) {
+      issuingOfficerId = await officerRepository.checkOfficerIfExist(
+            name: issuingOfficerName,
+            positionId: issuingOfficerPositionId,
+          ) ??
+          await officerRepository.registerOfficer(
+            name: issuingOfficerName,
+            positionId: issuingOfficerPositionId,
+          );
+    }
+
+    final fundCluster = fundClusterData != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == fundClusterData,
+          )
+        : null;
+
+    /// Create PAR
     final issuanceId = await issuanceRepository.createPAR(
-      propertyNumber: propertyNumber,
-      purchaseRequest: initPurchaseRequestData,
       issuanceItems: issuanceItems,
+      purchaseRequest: prId != null
+          ? await prRepository.getPurchaseRequestById(
+              id: prId,
+            )
+          : null,
+      entityId: entity != null
+          ? await entityRepository.checkEntityIfExist(
+              entityName: entity,
+            )
+          : null,
+      fundCluster: fundCluster,
       receivingOfficerId: receivingOfficerId,
-      sendingOfficerId: sendingOfficerId,
-      //issuedDate: issuedDate,
+      issuingOfficerId: issuingOfficerId,
     );
 
-    print('issuance id: $issuanceId');
-
-    // todo: solve the problem here
     final par = await issuanceRepository.getParById(
       id: issuanceId,
     );
 
-    print('par id: ${par?.parId}');
+    /// Send notification to recipient officer
+    if (prId != null) {
+      final pr = await prRepository.getPurchaseRequestById(
+        id: prId,
+      );
 
-    final postIssuancePurchaseRequestData =
-        await prRepository.getPurchaseRequestById(
-      id: prId,
-    );
+      final recipientOfficer = await officerRepository.getOfficerById(
+        officerId: receivingOfficerId,
+      );
 
-    int remainingQuantity = postIssuancePurchaseRequestData?.requestedItems
-            .map((item) => item.remainingQuantity)
-            .fold(0, (sum, qty) => sum! + qty!) ??
-        0;
+      String message = pr?.purchaseRequestStatus ==
+              PurchaseRequestStatus.fulfilled
+          ? "Purchase request #$prId has been fulfilled and issued. PAR Tracking ID: ${par?.id}."
+          : "Purchase request #$prId has been partially issued. PAR Tracking ID: ${par?.id}.";
 
-    print('remaining qty: $remainingQuantity');
-
-    String message = remainingQuantity == 0
-        ? "Purchase request #$prId has been fulfilled and issued. PAR Tracking ID: ${par?.parId}."
-        : "Purchase request #$prId has been partially issued. PAR Tracking ID: ${par?.parId}.";
-
-    /// reference will always refer to the pr id to build a tracking
-    //if (recipientOfficer?.userId != null) {
-    await notifRepository.sendNotification(
-      recipientId: recipientOfficer?.userId ?? '',
-      senderId: responsibleUserId,
-      message: message,
-      type: NotificationType.issuanceCreated,
-      referenceId: prId,
-    );
-    //}
-
-    print('notif done');
-    print('response items: ${par?.items}');
-    print('response: ${par?.toJson()}');
+      await notifRepository.sendNotification(
+        recipientId: recipientOfficer?.userId ?? '',
+        senderId: session.userId,
+        message: message,
+        type: NotificationType.issuanceCreated,
+        referenceId: prId,
+      );
+    }
 
     return Response.json(
       statusCode: 200,
