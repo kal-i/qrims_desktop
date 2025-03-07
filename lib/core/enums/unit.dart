@@ -2,6 +2,7 @@ enum Unit {
   piece,
   set,
   box,
+  bottle,
   pack,
   bundle,
   roll,

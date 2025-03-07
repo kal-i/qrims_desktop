@@ -6,7 +6,7 @@ class ProductDescriptionEntity extends Equatable {
     this.description,
   });
 
-  final String id;
+  final int id;
   final String? description;
 
   @override

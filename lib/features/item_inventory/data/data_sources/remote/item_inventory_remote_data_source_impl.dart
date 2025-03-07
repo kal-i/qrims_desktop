@@ -143,7 +143,8 @@ class ItemInventoryRemoteDataSourceImpl
   }) async {
     try {
       final Map<String, dynamic> params = {
-        if (fundCluster != null) 'fund_cluster': fundCluster,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
         'product_name': itemName,
         'description': description,
         'manufacturer_name': manufacturerName,

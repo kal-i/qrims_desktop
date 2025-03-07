@@ -25,6 +25,8 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     final pdf = pw.Document();
 
     final par = data as PropertyAcknowledgementReceiptEntity;
+    print(par.issuingOfficerEntity);
+    final purchaseRequestEntity = data.purchaseRequestEntity;
 
     // List to store all rows for the table
     List<pw.TableRow> tableRows = [];
@@ -102,7 +104,9 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
       }
 
       // Add PR information
-      descriptionColumn.add('PR: ${par.purchaseRequestEntity.id}');
+      if (purchaseRequestEntity != null) {
+        descriptionColumn.add('PR: ${purchaseRequestEntity.id}');
+      }
 
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
@@ -176,7 +180,11 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
 
           DocumentComponents.buildRowTextValue(
             text: 'Entity Name:',
-            value: data.purchaseRequestEntity.entity.name,
+            value: purchaseRequestEntity != null
+                ? purchaseRequestEntity.entity.name
+                : par.entity != null
+                    ? par.entity?.name ?? '\n'
+                    : '\n',
             isUnderlined: true,
           ),
 
@@ -189,8 +197,11 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
             children: [
               DocumentComponents.buildRowTextValue(
                 text: 'Fund Cluster:',
-                value:
-                    data.purchaseRequestEntity.fundCluster.toReadableString(),
+                value: purchaseRequestEntity != null
+                    ? purchaseRequestEntity.fundCluster.toReadableString()
+                    : par.fundCluster != null
+                        ? par.fundCluster?.toReadableString() ?? '\n'
+                        : '\n',
               ),
               DocumentComponents.buildRowTextValue(
                 text: 'PAR No:',
@@ -228,18 +239,21 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
                 children: [
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received from:',
-                    officerName: data.sendingOfficerEntity.name,
-                    officerPosition: data.sendingOfficerEntity.positionName,
-                    officerOffice: data.sendingOfficerEntity.officeName,
+                    officerName: data.issuingOfficerEntity?.name ?? '\n',
+                    officerPosition:
+                        data.issuingOfficerEntity?.positionName ?? '\n',
+                    officerOffice:
+                        data.issuingOfficerEntity?.officeName ?? '\n',
+                    date: DateTime.now(),
                     borderRight: false,
-                    isPAR: true,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received by:',
-                    officerName: data.receivingOfficerEntity.name,
-                    officerPosition: data.receivingOfficerEntity.positionName,
-                    officerOffice: data.receivingOfficerEntity.officeName,
-                    isPAR: true,
+                    officerName: data.receivingOfficerEntity?.name ?? '\n',
+                    officerPosition:
+                        data.receivingOfficerEntity?.positionName ?? '\n',
+                    officerOffice:
+                        data.receivingOfficerEntity?.officeName ?? '\n',
                   ),
                 ],
               ),

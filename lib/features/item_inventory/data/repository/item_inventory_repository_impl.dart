@@ -101,6 +101,7 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
     try {
       final response =
           await itemInventoryRemoteDateSource.registerEquipmentItem(
+        fundCluster: fundCluster,
         itemName: itemName,
         description: description,
         specification: specification,

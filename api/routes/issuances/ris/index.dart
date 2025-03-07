@@ -60,7 +60,7 @@ Future<Response> _createRIS(
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
-    print('json received: $json');
+    print('json received by the ris route: $json');
 
     /// Get current user from session
     final bearerToken = headers['Authorization']?.substring(7);
@@ -88,6 +88,11 @@ Future<Response> _createRIS(
     );
 
     /// Process issuance data
+    final issuedDate = json['issued_date'] != null
+        ? json['issued_date'] is String
+            ? DateTime.parse(json['issued_date'] as String)
+            : json['issued_date'] as DateTime
+        : DateTime.now();
     final issuanceItems = json['issuance_items'] as List<dynamic>?;
     final prId = json['pr_id'] as String?;
     final entity = json['entity'] as String?;
@@ -246,6 +251,7 @@ Future<Response> _createRIS(
 
     /// Create RIS
     final issuanceId = await issuanceRepository.createRIS(
+      issuedDate: issuedDate,
       issuanceItems: issuanceItems,
       purchaseRequest: prId != null
           ? await prRepository.getPurchaseRequestById(

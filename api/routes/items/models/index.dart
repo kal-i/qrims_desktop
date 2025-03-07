@@ -26,7 +26,7 @@ Future<Response> _getManufacturerNames(
     final brandName = queryParams['brand_name'] as String;
     final modelName = queryParams['model_name'];
 
-    String? productNameId;
+    int? productNameId;
     String? brandId;
 
     final productNameResult = await repository.checkProductNameIfExist(

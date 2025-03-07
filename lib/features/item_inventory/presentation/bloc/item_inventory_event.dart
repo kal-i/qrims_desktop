@@ -50,7 +50,7 @@ final class SupplyItemRegister extends ItemInventoryEvent {
   const SupplyItemRegister({
     required this.itemName,
     required this.description,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
     required this.unitCost,
@@ -59,7 +59,7 @@ final class SupplyItemRegister extends ItemInventoryEvent {
 
   final String itemName;
   final String description;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
   final double unitCost;

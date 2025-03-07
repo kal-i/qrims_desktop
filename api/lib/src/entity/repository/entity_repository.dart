@@ -70,10 +70,12 @@ class EntityRepository {
     );
 
     if (result.isEmpty) {
+      print('registered new entity');
       return await registerEntity(
         entityName: entityName,
       );
     } else {
+      print('entity id: ${result.first[0]}');
       return result.first[0] as String;
     }
   }

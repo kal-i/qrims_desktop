@@ -23,6 +23,8 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
 
   final _prIdController = TextEditingController();
 
+  final ValueNotifier<bool> _isWithPr = ValueNotifier(false);
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +35,7 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
   @override
   void dispose() {
     _prIdController.dispose();
+    _isWithPr.dispose();
     super.dispose();
   }
 
@@ -40,7 +43,7 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 900.0,
-      height: 300.0,
+      height: 350.0,
       headerTitle: 'Create Inventory Custodian Slip',
       subtitle: 'Issue items below Php 50,000.00',
       content: _buildModalContent(),
@@ -52,7 +55,69 @@ class _CreateIcsModalState extends State<CreateIcsModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildPurchaseRequestIdSuggestionField(),
+        _buildPRSelection(context),
+        const SizedBox(
+          height: 20.0,
+        ),
+        ValueListenableBuilder(
+            valueListenable: _isWithPr,
+            builder: (context, isWithPr, child) {
+              return isWithPr
+                  ? _buildPurchaseRequestIdSuggestionField()
+                  : const SizedBox.shrink();
+            }),
+      ],
+    );
+  }
+
+  Widget _buildPRSelection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Issue with a Purchase Request?',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontSize: 14.0,
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+        const SizedBox(
+          height: 10.0,
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isWithPr,
+          builder: (context, isWithPR, child) {
+            return Row(
+              children: [
+                Radio<bool>(
+                  value: true,
+                  groupValue: isWithPR,
+                  onChanged: (value) {
+                    _isWithPr.value = value!;
+                  },
+                ),
+                Text(
+                  'With PR',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(
+                  width: 20.0,
+                ),
+                Radio<bool>(
+                  value: false,
+                  groupValue: isWithPR,
+                  onChanged: (value) {
+                    _isWithPr.value = value!;
+                  },
+                ),
+                Text(
+                  'Without PR',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }

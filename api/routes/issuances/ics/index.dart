@@ -86,6 +86,16 @@ Future<Response> _createICS(
     );
 
     /// Process issuance data
+    final type = json['type'] != null
+        ? IcsType.values.firstWhere(
+            (e) => e.toString().split('.').last == json['type'],
+          )
+        : null;
+    final issuedDate = json['issued_date'] != null
+        ? json['issued_date'] is String
+            ? DateTime.parse(json['issued_date'] as String)
+            : json['issued_date'] as DateTime
+        : DateTime.now();
     final issuanceItems = json['issuance_items'] as List<dynamic>?;
     final prId = json['pr_id'] as String?;
     final entity = json['entity'] as String?;
@@ -106,10 +116,6 @@ Future<Response> _createICS(
     final issuingOfficerOffice = json['issuing_officer_office'] as String?;
     final issuingOfficerPosition = json['issuing_officer_position'] as String?;
     final issuingOfficerName = json['issuing_officer_name'] as String?;
-
-    // final issuedDate = json['issued_date'] is String
-    //     ? DateTime.parse(json['issued_date'] as String)
-    //     : json['issued_date'] as DateTime;
 
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
@@ -175,6 +181,8 @@ Future<Response> _createICS(
 
     /// Create ICS
     final issuanceId = await issuanceRepository.createICS(
+      type: type,
+      issuedDate: issuedDate,
       issuanceItems: issuanceItems,
       purchaseRequest: prId != null
           ? await prRepository.getPurchaseRequestById(

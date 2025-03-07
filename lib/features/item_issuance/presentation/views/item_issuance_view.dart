@@ -18,25 +18,26 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/enums/document_type.dart';
+import '../../../../core/enums/generate_inventory_report.dart';
+import '../../../../core/enums/issuance_status.dart';
+import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../item_inventory/data/models/supply.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
 import '../../domain/entities/issuance.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../bloc/issuances_bloc.dart';
-import '../components/create_ics_modal.dart';
-import '../components/create_par_modal.dart';
-import '../components/create_ris_modal.dart';
+import '../components/create_issuance_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
+import '../components/generate_inventory_report_modal.dart';
 
 class ItemIssuanceView extends StatefulWidget {
   const ItemIssuanceView({super.key});
@@ -187,7 +188,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     subtitle: 'You cannot perform this activity.')
                 : showDialog(
                     context: context,
-                    builder: (context) => const CreateRisModal(),
+                    builder: (context) => const CreateIssuanceModal(
+                      issuanceType: IssuanceType.ris,
+                    ),
                   ),
           ),
         ),
@@ -205,7 +208,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     subtitle: 'You cannot perform this activity.')
                 : showDialog(
                     context: context,
-                    builder: (context) => const CreateIcsModal(),
+                    builder: (context) => const CreateIssuanceModal(
+                      issuanceType: IssuanceType.ics,
+                    ),
                   ),
           ),
         ),
@@ -223,7 +228,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     subtitle: 'You cannot perform this activity.')
                 : showDialog(
                     context: context,
-                    builder: (context) => const CreateParModal(),
+                    builder: (context) => const CreateIssuanceModal(
+                      issuanceType: IssuanceType.par,
+                    ),
                   ),
           ),
         ),
@@ -290,11 +297,41 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
               return SizedBox(
                 width: 200.0, // Adjust the width of each card as needed
                 child: DocumentCard(
-                  onTap: () => showCustomDocumentPreview(
-                    context: context,
-                    documentObject: null,
-                    docType: template['type'] as DocumentType,
-                  ),
+                  onTap: () => template['title'] == 'RCPI'
+                      ? showDialog(
+                          context: context,
+                          builder: (context) =>
+                              const GenerateInventoryReportModal(
+                            generateInventoryReportType:
+                                GenerateInventoryReportType.rcpi,
+                            modalTitle: 'RPCI',
+                          ),
+                        )
+                      : template['title'] == 'Annex A.8'
+                          ? showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  const GenerateInventoryReportModal(
+                                generateInventoryReportType:
+                                    GenerateInventoryReportType.rcsep,
+                                modalTitle: 'RCSEP',
+                              ),
+                            )
+                          : template['title'] == 'A73'
+                              ? showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      const GenerateInventoryReportModal(
+                                    generateInventoryReportType:
+                                        GenerateInventoryReportType.rcppe,
+                                    modalTitle: 'RCPPE',
+                                  ),
+                                )
+                              : showCustomDocumentPreview(
+                                  context: context,
+                                  documentObject: null,
+                                  docType: template['type'] as DocumentType,
+                                ),
                   title: template['title'] as String,
                 ),
               );
@@ -408,7 +445,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
 
         if (state is ICSRegistered ||
             state is PARRegistered ||
-            state is RISRegistered) {
+            state is RISRegistered ||
+            state is FetchedInventoryReport) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();
@@ -461,14 +499,15 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                       ),
                 ),
                 Text(
-                  issuance.purchaseRequestEntity.id,
+                  issuance.purchaseRequestEntity?.id ?? 'N/A',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
                 ),
                 Text(
-                  capitalizeWord(issuance.receivingOfficerEntity.name),
+                  capitalizeWord(
+                      issuance.receivingOfficerEntity?.name ?? 'N/A'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
@@ -479,7 +518,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: _buildStatusHighlighter(
-                      issuance.isReceived,
+                      issuance.status,
                     ),
                   ),
                 ),
@@ -663,17 +702,24 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     );
   }
 
-  Widget _buildStatusHighlighter(bool isReceived) {
+  Widget _buildStatusHighlighter(IssuanceStatus status) {
     return HighlightStatusContainer(
-      statusStyle: _issuanceStatusStyler(isReceived: isReceived),
+      statusStyle: _issuanceStatusStyler(status: status),
     );
   }
 
-  StatusStyle _issuanceStatusStyler({required bool isReceived}) {
-    if (isReceived) {
-      return StatusStyle.green(label: 'Received');
-    } else {
-      return StatusStyle.yellow(label: 'To be receive');
+  StatusStyle _issuanceStatusStyler({
+    required IssuanceStatus status,
+  }) {
+    switch (status) {
+      case IssuanceStatus.unreceived:
+        return StatusStyle.yellow(label: 'Pending');
+      case IssuanceStatus.received:
+        return StatusStyle.green(label: 'Received');
+      case IssuanceStatus.returned:
+        return StatusStyle.blue(label: 'Returned');
+      case IssuanceStatus.cancelled:
+        return StatusStyle.red(label: 'Cancelled');
     }
   }
 }

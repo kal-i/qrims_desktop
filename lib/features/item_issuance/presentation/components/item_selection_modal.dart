@@ -133,7 +133,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 900.0,
+      width: 1080.0,
       height: 550.0,
       headerTitle: 'Item Inventory',
       subtitle: 'Select item(s) to be issued from the inventory.',
@@ -171,7 +171,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
 
   Widget _buildFilterTableRow() {
     final Map<String, String> filterMapping = {
-      'View All': '',
+      //'View All': '',
       'Supply': 'supply',
       'Equipment': 'equipment',
     };
@@ -235,7 +235,15 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                       ),
                 ),
                 Text(
-                  item.productStockEntity.productDescription?.description ?? '',
+                  (item.shareableItemInformationEntity.specification == null ||
+                          item.shareableItemInformationEntity.specification
+                                  ?.toLowerCase() ==
+                              'n/a')
+                      ? capitalizeWord(item.productStockEntity
+                              .productDescription?.description ??
+                          '')
+                      : capitalizeWord(
+                          '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,

@@ -92,3 +92,11 @@ final class IssuanceArchiveStatusUpdated extends IssuancesState {
 
   final bool isSuccessful;
 }
+
+final class FetchedInventoryReport extends IssuancesState {
+  const FetchedInventoryReport({
+    required this.inventoryReport,
+  });
+
+  final List<Map<String, dynamic>> inventoryReport;
+}

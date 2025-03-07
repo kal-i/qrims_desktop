@@ -1,21 +1,22 @@
-import '../../../officer/domain/entities/officer.dart';
 import 'issuance.dart';
 
 class InventoryCustodianSlipEntity extends IssuanceEntity {
   const InventoryCustodianSlipEntity({
     required super.id,
     required this.icsId,
-    required super.items,
-    required super.purchaseRequestEntity,
     required super.issuedDate,
     super.returnDate,
-    required super.receivingOfficerEntity,
-    required this.sendingOfficerEntity,
+    required super.items,
+    //super.batchItems,
+    super.purchaseRequestEntity,
+    super.entity,
+    super.fundCluster,
+    super.receivingOfficerEntity,
+    super.issuingOfficerEntity,
     required super.qrCodeImageData,
-    super.isReceived,
+    super.status,
     super.isArchived,
   });
 
   final String icsId;
-  final OfficerEntity sendingOfficerEntity;
 }

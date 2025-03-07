@@ -41,30 +41,35 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
   final _concreteIssuanceIdController = TextEditingController();
   final _issuedDateController = TextEditingController();
 
-  final _responsibilityCenterCodeController = TextEditingController();
-  final _purposeController = TextEditingController();
-
   final _prIdController = TextEditingController();
   final _prDateController = TextEditingController();
   final _prStatusController = TextEditingController();
   final _requestingOfficerController = TextEditingController();
   final _approvingOfficerController = TextEditingController();
 
+  final _entityNameController = TextEditingController();
+  final _fundClusterController = TextEditingController();
+
+  final _divisionController = TextEditingController();
+  final _responsibilityCenterCodeController = TextEditingController();
+  final _officeNameController = TextEditingController();
+  final _purposeController = TextEditingController();
+
   final _receivingOfficerOfficeNameController = TextEditingController();
   final _receivingOfficerPositionNameController = TextEditingController();
   final _receivingOfficerNameController = TextEditingController();
 
-  final _sendingOfficerOfficeNameController = TextEditingController();
-  final _sendingOfficerPositionNameController = TextEditingController();
-  final _sendingOfficerNameController = TextEditingController();
+  final _issuingOfficerOfficeNameController = TextEditingController();
+  final _issuingOfficerPositionNameController = TextEditingController();
+  final _issuingOfficerNameController = TextEditingController();
 
   final _approvingOfficerOfficeNameController = TextEditingController();
   final _approvingOfficerPositionNameController = TextEditingController();
   final _approvingOfficerNameController = TextEditingController();
 
-  final _issuingOfficerOfficeNameController = TextEditingController();
-  final _issuingOfficerPositionNameController = TextEditingController();
-  final _issuingOfficerNameController = TextEditingController();
+  final _requestingOfficerOfficeNameController = TextEditingController();
+  final _requestingOfficerPositionNameController = TextEditingController();
+  final _requestingOfficerNameController = TextEditingController();
 
   late TableConfig _prTableConfig;
   late TableConfig _issuedTableConfig;
@@ -134,22 +139,23 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
     _concreteIssuanceIdController.dispose();
     _issuedDateController.dispose();
 
-    _responsibilityCenterCodeController.dispose();
-    _purposeController.dispose();
-
     _prIdController.dispose();
     _prDateController.dispose();
     _prStatusController.dispose();
     _requestingOfficerController.dispose();
     _approvingOfficerController.dispose();
 
+    _entityNameController.dispose();
+    _fundClusterController.dispose();
+
+    _divisionController.dispose();
+    _responsibilityCenterCodeController.dispose();
+    _officeNameController.dispose();
+    _purposeController.dispose();
+
     _receivingOfficerOfficeNameController.dispose();
     _receivingOfficerPositionNameController.dispose();
     _receivingOfficerNameController.dispose();
-
-    _sendingOfficerOfficeNameController.dispose();
-    _sendingOfficerPositionNameController.dispose();
-    _sendingOfficerNameController.dispose();
 
     _approvingOfficerOfficeNameController.dispose();
     _approvingOfficerPositionNameController.dispose();
@@ -158,6 +164,10 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
     _issuingOfficerOfficeNameController.dispose();
     _issuingOfficerPositionNameController.dispose();
     _issuingOfficerNameController.dispose();
+
+    _requestingOfficerOfficeNameController.dispose();
+    _requestingOfficerPositionNameController.dispose();
+    _requestingOfficerNameController.dispose();
 
     super.dispose();
   }
@@ -209,141 +219,142 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
 
             final purchaseRequestEntity = issuanceEntity.purchaseRequestEntity;
 
-            _prIdController.text = purchaseRequestEntity.id;
-            _prDateController.text =
-                documentDateFormatter(purchaseRequestEntity.date);
-            _prStatusController.text = readableEnumConverter(
-                purchaseRequestEntity.purchaseRequestStatus);
+            if (purchaseRequestEntity != null) {
+              _prIdController.text = purchaseRequestEntity.id;
+              _prDateController.text =
+                  documentDateFormatter(purchaseRequestEntity.date);
+              _prStatusController.text = readableEnumConverter(
+                  purchaseRequestEntity.purchaseRequestStatus);
 
-            final requestingOfficerEntity =
-                purchaseRequestEntity.requestingOfficerEntity;
-            final approvingOfficerEntity =
-                purchaseRequestEntity.approvingOfficerEntity;
+              final requestingOfficerEntity =
+                  purchaseRequestEntity.requestingOfficerEntity;
+              final approvingOfficerEntity =
+                  purchaseRequestEntity.approvingOfficerEntity;
 
-            _requestingOfficerController.text = requestingOfficerEntity.name;
-            _approvingOfficerController.text = approvingOfficerEntity.name;
+              _requestingOfficerController.text = requestingOfficerEntity.name;
+              _approvingOfficerController.text = approvingOfficerEntity.name;
 
-            final requestedItemEntities =
-                purchaseRequestEntity.requestedItemEntities;
+              final requestedItemEntities =
+                  purchaseRequestEntity.requestedItemEntities;
 
-            _prTableRows.clear();
-            _prTableRows.addAll(
-              requestedItemEntities
-                  .map(
-                    (requestedItem) => TableData(
-                      id: requestedItem.id.toString(),
-                      columns: [
-                        Text(
-                          requestedItem.productNameEntity.name,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        Text(
-                          requestedItem.productDescriptionEntity.description ??
-                              'No description specified.',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        Text(
-                          requestedItem.quantity.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        Text(
-                          requestedItem.unitCost.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        Text(
-                          requestedItem.remainingQuantity.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        Text(
-                          'Not complete',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .toList(),
-            );
+              _prTableRows.clear();
+              _prTableRows.addAll(
+                requestedItemEntities
+                    .map(
+                      (requestedItem) => TableData(
+                        id: requestedItem.id.toString(),
+                        columns: [
+                          Text(
+                            requestedItem.productNameEntity.name,
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            requestedItem
+                                    .productDescriptionEntity.description ??
+                                'No description specified.',
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            requestedItem.quantity.toString(),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            requestedItem.unitCost.toString(),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            requestedItem.remainingQuantity.toString(),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            'Not complete',
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              );
+            }
 
             final receivingOfficerEntity =
                 issuanceEntity.receivingOfficerEntity;
+            final issuingOfficerEntity = issuanceEntity.issuingOfficerEntity;
 
             _issuanceIdController.text = issuanceEntity.id;
 
             _receivingOfficerOfficeNameController.text =
-                receivingOfficerEntity.officeName;
+                receivingOfficerEntity?.officeName ?? 'N/A';
             _receivingOfficerPositionNameController.text =
-                receivingOfficerEntity.positionName;
-            _receivingOfficerNameController.text = receivingOfficerEntity.name;
+                receivingOfficerEntity?.positionName ?? 'N/A';
+            _receivingOfficerNameController.text =
+                receivingOfficerEntity?.name ?? 'N/A';
+
+            _issuingOfficerOfficeNameController.text =
+                issuingOfficerEntity?.officeName ?? 'N/A';
+            _issuingOfficerPositionNameController.text =
+                issuingOfficerEntity?.positionName ?? 'N/A';
+            _issuingOfficerNameController.text =
+                issuingOfficerEntity?.name ?? 'N/A ';
 
             if (issuanceEntity is InventoryCustodianSlipEntity) {
-              final sendingOfficerEntity = issuanceEntity.sendingOfficerEntity;
-
               _concreteIssuanceIdController.text = issuanceEntity.icsId;
-
-              _sendingOfficerOfficeNameController.text =
-                  sendingOfficerEntity.officeName;
-              _sendingOfficerPositionNameController.text =
-                  sendingOfficerEntity.positionName;
-              _sendingOfficerNameController.text = sendingOfficerEntity.name;
             }
 
             if (issuanceEntity is PropertyAcknowledgementReceiptEntity) {
-              final sendingOfficerEntity = issuanceEntity.sendingOfficerEntity;
-
               _concreteIssuanceIdController.text = issuanceEntity.parId;
-
-              _sendingOfficerOfficeNameController.text =
-                  sendingOfficerEntity.officeName;
-              _sendingOfficerPositionNameController.text =
-                  sendingOfficerEntity.positionName;
-              _sendingOfficerNameController.text = sendingOfficerEntity.name;
             }
 
             if (issuanceEntity is RequisitionAndIssueSlipEntity) {
+              final officeEntity = issuanceEntity.office;
               final approvingOfficerEntity =
                   issuanceEntity.approvingOfficerEntity;
-              final issuingOfficerEntity = issuanceEntity.issuingOfficerEntity;
+              final requestingOfficerEntity =
+                  issuanceEntity.requestingOfficerEntity;
 
+              _divisionController.text = issuanceEntity.division ?? 'N/A';
               _responsibilityCenterCodeController.text =
                   issuanceEntity.responsibilityCenterCode ?? 'N/A';
+              _officeNameController.text = officeEntity?.officeName ?? 'N/A';
               _purposeController.text = issuanceEntity.purpose ?? 'N/A';
 
               _approvingOfficerOfficeNameController.text =
-                  approvingOfficerEntity.officeName;
+                  approvingOfficerEntity?.officeName ?? 'N/A';
               _approvingOfficerPositionNameController.text =
-                  approvingOfficerEntity.positionName;
+                  approvingOfficerEntity?.positionName ?? 'N/A';
               _approvingOfficerNameController.text =
-                  approvingOfficerEntity.name;
+                  approvingOfficerEntity?.name ?? 'N/A';
 
-              _issuingOfficerOfficeNameController.text =
-                  issuingOfficerEntity.officeName;
-              _issuingOfficerPositionNameController.text =
-                  issuingOfficerEntity.positionName;
-              _issuingOfficerNameController.text = issuingOfficerEntity.name;
+              _requestingOfficerOfficeNameController.text =
+                  requestingOfficerEntity?.officeName ?? 'N/A';
+              _requestingOfficerPositionNameController.text =
+                  requestingOfficerEntity?.positionName ?? 'N/A';
+              _requestingOfficerNameController.text =
+                  requestingOfficerEntity?.name ?? 'N/A';
             }
           }
         },
@@ -776,7 +787,7 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
 
   Widget _buildSendingOfficerOfficeSuggestionField() {
     return CustomFormTextField(
-      controller: _sendingOfficerOfficeNameController,
+      //controller: _sendingOfficerOfficeNameController,
       enabled: false,
       label: 'Sending Officer Office',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -820,7 +831,7 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
 
   Widget _buildSendingOfficerPositionSuggestionField() {
     return CustomFormTextField(
-      controller: _sendingOfficerPositionNameController,
+      //controller: _sendingOfficerPositionNameController,
       enabled: false,
       label: 'Sending Officer Position',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -864,7 +875,7 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
 
   Widget _buildSendingOfficerNameSuggestionField() {
     return CustomFormTextField(
-      controller: _sendingOfficerNameController,
+      //controller: _sendingOfficerNameController,
       enabled: false,
       label: 'Sending Officer Name',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light

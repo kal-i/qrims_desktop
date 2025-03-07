@@ -26,6 +26,9 @@ import 'features/auth/domain/usecases/user_verify_otp.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 // Navigation
+import 'features/item_issuance/domain/usecases/get_inventory_property_report.dart';
+import 'features/item_issuance/domain/usecases/get_inventory_semi_expendable_report.dart';
+import 'features/item_issuance/domain/usecases/get_inventory_supply_report.dart';
 import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source.dart';
 import 'features/navigation/data/data/data_sources/remote/notification_remote_data_source_impl.dart';
 import 'features/navigation/data/data/repository/notification_repository_impl.dart';

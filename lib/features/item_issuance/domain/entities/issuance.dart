@@ -1,27 +1,38 @@
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/enums/issuance_status.dart';
 import '../../../officer/domain/entities/officer.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
+import 'batch_item.dart';
 import 'issuance_item.dart';
 
 abstract class IssuanceEntity {
   const IssuanceEntity({
     required this.id,
-    required this.items,
-    required this.purchaseRequestEntity,
-    required this.receivingOfficerEntity,
     required this.issuedDate,
     this.returnDate,
+    required this.items,
+    //this.batchItems,
+    this.purchaseRequestEntity,
+    this.entity,
+    this.fundCluster,
+    this.receivingOfficerEntity,
+    this.issuingOfficerEntity,
     required this.qrCodeImageData,
-    this.isReceived = false,
+    this.status = IssuanceStatus.unreceived,
     this.isArchived = false,
   });
 
   final String id;
-  final List<IssuanceItemEntity> items;
-  final PurchaseRequestEntity purchaseRequestEntity;
-  final OfficerEntity receivingOfficerEntity;
   final DateTime issuedDate;
   final DateTime? returnDate;
+  final List<IssuanceItemEntity> items;
+  //final List<BatchItemEntity>? batchItems;
+  final PurchaseRequestEntity? purchaseRequestEntity;
+  final Entity? entity;
+  final FundCluster? fundCluster;
+  final OfficerEntity? receivingOfficerEntity;
+  final OfficerEntity? issuingOfficerEntity;
   final String qrCodeImageData;
-  final bool isReceived;
+  final IssuanceStatus status;
   final bool isArchived;
 }

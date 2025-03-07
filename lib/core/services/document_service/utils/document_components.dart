@@ -378,7 +378,7 @@ class DocumentComponents {
               font: serviceLocator<FontService>().getFont(
                 isPAR ? 'timesNewRomanBold' : 'timesNewRomanRegular',
               ),
-              fontSize: 10.0,
+              fontSize: 8.0,
             ),
           ),
           pw.SizedBox(
@@ -392,7 +392,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanBold'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                   decoration: isPAR ? pw.TextDecoration.underline : null,
                 ),
               ),
@@ -401,7 +401,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                 ),
               ),
               pw.Text(
@@ -409,7 +409,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                 ),
               ),
               pw.Text(

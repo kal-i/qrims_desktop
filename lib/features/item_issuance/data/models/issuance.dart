@@ -6,13 +6,17 @@ import 'requisition_and_issue_slip.dart';
 abstract class IssuanceModel extends IssuanceEntity {
   const IssuanceModel({
     required super.id,
-    required super.items,
-    required super.purchaseRequestEntity,
-    required super.receivingOfficerEntity,
     required super.issuedDate,
-    required super.returnDate,
+    super.returnDate,
+    required super.items,
+    //super.batchItems,
+    super.purchaseRequestEntity,
+    super.entity,
+    super.fundCluster,
+    super.receivingOfficerEntity,
+    super.issuingOfficerEntity,
     required super.qrCodeImageData,
-    super.isReceived,
+    super.status,
     super.isArchived,
   });
 

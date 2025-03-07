@@ -371,6 +371,21 @@ void _registerItemIssuanceDependencies() {
         issuanceRepository: serviceLocator(),
       ),
     )
+    ..registerFactory(
+      () => GetInventorySupplyReport(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+      () => GetInventorySemiExpendablePropertyReport(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+      () => GetInventoryPropertyReport(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
     ..registerFactory<IssuancesBloc>(
       () => IssuancesBloc(
         getIssuanceById: serviceLocator(),
@@ -380,6 +395,9 @@ void _registerItemIssuanceDependencies() {
         createPAR: serviceLocator(),
         createRIS: serviceLocator(),
         updateIssuanceArchiveStatus: serviceLocator(),
+        getInventorySupplies: serviceLocator(),
+        getInventorySemiExpendablePropertyReport: serviceLocator(),
+        getInventoryPropertyReport: serviceLocator(),
       ),
     );
 }

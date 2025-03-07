@@ -27,7 +27,7 @@ Future<Response> _getDescriptions(
 
     print(productName);
 
-    String? productNameId;
+    int? productNameId;
 
     final productNameResult = await repository.checkProductNameIfExist(
       productName: productName,

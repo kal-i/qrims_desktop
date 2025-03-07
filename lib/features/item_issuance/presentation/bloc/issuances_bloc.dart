@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/enums/ics_type.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
 import '../../domain/entities/issuance.dart';
 import '../../domain/entities/matched_item_with_pr.dart';
@@ -9,6 +12,9 @@ import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../../domain/usecases/create_ics.dart';
 import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/create_ris.dart';
+import '../../domain/usecases/get_inventory_property_report.dart';
+import '../../domain/usecases/get_inventory_semi_expendable_report.dart';
+import '../../domain/usecases/get_inventory_supply_report.dart';
 import '../../domain/usecases/get_issuance_by_id.dart';
 import '../../domain/usecases/get_paginated_issuances.dart';
 import '../../domain/usecases/match_item_with_pr.dart';
@@ -26,6 +32,10 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required CreatePAR createPAR,
     required CreateRIS createRIS,
     required UpdateIssuanceArchiveStatus updateIssuanceArchiveStatus,
+    required GetInventorySupplyReport getInventorySupplies,
+    required GetInventorySemiExpendablePropertyReport
+        getInventorySemiExpendablePropertyReport,
+    required GetInventoryPropertyReport getInventoryPropertyReport,
   })  : _getIssuanceById = getIssuanceById,
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
@@ -33,6 +43,10 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _createPar = createPAR,
         _createRIS = createRIS,
         _updateIssuanceArchiveStatus = updateIssuanceArchiveStatus,
+        _getInventorySupplies = getInventorySupplies,
+        _getInventorySemiExpendablePropertyReport =
+            getInventorySemiExpendablePropertyReport,
+        _getInventoryPropertyReport = getInventoryPropertyReport,
         super(IssuancesInitial()) {
     on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
@@ -41,6 +55,10 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<CreatePAREvent>(_onCreatePAR);
     on<CreateRISEvent>(_onCreateRIS);
     on<UpdateIssuanceArchiveStatusEvent>(_onUpdateIssuanceArchiveStatus);
+    on<GetInventorySupplyReportEvent>(_onGetInventorySupplyReport);
+    on<GetInventorySemiExpendablePropertyReportEvent>(
+        _onGetInventorySemiExpendablePropertyReport);
+    on<GetInventoryPropertyReportEvent>(_onGetInventoryPropertyReport);
   }
 
   final GetIssuanceById _getIssuanceById;
@@ -50,6 +68,10 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final CreatePAR _createPar;
   final CreateRIS _createRIS;
   final UpdateIssuanceArchiveStatus _updateIssuanceArchiveStatus;
+  final GetInventorySupplyReport _getInventorySupplies;
+  final GetInventorySemiExpendablePropertyReport
+      _getInventorySemiExpendablePropertyReport;
+  final GetInventoryPropertyReport _getInventoryPropertyReport;
 
   void _onGetIssuanceByIdEvent(
     GetIssuanceByIdEvent event,
@@ -134,14 +156,18 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
 
     final response = await _createICS(
       CreateICSParams(
-        prId: event.prId,
+        issuedDate: event.issuedDate,
+        type: event.type,
         issuanceItems: event.issuanceItems,
+        prId: event.prId,
+        entityName: event.entityName,
+        fundCluster: event.fundCluster,
         receivingOfficerOffice: event.receivingOfficerOffice,
         receivingOfficerPosition: event.receivingOfficerPosition,
         receivingOfficerName: event.receivingOfficerName,
-        sendingOfficerOffice: event.sendingOfficerOffice,
-        sendingOfficerPosition: event.sendingOfficerPosition,
-        sendingOfficerName: event.sendingOfficerName,
+        issuingOfficerOffice: event.issuingOfficerOffice,
+        issuingOfficerPosition: event.issuingOfficerPosition,
+        issuingOfficerName: event.issuingOfficerName,
       ),
     );
 
@@ -165,14 +191,17 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
 
     final response = await _createPar(
       CreatePARParams(
-        prId: event.prId,
+        issuedDate: event.issuedDate,
         issuanceItems: event.issuanceItems,
+        prId: event.prId,
+        entityName: event.entityName,
+        fundCluster: event.fundCluster,
         receivingOfficerOffice: event.receivingOfficerOffice,
         receivingOfficerPosition: event.receivingOfficerPosition,
         receivingOfficerName: event.receivingOfficerName,
-        sendingOfficerOffice: event.sendingOfficerOffice,
-        sendingOfficerPosition: event.sendingOfficerPosition,
-        sendingOfficerName: event.sendingOfficerName,
+        issuingOfficerOffice: event.issuingOfficerOffice,
+        issuingOfficerPosition: event.issuingOfficerPosition,
+        issuingOfficerName: event.issuingOfficerName,
       ),
     );
 
@@ -194,21 +223,31 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   ) async {
     emit(IssuancesLoading());
 
+    print('on create ris event: ${event.issuingOfficerPosition}');
+
     final response = await _createRIS(
       CreateRISParams(
-        prId: event.prId,
+        issuedDate: event.issuedDate,
         issuanceItems: event.issuanceItems,
-        purpose: event.purpose,
+        prId: event.prId,
+        entityName: event.entityName,
+        fundCluster: event.fundCluster,
+        division: event.division,
         responsibilityCenterCode: event.responsibilityCenterCode,
+        officeName: event.officeName,
+        purpose: event.purpose,
         receivingOfficerOffice: event.receivingOfficerOffice,
         receivingOfficerPosition: event.receivingOfficerPosition,
         receivingOfficerName: event.receivingOfficerName,
-        approvingOfficerOffice: event.approvingOfficerOffice,
-        approvingOfficerPosition: event.approvingOfficerPosition,
-        approvingOfficerName: event.approvingOfficerName,
         issuingOfficerOffice: event.issuingOfficerOffice,
         issuingOfficerPosition: event.issuingOfficerPosition,
         issuingOfficerName: event.issuingOfficerName,
+        approvingOfficerOffice: event.approvingOfficerOffice,
+        approvingOfficerPosition: event.approvingOfficerPosition,
+        approvingOfficerName: event.approvingOfficerName,
+        requestingOfficerOffice: event.requestingOfficerOffice,
+        requestingOfficerPosition: event.requestingOfficerPosition,
+        requestingOfficerName: event.requestingOfficerName,
       ),
     );
 
@@ -242,6 +281,77 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         IssuanceArchiveStatusUpdated(
           isSuccessful: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGetInventorySupplyReport(
+    GetInventorySupplyReportEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getInventorySupplies(
+      GenerateRPCIParams(
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        FetchedInventoryReport(
+          inventoryReport: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGetInventorySemiExpendablePropertyReport(
+    GetInventorySemiExpendablePropertyReportEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getInventorySemiExpendablePropertyReport(
+      GenerateRPSEPParams(
+        startDate: event.startDate,
+        endDate: event.endDate,
+        assetSubClass: event.assetSubClass,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        FetchedInventoryReport(
+          inventoryReport: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGetInventoryPropertyReport(
+    GetInventoryPropertyReportEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getInventoryPropertyReport(
+      GenerateRPPEParams(
+        startDate: event.startDate,
+        endDate: event.endDate,
+        assetSubClass: event.assetSubClass,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        FetchedInventoryReport(
+          inventoryReport: r,
         ),
       ),
     );

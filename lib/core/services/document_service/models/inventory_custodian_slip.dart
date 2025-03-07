@@ -24,6 +24,7 @@ class InventoryCustodianSlip implements BaseDocument {
     final pdf = pw.Document();
 
     final ics = data as InventoryCustodianSlipEntity;
+    final purchaseRequestEntity = data.purchaseRequestEntity;
     print('issued items length: ${ics.items.length}');
 
     // List to store all rows for the table
@@ -101,7 +102,7 @@ class InventoryCustodianSlip implements BaseDocument {
 
     // Loop through each item to generate rows
     for (final issuedItem in ics.items) {
-      // Extract common information
+      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
         issuedItem.itemEntity.productStockEntity.productDescription
                 ?.description ??
@@ -131,8 +132,13 @@ class InventoryCustodianSlip implements BaseDocument {
         );
       }
 
+      print(
+          'Item ID: ${issuedItem.itemEntity.shareableItemInformationEntity.id}');
+      print('Description Column: $descriptionColumn');
       // Add PR information
-      descriptionColumn.add('PR: ${ics.purchaseRequestEntity.id}');
+      if (purchaseRequestEntity != null) {
+        descriptionColumn.add('PR: ${purchaseRequestEntity.id}');
+      }
 
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
@@ -199,7 +205,11 @@ class InventoryCustodianSlip implements BaseDocument {
           pw.SizedBox(height: 20.0),
           DocumentComponents.buildRowTextValue(
             text: 'Entity Name:',
-            value: data.purchaseRequestEntity.entity.name,
+            value: purchaseRequestEntity != null
+                ? purchaseRequestEntity.entity.name
+                : ics.entity != null
+                    ? ics.entity?.name ?? '\n'
+                    : '\n',
           ),
           pw.SizedBox(height: 3.0),
           pw.Row(
@@ -207,8 +217,11 @@ class InventoryCustodianSlip implements BaseDocument {
             children: [
               DocumentComponents.buildRowTextValue(
                 text: 'Fund Cluster:',
-                value:
-                    data.purchaseRequestEntity.fundCluster.toReadableString(),
+                value: purchaseRequestEntity != null
+                    ? purchaseRequestEntity.fundCluster.toReadableString()
+                    : ics.fundCluster != null
+                        ? ics.fundCluster?.toReadableString() ?? '\n'
+                        : '\n',
               ),
               DocumentComponents.buildRowTextValue(
                 text: 'ICS No:',
@@ -238,17 +251,21 @@ class InventoryCustodianSlip implements BaseDocument {
                 children: [
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received from:',
-                    officerName: data.sendingOfficerEntity.name,
-                    officerPosition: data.sendingOfficerEntity.positionName,
-                    officerOffice: data.sendingOfficerEntity.officeName,
+                    officerName: data.issuingOfficerEntity?.name ?? '\n',
+                    officerPosition:
+                        data.issuingOfficerEntity?.positionName ?? '\n',
+                    officerOffice:
+                        data.issuingOfficerEntity?.officeName ?? '\n',
                     date: DateTime.now(),
                     borderRight: false,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received by:',
-                    officerName: data.receivingOfficerEntity.name,
-                    officerPosition: data.receivingOfficerEntity.positionName,
-                    officerOffice: data.receivingOfficerEntity.officeName,
+                    officerName: data.receivingOfficerEntity?.name ?? '\n',
+                    officerPosition:
+                        data.receivingOfficerEntity?.positionName ?? '\n',
+                    officerOffice:
+                        data.receivingOfficerEntity?.officeName ?? '\n',
                   ),
                 ],
               ),

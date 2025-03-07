@@ -313,13 +313,11 @@ class AppRoutingConfig {
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
-                  final purpose = extras['purpose'] as IssuancePurpose;
                   final type = extras['type'] as IssuanceType;
                   final prId = extras['pr_id'] as String;
 
                   return MaterialPage(
                     child: ReusableItemIssuanceView(
-                      issuancePurpose: purpose,
                       issuanceType: type,
                       prId: prId,
                     ),

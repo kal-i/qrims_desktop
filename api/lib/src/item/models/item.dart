@@ -25,6 +25,7 @@ enum Unit {
   piece,
   set,
   box,
+  bottle,
   pack,
   bundle,
   roll,
@@ -91,12 +92,12 @@ class ProductName {
     required this.name,
   });
 
-  final String id;
+  final int id;
   final String name;
 
   factory ProductName.fromJson(Map<String, dynamic> json) {
     return ProductName(
-      id: json['product_name_id'] as String,
+      id: json['product_name_id'] as int,
       name: json['product_name'] as String,
     );
   }
@@ -116,12 +117,12 @@ class ProductDescription {
     this.description,
   });
 
-  final String id;
+  final int id;
   final String? description;
 
   factory ProductDescription.fromJson(Map<String, dynamic> json) {
     return ProductDescription(
-      id: json['product_description_id'] as String,
+      id: json['product_description_id'] as int,
       description: json['product_description'] as String? ?? '',
     );
   }
@@ -221,14 +222,14 @@ class Model {
   });
 
   final String id;
-  final String productNameId;
+  final int productNameId;
   final String brandId;
   final String modelName;
 
   factory Model.fromJson(Map<String, dynamic> json) {
     return Model(
       id: json['model_id'] as String,
-      productNameId: json['product_name_id'] as String,
+      productNameId: json['product_name_id'] as int,
       brandId: json['brand_id'] as String,
       modelName: json['model_name'] as String,
     );
@@ -465,8 +466,8 @@ class ShareableItemInformationModel {
   });
 
   final String id;
-  final String productNameId;
-  final String productDescriptionId;
+  final int productNameId;
+  final int productDescriptionId;
   final String? specification;
   final Unit unit;
   final int quantity;
@@ -483,8 +484,8 @@ class ShareableItemInformationModel {
 
     final shareableItemInformationModel = ShareableItemInformationModel(
       id: json['base_item_id'] as String,
-      productNameId: json['product_name_id'] as String,
-      productDescriptionId: json['product_description_id'] as String,
+      productNameId: json['product_name_id'] as int,
+      productDescriptionId: json['product_description_id'] as int,
       specification: json['specification'] as String?,
       unit: unit,
       quantity: json['quantity'] as int,
@@ -696,6 +697,61 @@ class Equipment extends BaseItemModel {
       'asset_classification': assetClassification.toString().split('.').last,
       'asset_sub_class': assetSubClass.toString().split('.').last,
       'estimated_useful_life': estimatedUsefulLife,
+    };
+  }
+}
+
+enum BatchStatus {
+  available,
+  issued,
+}
+
+class BatchItem {
+  const BatchItem({
+    required this.id,
+    required this.baseItemId,
+    required this.batchCode,
+    this.status = BatchStatus.available,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  final int id;
+  final String baseItemId;
+  final String batchCode;
+  final BatchStatus status;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+
+  factory BatchItem.fromJson(Map<String, dynamic> json) {
+    return BatchItem(
+      id: json['id'] as int,
+      baseItemId: json['base_item_id'] as String,
+      batchCode: json['batch_code'] as String,
+      status: BatchStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+      ),
+      createdAt: json['created_at'] is String
+          ? DateTime.parse(
+              json['creaated_at'] as String,
+            )
+          : json['created_at'] as DateTime,
+      updatedAt: json['updated_at'] != null
+          ? json['updated_at'] is String
+              ? DateTime.parse(json['updated_at'] as String)
+              : json['updated_at'] as DateTime
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'base_item_id': baseItemId,
+      'batch_code': batchCode,
+      'status': status.toString().split('.').last,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

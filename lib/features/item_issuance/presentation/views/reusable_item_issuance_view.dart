@@ -8,17 +8,21 @@ import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/common/components/custom_date_picker.dart';
+import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
-import '../../../../core/enums/issuance_purpose.dart';
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/enums/ics_type.dart';
 import '../../../../core/enums/issuance_type.dart';
+import '../../../../core/services/entity_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/document_date_formatter.dart';
+import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../core/utils/show_confirmation_dialog.dart';
 import '../../../../init_dependencies.dart';
@@ -30,14 +34,12 @@ import '../components/item_selection_modal.dart';
 class ReusableItemIssuanceView extends StatefulWidget {
   const ReusableItemIssuanceView({
     super.key,
-    required this.issuancePurpose,
     required this.issuanceType,
-    required this.prId,
+    this.prId,
   });
 
-  final IssuancePurpose issuancePurpose;
   final IssuanceType issuanceType;
-  final String prId;
+  final String? prId;
 
   @override
   State<ReusableItemIssuanceView> createState() =>
@@ -46,6 +48,7 @@ class ReusableItemIssuanceView extends StatefulWidget {
 
 class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   late IssuancesBloc _issuancesBloc;
+  late EntitySuggestionService _entitySuggestionService;
   late OfficerSuggestionsService _officerSuggestionsService;
 
   final _formKey = GlobalKey<FormState>();
@@ -56,32 +59,34 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   final _requestingOfficerController = TextEditingController();
   final _approvingOfficerController = TextEditingController();
 
+  final _entityNameController = TextEditingController();
+
+  final _divisionController = TextEditingController();
+  final _responsibilityCenterCodeController = TextEditingController();
+  final _officeNameController = TextEditingController();
+  final _purposeController = TextEditingController();
+
   final _receivingOfficerOfficeNameController = TextEditingController();
   final _receivingOfficerPositionNameController = TextEditingController();
   final _receivingOfficerNameController = TextEditingController();
-
-  final _sendingOfficerOfficeNameController = TextEditingController();
-  final _sendingOfficerPositionNameController = TextEditingController();
-  final _sendingOfficerNameController = TextEditingController();
-
-  final _purposeController = TextEditingController();
-  final _responsibilityCenterCode = TextEditingController();
-
-  final _approvingOfficerOfficeNameController = TextEditingController();
-  final _approvingOfficerPositionNameController = TextEditingController();
-  final _approvingOfficerNameController = TextEditingController();
 
   final _issuingOfficerOfficeNameController = TextEditingController();
   final _issuingOfficerPositionNameController = TextEditingController();
   final _issuingOfficerNameController = TextEditingController();
 
+  final _approvingOfficerOfficeNameController = TextEditingController();
+  final _approvingOfficerPositionNameController = TextEditingController();
+  final _approvingOfficerNameController = TextEditingController();
+
+  final _requestingOfficerOfficeNameController = TextEditingController();
+  final _requestingOfficerPositionNameController = TextEditingController();
+  final _requestingOfficerNameController = TextEditingController();
+
+  final ValueNotifier<IcsType?> _selectedIcsType = ValueNotifier(null);
+  final ValueNotifier<FundCluster?> _selectedFundCluster = ValueNotifier(null);
   final ValueNotifier<String?> _selectedReceivingOfficerOffice =
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedReceivingOfficerPosition =
-      ValueNotifier(null);
-  final ValueNotifier<String?> _selectedSendingOfficerOffice =
-      ValueNotifier(null);
-  final ValueNotifier<String?> _selectedSendingOfficerPosition =
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedApprovingOfficerOffice =
       ValueNotifier(null);
@@ -90,6 +95,10 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   final ValueNotifier<String?> _selectedIssuingOfficerOffice =
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedIssuingOfficerPosition =
+      ValueNotifier(null);
+  final ValueNotifier<String?> _selectedRequestingOfficerOffice =
+      ValueNotifier(null);
+  final ValueNotifier<String?> _selectedRequestingOfficerPosition =
       ValueNotifier(null);
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
 
@@ -116,15 +125,18 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
+    _entitySuggestionService = serviceLocator<EntitySuggestionService>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _issuancesBloc.add(
-        MatchItemWithPrEvent(
-          prId: widget.prId,
-        ),
-      );
-    });
+    if (widget.prId != null && widget.prId!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _issuancesBloc.add(
+          MatchItemWithPrEvent(
+            prId: widget.prId!,
+          ),
+        );
+      });
+    }
 
     _prTableRows = [];
     _initializeTableConfig();
@@ -175,18 +187,22 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       if (widget.issuanceType == IssuanceType.ics) {
         _issuancesBloc.add(
           CreateICSEvent(
-            prId: _prIdController.text,
+            issuedDate: _pickedDate.value,
+            type: _selectedIcsType.value,
             issuanceItems: (_issuedTableRows.value)
                 .map((issuedTableRow) =>
                     issuedTableRow.object as Map<String, dynamic>)
                 .toList(),
+            prId: _prIdController.text,
+            entityName: _entityNameController.text,
+            fundCluster: _selectedFundCluster.value,
             receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
             receivingOfficerPosition:
                 _receivingOfficerPositionNameController.text,
             receivingOfficerName: _receivingOfficerNameController.text,
-            sendingOfficerOffice: _sendingOfficerOfficeNameController.text,
-            sendingOfficerPosition: _sendingOfficerPositionNameController.text,
-            sendingOfficerName: _sendingOfficerNameController.text,
+            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+            issuingOfficerName: _issuingOfficerNameController.text,
           ),
         );
       }
@@ -194,43 +210,58 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       if (widget.issuanceType == IssuanceType.par) {
         _issuancesBloc.add(
           CreatePAREvent(
-            prId: _prIdController.text,
+            issuedDate: _pickedDate.value,
             issuanceItems: (_issuedTableRows.value)
                 .map((issuedTableRow) =>
                     issuedTableRow.object as Map<String, dynamic>)
                 .toList(),
+            prId: _prIdController.text,
+            entityName: _entityNameController.text,
+            fundCluster: _selectedFundCluster.value,
             receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
             receivingOfficerPosition:
                 _receivingOfficerPositionNameController.text,
             receivingOfficerName: _receivingOfficerNameController.text,
-            sendingOfficerOffice: _sendingOfficerOfficeNameController.text,
-            sendingOfficerPosition: _sendingOfficerPositionNameController.text,
-            sendingOfficerName: _sendingOfficerNameController.text,
+            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+            issuingOfficerName: _issuingOfficerNameController.text,
           ),
         );
       }
 
       if (widget.issuanceType == IssuanceType.ris) {
+        print(
+            'issuing off pos selected: ${_issuingOfficerPositionNameController.text}');
         _issuancesBloc.add(
           CreateRISEvent(
-            prId: _prIdController.text,
+            issuedDate: _pickedDate.value,
             issuanceItems: (_issuedTableRows.value)
                 .map((issuedTableRow) =>
                     issuedTableRow.object as Map<String, dynamic>)
                 .toList(),
+            prId: _prIdController.text,
+            entityName: _entityNameController.text,
+            fundCluster: _selectedFundCluster.value,
+            division: _divisionController.text,
+            responsibilityCenterCode: _responsibilityCenterCodeController.text,
+            officeName: _officeNameController.text,
             purpose: _purposeController.text,
-            responsibilityCenterCode: _responsibilityCenterCode.text,
             receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
             receivingOfficerPosition:
                 _receivingOfficerPositionNameController.text,
             receivingOfficerName: _receivingOfficerNameController.text,
+            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+            issuingOfficerName: _issuingOfficerNameController.text,
             approvingOfficerOffice: _approvingOfficerOfficeNameController.text,
             approvingOfficerPosition:
                 _approvingOfficerPositionNameController.text,
             approvingOfficerName: _approvingOfficerNameController.text,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
+            requestingOfficerOffice:
+                _requestingOfficerOfficeNameController.text,
+            requestingOfficerPosition:
+                _requestingOfficerPositionNameController.text,
+            requestingOfficerName: _requestingOfficerNameController.text,
           ),
         );
       }
@@ -245,18 +276,35 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     _requestingOfficerController.dispose();
     _approvingOfficerController.dispose();
 
+    _entityNameController.dispose();
+
+    _divisionController.dispose();
+    _responsibilityCenterCodeController.dispose();
+    _officeNameController.dispose();
+    _purposeController.dispose();
+
     _receivingOfficerOfficeNameController.dispose();
     _receivingOfficerPositionNameController.dispose();
     _receivingOfficerNameController.dispose();
 
-    _sendingOfficerOfficeNameController.dispose();
-    _sendingOfficerPositionNameController.dispose();
-    _sendingOfficerNameController.dispose();
+    _issuingOfficerOfficeNameController.dispose();
+    _issuingOfficerPositionNameController.dispose();
+    _issuingOfficerNameController.dispose();
 
+    _approvingOfficerOfficeNameController.dispose();
+    _approvingOfficerPositionNameController.dispose();
+    _approvingOfficerNameController.dispose();
+
+    _requestingOfficerOfficeNameController.dispose();
+    _requestingOfficerPositionNameController.dispose();
+    _requestingOfficerNameController.dispose();
+
+    _selectedIcsType.dispose();
+    _selectedFundCluster.dispose();
     _selectedReceivingOfficerOffice.dispose();
     _selectedReceivingOfficerPosition.dispose();
-    _selectedSendingOfficerOffice.dispose();
-    _selectedSendingOfficerPosition.dispose();
+    _selectedRequestingOfficerOffice.dispose();
+    _selectedRequestingOfficerPosition.dispose();
     _selectedApprovingOfficerOffice.dispose();
     _selectedApprovingOfficerPosition.dispose();
     _selectedIssuingOfficerOffice.dispose();
@@ -438,10 +486,19 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       key: _formKey,
       child: Column(
         children: [
-          _buildPreviewPurchaseRequestSummary(),
+          _buildInitialInformationSection(),
           const SizedBox(
             height: 50.0,
           ),
+          if (widget.prId != null && widget.prId!.isNotEmpty)
+            Column(
+              children: [
+                _buildPreviewPurchaseRequestSummary(),
+                const SizedBox(
+                  height: 50.0,
+                ),
+              ],
+            ),
           _buildItemIssuanceSection(),
           const SizedBox(
             height: 50.0,
@@ -453,6 +510,98 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           _buildActionsRow(),
         ],
       ),
+    );
+  }
+
+  Widget _buildInitialInformationSection() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateSelection(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            if (widget.issuanceType == IssuanceType.ics)
+              Expanded(
+                child: _buildIcsTypeSelection(),
+              ),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildEntitySuggestionField(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: _buildFundClusterSelection(),
+            ),
+          ],
+        ),
+        if (widget.issuanceType == IssuanceType.ris)
+          Column(
+            children: [
+              const SizedBox(
+                height: 20.0,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomFormTextField(
+                      label: 'Division',
+                      controller: _divisionController,
+                      placeholderText: 'Enter division',
+                      fillColor:
+                          (context.watch<ThemeBloc>().state == AppTheme.light
+                              ? AppColor.lightCustomTextBox
+                              : AppColor.darkCustomTextBox),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: _buildOfficeSuggestionField(),
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: CustomFormTextField(
+                      label: 'Responsibility Center Code',
+                      controller: _responsibilityCenterCodeController,
+                      placeholderText: 'Enter responsibility center code',
+                      fillColor:
+                          (context.watch<ThemeBloc>().state == AppTheme.light
+                              ? AppColor.lightCustomTextBox
+                              : AppColor.darkCustomTextBox),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              CustomFormTextField(
+                label: 'Purpose',
+                controller: _purposeController,
+                maxLines: 4,
+                placeholderText: 'Enter purpose',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ],
+          ),
+      ],
     );
   }
 
@@ -811,45 +960,30 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         const SizedBox(
           height: 20.0,
         ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildRequestingOfficerOfficeSuggestionField(),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            Expanded(
-              child: _buildRequestingOfficerPositionSuggestionField(),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            Expanded(
-              child: _buildRequestingOfficerNameSuggestionField(),
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 30.0,
-        ),
-        if (widget.issuanceType != IssuanceType.ris)
-          Row(
+        if (widget.prId == null || widget.issuanceType == IssuanceType.ris)
+          Column(
             children: [
-              Expanded(
-                child: _buildSendingOfficerOfficeSuggestionField(),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildRequestingOfficerOfficeSuggestionField(),
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: _buildRequestingOfficerPositionSuggestionField(),
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  Expanded(
+                    child: _buildRequestingOfficerNameSuggestionField(),
+                  ),
+                ],
               ),
               const SizedBox(
-                width: 20.0,
-              ),
-              Expanded(
-                child: _buildSendingOfficerPositionSuggestionField(),
-              ),
-              const SizedBox(
-                width: 20.0,
-              ),
-              Expanded(
-                child: _buildSendingOfficerNameSuggestionField(),
+                height: 30.0,
               ),
             ],
           ),
@@ -878,27 +1012,49 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               const SizedBox(
                 height: 30.0,
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildIssuingOfficerOfficeSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildIssuingOfficerPositionSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildIssuingOfficerNameSuggestionField(),
-                  ),
-                ],
-              ),
             ],
           ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildIssuingOfficerOfficeSuggestionField(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: _buildIssuingOfficerPositionSuggestionField(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: _buildIssuingOfficerNameSuggestionField(),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 30.0,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildReceivingOfficerOfficeSuggestionField(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: _buildReceivingOfficerPositionSuggestionField(),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: _buildReceivingOfficerNameSuggestionField(),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -917,11 +1073,124 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               _pickedDate.value = date;
             }
           },
-          label: 'Acquired Date',
+          label: 'Issued Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+        );
+      },
+    );
+  }
+
+  Widget _buildIcsTypeSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedIcsType,
+      builder: (context, selectedIcsType, child) {
+        return CustomDropdownField(
+          //value: selectedIcsType.toString(),
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) {
+              _selectedIcsType.value = IcsType.values.firstWhere(
+                  (e) => e.toString().split('.').last == value.split('.').last);
+            }
+          },
+          items: IcsType.values
+              .map(
+                (type) => DropdownMenuItem(
+                  value: type.toString(),
+                  child: Text(
+                    readableEnumConverter(type).toUpperCase(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+              )
+              .toList(),
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+          label: 'Type',
+          placeholderText: 'Enter ICS\'s type',
+        );
+      },
+    );
+  }
+
+  Widget _buildOfficeSuggestionField() {
+    return CustomSearchField(
+      suggestionsCallback: (officeName) async {
+        return await _officerSuggestionsService.fetchOffices(
+          // page: currentPage,
+          officeName: officeName,
+        );
+      },
+      onSelected: (value) {
+        _officeNameController.text = value;
+      },
+      controller: _officeNameController,
+      label: 'Office',
+      placeHolderText: 'Enter office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
+    );
+  }
+
+  Widget _buildEntitySuggestionField() {
+    return CustomSearchField(
+      suggestionsCallback: (entityName) async {
+        final entityNames = await _entitySuggestionService.fetchEntities(
+          entityName: entityName,
+        );
+
+        return entityNames;
+      },
+      onSelected: (value) {
+        _entityNameController.text = value;
+      },
+      controller: _entityNameController,
+      label: 'Entity',
+      placeHolderText: 'Enter entity',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
+    );
+  }
+
+  Widget _buildFundClusterSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedFundCluster,
+      builder: (context, selectedFundCluster, child) {
+        return CustomDropdownField(
+          //value: selectedFundCluster.toString(),
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) {
+              _selectedFundCluster.value = FundCluster.values.firstWhere(
+                  (e) => e.toString().split('.').last == value.split('.').last);
+            }
+          },
+          items: FundCluster.values
+              .map(
+                (fundCluster) => DropdownMenuItem(
+                  value: fundCluster.toString(),
+                  child: Text(
+                    fundCluster.toReadableString(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+              )
+              .toList(),
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+          label: 'Fund Cluster',
+          placeholderText: 'Enter fund cluster',
         );
       },
     );
@@ -935,94 +1204,26 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         );
 
         if (offices == null) {
-          _receivingOfficerPositionNameController.clear();
-          _receivingOfficerNameController.clear();
+          _requestingOfficerPositionNameController.clear();
+          _requestingOfficerNameController.clear();
 
-          _selectedReceivingOfficerOffice.value = null;
-          _selectedReceivingOfficerPosition.value = null;
+          _selectedRequestingOfficerOffice.value = null;
+          _selectedRequestingOfficerPosition.value = null;
         }
 
         return offices;
       },
       onSelected: (value) {
-        _receivingOfficerOfficeNameController.text = value;
-        _receivingOfficerPositionNameController.clear();
-        _receivingOfficerNameController.clear();
+        _requestingOfficerOfficeNameController.text = value;
+        _requestingOfficerPositionNameController.clear();
+        _requestingOfficerNameController.clear();
 
-        _selectedReceivingOfficerOffice.value = value;
-        _selectedReceivingOfficerPosition.value = null;
+        _selectedRequestingOfficerOffice.value = value;
+        _selectedRequestingOfficerPosition.value = null;
       },
-      controller: _receivingOfficerOfficeNameController,
-      label: 'Receiving Officer Office',
+      controller: _requestingOfficerOfficeNameController,
+      label: 'Requesting Officer Office',
       placeHolderText: 'Enter requesting officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
-    );
-  }
-
-  Widget _buildSendingOfficerOfficeSuggestionField() {
-    return CustomSearchField(
-      suggestionsCallback: (officeName) async {
-        final offices = await _officerSuggestionsService.fetchOffices(
-          officeName: officeName,
-        );
-
-        if (offices == null) {
-          _sendingOfficerPositionNameController.clear();
-          _sendingOfficerNameController.clear();
-
-          _selectedSendingOfficerOffice.value = null;
-          _selectedSendingOfficerPosition.value = null;
-        }
-
-        return offices;
-      },
-      onSelected: (value) {
-        _sendingOfficerOfficeNameController.text = value;
-        _sendingOfficerPositionNameController.clear();
-        _sendingOfficerNameController.clear();
-
-        _selectedSendingOfficerOffice.value = value;
-        _selectedSendingOfficerPosition.value = null;
-      },
-      controller: _sendingOfficerOfficeNameController,
-      label: 'Sending Officer Office',
-      placeHolderText: 'Enter sending officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
-    );
-  }
-
-  Widget _buildApprovingOfficerOfficeSuggestionField() {
-    return CustomSearchField(
-      suggestionsCallback: (officeName) async {
-        final offices = await _officerSuggestionsService.fetchOffices(
-          officeName: officeName,
-        );
-
-        if (offices == null) {
-          _approvingOfficerPositionNameController.clear();
-          _approvingOfficerNameController.clear();
-
-          _selectedApprovingOfficerOffice.value = null;
-          _selectedApprovingOfficerPosition.value = null;
-        }
-
-        return offices;
-      },
-      onSelected: (value) {
-        _approvingOfficerOfficeNameController.text = value;
-        _approvingOfficerPositionNameController.clear();
-        _approvingOfficerNameController.clear();
-
-        _selectedApprovingOfficerOffice.value = value;
-        _selectedApprovingOfficerPosition.value = null;
-      },
-      controller: _approvingOfficerOfficeNameController,
-      label: 'Approving Officer Office',
-      placeHolderText: 'Enter approving officer\'s office',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),
@@ -1063,48 +1264,77 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     );
   }
 
-  Widget _buildRequestingOfficerPositionSuggestionField() {
-    return ValueListenableBuilder(
-      valueListenable: _selectedReceivingOfficerOffice,
-      builder: (context, selectedOfficeName, child) {
-        return CustomSearchField(
-          key: ValueKey(selectedOfficeName),
-          suggestionsCallback: (String? positionName) async {
-            if (selectedOfficeName != null && selectedOfficeName.isNotEmpty) {
-              final positions =
-                  await _officerSuggestionsService.fetchOfficePositions(
-                officeName: selectedOfficeName,
-                positionName: positionName,
-              );
-
-              if (positions == null) {
-                _receivingOfficerNameController.clear();
-                _selectedReceivingOfficerPosition.value = null;
-              }
-
-              return positions;
-            }
-            return null;
-          },
-          onSelected: (value) {
-            _receivingOfficerPositionNameController.text = value;
-            _receivingOfficerNameController.clear();
-            _selectedReceivingOfficerPosition.value = value;
-          },
-          controller: _receivingOfficerPositionNameController,
-          label: 'Receiving Officer Position',
-          placeHolderText: 'Enter requesting officer\'s position',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
+  Widget _buildApprovingOfficerOfficeSuggestionField() {
+    return CustomSearchField(
+      suggestionsCallback: (officeName) async {
+        final offices = await _officerSuggestionsService.fetchOffices(
+          officeName: officeName,
         );
+
+        if (offices == null) {
+          _approvingOfficerPositionNameController.clear();
+          _approvingOfficerNameController.clear();
+
+          _selectedApprovingOfficerOffice.value = null;
+          _selectedApprovingOfficerPosition.value = null;
+        }
+
+        return offices;
       },
+      onSelected: (value) {
+        _approvingOfficerOfficeNameController.text = value;
+        _approvingOfficerPositionNameController.clear();
+        _approvingOfficerNameController.clear();
+
+        _selectedApprovingOfficerOffice.value = value;
+        _selectedApprovingOfficerPosition.value = null;
+      },
+      controller: _approvingOfficerOfficeNameController,
+      label: 'Approving Officer Office',
+      placeHolderText: 'Enter approving officer\'s office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
     );
   }
 
-  Widget _buildSendingOfficerPositionSuggestionField() {
+  Widget _buildReceivingOfficerOfficeSuggestionField() {
+    return CustomSearchField(
+      suggestionsCallback: (officeName) async {
+        final offices = await _officerSuggestionsService.fetchOffices(
+          officeName: officeName,
+        );
+
+        if (offices == null) {
+          _receivingOfficerPositionNameController.clear();
+          _receivingOfficerNameController.clear();
+
+          _selectedReceivingOfficerOffice.value = null;
+          _selectedReceivingOfficerPosition.value = null;
+        }
+
+        return offices;
+      },
+      onSelected: (value) {
+        _receivingOfficerOfficeNameController.text = value;
+        _receivingOfficerPositionNameController.clear();
+        _receivingOfficerNameController.clear();
+
+        _selectedReceivingOfficerOffice.value = value;
+        _selectedReceivingOfficerPosition.value = null;
+      },
+      controller: _receivingOfficerOfficeNameController,
+      label: 'Receiving Officer Office',
+      placeHolderText: 'Enter receiving officer\'s office',
+      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+          ? AppColor.lightCustomTextBox
+          : AppColor.darkCustomTextBox),
+    );
+  }
+
+  Widget _buildRequestingOfficerPositionSuggestionField() {
     return ValueListenableBuilder(
-      valueListenable: _selectedSendingOfficerOffice,
+      valueListenable: _selectedRequestingOfficerOffice,
       builder: (context, selectedOfficeName, child) {
         return CustomSearchField(
           key: ValueKey(selectedOfficeName),
@@ -1117,8 +1347,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               );
 
               if (positions == null) {
-                _sendingOfficerNameController.clear();
-                _selectedSendingOfficerPosition.value = null;
+                _requestingOfficerNameController.clear();
+                _selectedRequestingOfficerPosition.value = null;
               }
 
               return positions;
@@ -1126,13 +1356,13 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             return null;
           },
           onSelected: (value) {
-            _sendingOfficerPositionNameController.text = value;
-            _sendingOfficerNameController.clear();
-            _selectedSendingOfficerPosition.value = value;
+            _requestingOfficerPositionNameController.text = value;
+            _requestingOfficerNameController.clear();
+            _selectedRequestingOfficerPosition.value = value;
           },
-          controller: _sendingOfficerPositionNameController,
-          label: 'Sending Officer Position',
-          placeHolderText: 'Enter sending officer\'s position',
+          controller: _requestingOfficerPositionNameController,
+          label: 'Requesting Officer Position',
+          placeHolderText: 'Enter requesting officer\'s position',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
@@ -1219,53 +1449,51 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     );
   }
 
-  Widget _buildRequestingOfficerNameSuggestionField() {
+  Widget _buildReceivingOfficerPositionSuggestionField() {
     return ValueListenableBuilder(
       valueListenable: _selectedReceivingOfficerOffice,
       builder: (context, selectedOfficeName, child) {
-        return ValueListenableBuilder(
-          valueListenable: _selectedReceivingOfficerPosition,
-          builder: (context, selectedPositionName, child) {
-            return CustomSearchField(
-              key: ValueKey('$selectedOfficeName-$selectedPositionName'),
-              suggestionsCallback: (String? officerName) async {
-                if ((selectedOfficeName != null &&
-                        selectedOfficeName.isNotEmpty) &&
-                    (selectedPositionName != null &&
-                        selectedPositionName.isNotEmpty)) {
-                  final officers =
-                      await _officerSuggestionsService.fetchOfficers(
-                    officeName: selectedOfficeName,
-                    positionName: selectedPositionName,
-                    officerName: officerName,
-                  );
+        return CustomSearchField(
+          key: ValueKey(selectedOfficeName),
+          suggestionsCallback: (String? positionName) async {
+            if (selectedOfficeName != null && selectedOfficeName.isNotEmpty) {
+              final positions =
+                  await _officerSuggestionsService.fetchOfficePositions(
+                officeName: selectedOfficeName,
+                positionName: positionName,
+              );
 
-                  return officers;
-                }
-                return null;
-              },
-              onSelected: (value) {
-                _receivingOfficerNameController.text = value;
-              },
-              controller: _receivingOfficerNameController,
-              label: 'Receiving Officer Name',
-              placeHolderText: 'Enter requesting officer\'s name',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
-            );
+              if (positions == null) {
+                _receivingOfficerNameController.clear();
+                _selectedReceivingOfficerPosition.value = null;
+              }
+
+              return positions;
+            }
+            return null;
           },
+          onSelected: (value) {
+            _receivingOfficerPositionNameController.text = value;
+            _receivingOfficerNameController.clear();
+            _selectedReceivingOfficerPosition.value = value;
+          },
+          controller: _receivingOfficerPositionNameController,
+          label: 'Receiving Officer Position',
+          placeHolderText: 'Enter receiving officer\'s position',
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );
   }
 
-  Widget _buildSendingOfficerNameSuggestionField() {
+  Widget _buildRequestingOfficerNameSuggestionField() {
     return ValueListenableBuilder(
-      valueListenable: _selectedSendingOfficerOffice,
+      valueListenable: _selectedRequestingOfficerOffice,
       builder: (context, selectedOfficeName, child) {
         return ValueListenableBuilder(
-          valueListenable: _selectedSendingOfficerPosition,
+          valueListenable: _selectedRequestingOfficerPosition,
           builder: (context, selectedPositionName, child) {
             return CustomSearchField(
               key: ValueKey('$selectedOfficeName-$selectedPositionName'),
@@ -1286,11 +1514,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 return null;
               },
               onSelected: (value) {
-                _sendingOfficerNameController.text = value;
+                _requestingOfficerNameController.text = value;
               },
-              controller: _sendingOfficerNameController,
-              label: 'Sending Officer Name',
-              placeHolderText: 'Enter sending officer\'s name',
+              controller: _requestingOfficerNameController,
+              label: 'Requesting Officer Name',
+              placeHolderText: 'Enter requesting officer\'s name',
               fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                   ? AppColor.lightCustomTextBox
                   : AppColor.darkCustomTextBox),
@@ -1373,6 +1601,47 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               controller: _issuingOfficerNameController,
               label: 'Issuing Officer Name',
               placeHolderText: 'Enter issuing officer\'s name',
+              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                  ? AppColor.lightCustomTextBox
+                  : AppColor.darkCustomTextBox),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildReceivingOfficerNameSuggestionField() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedReceivingOfficerOffice,
+      builder: (context, selectedOfficeName, child) {
+        return ValueListenableBuilder(
+          valueListenable: _selectedReceivingOfficerPosition,
+          builder: (context, selectedPositionName, child) {
+            return CustomSearchField(
+              key: ValueKey('$selectedOfficeName-$selectedPositionName'),
+              suggestionsCallback: (String? officerName) async {
+                if ((selectedOfficeName != null &&
+                        selectedOfficeName.isNotEmpty) &&
+                    (selectedPositionName != null &&
+                        selectedPositionName.isNotEmpty)) {
+                  final officers =
+                      await _officerSuggestionsService.fetchOfficers(
+                    officeName: selectedOfficeName,
+                    positionName: selectedPositionName,
+                    officerName: officerName,
+                  );
+
+                  return officers;
+                }
+                return null;
+              },
+              onSelected: (value) {
+                _receivingOfficerNameController.text = value;
+              },
+              controller: _receivingOfficerNameController,
+              label: 'Receiving Officer Name',
+              placeHolderText: 'Enter receiving officer\'s name',
               fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                   ? AppColor.lightCustomTextBox
                   : AppColor.darkCustomTextBox),

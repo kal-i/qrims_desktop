@@ -8,7 +8,7 @@ class ProductNameModel extends ProductNameEntity {
 
   factory ProductNameModel.fromJson(Map<String, dynamic> json) {
     return ProductNameModel(
-      id: json['product_name_id'] as String,
+      id: json['product_name_id'] as int,
       name: json['product_name'] as String,
     );
   }

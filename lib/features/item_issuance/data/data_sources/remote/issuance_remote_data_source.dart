@@ -1,3 +1,6 @@
+import '../../../../../core/enums/asset_sub_class.dart';
+import '../../../../../core/enums/fund_cluster.dart';
+import '../../../../../core/enums/ics_type.dart';
 import '../../models/inventory_custodian_slip.dart';
 import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
@@ -21,41 +24,56 @@ abstract interface class IssuanceRemoteDataSource {
   });
 
   Future<InventoryCustodianSlipModel> createICS({
-    required String prId,
+    DateTime? issuedDate,
+    IcsType? type,
     required List<dynamic> issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   });
 
   Future<PropertyAcknowledgementReceiptModel> createPAR({
-    required String prId,
+    DateTime? issuedDate,
     required List<dynamic> issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   });
 
   Future<RequisitionAndIssuanceSlipModel> createRIS({
-    required String prId,
+    DateTime? issuedDate,
     required List<dynamic> issuanceItems,
-    String? purpose,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? division,
     String? responsibilityCenterCode,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String approvingOfficerOffice,
-    required String approvingOfficerPosition,
-    required String approvingOfficerName,
-    required String issuingOfficerOffice,
-    required String issuingOfficerPosition,
-    required String issuingOfficerName,
+    String? officeName,
+    String? purpose,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    String? approvingOfficerOffice,
+    String? approvingOfficerPosition,
+    String? approvingOfficerName,
+    String? requestingOfficerOffice,
+    String? requestingOfficerPosition,
+    String? requestingOfficerName,
   });
 
   Future<IssuanceModel?> getIssuanceById({
@@ -65,5 +83,22 @@ abstract interface class IssuanceRemoteDataSource {
   Future<bool> updateIssuanceArchiveStatus({
     required String id,
     required bool isArchived,
+  });
+
+  Future<List<Map<String, dynamic>>> getInventorySupplyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+  });
+
+  Future<List<Map<String, dynamic>>> getInventorySemiExpendablePropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
+  });
+
+  Future<List<Map<String, dynamic>>> getInventoryPropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
   });
 }

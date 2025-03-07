@@ -1,0 +1,4 @@
+enum BatchStatus {
+  available,
+  issued,
+}

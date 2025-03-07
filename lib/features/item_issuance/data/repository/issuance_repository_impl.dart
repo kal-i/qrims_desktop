@@ -1,5 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/enums/ics_type.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
@@ -20,25 +23,33 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
 
   @override
   Future<Either<Failure, InventoryCustodianSlipEntity>> createICS({
-    required String prId,
-    required List issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    DateTime? issuedDate,
+    IcsType? type,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.createICS(
-        prId: prId,
+        issuedDate: issuedDate,
+        type: type,
         issuanceItems: issuanceItems,
+        prId: prId,
+        entityName: entityName,
+        fundCluster: fundCluster,
         receivingOfficerOffice: receivingOfficerOffice,
         receivingOfficerPosition: receivingOfficerPosition,
         receivingOfficerName: receivingOfficerName,
-        sendingOfficerOffice: sendingOfficerOffice,
-        sendingOfficerPosition: sendingOfficerPosition,
-        sendingOfficerName: sendingOfficerName,
+        issuingOfficerOffice: issuingOfficerOffice,
+        issuingOfficerPosition: issuingOfficerPosition,
+        issuingOfficerName: issuingOfficerName,
       );
 
       return right(response);
@@ -49,26 +60,31 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
 
   @override
   Future<Either<Failure, PropertyAcknowledgementReceiptEntity>> createPAR({
-    required String prId,
-    String? propertyNumber,
-    required List issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    DateTime? issuedDate,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.createPAR(
-        prId: prId,
+        issuedDate: issuedDate,
         issuanceItems: issuanceItems,
+        prId: prId,
+        entityName: entityName,
+        fundCluster: fundCluster,
         receivingOfficerOffice: receivingOfficerOffice,
         receivingOfficerPosition: receivingOfficerPosition,
         receivingOfficerName: receivingOfficerName,
-        sendingOfficerOffice: sendingOfficerOffice,
-        sendingOfficerPosition: sendingOfficerPosition,
-        sendingOfficerName: sendingOfficerName,
+        issuingOfficerOffice: issuingOfficerOffice,
+        issuingOfficerPosition: issuingOfficerPosition,
+        issuingOfficerName: issuingOfficerName,
       );
 
       return right(response);
@@ -79,35 +95,52 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
 
   @override
   Future<Either<Failure, RequisitionAndIssueSlipEntity>> createRIS({
-    required String prId,
-    required List issuanceItems,
-    String? purpose,
+    DateTime? issuedDate,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? division,
     String? responsibilityCenterCode,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String approvingOfficerOffice,
-    required String approvingOfficerPosition,
-    required String approvingOfficerName,
-    required String issuingOfficerOffice,
-    required String issuingOfficerPosition,
-    required String issuingOfficerName,
+    String? officeName,
+    String? purpose,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    String? approvingOfficerOffice,
+    String? approvingOfficerPosition,
+    String? approvingOfficerName,
+    String? requestingOfficerOffice,
+    String? requestingOfficerPosition,
+    String? requestingOfficerName,
   }) async {
     try {
+      print('iss ris impl repo:$issuingOfficerPosition');
       final response = await issuanceRemoteDataSource.createRIS(
-        prId: prId,
+        issuedDate: issuedDate,
         issuanceItems: issuanceItems,
-        purpose: purpose,
+        prId: prId,
+        entityName: entityName,
+        fundCluster: fundCluster,
+        division: division,
         responsibilityCenterCode: responsibilityCenterCode,
+        officeName: officeName,
+        purpose: purpose,
         receivingOfficerOffice: receivingOfficerOffice,
         receivingOfficerPosition: receivingOfficerPosition,
         receivingOfficerName: receivingOfficerName,
-        approvingOfficerOffice: approvingOfficerOffice,
-        approvingOfficerPosition: approvingOfficerPosition,
-        approvingOfficerName: approvingOfficerName,
         issuingOfficerOffice: issuingOfficerOffice,
         issuingOfficerPosition: issuingOfficerPosition,
         issuingOfficerName: issuingOfficerName,
+        approvingOfficerOffice: approvingOfficerOffice,
+        approvingOfficerPosition: approvingOfficerPosition,
+        approvingOfficerName: approvingOfficerName,
+        requestingOfficerOffice: requestingOfficerOffice,
+        requestingOfficerPosition: requestingOfficerPosition,
+        requestingOfficerName: requestingOfficerName,
       );
 
       return right(response);
@@ -187,6 +220,65 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
           await issuanceRemoteDataSource.updateIssuanceArchiveStatus(
         id: id,
         isArchived: isArchived,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getInventorySupplyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.getInventorySupplyReport(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getInventoryPropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
+  }) async {
+    try {
+      final response =
+          await issuanceRemoteDataSource.getInventoryPropertyReport(
+        startDate: startDate,
+        endDate: endDate,
+        assetSubClass: assetSubClass,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getInventorySemiExpendablePropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource
+          .getInventorySemiExpendablePropertyReport(
+        startDate: startDate,
+        endDate: endDate,
+        assetSubClass: assetSubClass,
       );
 
       return right(response);

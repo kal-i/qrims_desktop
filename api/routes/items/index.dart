@@ -154,9 +154,11 @@ Future<Response> _registerItem(
     final serialNoInput = json['serial_no'] as String?;
 
     final estimatedUsefulLife = json['estimated_useful_life'] as int?;
-    final acquiredDate = json['acquired_date'] is String
-        ? DateTime.parse(json['acquired_date'] as String)
-        : json['acquired_date'] as DateTime?;
+    final acquiredDate = json['acquired_date'] != null
+        ? json['acquired_date'] is String
+            ? DateTime.parse(json['acquired_date'] as String)
+            : json['acquired_date'] as DateTime
+        : DateTime.now();
 
     FundCluster? fundCluster;
     AssetClassification? assetClassification;
@@ -167,7 +169,7 @@ Future<Response> _registerItem(
       fundCluster = json['fund_cluster'] != null
           ? FundCluster.values.firstWhere(
               (e) => e.toString().split('.').last == json['fund_cluster'])
-          : FundCluster.unknown;
+          : null;
       assetClassification = json['asset_classification'] != null
           ? AssetClassification.values.firstWhere((e) =>
               e.toString().split('.').last == json['asset_classification'])
@@ -191,8 +193,8 @@ Future<Response> _registerItem(
       );
     }
 
-    String? productNameId;
-    String? productDescriptionId;
+    int? productNameId;
+    int? productDescriptionId;
 
     final productNameResult = await itemRepository.checkProductNameIfExist(
       productName: productName,
@@ -350,6 +352,14 @@ Future<Response> _registerItem(
         await itemRepository.registerSupply(
           baseItemModelId: baseItemId,
         );
+
+        // await itemRepository.generateBatchItems(
+        //   acquiredDate: acquiredDate,
+        //   baseItemId: baseItemId,
+        //   productName: productName,
+        //   quantity: quantity,
+        //   fundCluster: fundCluster,
+        // );
       }
 
       final supplyItem = await itemRepository.getConcreteItemByBaseItemId(

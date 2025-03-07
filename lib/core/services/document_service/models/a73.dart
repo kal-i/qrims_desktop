@@ -1,8 +1,12 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../init_dependencies.dart';
+import '../../../utils/capitalizer.dart';
+import '../../../utils/currency_formatter.dart';
+import '../../../utils/standardize_position_name.dart';
+import '../document_service.dart';
 import '../font_service.dart';
-import '../image_service.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -16,6 +20,237 @@ class A73 implements BaseDocument {
   }) async {
     final pdf = pw.Document();
 
+    final assetSubClass = data['asset_sub_class'] as String?;
+    final accountableOfficer =
+        data['accountable_officer'] as Map<String, String>?;
+    final inventoryProperties = data['inventory_report'];
+    final approvingEntityOrAuthorizedRepresentative =
+        data['approving_entity_or_authorized_representative'] as String?;
+    final coaRepresentative = data['coa_representative'] as String?;
+    final certifyingOfficers =
+        data['certifying_officers'] as List<Map<String, dynamic>>?;
+
+    List<pw.TableRow> tableRows = [];
+    List<pw.TableRow> tableFooterRows = [
+      pw.TableRow(
+        children: [
+          DocumentComponents.buildContainer(
+            borderTop: false,
+            borderRight: false,
+            borderBottom: false,
+            verticalPadding: 3.0,
+            horizontalPadding: 3.0,
+            child: pw.Text(
+              'Certified Correct by:',
+              style: pw.TextStyle(
+                font: serviceLocator<FontService>()
+                    .getFont('timesNewRomanRegular'),
+                fontSize: 8.0,
+              ),
+            ),
+          ),
+          DocumentComponents.buildContainer(
+            borderTop: false,
+            borderRight: false,
+            borderBottom: false,
+            borderLeft: false,
+            verticalPadding: 3.0,
+            horizontalPadding: 3.0,
+            child: pw.Text(
+              'Approved by:',
+              style: pw.TextStyle(
+                font: serviceLocator<FontService>()
+                    .getFont('timesNewRomanRegular'),
+                fontSize: 8.0,
+              ),
+            ),
+          ),
+          DocumentComponents.buildContainer(
+            borderTop: false,
+            borderBottom: false,
+            borderLeft: false,
+            verticalPadding: 3.0,
+            horizontalPadding: 3.0,
+            child: pw.Text(
+              'Witnessed by:',
+              style: pw.TextStyle(
+                font: serviceLocator<FontService>()
+                    .getFont('timesNewRomanRegular'),
+                fontSize: 8.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ];
+
+    tableRows.add(
+      _buildHeaderTableRow(),
+    );
+
+    for (final inventoryProperty in inventoryProperties) {
+      final article = inventoryProperty['article'].toString().toUpperCase();
+      final description =
+          '${inventoryProperty['brand_name']} ${inventoryProperty['model_name']} with SN: ${inventoryProperty['serial_no']}';
+      final semiExpendablePropertyNo = inventoryProperty['property_no'];
+      final unit = inventoryProperty['unit'];
+      final unitValue =
+          double.parse(inventoryProperty['unit_value'].toString());
+
+      // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
+      final totalQuantity =
+          inventoryProperty['balance_from_previous_row_after_issuance'] == 0
+              ? inventoryProperty['total_quantity_available_and_issued'] != null
+                  ? int.tryParse(
+                      inventoryProperty['total_quantity_available_and_issued']
+                              ?.toString() ??
+                          '0')
+                  : inventoryProperty['current_quantity_in_stock']
+              : inventoryProperty['balance_from_previous_row_after_issuance'];
+
+      final balanceAfterIssue = int.tryParse(
+              inventoryProperty['balance_per_row_after_issuance']?.toString() ??
+                  '0') ??
+          0;
+
+      final remarks = inventoryProperty['receiving_officer_name'] != null
+          ? '${capitalizeWord(inventoryProperty['receiving_officer_name'])}/${capitalizeWord(inventoryProperty['receiving_officer_office'])}-${standardizePositionName(inventoryProperty['receiving_officer_position'])}'
+          : '\n';
+
+      final rowHeight = DocumentService.getRowHeight(
+        description,
+        fontSize: 8.0,
+      );
+
+      tableRows.add(
+        _buildContentTableRow(
+          article: article,
+          description: description,
+          semiExpendablePropertyNo: semiExpendablePropertyNo,
+          unit: unit,
+          unitValue: unitValue,
+          totalQuantity: totalQuantity,
+          quantityAfterIssued: balanceAfterIssue,
+          remarks: remarks,
+          rowHeight: rowHeight,
+        ),
+      );
+    }
+
+    if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
+      for (int i = 0; i < certifyingOfficers.length; i++) {
+        final certifyingOfficer = certifyingOfficers[i];
+
+        if (i == 0) {
+          tableFooterRows.add(
+            pw.TableRow(
+              children: [
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderRight: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  verticalPadding: 5.0,
+                  child: _buildAssociatedOfficerField(
+                    title: certifyingOfficer['position'],
+                    officerName: certifyingOfficer['name'],
+                  ),
+                ),
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderRight: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  borderLeft: false,
+                  verticalPadding: 5.0,
+                  child: _buildAssociatedOfficerField(
+                    title: 'Entity or Authorized Representative',
+                    officerName: approvingEntityOrAuthorizedRepresentative,
+                  ),
+                ),
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  borderLeft: false,
+                  verticalPadding: 5.0,
+                  child: _buildAssociatedOfficerField(
+                    title: 'COA Representative',
+                    officerName: coaRepresentative,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          tableFooterRows.add(
+            pw.TableRow(
+              children: [
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderRight: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  verticalPadding: 5.0,
+                  child: _buildAssociatedOfficerField(
+                    title: certifyingOfficer['position'],
+                    officerName: certifyingOfficer['name'],
+                  ),
+                ),
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderRight: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  borderLeft: false,
+                  verticalPadding: 20.7,
+                  child: pw.SizedBox.shrink(),
+                ),
+                DocumentComponents.buildContainer(
+                  borderTop: false,
+                  borderBottom:
+                      i == certifyingOfficers.length - 1 ? true : false,
+                  borderLeft: false,
+                  verticalPadding: 20.7,
+                  child: pw.SizedBox.shrink(),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } else {
+      tableFooterRows.add(
+        pw.TableRow(
+          children: [
+            DocumentComponents.buildContainer(
+              borderTop: false,
+              borderRight: false,
+              verticalPadding: 20.7,
+              child: pw.SizedBox.shrink(),
+            ),
+            DocumentComponents.buildContainer(
+              borderTop: false,
+              borderRight: false,
+              borderLeft: false,
+              verticalPadding: 5.0,
+              child: _buildAssociatedOfficerField(
+                title: 'Entity or Authorized Representative',
+              ),
+            ),
+            DocumentComponents.buildContainer(
+              borderTop: false,
+              borderLeft: false,
+              verticalPadding: 5.0,
+              child: _buildAssociatedOfficerField(
+                title: 'COA Representative',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     pdf.addPage(
       pw.MultiPage(
         pageTheme: DocumentPageUtil.getPageTheme(
@@ -24,569 +259,135 @@ class A73 implements BaseDocument {
         ),
         build: (context) => [
           pw.Center(
-            child: _buildHeader(),
-          ),
-          pw.SizedBox(
-            height: 10.0,
-          ),
-          pw.Text(
-            'Fund Cluster: ',
-            style: const pw.TextStyle(
-              //font: FontService().getFont('timesNewRomanBold'),
-              fontSize: 10.0,
+            child: _buildHeader(
+              assetSubClass: assetSubClass != null && assetSubClass.isNotEmpty
+                  ? assetSubClass
+                  : null,
             ),
           ),
           pw.SizedBox(
             height: 10.0,
           ),
           pw.Text(
-            'For which __________________, ________________, __________________ is accountable, having assumed such accountability on ______________.',
-            style: const pw.TextStyle(
-              //font: FontService().getFont('timesNewRomanBold'),
-              fontSize: 10.0,
+            'Fund Cluster: ${data['fund_cluster']}',
+            style: pw.TextStyle(
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
             ),
           ),
           pw.SizedBox(
             height: 10.0,
           ),
-          _buildTableHeader(pageFormat),
-          for (int i = 0; i < 20; i++) _buildTableContent(pageFormat),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Certified Correct by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Approved by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 3.0,
-                    horizontalPadding: 3.0,
-                    child: pw.Text(
-                      'Witnessed by:',
-                      style: const pw.TextStyle(
-                        fontSize: 8.0,
-                      ),
-                    ),
-                  ),
-                ],
+          pw.RichText(
+            text: pw.TextSpan(
+              text: 'For which ',
+              style: pw.TextStyle(
+                font:
+                    serviceLocator<FontService>().getFont('timesNewRomanBold'),
+                fontSize: 8.0,
               ),
-            ],
+              children: [
+                pw.TextSpan(
+                  text: accountableOfficer?['name'] != null &&
+                          accountableOfficer!['name']!.isNotEmpty
+                      ? '${accountableOfficer['name']}'
+                      : '_______________________',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanRegular'),
+                    fontSize: 7.5,
+                    decoration: pw.TextDecoration.underline,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: ', ',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: accountableOfficer?['position'] != null &&
+                          accountableOfficer!['position']!.isNotEmpty
+                      ? '${accountableOfficer['position']}'
+                      : '_______________________',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanRegular'),
+                    fontSize: 7.5,
+                    decoration: pw.TextDecoration.underline,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: ', ',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: accountableOfficer?['location'] != null &&
+                          accountableOfficer!['location']!.isNotEmpty
+                      ? '${accountableOfficer['location']}'
+                      : '_______________________',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanRegular'),
+                    fontSize: 7.5,
+                    decoration: pw.TextDecoration.underline,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: ', ',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
+                  ),
+                ),
+                pw.TextSpan(
+                  text:
+                      'is accountable, having assumed such accountability on ',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: accountableOfficer?['accountability_date'] != null
+                      ? '${accountableOfficer?['accountability_date']}'
+                      : '_______________________',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanRegular'),
+                    fontSize: 7.5,
+                    decoration: pw.TextDecoration.underline,
+                  ),
+                ),
+                pw.TextSpan(
+                  text: '.',
+                  style: pw.TextStyle(
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
+                  ),
+                ),
+              ],
+            ),
           ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Chair',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title:
-                              'head of Agency/Entity or Authorized Representative',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'COA Representative',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          pw.SizedBox(
+            height: 10.0,
           ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Co-Chair',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderLeft: false,
-                    borderBottom: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
+          _buildTableHeader(
+            pageFormat,
+            tableRows,
           ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 5.0,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderBottom: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.Table(
-            columnWidths: pageFormat == PdfPageFormat.a4
-                ? {
-                    0: const pw.FixedColumnWidth(1250.0),
-                    1: const pw.FixedColumnWidth(960.0),
-                    2: const pw.FixedColumnWidth(775.0),
-                  }
-                : pageFormat == PdfPageFormat.letter
-                    ? {
-                        0: const pw.FixedColumnWidth(300.0),
-                        1: const pw.FixedColumnWidth(400.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(190.0),
-                        4: const pw.FixedColumnWidth(125.0),
-                        5: const pw.FixedColumnWidth(250.0),
-                        6: const pw.FixedColumnWidth(250.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(240.0),
-                      }
-                    : {
-                        0: const pw.FixedColumnWidth(360.0),
-                        1: const pw.FixedColumnWidth(470.0),
-                        2: const pw.FixedColumnWidth(200.0),
-                        3: const pw.FixedColumnWidth(150.0),
-                        4: const pw.FixedColumnWidth(100.0),
-                        5: const pw.FixedColumnWidth(200.0),
-                        6: const pw.FixedColumnWidth(200.0),
-                        7: const pw.FixedColumnWidth(240.0),
-                        8: const pw.FixedColumnWidth(470.0),
-                      },
-            children: [
-              pw.TableRow(
-                children: [
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    verticalPadding: 5.0,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _buildAssociatedOfficerField(
-                          title: 'Inventory Committee Member',
-                        ),
-                      ],
-                    ),
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                  DocumentComponents.buildContainer(
-                    borderTop: false,
-                    borderLeft: false,
-                    verticalPadding: 21.4,
-                  ),
-                ],
-              ),
-            ],
+          _buildTableFooter(
+            pageFormat,
+            tableFooterRows,
           ),
         ],
       ),
@@ -595,14 +396,16 @@ class A73 implements BaseDocument {
     return pdf;
   }
 
-  pw.Widget _buildHeader() {
+  pw.Widget _buildHeader({
+    String? assetSubClass,
+  }) {
     return pw.Column(
       children: [
         pw.Text(
           'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 14.0,
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+            fontSize: 10.0,
           ),
           textAlign: pw.TextAlign.center,
         ),
@@ -610,77 +413,77 @@ class A73 implements BaseDocument {
           height: 5.0,
         ),
         pw.Text(
-          '_______________________________________',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 12.0,
+          assetSubClass?.toUpperCase() ?? '_________________________',
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+            fontSize: 8.0,
           ),
         ),
         pw.SizedBox(
           height: 5.0,
         ),
         pw.Text(
-          '(Type of Property, Plant, and Equipment)',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanRegular'),
-            fontSize: 10.0,
+          '(Type of Property, Plant and Equipment)',
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanRegular'),
+            fontSize: 8.0,
           ),
         ),
         pw.SizedBox(
           height: 5.0,
         ),
         pw.Text(
-          'As at _______________________________',
-          style: const pw.TextStyle(
-            //font: FontService().getFont('timesNewRomanBold'),
-            fontSize: 12.0,
+          'As at _______________________',
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+            fontSize: 9.0,
           ),
         ),
       ],
     );
   }
 
-  pw.Table _buildTableHeader(PdfPageFormat pageFormat) {
+  pw.Table _buildTableHeader(
+    PdfPageFormat pageFormat,
+    List<pw.TableRow> tableRows,
+  ) {
     return pw.Table(
       columnWidths: pageFormat == PdfPageFormat.a4
           ? {
               0: const pw.FixedColumnWidth(300.0),
               1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(300.0),
+              2: const pw.FixedColumnWidth(350.0),
               3: const pw.FixedColumnWidth(180.0),
               4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(260.0),
-              6: const pw.FixedColumnWidth(260.0),
+              5: const pw.FixedColumnWidth(240.0),
+              6: const pw.FixedColumnWidth(240.0),
               7: const pw.FixedColumnWidth(350.0),
               8: const pw.FixedColumnWidth(600.0),
             }
           : pageFormat == PdfPageFormat.letter
               ? {
                   0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(550.0),
-                  2: const pw.FixedColumnWidth(250.0),
+                  1: const pw.FixedColumnWidth(500.0),
+                  2: const pw.FixedColumnWidth(310.0),
                   3: const pw.FixedColumnWidth(180.0),
                   4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(250.0),
-                  6: const pw.FixedColumnWidth(250.0),
-                  7: const pw.FixedColumnWidth(350.0),
-                  8: const pw.FixedColumnWidth(550.0),
+                  5: const pw.FixedColumnWidth(210.0),
+                  6: const pw.FixedColumnWidth(210.0),
+                  7: const pw.FixedColumnWidth(320.0),
+                  8: const pw.FixedColumnWidth(500.0),
                 }
               : {
                   0: const pw.FixedColumnWidth(360.0),
-                  1: const pw.FixedColumnWidth(470.0),
+                  1: const pw.FixedColumnWidth(500.0),
                   2: const pw.FixedColumnWidth(200.0),
-                  3: const pw.FixedColumnWidth(150.0),
+                  3: const pw.FixedColumnWidth(120.0),
                   4: const pw.FixedColumnWidth(100.0),
-                  5: const pw.FixedColumnWidth(200.0),
-                  6: const pw.FixedColumnWidth(200.0),
+                  5: const pw.FixedColumnWidth(160.0),
+                  6: const pw.FixedColumnWidth(160.0),
                   7: const pw.FixedColumnWidth(240.0),
                   8: const pw.FixedColumnWidth(470.0),
                 },
-      children: [
-        _buildHeaderTableRow(),
-        //for (int i = 0; i < 20; i++) _buildFirstPageTableRow(),
-      ],
+      children: tableRows,
     );
   }
 
@@ -690,34 +493,34 @@ class A73 implements BaseDocument {
           ? {
               0: const pw.FixedColumnWidth(300.0),
               1: const pw.FixedColumnWidth(600.0),
-              2: const pw.FixedColumnWidth(300.0),
+              2: const pw.FixedColumnWidth(350.0),
               3: const pw.FixedColumnWidth(180.0),
               4: const pw.FixedColumnWidth(125.0),
-              5: const pw.FixedColumnWidth(260.0),
-              6: const pw.FixedColumnWidth(260.0),
+              5: const pw.FixedColumnWidth(240.0),
+              6: const pw.FixedColumnWidth(240.0),
               7: const pw.FixedColumnWidth(350.0),
               8: const pw.FixedColumnWidth(600.0),
             }
           : pageFormat == PdfPageFormat.letter
               ? {
                   0: const pw.FixedColumnWidth(210.0),
-                  1: const pw.FixedColumnWidth(550.0),
-                  2: const pw.FixedColumnWidth(250.0),
+                  1: const pw.FixedColumnWidth(500.0),
+                  2: const pw.FixedColumnWidth(310.0),
                   3: const pw.FixedColumnWidth(180.0),
                   4: const pw.FixedColumnWidth(115.0),
-                  5: const pw.FixedColumnWidth(250.0),
-                  6: const pw.FixedColumnWidth(250.0),
-                  7: const pw.FixedColumnWidth(350.0),
-                  8: const pw.FixedColumnWidth(550.0),
+                  5: const pw.FixedColumnWidth(210.0),
+                  6: const pw.FixedColumnWidth(210.0),
+                  7: const pw.FixedColumnWidth(320.0),
+                  8: const pw.FixedColumnWidth(500.0),
                 }
               : {
                   0: const pw.FixedColumnWidth(360.0),
                   1: const pw.FixedColumnWidth(470.0),
                   2: const pw.FixedColumnWidth(200.0),
-                  3: const pw.FixedColumnWidth(150.0),
-                  4: const pw.FixedColumnWidth(100.0),
-                  5: const pw.FixedColumnWidth(200.0),
-                  6: const pw.FixedColumnWidth(200.0),
+                  3: const pw.FixedColumnWidth(80.0),
+                  4: const pw.FixedColumnWidth(200.0),
+                  5: const pw.FixedColumnWidth(80.0),
+                  6: const pw.FixedColumnWidth(80.0),
                   7: const pw.FixedColumnWidth(240.0),
                   8: const pw.FixedColumnWidth(470.0),
                 },
@@ -733,90 +536,126 @@ class A73 implements BaseDocument {
       children: [
         DocumentComponents.buildHeaderContainerCell(
           data: 'Article',
-          verticalPadding: 11.4,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            DocumentComponents.buildHeaderContainerCell(
-              data: 'Description',
-              verticalPadding: 3.0,
-              horizontalPadding: 3.0,
-              borderRight: false,
-              borderLeft: false,
-              borderWidthBottom: 2.0,
-            ),
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Specs',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Brand',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Model',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: 'Serial #',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 14.8,
         ),
         DocumentComponents.buildHeaderContainerCell(
+          data: 'Description (Specification, Brand, Model, Serial #, Etc.)',
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 10.6,
+          horizontalPadding: 3.0,
+          borderRight: false,
+          borderLeft: false,
+          borderWidthBottom: 2.0,
+        ),
+        // pw.Column(
+        //   crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        //   children: [
+        //     DocumentComponents.buildHeaderContainerCell(
+        //       data: 'Description (Specification, Brand, Model, Serial #, Etc.)',
+        //       font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+        //       fontSize: 8.0,
+        //       verticalPadding: 3.0,
+        //       horizontalPadding: 3.0,
+        //       borderRight: false,
+        //       borderLeft: false,
+        //       borderWidthBottom: 2.0,
+        //     ),
+        //     pw.Row(
+        //       children: [
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildHeaderContainerCell(
+        //             data: 'Specs',
+        //             font: serviceLocator<FontService>()
+        //                 .getFont('timesNewRomanBold'),
+        //             fontSize: 8.0,
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderLeft: false,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildHeaderContainerCell(
+        //             data: 'Brand',
+        //             font: serviceLocator<FontService>()
+        //                 .getFont('timesNewRomanBold'),
+        //             fontSize: 8.0,
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildHeaderContainerCell(
+        //             data: 'Model',
+        //             font: serviceLocator<FontService>()
+        //                 .getFont('timesNewRomanBold'),
+        //             fontSize: 8.0,
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildHeaderContainerCell(
+        //             data: 'Serial #',
+        //             font: serviceLocator<FontService>()
+        //                 .getFont('timesNewRomanBold'),
+        //             fontSize: 8.0,
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+        DocumentComponents.buildHeaderContainerCell(
           data: 'Property Number',
-          verticalPadding: 6.0,
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 10.6,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit of Measure',
-          verticalPadding: 6.0,
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 10.6,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Unit Value',
-          verticalPadding: 6.0,
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 10.6,
           borderRight: false,
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Quantity per',
+              data: 'Balance Per Card',
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
               horizontalPadding: 3.0,
               borderRight: false,
               verticalPadding: 3.0,
               borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Property Card',
+              data: '(Quantity)',
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
               borderTop: false,
               borderRight: false,
               verticalPadding: 3.0,
@@ -827,13 +666,17 @@ class A73 implements BaseDocument {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Quantity per',
+              data: 'On Hand Per Count',
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
               verticalPadding: 3.0,
               horizontalPadding: 3.0,
               borderWidthBottom: 2.0,
             ),
             DocumentComponents.buildHeaderContainerCell(
-              data: 'Physical Count',
+              data: '(Quantity)',
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
               borderTop: false,
               verticalPadding: 3.0,
             ),
@@ -844,31 +687,40 @@ class A73 implements BaseDocument {
           children: [
             DocumentComponents.buildHeaderContainerCell(
               data: 'Shortage/Overage',
+              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+              fontSize: 8.0,
               borderRight: false,
               borderLeft: false,
               borderWidthBottom: 2.0,
-              verticalPadding: 3.0,
+              verticalPadding: 7.5,
             ),
             pw.Row(
               children: [
                 pw.Expanded(
                   child: DocumentComponents.buildHeaderContainerCell(
                     data: 'Quantity',
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
                     borderTop: false,
                     borderRight: false,
                     borderLeft: false,
                     horizontalPadding: 3.0,
-                    verticalPadding: 2.0,
-                    borderWidthBottom: 2.0,
+                    verticalPadding: 3.0,
+                    borderWidthBottom: 2.8,
                   ),
                 ),
                 pw.Expanded(
                   child: DocumentComponents.buildHeaderContainerCell(
                     data: 'Value',
+                    font: serviceLocator<FontService>()
+                        .getFont('timesNewRomanBold'),
+                    fontSize: 8.0,
                     borderTop: false,
                     borderRight: false,
                     horizontalPadding: 3.0,
                     verticalPadding: 3.0,
+                    borderWidthBottom: 2.8,
                     borderWidthLeft: 2.0,
                   ),
                 ),
@@ -878,19 +730,113 @@ class A73 implements BaseDocument {
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Remarks (State whereabouts, conditions, Accountable Officer)',
-          verticalPadding: 6.0,
+          font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
+          fontSize: 8.0,
+          verticalPadding: 10.6,
         ),
       ],
     );
   }
 
-  pw.TableRow _buildContentTableRow() {
+  pw.TableRow _buildContentTableRow({
+    String? article,
+    String? description,
+    String? semiExpendablePropertyNo,
+    String? unit,
+    double? unitValue,
+    int? totalQuantity,
+    int? quantityAfterIssued,
+    String? remarks,
+    double? rowHeight,
+  }) {
     return pw.TableRow(
       children: [
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          borderTop: false,
+        DocumentComponents.buildTableRowColumn(
+          data: article ?? '\n',
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: description ?? '\n',
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        // pw.Column(
+        //   crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        //   children: [
+        //     pw.Row(
+        //       children: [
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildTableRowColumn(
+        //             data: '\n',
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderLeft: false,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildTableRowColumn(
+        //             data: '\n',
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildTableRowColumn(
+        //             data: '\n',
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //         pw.Expanded(
+        //           child: DocumentComponents.buildTableRowColumn(
+        //             data: '\n',
+        //             verticalPadding: 3.0,
+        //             borderTop: false,
+        //             borderRight: false,
+        //             borderWidthLeft: 2.0,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+        DocumentComponents.buildTableRowColumn(
+          data: semiExpendablePropertyNo ?? '\n',
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: unit ?? '\n',
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: formatCurrency(unitValue ?? 0),
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: totalQuantity.toString(),
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
+        ),
+        DocumentComponents.buildTableRowColumn(
+          data: totalQuantity.toString(),
+          borderRight: false,
+          fontSize: 8.0,
+          rowHeight: rowHeight,
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -898,112 +844,58 @@ class A73 implements BaseDocument {
             pw.Row(
               children: [
                 pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
+                  child: DocumentComponents.buildTableRowColumn(
                     data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
                     borderRight: false,
-                    borderLeft: false,
+                    fontSize: 8.0,
+                    rowHeight: rowHeight,
                   ),
                 ),
                 pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
+                  child: DocumentComponents.buildTableRowColumn(
                     data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
                     borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    verticalPadding: 3.0,
-                    borderTop: false,
-                    borderRight: false,
-                    borderWidthLeft: 2.0,
+                    solidBorderWidth: 2.0,
+                    fontSize: 8.0,
+                    rowHeight: rowHeight,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          horizontalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          horizontalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          verticalPadding: 3.0,
-          borderTop: false,
-          borderRight: false,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          borderRight: false,
-          verticalPadding: 3.0,
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          verticalPadding: 3.0,
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    borderTop: false,
-                    borderRight: false,
-                    borderLeft: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 3.0,
-                  ),
-                ),
-                pw.Expanded(
-                  child: DocumentComponents.buildHeaderContainerCell(
-                    data: '\n',
-                    borderTop: false,
-                    borderRight: false,
-                    horizontalPadding: 3.0,
-                    verticalPadding: 3.0,
-                    borderWidthLeft: 2.0,
-                    borderWidthBottom: 3.0,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        DocumentComponents.buildHeaderContainerCell(
-          data: '\n',
-          borderTop: false,
-          verticalPadding: 3.0,
+        DocumentComponents.buildTableRowColumn(
+          data: remarks ?? '\n',
+          fontSize: 8.0,
+          rowHeight: rowHeight,
         ),
       ],
+    );
+  }
+
+  pw.Table _buildTableFooter(
+    PdfPageFormat pageFormat,
+    List<pw.TableRow> tableRows,
+  ) {
+    return pw.Table(
+      columnWidths: pageFormat == PdfPageFormat.a4
+          ? {
+              0: const pw.FixedColumnWidth(865.0),
+              1: const pw.FixedColumnWidth(800.0),
+              2: const pw.FixedColumnWidth(375.0),
+            }
+          : pageFormat == PdfPageFormat.letter
+              ? {
+                  0: const pw.FixedColumnWidth(1000.0),
+                  1: const pw.FixedColumnWidth(835.0),
+                  2: const pw.FixedColumnWidth(375.0),
+                }
+              : {
+                  0: const pw.FixedColumnWidth(995.0),
+                  1: const pw.FixedColumnWidth(710.0),
+                  2: const pw.FixedColumnWidth(375.0),
+                },
+      children: tableRows,
     );
   }
 
@@ -1015,9 +907,13 @@ class A73 implements BaseDocument {
       mainAxisAlignment: pw.MainAxisAlignment.center,
       children: [
         pw.Text(
-          officerName ?? '___________________________________',
-          style: const pw.TextStyle(
+          officerName != null && officerName.isNotEmpty
+              ? officerName
+              : '___________________________',
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanRegular'),
             fontSize: 8.0,
+            decoration: pw.TextDecoration.underline,
           ),
           textAlign: pw.TextAlign.center,
         ),
@@ -1026,7 +922,8 @@ class A73 implements BaseDocument {
         ),
         pw.Text(
           'Signature over Printed Name of\n$title',
-          style: const pw.TextStyle(
+          style: pw.TextStyle(
+            font: serviceLocator<FontService>().getFont('timesNewRomanRegular'),
             fontSize: 8.0,
           ),
           textAlign: pw.TextAlign.center,

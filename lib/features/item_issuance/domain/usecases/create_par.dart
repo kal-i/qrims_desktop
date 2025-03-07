@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/error/failure.dart';
 
 import '../../../../core/usecases/usecase.dart';
@@ -19,36 +20,45 @@ class CreatePAR
     CreatePARParams params,
   ) async {
     return await issuanceRepository.createPAR(
-      prId: params.prId,
+      issuedDate: params.issuedDate,
       issuanceItems: params.issuanceItems,
+      prId: params.prId,
+      entityName: params.entityName,
+      fundCluster: params.fundCluster,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
       receivingOfficerName: params.receivingOfficerName,
-      sendingOfficerOffice: params.sendingOfficerOffice,
-      sendingOfficerPosition: params.sendingOfficerPosition,
-      sendingOfficerName: params.sendingOfficerName,
+      issuingOfficerOffice: params.issuingOfficerOffice,
+      issuingOfficerPosition: params.issuingOfficerPosition,
+      issuingOfficerName: params.issuingOfficerName,
     );
   }
 }
 
 class CreatePARParams {
   const CreatePARParams({
-    required this.prId,
+    this.issuedDate,
     required this.issuanceItems,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.sendingOfficerOffice,
-    required this.sendingOfficerPosition,
-    required this.sendingOfficerName,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
   });
 
-  final String prId;
+  final DateTime? issuedDate;
   final List issuanceItems;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String sendingOfficerOffice;
-  final String sendingOfficerPosition;
-  final String sendingOfficerName;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
 }

@@ -35,13 +35,15 @@ class Sticker implements BaseDocument {
 
     if (data is InventoryCustodianSlipEntity) {
       items = data.items;
-      fundSource = data.purchaseRequestEntity.fundCluster.toReadableString();
-      personAccountable = data.receivingOfficerEntity.name;
+      fundSource = data.purchaseRequestEntity?.fundCluster.toReadableString() ??
+          data.fundCluster!.toReadableString();
+      personAccountable = data.receivingOfficerEntity?.name ?? '';
       acquisitionDate = documentDateFormatter(data.issuedDate);
     } else if (data is PropertyAcknowledgementReceiptEntity) {
       items = data.items;
-      fundSource = data.purchaseRequestEntity.fundCluster.toReadableString();
-      personAccountable = data.receivingOfficerEntity.name;
+      fundSource = data.purchaseRequestEntity?.fundCluster.toReadableString() ??
+          data.fundCluster!.toReadableString();
+      personAccountable = data.receivingOfficerEntity?.name ?? '';
       acquisitionDate = documentDateFormatter(data.issuedDate);
     } else {
       throw ArgumentError('Unsupported data type for RIS generation');

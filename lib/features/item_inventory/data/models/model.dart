@@ -3,7 +3,7 @@ import '../../domain/entities/model.dart';
 class Model extends ModelEntity {
   const Model({
     required super.id,
-    required super.stockId,
+    required super.productNameId,
     required super.brandId,
     required super.modelName,
   });
@@ -11,7 +11,7 @@ class Model extends ModelEntity {
   factory Model.fromJson(Map<String, dynamic> json) {
     return Model(
       id: json['model_id'] as String? ?? '',
-      stockId: json['stock_id'] as String? ?? '',
+      productNameId: json['stock_id'] as int? ?? 0,
       brandId: json['brand_id'] as String? ?? '',
       modelName: json['model_name'] as String? ?? '',
     );
@@ -20,7 +20,7 @@ class Model extends ModelEntity {
   Map<String, dynamic> toJson() {
     return {
       'model_id': id,
-      'stock_id': stockId,
+      'stock_id': productNameId,
       'brand_id': brandId,
       'model_name': modelName,
     };

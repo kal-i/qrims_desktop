@@ -17,6 +17,8 @@ import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
+import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
@@ -238,34 +240,43 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
             final initItemData = state.item;
 
             if (initItemData is EquipmentEntity) {
+              final itemEntity = state.item as EquipmentEntity;
+              final productStockEntity = itemEntity.productStockEntity;
+              final productNameEntity = productStockEntity.productName;
+              final productDescriptionEntity =
+                  productStockEntity.productDescription;
+              final shareableItemInformationEntity =
+                  itemEntity.shareableItemInformationEntity;
+              final manufacturerBrandEntity =
+                  itemEntity.manufacturerBrandEntity;
+              final manufacturerEntity = manufacturerBrandEntity.manufacturer;
+              final brandEntity = manufacturerBrandEntity.brand;
+              final modelEntity = itemEntity.modelEntity;
+
               _itemIdController.text =
-                  initItemData.shareableItemInformationEntity.id.toString();
+                  shareableItemInformationEntity.id.toString();
               _encryptedItemIdController.text =
-                  initItemData.shareableItemInformationEntity.encryptedId;
-              _itemNameController.text = initItemData
-                      .productStockEntity.productName.name
-                      .toLowerCase() ??
-                  '';
-              _itemDescriptionsController.text = initItemData
-                      .productStockEntity.productDescription?.description ??
-                  '';
+                  shareableItemInformationEntity.encryptedId;
+              _itemNameController.text = capitalizeWord(productNameEntity.name);
+              _itemDescriptionsController.text =
+                  productDescriptionEntity?.description ??
+                      'No description defined.';
               _specificationController.text =
-                  initItemData.shareableItemInformationEntity.specification ??
-                      'Not specified.';
-              _brandController.text =
-                  initItemData.manufacturerBrandEntity.brand.name;
-              _modelController.text = initItemData.modelEntity.modelName;
-              _serialNoController.text = initItemData.serialNo;
-              _manufacturerController.text =
-                  initItemData.manufacturerBrandEntity.manufacturer.name;
+                  (shareableItemInformationEntity.specification == null ||
+                          shareableItemInformationEntity.specification
+                                  ?.toLowerCase() ==
+                              'n/a')
+                      ? 'No specification defined.'
+                      : shareableItemInformationEntity.specification!;
+              _brandController.text = brandEntity.name;
+              _modelController.text = modelEntity.modelName;
+              _serialNoController.text = itemEntity.serialNo;
+              _manufacturerController.text = manufacturerEntity.name;
               _selectedAssetClassification.value =
                   AssetClassification.values.firstWhere(
                 (e) =>
                     e.toString().split('.').last ==
-                    initItemData.assetClassification
-                        ?.toString()
-                        .split('.')
-                        .last,
+                    itemEntity.assetClassification?.toString().split('.').last,
                 orElse: () => AssetClassification.unknown,
               );
 
@@ -273,26 +284,24 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   AssetSubClass.values.firstWhere(
                 (e) =>
                     e.toString().split('.').last ==
-                    initItemData.assetSubClass?.toString().split('.').last,
+                    itemEntity.assetSubClass?.toString().split('.').last,
                 orElse: () => AssetSubClass.unknown,
               );
               _selectedUnit.value = Unit.values.firstWhere(
                 (e) =>
                     e.toString().split('.').last ==
-                    initItemData.shareableItemInformationEntity.unit
+                    shareableItemInformationEntity.unit
                         .toString()
                         .split('.')
                         .last,
                 orElse: () => Unit.undetermined,
               );
-              _quantityController.text = initItemData
-                  .shareableItemInformationEntity.quantity
-                  .toString();
-              _unitCostController.text = initItemData
-                  .shareableItemInformationEntity.unitCost
-                  .toString();
+              _quantityController.text =
+                  shareableItemInformationEntity.quantity.toString();
+              _unitCostController.text =
+                  formatCurrency(shareableItemInformationEntity.unitCost);
               _estimatedUsefulLifeController.text =
-                  initItemData.estimatedUsefulLife.toString();
+                  itemEntity.estimatedUsefulLife.toString();
               _pickedDate.value =
                   initItemData.shareableItemInformationEntity.acquiredDate ??
                       DateTime.now();
@@ -459,6 +468,23 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
             Expanded(
               child: SizedBox(
                 height: 100.0,
+                child: _buildAcquiredDateSelection(),
+              ),
+            ),
+            const SizedBox(width: 20.0),
+            Expanded(
+              child: SizedBox(
+                height: 100.0,
+                child: _buildFundClusterSelection(),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 100.0,
                 child: _buildItemNamesSuggestionField(),
               ),
             ),
@@ -500,7 +526,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   SizedBox(
                     height: 100.0,
                     child: CustomFormTextField(
-                      label: 'Serial No.',
+                      label: '* Serial No.',
                       placeholderText: 'Enter item\'s serial no.',
                       controller: _serialNoController,
                       enabled: !_isViewOnlyMode(),
@@ -516,7 +542,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           ],
         ),
         CustomFormTextField(
-          label: 'Specification',
+          label: 'Specification (Optional)',
           placeholderText: 'Enter item\'s specification',
           maxLines: 4,
           controller: _specificationController,
@@ -533,16 +559,6 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Text(
-        //   'Other Information',
-        //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        //         fontSize: 18.0,
-        //         fontWeight: FontWeight.w700,
-        //       ),
-        // ),
-        // const SizedBox(
-        //   height: 20.0,
-        // ),
         Row(
           children: [
             Expanded(
@@ -560,7 +576,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   SizedBox(
                     height: 100.0,
                     child: CustomFormTextField(
-                      label: 'Unit Cost',
+                      label: '* Unit Cost',
                       placeholderText: 'Enter item\'s unit cost',
                       controller: _unitCostController,
                       enabled: !_isViewOnlyMode(),
@@ -588,7 +604,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   SizedBox(
                     height: 100.0,
                     child: CustomFormTextField(
-                      label: 'Estimated Useful Life',
+                      label: '* Estimated Useful Life',
                       placeholderText: 'Enter item\'s estimated useful life',
                       controller: _estimatedUsefulLifeController,
                       enabled: !_isViewOnlyMode(),
@@ -603,16 +619,6 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
               ),
             ),
           ],
-        ),
-
-        SizedBox(
-          height: 100.0,
-          child: _buildAcquiredDateSelection(),
-        ),
-
-        SizedBox(
-          height: 100.0,
-          child: _buildFundClusterSelection(),
         ),
       ],
     );
@@ -670,7 +676,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
         _selectedItemName.value = value;
       },
       controller: _itemNameController,
-      label: 'Item Name',
+      label: '* Item Name',
       placeHolderText: 'Enter item\'s name',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
@@ -707,7 +713,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
-          label: 'Fund Cluster',
+          label: '* Fund Cluster',
           placeholderText: 'Enter purchase request\'s fund cluster',
         );
       },
@@ -734,7 +740,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
             _itemDescriptionsController.text = value;
           },
           controller: _itemDescriptionsController,
-          label: 'Description',
+          label: '* Description',
           placeHolderText: 'Enter item\'s description',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -764,7 +770,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
         _selectedManufacturer.value = value;
       },
       controller: _manufacturerController,
-      label: 'Manufacturer',
+      label: '* Manufacturer',
       placeHolderText: 'Enter item\'s manufacturer',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
@@ -800,7 +806,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
             _selectedBrand.value = value;
           },
           controller: _brandController,
-          label: 'Brand',
+          label: '* Brand',
           placeHolderText: 'Enter item\'s brand',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -836,7 +842,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   _modelController.text = value;
                 },
                 controller: _modelController,
-                label: 'Model',
+                label: '* Model',
                 placeHolderText: 'Enter item\'s model',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
@@ -855,7 +861,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           value: selectedValue.toString(),
           onChanged:
               !_isViewOnlyMode() ? _onAssetClassificationSelection : null,
-          label: 'Asset Classification',
+          label: '* Asset Classification',
           items: AssetClassification.values
               .map(
                 (assetClassification) => DropdownMenuItem<String>(
@@ -899,7 +905,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                 ),
               )
               .toList(),
-          label: 'Unit',
+          label: '* Unit',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
@@ -915,7 +921,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
         return CustomDropdownField(
           value: selectedValue.toString(),
           onChanged: !_isViewOnlyMode() ? _onAssetSubClassSelection : null,
-          label: 'Asset Sub Class',
+          label: '* Asset Sub Class',
           items: AssetSubClass.values
               .map(
                 (assetSubClass) => DropdownMenuItem<String>(
@@ -943,7 +949,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
       valueListenable: _quantity,
       builder: (BuildContext context, int value, Widget? child) {
         return CustomFormTextField(
-          label: 'Quantity',
+          label: '* Quantity',
           placeholderText: 'Enter item\'s quantity',
           controller: _quantityController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -997,7 +1003,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
               _pickedDate.value = date;
             }
           },
-          label: 'Acquired Date',
+          label: '* Acquired Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox

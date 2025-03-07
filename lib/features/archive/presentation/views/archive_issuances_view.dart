@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
@@ -16,6 +14,7 @@ import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
+import '../../../../core/enums/issuance_status.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../item_issuance/presentation/bloc/issuances_bloc.dart';
@@ -261,14 +260,15 @@ class _ArchiveIssuancesViewState extends State<ArchiveIssuancesView> {
                       ),
                 ),
                 Text(
-                  issuance.purchaseRequestEntity.id,
+                  issuance.purchaseRequestEntity?.id ?? 'N/A',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
                 ),
                 Text(
-                  capitalizeWord(issuance.receivingOfficerEntity.name),
+                  capitalizeWord(
+                      issuance.receivingOfficerEntity?.name ?? 'N/A'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
@@ -279,7 +279,7 @@ class _ArchiveIssuancesViewState extends State<ArchiveIssuancesView> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: _buildStatusHighlighter(
-                      issuance.isReceived,
+                      issuance.status,
                     ),
                   ),
                 ),
@@ -377,17 +377,24 @@ class _ArchiveIssuancesViewState extends State<ArchiveIssuancesView> {
     );
   }
 
-  Widget _buildStatusHighlighter(bool isReceived) {
+  Widget _buildStatusHighlighter(IssuanceStatus status) {
     return HighlightStatusContainer(
-      statusStyle: _issuanceStatusStyler(isReceived: isReceived),
+      statusStyle: _issuanceStatusStyler(status: status),
     );
   }
 
-  StatusStyle _issuanceStatusStyler({required bool isReceived}) {
-    if (isReceived) {
-      return StatusStyle.green(label: 'Received');
-    } else {
-      return StatusStyle.yellow(label: 'To be receive');
+  StatusStyle _issuanceStatusStyler({
+    required IssuanceStatus status,
+  }) {
+    switch (status) {
+      case IssuanceStatus.unreceived:
+        return StatusStyle.yellow(label: 'Pending');
+      case IssuanceStatus.received:
+        return StatusStyle.green(label: 'Received');
+      case IssuanceStatus.returned:
+        return StatusStyle.blue(label: 'Returned');
+      case IssuanceStatus.cancelled:
+        return StatusStyle.red(label: 'Cancelled');
     }
   }
 }

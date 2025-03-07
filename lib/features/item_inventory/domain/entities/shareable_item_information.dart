@@ -15,8 +15,8 @@ class ShareableItemInformationEntity {
   });
 
   final String id;
-  final String productNameId;
-  final String productDescriptionId;
+  final int productNameId;
+  final int productDescriptionId;
   final String? specification;
   final Unit unit;
   final int quantity;

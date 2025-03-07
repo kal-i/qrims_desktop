@@ -433,7 +433,16 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                             ),
                       ),
                       Text(
-                        '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}',
+                        (item.shareableItemInformationEntity.specification ==
+                                    null ||
+                                item.shareableItemInformationEntity
+                                        .specification
+                                        ?.toLowerCase() ==
+                                    'n/a')
+                            ? capitalizeWord(
+                                '${item.productStockEntity.productDescription?.description}')
+                            : capitalizeWord(
+                                '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}'),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,

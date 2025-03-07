@@ -1,5 +1,6 @@
 import 'package:fpdart/src/either.dart';
 
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/requisition_and_issue_slip.dart';
@@ -18,51 +19,75 @@ class CreateRIS
     CreateRISParams params,
   ) async {
     return await issuanceRepository.createRIS(
-      prId: params.prId,
+      issuedDate: params.issuedDate,
       issuanceItems: params.issuanceItems,
-      purpose: params.purpose,
+      prId: params.prId,
+      entityName: params.entityName,
+      fundCluster: params.fundCluster,
+      division: params.division,
       responsibilityCenterCode: params.responsibilityCenterCode,
+      officeName: params.officeName,
+      purpose: params.purpose,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
       receivingOfficerName: params.receivingOfficerName,
+      issuingOfficerOffice: params.issuingOfficerOffice,
+      issuingOfficerPosition: params.issuingOfficerPosition,
+      issuingOfficerName: params.issuingOfficerName,
       approvingOfficerOffice: params.approvingOfficerOffice,
       approvingOfficerPosition: params.approvingOfficerPosition,
       approvingOfficerName: params.approvingOfficerName,
-      issuingOfficerOffice: params.issuingOfficerOffice,
-      issuingOfficerPosition: params.approvingOfficerPosition,
-      issuingOfficerName: params.issuingOfficerName,
+      requestingOfficerOffice: params.requestingOfficerOffice,
+      requestingOfficerPosition: params.requestingOfficerPosition,
+      requestingOfficerName: params.requestingOfficerName,
     );
   }
 }
 
 class CreateRISParams {
   const CreateRISParams({
-    required this.prId,
+    this.issuedDate,
     required this.issuanceItems,
-    this.purpose,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.division,
     this.responsibilityCenterCode,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.approvingOfficerOffice,
-    required this.approvingOfficerPosition,
-    required this.approvingOfficerName,
-    required this.issuingOfficerOffice,
-    required this.issuingOfficerPosition,
-    required this.issuingOfficerName,
+    this.officeName,
+    this.purpose,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
+    this.approvingOfficerOffice,
+    this.approvingOfficerPosition,
+    this.approvingOfficerName,
+    this.requestingOfficerOffice,
+    this.requestingOfficerPosition,
+    this.requestingOfficerName,
   });
 
-  final String prId;
+  final DateTime? issuedDate;
   final List issuanceItems;
-  final String? purpose;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? division;
   final String? responsibilityCenterCode;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String approvingOfficerOffice;
-  final String approvingOfficerPosition;
-  final String approvingOfficerName;
-  final String issuingOfficerOffice;
-  final String issuingOfficerPosition;
-  final String issuingOfficerName;
+  final String? officeName;
+  final String? purpose;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
+  final String? approvingOfficerOffice;
+  final String? approvingOfficerPosition;
+  final String? approvingOfficerName;
+  final String? requestingOfficerOffice;
+  final String? requestingOfficerPosition;
+  final String? requestingOfficerName;
 }

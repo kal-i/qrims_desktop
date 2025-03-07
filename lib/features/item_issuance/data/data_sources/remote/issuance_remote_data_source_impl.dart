@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../../../../../core/constants/endpoints.dart';
+import '../../../../../core/enums/asset_sub_class.dart';
+import '../../../../../core/enums/fund_cluster.dart';
+import '../../../../../core/enums/ics_type.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
@@ -21,25 +26,41 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
 
   @override
   Future<InventoryCustodianSlipModel> createICS({
-    required String prId,
-    required List issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    DateTime? issuedDate,
+    IcsType? type,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   }) async {
     try {
       final Map<String, dynamic> params = {
-        'pr_id': prId,
+        if (issuedDate != null) 'issued_date': issuedDate.toIso8601String(),
+        if (type != null) 'type': type.toString().split('.').last,
         'issuance_items': issuanceItems,
-        "receiving_officer_office": receivingOfficerOffice,
-        "receiving_officer_position": receivingOfficerPosition,
-        "receiving_officer_name": receivingOfficerName,
-        "sending_officer_office": sendingOfficerOffice,
-        "sending_officer_position": sendingOfficerPosition,
-        "sending_officer_name": sendingOfficerName,
+        if (prId != null && prId.isNotEmpty) 'pr_id': prId,
+        if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
+        if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
+          'receiving_officer_office': receivingOfficerOffice,
+        if (receivingOfficerPosition != null &&
+            receivingOfficerPosition.isNotEmpty)
+          'receiving_officer_position': receivingOfficerPosition,
+        if (receivingOfficerName != null && receivingOfficerName.isNotEmpty)
+          'receiving_officer_name': receivingOfficerName,
+        if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
+          'issuing_officer_office': issuingOfficerOffice,
+        if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)
+          'issuing_officer_position': issuingOfficerPosition,
+        if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
+          'issuing_officer_name': issuingOfficerName,
       };
 
       final response = await httpService.post(
@@ -59,28 +80,39 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
 
   @override
   Future<PropertyAcknowledgementReceiptModel> createPAR({
-    required String prId,
-    String? propertyNumber,
-    required List issuanceItems,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String sendingOfficerOffice,
-    required String sendingOfficerPosition,
-    required String sendingOfficerName,
+    DateTime? issuedDate,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
   }) async {
     try {
       final Map<String, dynamic> params = {
-        'pr_id': prId,
-        if (propertyNumber != null && propertyNumber.isNotEmpty)
-          'property_number': propertyNumber,
+        if (issuedDate != null) 'issued_date': issuedDate.toIso8601String(),
         'issuance_items': issuanceItems,
-        "receiving_officer_office": receivingOfficerOffice,
-        "receiving_officer_position": receivingOfficerPosition,
-        "receiving_officer_name": receivingOfficerName,
-        "sending_officer_office": sendingOfficerOffice,
-        "sending_officer_position": sendingOfficerPosition,
-        "sending_officer_name": sendingOfficerName,
+        if (prId != null && prId.isNotEmpty) 'pr_id': prId,
+        if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
+        if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
+          'receiving_officer_office': receivingOfficerOffice,
+        if (receivingOfficerPosition != null &&
+            receivingOfficerPosition.isNotEmpty)
+          'receiving_officer_position': receivingOfficerPosition,
+        if (receivingOfficerName != null && receivingOfficerName.isNotEmpty)
+          'receiving_officer_name': receivingOfficerName,
+        if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
+          'issuing_officer_office': issuingOfficerOffice,
+        if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)
+          'issuing_officer_position': issuingOfficerPosition,
+        if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
+          'issuing_officer_name': issuingOfficerName,
       };
 
       final response = await httpService.post(
@@ -101,37 +133,72 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
 
   @override
   Future<RequisitionAndIssuanceSlipModel> createRIS({
-    required String prId,
-    required List issuanceItems,
-    String? purpose,
+    DateTime? issuedDate,
+    required List<dynamic> issuanceItems,
+    String? prId,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? division,
     String? responsibilityCenterCode,
-    required String receivingOfficerOffice,
-    required String receivingOfficerPosition,
-    required String receivingOfficerName,
-    required String approvingOfficerOffice,
-    required String approvingOfficerPosition,
-    required String approvingOfficerName,
-    required String issuingOfficerOffice,
-    required String issuingOfficerPosition,
-    required String issuingOfficerName,
+    String? officeName,
+    String? purpose,
+    String? receivingOfficerOffice,
+    String? receivingOfficerPosition,
+    String? receivingOfficerName,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    String? approvingOfficerOffice,
+    String? approvingOfficerPosition,
+    String? approvingOfficerName,
+    String? requestingOfficerOffice,
+    String? requestingOfficerPosition,
+    String? requestingOfficerName,
   }) async {
     try {
+      print('iss ds impl: $issuingOfficerPosition');
       final Map<String, dynamic> params = {
-        'pr_id': prId,
+        if (issuedDate != null) 'issued_date': issuedDate.toIso8601String(),
         'issuance_items': issuanceItems,
-        if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
+        if (prId != null && prId.isNotEmpty) 'pr_id': prId,
+        if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
+        if (division != null && division.isNotEmpty) 'division': division,
         if (responsibilityCenterCode != null &&
             responsibilityCenterCode.isNotEmpty)
           'responsibility_center_code': responsibilityCenterCode,
-        "receiving_officer_office": receivingOfficerOffice,
-        "receiving_officer_position": receivingOfficerPosition,
-        "receiving_officer_name": receivingOfficerName,
-        "approving_officer_office": approvingOfficerOffice,
-        "approving_officer_position": approvingOfficerPosition,
-        "approving_officer_name": approvingOfficerName,
-        "issuing_officer_office": issuingOfficerOffice,
-        "issuing_officer_position": issuingOfficerPosition,
-        "issuing_officer_name": issuingOfficerName,
+        if (officeName != null && officeName.isNotEmpty)
+          'office_name': officeName,
+        if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
+        if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
+          'receiving_officer_office': receivingOfficerOffice,
+        if (receivingOfficerPosition != null &&
+            receivingOfficerPosition.isNotEmpty)
+          'receiving_officer_position': receivingOfficerPosition,
+        if (receivingOfficerName != null && receivingOfficerName.isNotEmpty)
+          'receiving_officer_name': receivingOfficerName,
+        if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
+          'issuing_officer_office': issuingOfficerOffice,
+        if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)
+          'issuing_officer_position': issuingOfficerPosition,
+        if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
+          'issuing_officer_name': issuingOfficerName,
+        if (approvingOfficerOffice != null && approvingOfficerOffice.isNotEmpty)
+          'approving_officer_office': approvingOfficerOffice,
+        if (approvingOfficerPosition != null &&
+            approvingOfficerPosition.isNotEmpty)
+          'approving_officer_position': approvingOfficerPosition,
+        if (approvingOfficerName != null && approvingOfficerName.isNotEmpty)
+          'approving_officer_name': approvingOfficerName,
+        if (requestingOfficerOffice != null &&
+            requestingOfficerOffice.isNotEmpty)
+          'requesting_officer_office': requestingOfficerOffice,
+        if (requestingOfficerPosition != null &&
+            requestingOfficerPosition.isNotEmpty)
+          'requesting_officer_position': requestingOfficerPosition,
+        if (requestingOfficerName != null && requestingOfficerName.isNotEmpty)
+          'requesting_officer_name': requestingOfficerName,
       };
 
       final response = await httpService.post(
@@ -265,6 +332,93 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         return true;
       }
       return false;
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getInventorySupplyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'start_date': startDate.toIso8601String(),
+        if (endDate != null) 'end_date': endDate.toIso8601String(),
+      };
+
+      final response = await httpService.get(
+        endpoint: inventorySupplyReportEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(
+            response.data['inventory_supply']);
+      } else {
+        throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getInventoryPropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'start_date': startDate.toIso8601String(),
+        if (endDate != null) 'end_date': endDate.toIso8601String(),
+        if (assetSubClass != null)
+          'asset_sub_class': assetSubClass.toString().split('.').last,
+      };
+
+      final response = await httpService.get(
+        endpoint: inventoryPropertyReportEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(
+            response.data['inventory_property']);
+      } else {
+        throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getInventorySemiExpendablePropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    AssetSubClass? assetSubClass,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'start_date': startDate.toIso8601String(),
+        if (endDate != null) 'end_date': endDate.toIso8601String(),
+        if (assetSubClass != null)
+          'asset_sub_class': assetSubClass.toString().split('.').last,
+      };
+
+      final response = await httpService.get(
+        endpoint: inventorySemiExpendablePropertyReportEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(
+            response.data['inventory_semi_expendable_property']);
+      } else {
+        throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
     } catch (e) {
       throw ServerException(e.toString());
     }

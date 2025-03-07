@@ -12,26 +12,26 @@ class ItemRepository {
 
   final Connection _conn;
 
-  Future<String> _generateUniqueProductNameId() async {
-    while (true) {
-      final productNameId = generatedId('PRDCTNM');
+  // Future<String> _generateUniqueProductNameId() async {
+  //   while (true) {
+  //     final productNameId = generatedId('PRDCTNM');
 
-      final result = await _conn.execute(
-        Sql.named('''
-        SELECT COUNT(id) FROM ProductNames Where id = @id;
-        '''),
-        parameters: {
-          'id': productNameId,
-        },
-      );
+  //     final result = await _conn.execute(
+  //       Sql.named('''
+  //       SELECT COUNT(id) FROM ProductNames Where id = @id;
+  //       '''),
+  //       parameters: {
+  //         'id': productNameId,
+  //       },
+  //     );
 
-      final count = result.first[0] as int;
+  //     final count = result.first[0] as int;
 
-      if (count == 0) {
-        return productNameId;
-      }
-    }
-  }
+  //     if (count == 0) {
+  //       return productNameId;
+  //     }
+  //   }
+  // }
 
   Future<String> _generateUniqueProductDescriptionId() async {
     while (true) {
@@ -61,6 +61,7 @@ class ItemRepository {
   ) async {
     final now = DateTime.now();
 
+    // Use the provided acquiredDate or the current date
     final yearMonth = acquiredDate != null
         ? "${acquiredDate.year}-${acquiredDate.month.toString().padLeft(2, '0')}"
         : "${now.year}-${now.month.toString().padLeft(2, '0')}";
@@ -77,7 +78,7 @@ class ItemRepository {
     );
     final cumulativeCount = sequenceResult.first[0] as int;
 
-    // Fetch the latest record for the specific item this month
+    // Fetch the latest record for the specific item and month
     final itemResult = await _conn.execute(
       Sql.named(
         '''
@@ -88,19 +89,18 @@ class ItemRepository {
       ''',
       ),
       parameters: {
-        'item_name': itemName,
+        'item_name': formattedItemName,
         'year_month': yearMonth,
       },
     );
 
     int itemSpecificCount;
     if (itemResult.isNotEmpty && itemResult.first[0] != null) {
-      itemSpecificCount = int.parse(itemResult.first[0]
-              .toString()
-              .split('(')
-              .last
-              .replaceAll(')', '')) +
-          1;
+      // Extract the item-specific count from the latest ID for the month
+      final latestId = itemResult.first[0].toString();
+      final countMatch = RegExp(r'\((\d+)\)$').firstMatch(latestId);
+      itemSpecificCount =
+          countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
     } else {
       itemSpecificCount = 1;
     }
@@ -109,6 +109,7 @@ class ItemRepository {
     final uniqueId = fundCluster != null
         ? '$formattedItemName-${fundCluster.value}-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
         : '$formattedItemName-$yearMonth-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+
     return uniqueId;
   }
 
@@ -402,8 +403,8 @@ class ItemRepository {
       final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
       print('qr data id: $qrCodeImageData');
 
-      String? productNameId;
-      String? productDescriptionId;
+      int? productNameId;
+      int? productDescriptionId;
       String? manufacturerId;
       String? brandId;
       String? modelId;
@@ -558,8 +559,8 @@ class ItemRepository {
   Future<String> registerBaseItem({
     FundCluster? fundCluster,
     required String productName,
-    required String productNameId,
-    String? productDescriptionId,
+    required int productNameId,
+    int? productDescriptionId,
     String? specification,
     required Unit unit,
     required int quantity,
@@ -617,9 +618,71 @@ class ItemRepository {
     }
   }
 
+  Future<List<String>> generateBatchItems({
+    required DateTime acquiredDate,
+    required String baseItemId,
+    required String productName,
+    required int quantity,
+    FundCluster? fundCluster,
+  }) async {
+    if (productName.isEmpty) {
+      throw ArgumentError('Product name cannot be empty.');
+    }
+
+    // Format the product name (capitalize first letter of each word)
+    final formattedItemName = productName
+        .split(' ')
+        .map((word) =>
+            word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '')
+        .join('');
+
+    // Generate batch codes
+    final batchItemCodes = <String>[];
+    final batchInserts = <Map<String, dynamic>>[];
+
+    for (int i = 1; i <= quantity; i++) {
+      // Construct the batch code
+      final batchCode = fundCluster != null
+          ? '$formattedItemName-${acquiredDate.year}(${fundCluster.value})-${acquiredDate.month.toString().padLeft(2, '0')}-${i.toString().padLeft(3, '0')}'
+          : '$formattedItemName-${acquiredDate.year}${acquiredDate.month.toString().padLeft(2, '0')}-${i.toString().padLeft(3, '0')}';
+
+      batchItemCodes.add(batchCode);
+
+      // Prepare the insert parameters
+      batchInserts.add({
+        'base_item_id': baseItemId,
+        'batch_code': batchCode,
+      });
+    }
+
+    // Insert all batch items in a single query
+    try {
+      await _conn.execute(
+        Sql.named(
+          '''
+        INSERT INTO BatchItems (
+          base_item_id, 
+          batch_code
+        ) VALUES (
+          @base_item_id,
+          @batch_code
+        );
+        ''',
+        ),
+        parameters: batchInserts,
+      );
+    } catch (e) {
+      print('Error inserting batch items: $e');
+      rethrow; // Rethrow the exception to handle it at a higher level
+    }
+
+    print('Generated batch item codes: $batchItemCodes');
+    return batchItemCodes;
+  }
+
   Future<String?> checkSupplyIfExist({
-    required String productNameId,
-    required String productDescriptionId,
+    required int productNameId,
+    required int productDescriptionId,
     String? specification,
     required Unit unit,
     required double unitCost,
@@ -720,7 +783,7 @@ class ItemRepository {
 
   Future<String> registerEquipment({
     required String baseItemModelId,
-    required String productNameId,
+    required int productNameId,
     required String manufacturerName,
     required String brandName,
     required String modelName,
@@ -856,8 +919,8 @@ class ItemRepository {
       final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
       print('qr data id: $qrCodeImageData');
 
-      String? productNameId;
-      String? productDescriptionId;
+      int? productNameId;
+      int? productDescriptionId;
       String? manufacturerId;
       String? brandId;
       String? modelId;
@@ -1148,26 +1211,24 @@ class ItemRepository {
   //   }
   // }
 
-  Future<String> registerProductName({
+  Future<int> registerProductName({
     required String productName,
   }) async {
-    final productNameId = await _generateUniqueProductNameId();
-
-    await _conn.execute(
+    final result = await _conn.execute(
       Sql.named('''
-      INSERT INTO ProductNames (id, name)
-      VALUES (@id, @name)
+      INSERT INTO ProductNames (name)
+      VALUES (@name)
+      RETURNING id
     '''),
       parameters: {
-        'id': productNameId,
         'name': productName,
       },
     );
 
-    return productNameId;
+    return result.first[0] as int; // Return the generated ID
   }
 
-  Future<String?> checkProductNameIfExist({
+  Future<int?> checkProductNameIfExist({
     required String productName,
   }) async {
     final checkIfExists = await _conn.execute(
@@ -1185,30 +1246,28 @@ class ItemRepository {
       //return await registerProductName(productName: productName);
     } else {
       print('product name result is not empty: $checkIfExists');
-      return checkIfExists.first[0] as String;
+      return checkIfExists.first[0] as int;
     }
   }
 
-  Future<String> registerProductDescription({
+  Future<int> registerProductDescription({
     String? productDescription,
   }) async {
-    final productDescriptionId = await _generateUniqueProductDescriptionId();
-
-    await _conn.execute(
+    final result = await _conn.execute(
       Sql.named('''
-      INSERT INTO ProductDescriptions (id, description)
-      VALUES (@id, @description)
+      INSERT INTO ProductDescriptions (description)
+      VALUES (@description)
+      RETURNING id
     '''),
       parameters: {
-        'id': productDescriptionId,
         'description': productDescription,
       },
     );
 
-    return productDescriptionId;
+    return result.first[0] as int; // Return the generated ID
   }
 
-  Future<String?> checkProductDescriptionIfExist({
+  Future<int?> checkProductDescriptionIfExist({
     String? productDescription,
   }) async {
     final checkIfExists = productDescription == null
@@ -1234,13 +1293,13 @@ class ItemRepository {
       // );
     } else {
       print('product desc result is not empty: $checkIfExists');
-      return checkIfExists.first[0] as String;
+      return checkIfExists.first[0] as int;
     }
   }
 
   Future<void> registerProductStock({
-    required String productNameId,
-    required String productDescriptionId,
+    required int productNameId,
+    required int productDescriptionId,
   }) async {
     await _conn.execute(
       Sql.named('''
@@ -1255,8 +1314,8 @@ class ItemRepository {
   }
 
   Future<int> checkProductStockIfExist({
-    required String productNameId,
-    required String productDescriptionId,
+    required int productNameId,
+    required int productDescriptionId,
   }) async {
     final checkIfExists = await _conn.execute(
       Sql.named('''
@@ -1407,7 +1466,7 @@ class ItemRepository {
   }
 
   Future<String> registerModel({
-    required String productNameId,
+    required int productNameId,
     required String brandId,
     required String modelName,
   }) async {
@@ -1430,7 +1489,7 @@ class ItemRepository {
   }
 
   Future<String?> checkModelIfExist({
-    required String productNameId,
+    required int productNameId,
     required String brandId,
     required String modelName,
   }) async {
@@ -2236,8 +2295,8 @@ class ItemRepository {
         'id': id,
       };
 
-      String? productNameId;
-      String? productDescriptionId;
+      int? productNameId;
+      int? productDescriptionId;
       String? manufacturerId;
       String? brandId;
       String? modelId;
@@ -2260,7 +2319,7 @@ class ItemRepository {
         baseItemParams['product_name_id'] = productNameId;
       }
 
-      if ((productNameId != null && productNameId.isNotEmpty) &&
+      if ((productNameId != null) &&
           (description != null && description.isNotEmpty)) {
         final productDescriptionResult = await checkProductDescriptionIfExist(
           productDescription: description,
@@ -2375,7 +2434,7 @@ class ItemRepository {
         equipmentParams['brand_id'] = brandId;
       }
 
-      if ((productNameId != null && productNameId.isNotEmpty) &&
+      if ((productNameId != null) &&
           (brandId != null && brandId.isNotEmpty) &&
           (modelName != null && modelName.isNotEmpty)) {
         final modelResult = await checkModelIfExist(
@@ -2522,7 +2581,7 @@ class ItemRepository {
   }
 
   Future<int> getStocksDescriptionFilteredCount({
-    required String productNameId,
+    required int productNameId,
     String? productDescription,
   }) async {
     Map<String, dynamic> params = {};
@@ -2534,10 +2593,8 @@ class ItemRepository {
     JOIN ProductNames pn ON pn.id = ps.product_name_id
     ''';
 
-    if (productNameId.isNotEmpty) {
-      baseQuery += ' WHERE pn.id = @id';
-      params['id'] = productNameId;
-    }
+    baseQuery += ' WHERE pn.id = @id';
+    params['id'] = productNameId;
 
     if (productDescription != null && productDescription.isNotEmpty) {
       baseQuery += ' AND pd.description ILIKE @description';
@@ -2557,7 +2614,7 @@ class ItemRepository {
   Future<List<String>?> getStocksDescription({
     required int page,
     required int pageSize,
-    required String productNameId,
+    required int productNameId,
     String? productDescription,
   }) async {
     print(productNameId);
@@ -2572,10 +2629,8 @@ class ItemRepository {
     JOIN ProductNames pn ON pn.id = ps.product_name_id
     ''';
 
-    if (productNameId.isNotEmpty) {
-      baseQuery += 'WHERE pn.id = @id';
-      params['id'] = productNameId;
-    }
+    baseQuery += 'WHERE pn.id = @id';
+    params['id'] = productNameId;
 
     if (productDescription != null && productDescription.isNotEmpty) {
       baseQuery += ' AND pd.description ILIKE @description';
@@ -2759,7 +2814,7 @@ class ItemRepository {
   }
 
   Future<int> getBrandModelsFilteredCount({
-    required String productNameId,
+    required int productNameId,
     required String brandId,
     String? modelName,
   }) async {
@@ -2768,7 +2823,7 @@ class ItemRepository {
     SELECT COUNT(model_name) FROM Models
       ''';
 
-    if (productNameId.isNotEmpty && brandId.isNotEmpty) {
+    if (brandId.isNotEmpty) {
       baseQuery += ' WHERE product_name_id = @product_name_id';
       baseQuery += ' AND brand_id = @brand_id';
 
@@ -2795,7 +2850,7 @@ class ItemRepository {
   Future<List<String>?> getBrandModelNames({
     required int page,
     required int pageSize,
-    required String productNameId,
+    required int productNameId,
     required String brandId,
     String? modelName,
   }) async {
@@ -2807,7 +2862,7 @@ class ItemRepository {
     SELECT model_name FROM Models
       ''';
 
-    if (productNameId.isNotEmpty && brandId.isNotEmpty) {
+    if (brandId.isNotEmpty) {
       baseQuery += ' WHERE product_name_id = @product_name_id';
       baseQuery += ' AND brand_id = @brand_id';
 

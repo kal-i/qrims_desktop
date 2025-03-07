@@ -60,6 +60,8 @@ Future<Response> _createPAR(
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
+    print('json received by route: $json');
+
     /// Get current user from session
     final bearerToken = headers['Authorization']?.substring(7);
     if (bearerToken == null) {
@@ -86,6 +88,11 @@ Future<Response> _createPAR(
     );
 
     /// Process issuance data
+    final issuedDate = json['issued_date'] != null
+        ? json['issued_date'] is String
+            ? DateTime.parse(json['issued_date'] as String)
+            : json['issued_date'] as DateTime
+        : DateTime.now();
     final issuanceItems = json['issuance_items'] as List<dynamic>?;
     final prId = json['pr_id'] as String?;
     final entity = json['entity'] as String?;
@@ -106,10 +113,6 @@ Future<Response> _createPAR(
     final issuingOfficerOffice = json['issuing_officer_office'] as String?;
     final issuingOfficerPosition = json['issuing_officer_position'] as String?;
     final issuingOfficerName = json['issuing_officer_name'] as String?;
-
-    // final issuedDate = json['issued_date'] is String
-    //     ? DateTime.parse(json['issued_date'] as String)
-    //     : json['issued_date'] as DateTime;
 
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
@@ -175,6 +178,7 @@ Future<Response> _createPAR(
 
     /// Create PAR
     final issuanceId = await issuanceRepository.createPAR(
+      issuedDate: issuedDate,
       issuanceItems: issuanceItems,
       purchaseRequest: prId != null
           ? await prRepository.getPurchaseRequestById(

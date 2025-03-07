@@ -6,6 +6,7 @@ import 'package:api/src/organization_management/repositories/office_repository.d
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
 import 'package:api/src/purchase_request/model/purchase_request.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
+import 'package:api/src/utils/fund_cluster_value_extension.dart';
 import 'package:api/src/utils/qr_code_utils.dart';
 import 'package:postgres/postgres.dart';
 
@@ -51,34 +52,112 @@ class IssuanceRepository {
     return uniqueId;
   }
 
-  Future<String> _generateUniqueIcsId() async {
-    final now = DateTime.now();
-    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+  // Future<String> _generateUniqueIcsId({
+  //   IcsType? type,
+  //   FundCluster? fundCluster,
+  //   required DateTime issuedDate,
+  // }) async {
+  //   final yearMonth =
+  //       "${issuedDate.year}-${issuedDate.month.toString().padLeft(2, '0')}";
 
-    print('Current year-month for ICS ID: $yearMonth');
+  //   // Fetch the maximum sequence number (NNN) for the given year and month
+  //   final result = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //     SELECT id FROM InventoryCustodianSlips
+  //     WHERE id LIKE '%$yearMonth-%'
+  //     ORDER BY id DESC
+  //     LIMIT 1;
+  //     ''',
+  //     ),
+  //   );
 
+  //   int n = 1; // Default sequence number
+  //   if (result.isNotEmpty) {
+  //     final lastId = result.first[0].toString();
+  //     // Extract the sequence number (NNN) from the last ID
+  //     final parts = lastId.split('-');
+  //     final lastPart = parts.last;
+  //     n = int.parse(lastPart) + 1; // Increment the sequence number
+  //   }
+
+  //   String uniqueId = '';
+
+  //   // Add type prefix if type exists
+  //   if (type != null) {
+  //     uniqueId += '${type == IcsType.sphv ? 'SPHV' : 'SPLV'}-';
+  //   }
+
+  //   // Add year and fund cluster if fund cluster exists
+  //   uniqueId += '${issuedDate.year}';
+  //   if (fundCluster != null) {
+  //     uniqueId += '(${fundCluster.value})';
+  //   }
+
+  //   // Add month and sequence number
+  //   uniqueId +=
+  //       '-${issuedDate.month.toString().padLeft(2, '0')}-${n.toString().padLeft(3, '0')}';
+
+  //   print('Generated ICS ID: $uniqueId');
+  //   return uniqueId;
+  // }
+
+  Future<String> _generateUniqueIcsId({
+    IcsType? type,
+    FundCluster? fundCluster,
+    required DateTime issuedDate,
+  }) async {
+    final yearMonth =
+        "${issuedDate.year}-${issuedDate.month.toString().padLeft(2, '0')}";
+
+    // Fetch all IDs for the given year and month
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT id FROM InventoryCustodianSlips
-        WHERE id LIKE @year_month || '-%'
-        ORDER BY id DESC 
-        LIMIT 1;
-        ''',
+      SELECT id FROM InventoryCustodianSlips
+      WHERE id LIKE '%$yearMonth-%'
+      ORDER BY id DESC;
+      ''',
       ),
-      parameters: {
-        'year_month': yearMonth,
-      },
     );
 
-    int? n; // represent the no. of record
+    int maxN = 0; // Track the maximum sequence number
+
     if (result.isNotEmpty) {
-      n = int.parse(result.first[0].toString().split('-').last) + 1;
-    } else {
-      n = 1;
+      for (final row in result) {
+        final id = row[0].toString();
+        // Extract the sequence number (NNN) from the ID
+        final parts = id.split('-');
+        if (parts.length >= 3) {
+          final lastPart = parts.last;
+          final currentN = int.tryParse(lastPart) ?? 0;
+          if (currentN > maxN) {
+            maxN = currentN; // Update the maximum sequence number
+          }
+        }
+      }
     }
 
-    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+    // Increment the maximum sequence number
+    final n = maxN + 1;
+
+    String uniqueId = '';
+
+    // Add type prefix if type exists
+    if (type != null) {
+      uniqueId += '${type == IcsType.sphv ? 'SPHV' : 'SPLV'}-';
+    }
+
+    // Add year and fund cluster if fund cluster exists
+    uniqueId += '${issuedDate.year}';
+    if (fundCluster != null) {
+      uniqueId += '(${fundCluster.value})';
+    }
+
+    // Add month and sequence number
+    uniqueId +=
+        '-${issuedDate.month.toString().padLeft(2, '0')}-${n.toString().padLeft(3, '0')}';
+
     print('Generated ICS ID: $uniqueId');
     return uniqueId;
   }
@@ -150,7 +229,6 @@ class IssuanceRepository {
   Future<List<IssuanceItem>> _getIssuanceItems({
     required String issuanceId,
   }) async {
-    final itemList = <BaseItemModel>[];
     final issuanceItems = <IssuanceItem>[];
 
     final issuanceItemsResult = await _conn.execute(
@@ -168,9 +246,7 @@ class IssuanceRepository {
         e.serial_no,
         e.asset_classification,
         e.asset_sub_class,
-        e.unit_cost,
         e.estimated_useful_life,
-        e.acquired_date,
         mnf.name as manufacturer_name,
         brnd.name as brand_name,
         md.model_name
@@ -201,48 +277,52 @@ class IssuanceRepository {
     );
 
     for (final row in issuanceItemsResult) {
-      if (row[13] != null) {
+      Map<String, dynamic> item = {};
+
+      if (row[15] != null) {
         final supplyMap = {
-          'supply_id': row[13],
+          'supply_id': row[15],
           'base_item_id': row[3],
           'product_name_id': row[4],
           'product_description_id': row[5],
           'specification': row[6],
           'unit': row[7],
           'quantity': row[8],
+          'unit_cost': row[11],
           'encrypted_id': row[9],
           'qr_code_image_data': row[10],
-          'product_name': row[11],
-          'product_description': row[12],
+          'acquired_date': row[12],
+          'product_name': row[13],
+          'product_description': row[14],
         };
-        itemList.add(Supply.fromJson(supplyMap));
-      } else if (row[14] != null) {
+        item = Supply.fromJson(supplyMap).toJson();
+      } else if (row[16] != null) {
         final equipmentMap = {
-          'equipment_id': row[14],
+          'equipment_id': row[16],
           'base_item_id': row[3],
           'product_name_id': row[4],
           'product_description_id': row[5],
           'specification': row[6],
           'unit': row[7],
           'quantity': row[8],
+          'unit_cost': row[11],
           'encrypted_id': row[9],
           'qr_code_image_data': row[10],
-          'product_name': row[11],
-          'product_description': row[12],
-          'manufacturer_id': row[15],
-          'brand_id': row[16],
-          'model_id': row[17],
-          'serial_no': row[18],
-          'asset_classification': row[19],
-          'asset_sub_class': row[20],
-          'unit_cost': row[21],
-          'estimated_useful_life': row[22],
-          'acquired_date': row[23],
+          'acquired_date': row[12],
+          'product_name': row[13],
+          'product_description': row[14],
+          'manufacturer_id': row[17],
+          'brand_id': row[18],
+          'model_id': row[19],
+          'serial_no': row[20],
+          'asset_classification': row[21],
+          'asset_sub_class': row[22],
+          'estimated_useful_life': row[23],
           'manufacturer_name': row[24],
           'brand_name': row[25],
           'model_name': row[26],
         };
-        itemList.add(Equipment.fromJson(equipmentMap));
+        item = Equipment.fromJson(equipmentMap).toJson();
       }
 
       print('issuance item result: $issuanceItemsResult');
@@ -251,11 +331,7 @@ class IssuanceRepository {
         IssuanceItem.fromJson(
           {
             'issuance_id': row[0],
-            'item': itemList
-                .map((item) => item is Supply
-                    ? item.toJson()
-                    : (item as Equipment).toJson())
-                .toList(),
+            'item': item,
             'issued_quantity': row[2],
           },
         ),
@@ -265,6 +341,40 @@ class IssuanceRepository {
     print('returned issuance items: $issuanceItems');
 
     return issuanceItems;
+  }
+
+  Future<List<BatchItem>> _getBatchItems({
+    required String issuanceId,
+  }) async {
+    final batchItems = <BatchItem>[];
+
+    final results = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT * FROM BatchItems
+        WHERE issuance_id = @issuance_id;
+        ''',
+      ),
+      parameters: {
+        'issuance_id': issuanceId,
+      },
+    );
+
+    for (final row in results) {
+      final batchMap = {
+        'id': row[0],
+        'base_item_id': row[1],
+        'batch_code': row[2],
+        'status': row[3],
+        'issuance_id': row[4],
+        'created_at': row[5],
+        'updated_at': row[6]
+      };
+
+      batchItems.add(BatchItem.fromJson(batchMap));
+    }
+
+    return batchItems;
   }
 
   Future<Issuance?> getIssuanceById({
@@ -330,6 +440,12 @@ class IssuanceRepository {
       issuanceId: id,
     );
 
+    // final batchItems = await _getBatchItems(
+    //   issuanceId: id,
+    // );
+
+    print('ICS issuance items converted.');
+
     final issuanceResult = await _conn.execute(
       Sql.named(
         '''
@@ -348,6 +464,8 @@ class IssuanceRepository {
         'issuance_id': id,
       },
     );
+
+    print('ICS query executed.');
 
     for (final row in issuanceResult) {
       PurchaseRequest? purchaseRequest;
@@ -398,6 +516,8 @@ class IssuanceRepository {
         'return_date': row[2],
         'items':
             issuanceItems.map((issuanceItem) => issuanceItem.toJson()).toList(),
+        // 'batch_items':
+        //     batchItems.map((batchItem) => batchItem.toJson()).toList(),
         'purchase_request': purchaseRequest?.toJson(),
         'entity': entity?.toJson(),
         'fund_cluster': fundCluster,
@@ -531,7 +651,7 @@ class IssuanceRepository {
         ris.id AS ris_id,
         ris.division AS division,
         ris.responsibility_center_code AS responsiblity_center_code,
-        ris.office AS office,
+        ris.office_id AS office_id,
         ris.purpose AS purpose,
         ris.approving_officer_id as approving_officer_id,
         ris.requesting_officer_id as requesting_officer_id
@@ -548,7 +668,7 @@ class IssuanceRepository {
       },
     );
 
-    print('query executed');
+    print('query executed: $issuanceResult');
 
     for (final row in issuanceResult) {
       PurchaseRequest? purchaseRequest;
@@ -579,13 +699,14 @@ class IssuanceRepository {
         fundCluster = FundCluster.values.firstWhere(
           (e) => e.toString().split('.').last == row[5],
         );
+        print('converted fund cluster: $fundCluster');
       }
 
       if (row[6] != null) {
         receivingOfficer = await OfficerRepository(_conn).getOfficerById(
           officerId: row[6] as String,
         );
-        print('converted receiving off');
+        print('converted receiving off from ris');
       }
 
       if (row[7] != null) {
@@ -595,14 +716,14 @@ class IssuanceRepository {
         print('converted issuing off');
       }
 
-      if (row[8] != null) {
+      if (row[16] != null) {
         approvingOfficer = await OfficerRepository(_conn).getOfficerById(
           officerId: row[16] as String,
         );
         print('converted approving off');
       }
 
-      if (row[9] != null) {
+      if (row[17] != null) {
         requestingOfficer = await OfficerRepository(_conn).getOfficerById(
           officerId: row[17] as String,
         );
@@ -613,7 +734,10 @@ class IssuanceRepository {
         office = await OfficeRepository(_conn).getOfficeById(
           id: row[14] as String,
         );
+        print('converted office');
       }
+
+      print('ris convertion---');
 
       final risObj = RequisitionAndIssueSlip.fromJson(
         {
@@ -975,6 +1099,7 @@ class IssuanceRepository {
   }
 
   Future<String> _createIssuance({
+    required DateTime issuedDate,
     required List<dynamic> issuanceItems,
     PurchaseRequest? purchaseRequest,
     String? entityId,
@@ -991,186 +1116,39 @@ class IssuanceRepository {
       (ctx) async {
         try {
           // Step 1: Insert into the Issuances table
-          await ctx.execute(
-            Sql.named(
-              '''
-            INSERT INTO Issuances (
-              id, purchase_request_id, entity_id, fund_cluster, 
-              receiving_officer_id, issuing_officer_id, issued_date, qr_code_image_data
-            )
-            VALUES (
-              @id, @purchase_request_id, @entity_id, @fund_cluster, 
-              @receiving_officer_id, @issuing_officer_id, @issued_date, @qr_code_image_data
-            );
-            ''',
-            ),
-            parameters: {
-              'id': issuanceId,
-              'purchase_request_id': purchaseRequest?.id,
-              'entity_id': entityId,
-              'fund_cluster': fundCluster?.toString().split('.').last,
-              'receiving_officer_id': receivingOfficerId,
-              'issuing_officer_id': issuingOfficerId,
-              'issued_date': DateTime.now().toIso8601String(),
-              'qr_code_image_data': qrCodeImageData,
-            },
-          );
+          await _insertIssuance(
+              ctx,
+              issuanceId,
+              issuedDate,
+              purchaseRequest,
+              entityId,
+              fundCluster,
+              receivingOfficerId,
+              issuingOfficerId,
+              qrCodeImageData);
 
           // Step 2: Insert into the concrete issuance table
-          concreteIssuanceEntityParams['issuance_id'] = issuanceId;
-          await ctx.execute(
-            Sql.named(concreteIssuanceEntityQuery),
-            parameters: concreteIssuanceEntityParams,
+          await _insertConcreteIssuance(
+            ctx,
+            concreteIssuanceEntityQuery,
+            concreteIssuanceEntityParams,
+            issuanceId,
           );
 
           if (purchaseRequest == null) {
             // Handle issuance without PR
-            for (final issuance in issuanceItems) {
-              final itemId = issuance['item_id'] as String;
-              final issuedQuantity = issuance['issued_quantity'] as int;
-
-              // Step 3: Insert into IssuanceItems table
-              await ctx.execute(
-                Sql.named(
-                  '''
-                INSERT INTO IssuanceItems (issuance_id, item_id, issued_quantity)
-                VALUES (@issuance_id, @item_id, @issued_quantity);
-                ''',
-                ),
-                parameters: {
-                  'issuance_id': issuanceId,
-                  'item_id': itemId,
-                  'issued_quantity': issuedQuantity,
-                },
-              );
-
-              // Step 4: Update the Items table to reduce stock
-              await ctx.execute(
-                Sql.named(
-                  '''
-                UPDATE Items
-                SET quantity = quantity - @quantity
-                WHERE id = @id;
-                ''',
-                ),
-                parameters: {
-                  'id': itemId,
-                  'quantity': issuedQuantity,
-                },
-              );
-            }
+            await _handleIssuanceWithoutPR(
+              ctx,
+              issuanceId,
+              issuanceItems,
+            );
           } else {
             // Handle issuance with PR
-            int totalRemainingQuantities = 0;
-
-            // Preprocess issuanceItems into a map for faster lookup
-            final Map<String, dynamic> issuanceItemsMap = {};
-            for (final issuanceItem in issuanceItems) {
-              final key =
-                  '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
-                  '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
-                  '${issuanceItem['shareable_item_information']['unit']}';
-              issuanceItemsMap[key] = issuanceItem;
-            }
-
-            // Iterate through each requested item in the purchase request
-            for (final requestedItem in purchaseRequest.requestedItems) {
-              final requestedProductNameId = requestedItem.productName.id;
-              final requestedProductDescriptionId =
-                  requestedItem.productDescription.id;
-              final requestedUnit =
-                  requestedItem.unit.toString().split('.').last;
-
-              // Construct a key for the requested item
-              final key =
-                  '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
-
-              // Check if the issuanceItems map contains the requested item
-              if (issuanceItemsMap.containsKey(key)) {
-                final issuanceItem = issuanceItemsMap[key];
-                final issuanceBaseItemId =
-                    issuanceItem['shareable_item_information']['base_item_id'];
-                final issuanceQuantity =
-                    int.parse(issuanceItem['issued_quantity'] as String);
-
-                // Calculate the quantity to issue
-                final issuedQuantity =
-                    min(requestedItem.quantity, issuanceQuantity);
-
-                if (issuedQuantity > 0) {
-                  // Step 3: Insert into IssuanceItems table
-                  await ctx.execute(
-                    Sql.named(
-                      '''
-                    INSERT INTO IssuanceItems (issuance_id, item_id, issued_quantity)
-                    VALUES (@issuance_id, @item_id, @issued_quantity);
-                    ''',
-                    ),
-                    parameters: {
-                      'issuance_id': issuanceId,
-                      'item_id': issuanceBaseItemId,
-                      'issued_quantity': issuedQuantity,
-                    },
-                  );
-
-                  // Step 4: Update the RequestedItems table
-                  final remainingRequestedQuantity =
-                      requestedItem.quantity - issuedQuantity;
-                  totalRemainingQuantities += remainingRequestedQuantity;
-
-                  await ctx.execute(
-                    Sql.named(
-                      '''
-                    UPDATE RequestedItems
-                    SET remaining_quantity = @remaining_quantity
-                    WHERE id = @id;
-                    ''',
-                    ),
-                    parameters: {
-                      'id': requestedItem.id,
-                      'remaining_quantity': remainingRequestedQuantity,
-                    },
-                  );
-
-                  // Step 5: Update the Items table to reduce stock
-                  await ctx.execute(
-                    Sql.named(
-                      '''
-                    UPDATE Items
-                    SET quantity = quantity - @quantity
-                    WHERE id = @id;
-                    ''',
-                    ),
-                    parameters: {
-                      'id': issuanceBaseItemId,
-                      'quantity': issuedQuantity,
-                    },
-                  );
-                }
-              }
-            }
-
-            // Step 6: Update the PurchaseRequest status
-            await ctx.execute(
-              Sql.named(
-                '''
-              UPDATE PurchaseRequests
-              SET status = @status
-              WHERE id = @id;
-              ''',
-              ),
-              parameters: {
-                'id': purchaseRequest.id,
-                'status': totalRemainingQuantities > 0
-                    ? PurchaseRequestStatus.partiallyFulfilled
-                        .toString()
-                        .split('.')
-                        .last
-                    : PurchaseRequestStatus.fulfilled
-                        .toString()
-                        .split('.')
-                        .last,
-              },
+            await _handleIssuanceWithPR(
+              ctx,
+              issuanceId,
+              purchaseRequest,
+              issuanceItems,
             );
           }
 
@@ -1185,6 +1163,293 @@ class IssuanceRepository {
     );
 
     return issuanceId;
+  }
+
+  Future<void> _insertIssuance(
+    TxSession ctx,
+    String issuanceId,
+    DateTime issuedDate,
+    PurchaseRequest? purchaseRequest,
+    String? entityId,
+    FundCluster? fundCluster,
+    String? receivingOfficerId,
+    String? issuingOfficerId,
+    String qrCodeImageData,
+  ) async {
+    await ctx.execute(
+      Sql.named(
+        '''
+        INSERT INTO Issuances (
+          id, issued_date, purchase_request_id, entity_id, fund_cluster, 
+          receiving_officer_id, issuing_officer_id, qr_code_image_data
+        )
+        VALUES (
+          @id, @issued_date, @purchase_request_id, @entity_id, @fund_cluster, 
+          @receiving_officer_id, @issuing_officer_id, @qr_code_image_data
+        );
+        ''',
+      ),
+      parameters: {
+        'id': issuanceId,
+        'issued_date': issuedDate.toIso8601String(),
+        'purchase_request_id': purchaseRequest?.id,
+        'entity_id': entityId,
+        'fund_cluster': fundCluster?.toString().split('.').last,
+        'receiving_officer_id': receivingOfficerId,
+        'issuing_officer_id': issuingOfficerId,
+        'qr_code_image_data': qrCodeImageData,
+      },
+    );
+
+    print('Base Issuance created.');
+  }
+
+  Future<void> _insertConcreteIssuance(
+    TxSession ctx,
+    String concreteIssuanceEntityQuery,
+    Map<String, dynamic> concreteIssuanceEntityParams,
+    String issuanceId,
+  ) async {
+    print('contrete issuance entity query: $concreteIssuanceEntityQuery');
+    print('contrete issuance entity params: $concreteIssuanceEntityParams');
+
+    concreteIssuanceEntityParams['issuance_id'] = issuanceId;
+    await ctx.execute(
+      Sql.named(concreteIssuanceEntityQuery),
+      parameters: concreteIssuanceEntityParams,
+    );
+
+    print('Concrete Issuance created.');
+  }
+
+  Future<void> _handleIssuanceWithoutPR(
+    TxSession ctx,
+    String issuanceId,
+    List<dynamic> issuanceItems,
+  ) async {
+    for (final issuance in issuanceItems) {
+      final itemId =
+          issuance['shareable_item_information']['base_item_id'] as String;
+      final issuedQuantity = int.parse(issuance['issued_quantity'] as String);
+
+      // Step 3: Insert into IssuanceItems table
+      await _insertIssuanceItem(ctx, issuanceId, itemId, issuedQuantity);
+
+      // Step 4: Update the Items table to reduce stock
+      await _updateItemStock(ctx, itemId, issuedQuantity);
+
+      // Step 5: Update the BatchItems table
+      // await _updateBatchItems(ctx, issuanceId, itemId, issuedQuantity);
+    }
+  }
+
+  Future<void> _insertIssuanceItem(
+    TxSession ctx,
+    String issuanceId,
+    String itemId,
+    int issuedQuantity,
+  ) async {
+    await ctx.execute(
+      Sql.named(
+        '''
+        INSERT INTO IssuanceItems (issuance_id, item_id, issued_quantity)
+        VALUES (@issuance_id, @item_id, @issued_quantity);
+        ''',
+      ),
+      parameters: {
+        'issuance_id': issuanceId,
+        'item_id': itemId,
+        'issued_quantity': issuedQuantity,
+      },
+    );
+  }
+
+  Future<void> _updateItemStock(
+    TxSession ctx,
+    String itemId,
+    int issuedQuantity,
+  ) async {
+    await ctx.execute(
+      Sql.named(
+        '''
+        UPDATE Items
+        SET quantity = quantity - @quantity
+        WHERE id = @id;
+        ''',
+      ),
+      parameters: {
+        'id': itemId,
+        'quantity': issuedQuantity,
+      },
+    );
+  }
+
+  Future<void> _updateBatchItems(
+    TxSession ctx,
+    String issuanceId,
+    String itemId,
+    int issuedQuantity,
+  ) async {
+    // Select available batch items
+    final batchCodes = await ctx.execute(
+      Sql.named(
+        '''
+        SELECT batch_code FROM BatchItems
+        WHERE base_item_id = @base_item_id AND status = @status
+        LIMIT @limit;
+        ''',
+      ),
+      parameters: {
+        'base_item_id': itemId,
+        'status': BatchStatus.available.toString().split('.').last,
+        'limit': issuedQuantity,
+      },
+    );
+
+    if (batchCodes.length < issuedQuantity) {
+      throw Exception('Not enough available batch items for item $itemId');
+    }
+
+    // Update the available batch codes
+    for (final batchCodeRow in batchCodes) {
+      final batchCode = batchCodeRow[0] as String;
+      await ctx.execute(
+        Sql.named(
+          '''
+          UPDATE BatchItems
+          SET issuance_id = @issuance_id, status = @status, updated_at = @updated_at
+          WHERE batch_code = @batch_code;
+          ''',
+        ),
+        parameters: {
+          'batch_code': batchCode,
+          'issuance_id': issuanceId,
+          'status': BatchStatus.issued.toString().split('.').last,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> _handleIssuanceWithPR(
+    TxSession ctx,
+    String issuanceId,
+    PurchaseRequest purchaseRequest,
+    List<dynamic> issuanceItems,
+  ) async {
+    int totalRemainingQuantities = 0;
+
+    // Preprocess issuanceItems into a map for faster lookup
+    // final Map<String, dynamic> issuanceItemsMap = {};
+    for (final issuanceItem in issuanceItems) {
+      // final key =
+      //     '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
+      //     '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
+      //     '${issuanceItem['shareable_item_information']['unit']}';
+      // issuanceItemsMap[key] = issuanceItem;
+
+      final itemId =
+          issuanceItem['shareable_item_information']['base_item_id'] as String;
+      final issuedQuantity =
+          int.parse(issuanceItem['issued_quantity'] as String);
+
+      // Step 3: Insert into IssuanceItems table
+      await _insertIssuanceItem(ctx, issuanceId, itemId, issuedQuantity);
+
+      // await ctx.execute(
+      //   Sql.named(
+      //     '''
+      //          UPDATE RequestedItems
+      //          SET remaining_quantity = @remaining_quantity
+      //          WHERE id = @id;
+      //          ''',
+      //   ),
+      //   parameters: {
+      //     'id': requestedItem.id,
+      //     'remaining_quantity': remainingRequestedQuantity,
+      //   },
+      // );
+
+      // Step 4: Update the Items table to reduce stock
+      await _updateItemStock(ctx, itemId, issuedQuantity);
+
+      // Step 5: Update the BatchItems table
+      // await _updateBatchItems(ctx, issuanceId, itemId, issuedQuantity);
+    }
+
+    // Iterate through each requested item in the purchase request
+    // for (final requestedItem in purchaseRequest.requestedItems) {
+    //   final requestedProductNameId = requestedItem.productName.id;
+    //   final requestedProductDescriptionId = requestedItem.productDescription.id;
+    //   final requestedUnit = requestedItem.unit.toString().split('.').last;
+
+    //   // Construct a key for the requested item
+    //   final key =
+    //       '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
+
+    //   // Check if the issuanceItems map contains the requested item
+    //   if (issuanceItemsMap.containsKey(key)) {
+    //     final issuanceItem = issuanceItemsMap[key];
+    //     final issuanceBaseItemId = issuanceItem['shareable_item_information']
+    //         ['base_item_id'] as String;
+    //     final issuanceQuantity =
+    //         int.parse(issuanceItem['issued_quantity'] as String);
+
+    //     // Calculate the quantity to issue
+    //     final issuedQuantity = min(requestedItem.quantity, issuanceQuantity);
+
+    //     if (issuedQuantity > 0) {
+    //       // Step 3: Insert into IssuanceItems table
+    //       await _insertIssuanceItem(
+    //           ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
+
+    //       // Step 4: Update the RequestedItems table
+    //       final remainingRequestedQuantity =
+    //           requestedItem.quantity - issuedQuantity;
+    //       totalRemainingQuantities += remainingRequestedQuantity;
+
+    //       await ctx.execute(
+    //         Sql.named(
+    //           '''
+    //           UPDATE RequestedItems
+    //           SET remaining_quantity = @remaining_quantity
+    //           WHERE id = @id;
+    //           ''',
+    //         ),
+    //         parameters: {
+    //           'id': requestedItem.id,
+    //           'remaining_quantity': remainingRequestedQuantity,
+    //         },
+    //       );
+
+    //       // Step 5: Update the Items table to reduce stock
+    //       await _updateItemStock(ctx, issuanceBaseItemId, issuedQuantity);
+
+    //       // Step 6: Update the BatchItems table
+    //       // await _updateBatchItems(ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
+    //     }
+    //   }
+    // }
+
+    // Step 7: Update the PurchaseRequest status
+    await ctx.execute(
+      Sql.named(
+        '''
+        UPDATE PurchaseRequests
+        SET status = @status
+        WHERE id = @id;
+        ''',
+      ),
+      parameters: {
+        'id': purchaseRequest.id,
+        'status': totalRemainingQuantities > 0
+            ? PurchaseRequestStatus.partiallyFulfilled
+                .toString()
+                .split('.')
+                .last
+            : PurchaseRequestStatus.fulfilled.toString().split('.').last,
+      },
+    );
   }
 
   // Future<String> _createIssuance({
@@ -1378,6 +1643,8 @@ class IssuanceRepository {
   // }
 
   Future<String> createICS({
+    IcsType? type,
+    required DateTime issuedDate,
     required List<dynamic> issuanceItems,
     PurchaseRequest? purchaseRequest,
     String? entityId,
@@ -1385,7 +1652,13 @@ class IssuanceRepository {
     String? receivingOfficerId,
     String? issuingOfficerId,
   }) async {
-    final icsId = await _generateUniqueIcsId();
+    final icsId = await _generateUniqueIcsId(
+      type: type,
+      fundCluster: fundCluster,
+      issuedDate: issuedDate,
+    );
+
+    print('Generated ICS ID: $icsId');
 
     final concreteIssuanceEntityQuery = '''
     INSERT INTO InventoryCustodianSlips (id, issuance_id)
@@ -1397,6 +1670,7 @@ class IssuanceRepository {
     };
 
     return await _createIssuance(
+      issuedDate: issuedDate,
       issuanceItems: issuanceItems,
       purchaseRequest: purchaseRequest,
       entityId: entityId,
@@ -1409,6 +1683,7 @@ class IssuanceRepository {
   }
 
   Future<String> createPAR({
+    required DateTime issuedDate,
     required List<dynamic> issuanceItems,
     PurchaseRequest? purchaseRequest,
     String? entityId,
@@ -1428,6 +1703,7 @@ class IssuanceRepository {
     };
 
     return await _createIssuance(
+      issuedDate: issuedDate,
       issuanceItems: issuanceItems,
       purchaseRequest: purchaseRequest,
       entityId: entityId,
@@ -1440,6 +1716,7 @@ class IssuanceRepository {
   }
 
   Future<String> createRIS({
+    required DateTime issuedDate,
     required List<dynamic> issuanceItems,
     PurchaseRequest? purchaseRequest,
     String? entityId,
@@ -1491,6 +1768,7 @@ class IssuanceRepository {
     };
 
     return await _createIssuance(
+      issuedDate: issuedDate,
       purchaseRequest: purchaseRequest,
       issuanceItems: issuanceItems,
       receivingOfficerId: receivingOfficerId,
@@ -1783,4 +2061,355 @@ class IssuanceRepository {
   //
   //   return issuanceId;
   // }
+
+  Future<List<Map<String, dynamic>>> getInventorySupplyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+  }) async {
+    final inventorySupply = <Map<String, dynamic>>[];
+
+    final results = await _conn.execute(
+      Sql.named(
+        '''
+      WITH IssuanceData AS (
+          SELECT
+              i.id AS item_id,
+              i.product_name_id, -- Include product_name_id from Items
+              i.product_description_id, -- Include product_description_id from Items
+              i.unit, -- Include unit from Items
+              i.unit_cost, -- Include unit_cost from Items
+              pn.name AS product_name,
+              pd.description AS product_description,
+              s.id AS supply_id,
+              i.quantity AS current_quantity_in_stock,
+              issi.issued_quantity AS total_quantity_issued_for_a_particular_row,
+              ent.id AS entity_id,
+              ent.name AS entity_name,
+              rec_off.name AS receiving_officer_name,
+              ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY iss.id) AS row_num -- To order issuances for each item
+          FROM
+              Items i
+          JOIN
+              Supplies s ON i.id = s.base_item_id
+          LEFT JOIN
+              ProductNames pn ON i.product_name_id = pn.id
+          LEFT JOIN
+              ProductDescriptions pd ON i.product_description_id = pd.id
+          LEFT JOIN
+              IssuanceItems issi ON i.id = issi.item_id
+          LEFT JOIN
+              Issuances iss ON issi.issuance_id = iss.id
+          LEFT JOIN
+              RequisitionAndIssueSlips ris ON iss.id = ris.issuance_id
+          LEFT JOIN
+              entities ent ON iss.entity_id = ent.id
+          LEFT JOIN
+              officers rec_off ON iss.receiving_officer_id = rec_off.id
+          WHERE
+              i.acquired_date BETWEEN @start_date AND @end_date -- Add date filter here
+      ),
+      CumulativeIssued AS (
+          SELECT
+              item_id,
+              product_name_id, -- Include product_name_id
+              product_description_id, -- Include product_description_id
+              unit, -- Include unit
+              unit_cost, -- Include unit_cost
+              product_name,
+              product_description,
+              supply_id,
+              current_quantity_in_stock,
+              total_quantity_issued_for_a_particular_row,
+              entity_id,
+              entity_name,
+              receiving_officer_name,
+              row_num,
+              SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id) AS total_issued_quantity_all_entities,
+              SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id ORDER BY row_num) AS cumulative_issued_quantity
+          FROM
+              IssuanceData
+      ),
+      RunningBalance AS (
+          SELECT
+              item_id,
+              product_name_id, -- Include product_name_id
+              product_description_id, -- Include product_description_id
+              unit, -- Include unit
+              unit_cost, -- Include unit_cost
+              product_name,
+              product_description,
+              supply_id,
+              current_quantity_in_stock,
+              total_quantity_issued_for_a_particular_row,
+              entity_id,
+              entity_name,
+              receiving_officer_name,
+              row_num,
+              total_issued_quantity_all_entities,
+              current_quantity_in_stock + total_issued_quantity_all_entities AS total_quantity_available_and_issued,
+              COALESCE(
+                  LAG(current_quantity_in_stock + total_issued_quantity_all_entities - cumulative_issued_quantity) 
+                  OVER (PARTITION BY item_id ORDER BY row_num), 
+                  0
+              ) AS balance_from_previous_row_after_issuance,
+              current_quantity_in_stock + total_issued_quantity_all_entities - cumulative_issued_quantity 
+                  AS balance_per_row_after_issuance
+          FROM
+              CumulativeIssued
+      )
+      SELECT
+          item_id,
+          product_name_id, -- Include product_name_id
+          product_description_id, -- Include product_description_id
+          unit, -- Include unit
+          unit_cost, -- Include unit_cost
+          product_name,
+          product_description,
+          supply_id,
+          current_quantity_in_stock,
+          total_quantity_issued_for_a_particular_row,
+          total_quantity_available_and_issued,
+          balance_from_previous_row_after_issuance,
+          balance_per_row_after_issuance,
+          entity_id,
+          entity_name,
+          receiving_officer_name
+      FROM
+          RunningBalance
+      ORDER BY
+          item_id, row_num;
+      ''',
+      ),
+      parameters: {
+        'start_date': startDate.toIso8601String(),
+        'end_date':
+            endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      },
+    );
+
+    print('results: $results');
+
+    for (final row in results) {
+      inventorySupply.add(
+        {
+          'article': row[5],
+          'description': row[6],
+          'stock_number': '${row[1]}${row[2]}',
+          'unit': row[3],
+          'unit_value': row[4],
+          'current_quantity_in_stock': row[8],
+          'total_quantity_issued_for_a_particular_row': row[9],
+          'total_quantity_available_and_issued': row[10],
+          'balance_from_previous_row_after_issuance': row[11],
+          'balance_per_row_after_issuance': row[12],
+          'entity_name': row[14],
+          'receiving_officer_name': row[15],
+        },
+      );
+    }
+
+    return inventorySupply;
+  }
+
+  Future<List<Map<String, dynamic>>> getInventoryPropertyReport({
+    required DateTime startDate,
+    DateTime? endDate,
+    double? unitCost, // Optional to support both cases
+    AssetSubClass? assetSubClass,
+  }) async {
+    final inventoryProperty = <Map<String, dynamic>>[];
+
+    try {
+      final results = await _conn.execute(
+        Sql.named(
+          '''
+        WITH IssuanceData AS (
+            SELECT
+                i.id AS item_id,
+                i.product_name_id,
+                i.product_description_id,
+                i.unit,
+                i.unit_cost, 
+                pn.name AS product_name,
+                pd.description AS product_description,
+                e.id AS equipment_id,
+                i.specification, 
+                b.name AS brand_name,
+                m.model_name AS model_name,
+                e.serial_no, 
+                i.quantity AS current_quantity_in_stock,
+                issi.issued_quantity AS total_quantity_issued_for_a_particular_row,
+                ent.id AS entity_id,
+                ent.name AS entity_name,
+                rec_off.name AS receiving_officer_name,
+                rec_ofc.name AS receiving_officer_office,
+                rec_off_pos.position_name AS receiving_officer_position,
+                ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY iss.id) AS row_num 
+            FROM
+                Items i
+            JOIN
+                Equipment e ON i.id = e.base_item_id 
+            LEFT JOIN
+                ProductNames pn ON i.product_name_id = pn.id
+            LEFT JOIN
+                ProductDescriptions pd ON i.product_description_id = pd.id
+            LEFT JOIN
+                Brands b ON e.brand_id = b.id
+            LEFT JOIN
+                Models m ON e.model_id = m.id
+            LEFT JOIN
+                IssuanceItems issi ON i.id = issi.item_id
+            LEFT JOIN
+                Issuances iss ON issi.issuance_id = iss.id
+            LEFT JOIN
+                InventoryCustodianSlips ics ON iss.id = ics.issuance_id
+            LEFT JOIN
+                entities ent ON iss.entity_id = ent.id
+            LEFT JOIN
+                officers rec_off ON iss.receiving_officer_id = rec_off.id
+            LEFT JOIN
+                positions rec_off_pos ON rec_off.position_id = rec_off_pos.id
+            LEFT JOIN
+                offices rec_ofc ON rec_off_pos.office_id = rec_ofc.id
+            WHERE
+                i.acquired_date BETWEEN @start_date AND @end_date
+                ${unitCost != null ? 'AND i.unit_cost ' + (unitCost <= 50000.0 ? '<= 50000' : '> 50000') : ''}
+                ${assetSubClass != null ? 'AND e.asset_sub_class = @asset_sub_class' : ''}
+        ),
+        CumulativeIssued AS (
+            SELECT
+                item_id,
+                product_name_id, 
+                product_description_id, 
+                unit,
+                unit_cost, 
+                product_name,
+                product_description,
+                equipment_id, 
+                specification, 
+                brand_name, 
+                model_name, 
+                serial_no,
+                current_quantity_in_stock,
+                total_quantity_issued_for_a_particular_row,
+                entity_id,
+                entity_name,
+                receiving_officer_name,
+                receiving_officer_office,
+                receiving_officer_position,
+                row_num,
+                SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id) AS total_issued_quantity_all_entities,
+                SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id ORDER BY row_num) AS cumulative_issued_quantity
+            FROM
+                IssuanceData
+        ),
+        RunningBalance AS (
+            SELECT
+                item_id,
+                product_name_id, 
+                product_description_id,
+                unit, 
+                unit_cost, 
+                product_name,
+                product_description,
+                equipment_id, 
+                specification, 
+                brand_name, 
+                model_name, 
+                serial_no, 
+                current_quantity_in_stock,
+                total_quantity_issued_for_a_particular_row,
+                entity_name,
+                receiving_officer_name,
+                receiving_officer_office,
+                receiving_officer_position,
+                row_num,
+                total_issued_quantity_all_entities,
+                current_quantity_in_stock + total_issued_quantity_all_entities AS total_quantity_available_and_issued,
+                COALESCE(
+                    LAG(current_quantity_in_stock + total_issued_quantity_all_entities - cumulative_issued_quantity) 
+                    OVER (PARTITION BY item_id ORDER BY row_num), 
+                    0
+                ) AS balance_from_previous_row_after_issuance,
+                current_quantity_in_stock + total_issued_quantity_all_entities - cumulative_issued_quantity 
+                    AS balance_per_row_after_issuance
+            FROM
+                CumulativeIssued
+        )
+        SELECT
+            item_id,
+            product_name_id,
+            product_description_id, 
+            unit,
+            unit_cost,
+            product_name,
+            product_description,
+            equipment_id,
+            specification,
+            brand_name,
+            model_name, 
+            serial_no,
+            current_quantity_in_stock,
+            total_quantity_issued_for_a_particular_row,
+            total_quantity_available_and_issued,
+            balance_from_previous_row_after_issuance,
+            balance_per_row_after_issuance,
+            entity_name,
+            receiving_officer_name,
+            receiving_officer_office,
+            receiving_officer_position
+        FROM
+            RunningBalance
+        ORDER BY
+            item_id, row_num;
+        ''',
+        ),
+        parameters: {
+          'start_date': startDate.toIso8601String(),
+          'end_date':
+              endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+          if (assetSubClass != null)
+            'asset_sub_class': assetSubClass.toString().split('.').last,
+        },
+      );
+
+      print('results: $results');
+
+      // Map results to a list of maps
+      for (final row in results) {
+        inventoryProperty.add(
+          {
+            'article': row[5], // product_name
+            'description': row[6], // product_description
+            'specification': row[8], // specification
+            'brand_name': row[9], // brand_name
+            'model_name': row[10], // model_name
+            'serial_no': row[11], // serial_no
+            'property_no': row[0], // item_id
+            'unit': row[3], // unit
+            'unit_value': row[4], // unit_cost
+            'current_quantity_in_stock': row[12], // current_quantity_in_stock
+            'total_quantity_issued_for_a_particular_row':
+                row[13], // total_quantity_issued_for_a_particular_row
+            'total_quantity_available_and_issued':
+                row[14], // total_quantity_available_and_issued
+            'balance_from_previous_row_after_issuance':
+                row[15], // balance_from_previous_row_after_issuance
+            'balance_per_row_after_issuance':
+                row[16], // balance_per_row_after_issuance
+            'entity_name': row[17], // entity_name
+            'receiving_officer_name': row[18], // receiving_officer_name
+            'receiving_officer_office': row[19], // receiving_officer_office
+            'receiving_officer_position': row[20], // receiving_officer_position
+          },
+        );
+      }
+    } catch (e) {
+      // Handle any errors that occur during execution
+      print('Error fetching inventory property report: $e');
+      rethrow; // Optionally rethrow the error if needed
+    }
+
+    return inventoryProperty;
+  }
 }

@@ -58,5 +58,9 @@ const updateIssuanceArchiveStatusEP = '$issuancesEP/update_archive_status';
 const icsEP = '$issuancesEP/ics';
 const parEP = '$issuancesEP/par';
 const risEP = '$issuancesEP/ris';
+const inventorySupplyReportEP = '$issuancesEP/inventory_supply_report';
+const inventorySemiExpendablePropertyReportEP =
+    '$issuancesEP/inventory_semi_expendable_property_report';
+const inventoryPropertyReportEP = '$issuancesEP/inventory_property_report';
 
 const notificationsEP = '/notifications';

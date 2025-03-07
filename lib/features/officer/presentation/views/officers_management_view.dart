@@ -19,6 +19,7 @@ import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../../core/utils/standardize_position_name.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/officers_bloc.dart';
 import '../components/filter_officer_modal.dart';
@@ -370,7 +371,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                       ),
                 ),
                 Text(
-                  capitalizeWord(officer.positionName),
+                  standardizePositionName(officer.positionName),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,

@@ -37,80 +37,108 @@ final class MatchItemWithPrEvent extends IssuancesEvent {
 
 final class CreateICSEvent extends IssuancesEvent {
   const CreateICSEvent({
-    required this.prId,
+    this.issuedDate,
+    this.type,
     required this.issuanceItems,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.sendingOfficerOffice,
-    required this.sendingOfficerPosition,
-    required this.sendingOfficerName,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
   });
 
-  final String prId;
+  final DateTime? issuedDate;
+  final IcsType? type;
   final List issuanceItems;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String sendingOfficerOffice;
-  final String sendingOfficerPosition;
-  final String sendingOfficerName;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
 }
 
 final class CreatePAREvent extends IssuancesEvent {
   const CreatePAREvent({
-    required this.prId,
-    this.propertyNumber,
+    this.issuedDate,
     required this.issuanceItems,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.sendingOfficerOffice,
-    required this.sendingOfficerPosition,
-    required this.sendingOfficerName,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
   });
 
-  final String prId;
-  final String? propertyNumber;
+  final DateTime? issuedDate;
   final List issuanceItems;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String sendingOfficerOffice;
-  final String sendingOfficerPosition;
-  final String sendingOfficerName;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
 }
 
 final class CreateRISEvent extends IssuancesEvent {
   const CreateRISEvent({
-    required this.prId,
+    this.issuedDate,
     required this.issuanceItems,
-    this.purpose,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.division,
     this.responsibilityCenterCode,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.approvingOfficerOffice,
-    required this.approvingOfficerPosition,
-    required this.approvingOfficerName,
-    required this.issuingOfficerOffice,
-    required this.issuingOfficerPosition,
-    required this.issuingOfficerName,
+    this.officeName,
+    this.purpose,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
+    this.approvingOfficerOffice,
+    this.approvingOfficerPosition,
+    this.approvingOfficerName,
+    this.requestingOfficerOffice,
+    this.requestingOfficerPosition,
+    this.requestingOfficerName,
   });
 
-  final String prId;
+  final DateTime? issuedDate;
   final List issuanceItems;
-  final String? purpose;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? division;
   final String? responsibilityCenterCode;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String approvingOfficerOffice;
-  final String approvingOfficerPosition;
-  final String approvingOfficerName;
-  final String issuingOfficerOffice;
-  final String issuingOfficerPosition;
-  final String issuingOfficerName;
+  final String? officeName;
+  final String? purpose;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
+  final String? approvingOfficerOffice;
+  final String? approvingOfficerPosition;
+  final String? approvingOfficerName;
+  final String? requestingOfficerOffice;
+  final String? requestingOfficerPosition;
+  final String? requestingOfficerName;
 }
 
 final class GetIssuanceByIdEvent extends IssuancesEvent {
@@ -129,4 +157,39 @@ final class UpdateIssuanceArchiveStatusEvent extends IssuancesEvent {
 
   final String id;
   final bool isArchived;
+}
+
+final class GetInventorySupplyReportEvent extends IssuancesEvent {
+  const GetInventorySupplyReportEvent({
+    required this.startDate,
+    this.endDate,
+  });
+
+  final DateTime startDate;
+  final DateTime? endDate;
+}
+
+final class GetInventorySemiExpendablePropertyReportEvent
+    extends IssuancesEvent {
+  const GetInventorySemiExpendablePropertyReportEvent({
+    required this.startDate,
+    this.endDate,
+    this.assetSubClass,
+  });
+
+  final DateTime startDate;
+  final DateTime? endDate;
+  final AssetSubClass? assetSubClass;
+}
+
+final class GetInventoryPropertyReportEvent extends IssuancesEvent {
+  const GetInventoryPropertyReportEvent({
+    required this.startDate,
+    this.endDate,
+    this.assetSubClass,
+  });
+
+  final DateTime startDate;
+  final DateTime? endDate;
+  final AssetSubClass? assetSubClass;
 }

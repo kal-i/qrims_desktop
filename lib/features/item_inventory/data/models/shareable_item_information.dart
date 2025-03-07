@@ -6,7 +6,7 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
     required super.id,
     required super.productNameId,
     required super.productDescriptionId,
-    required super.specification,
+    super.specification,
     required super.unit,
     required super.quantity,
     required super.unitCost,
@@ -23,9 +23,9 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
 
     return ShareableItemInformationModel(
       id: json['base_item_id'] as String,
-      productNameId: json['product_name_id'] as String,
-      productDescriptionId: json['product_description_id'] as String,
-      specification: json['specification'] as String,
+      productNameId: json['product_name_id'] as int,
+      productDescriptionId: json['product_description_id'] as int,
+      specification: json['specification'] as String?,
       unit: unit,
       quantity: json['quantity'] as int,
       unitCost: json['unit_cost'] is String

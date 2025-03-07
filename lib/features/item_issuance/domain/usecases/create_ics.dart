@@ -1,3 +1,5 @@
+import '../../../../core/enums/fund_cluster.dart';
+import '../../../../core/enums/ics_type.dart';
 import '../../../../core/error/failure.dart';
 import 'package:fpdart/src/either.dart';
 
@@ -15,38 +17,51 @@ class CreateICS
 
   @override
   Future<Either<Failure, InventoryCustodianSlipEntity>> call(
-      CreateICSParams params) async {
+    CreateICSParams params,
+  ) async {
     return await issuanceRepository.createICS(
-      prId: params.prId,
+      issuedDate: params.issuedDate,
+      type: params.type,
       issuanceItems: params.issuanceItems,
+      prId: params.prId,
+      entityName: params.entityName,
+      fundCluster: params.fundCluster,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
       receivingOfficerName: params.receivingOfficerName,
-      sendingOfficerOffice: params.sendingOfficerOffice,
-      sendingOfficerPosition: params.sendingOfficerPosition,
-      sendingOfficerName: params.sendingOfficerName,
+      issuingOfficerOffice: params.issuingOfficerOffice,
+      issuingOfficerPosition: params.issuingOfficerPosition,
+      issuingOfficerName: params.issuingOfficerName,
     );
   }
 }
 
 class CreateICSParams {
   const CreateICSParams({
-    required this.prId,
+    this.issuedDate,
+    this.type,
     required this.issuanceItems,
-    required this.receivingOfficerOffice,
-    required this.receivingOfficerPosition,
-    required this.receivingOfficerName,
-    required this.sendingOfficerOffice,
-    required this.sendingOfficerPosition,
-    required this.sendingOfficerName,
+    this.prId,
+    this.entityName,
+    this.fundCluster,
+    this.receivingOfficerOffice,
+    this.receivingOfficerPosition,
+    this.receivingOfficerName,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
   });
 
-  final String prId;
+  final DateTime? issuedDate;
+  final IcsType? type;
   final List issuanceItems;
-  final String receivingOfficerOffice;
-  final String receivingOfficerPosition;
-  final String receivingOfficerName;
-  final String sendingOfficerOffice;
-  final String sendingOfficerPosition;
-  final String sendingOfficerName;
+  final String? prId;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? receivingOfficerOffice;
+  final String? receivingOfficerPosition;
+  final String? receivingOfficerName;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
 }

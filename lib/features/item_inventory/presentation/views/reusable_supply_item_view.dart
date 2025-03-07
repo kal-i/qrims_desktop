@@ -14,6 +14,8 @@ import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
+import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
@@ -94,17 +96,14 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   }
 
   void _saveItem() {
-    print(_itemNameController.text);
-    print(_itemDescriptionsController.text);
-    print(_specificationController.text);
-    print(_selectedUnit.value);
-    print(_quantityController.text);
     if (_formKey.currentState!.validate()) {
       context.read<ItemInventoryBloc>().add(
             SupplyItemRegister(
               itemName: _itemNameController.text,
               description: _itemDescriptionsController.text,
-              specification: _specificationController.text,
+              specification: _specificationController.text.isEmpty
+                  ? null
+                  : _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
               unitCost: double.parse(_unitCostController.text),
@@ -139,6 +138,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     _specificationController.dispose();
     _unitController.dispose();
     _quantityController.dispose();
+    _unitCostController.dispose();
 
     _quantity.dispose();
     _selectedItemName.dispose();
@@ -180,19 +180,29 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
             final initItemData = state.item;
 
             if (initItemData is SupplyEntity) {
+              final itemEntity = state.item;
+              final productStock = itemEntity.productStockEntity;
+              final productNameEntity = productStock.productName;
+              final productDescriptionEntity = productStock.productDescription;
+              final shareableItemInformationEntity =
+                  itemEntity.shareableItemInformationEntity;
+
               _itemIdController.text =
-                  initItemData.shareableItemInformationEntity.id.toString();
+                  shareableItemInformationEntity.id.toString();
               _encryptedItemIdController.text =
-                  initItemData.shareableItemInformationEntity.encryptedId;
-              _itemNameController.text = initItemData
-                  .productStockEntity.productName.name
-                  .toLowerCase();
-              _itemDescriptionsController.text = initItemData
-                      .productStockEntity.productDescription?.description ??
-                  '';
+                  shareableItemInformationEntity.encryptedId;
+              _itemNameController.text = capitalizeWord(productNameEntity.name);
+              _itemDescriptionsController.text =
+                  productDescriptionEntity?.description ??
+                      'No description defined.';
               _specificationController.text =
-                  initItemData.shareableItemInformationEntity.specification ??
-                      'Not specified.';
+                  (shareableItemInformationEntity.specification == null ||
+                          shareableItemInformationEntity.specification
+                                  ?.toLowerCase() ==
+                              'n/a')
+                      ? 'No specification defined.'
+                      : shareableItemInformationEntity.specification!;
+
               _selectedUnit.value = Unit.values.firstWhere(
                 (e) =>
                     e.toString().split('.').last ==
@@ -205,6 +215,8 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               _quantityController.text = initItemData
                   .shareableItemInformationEntity.quantity
                   .toString();
+              _unitCostController.text = formatCurrency(
+                  initItemData.shareableItemInformationEntity.unitCost);
             }
           }
 
@@ -424,7 +436,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               child: SizedBox(
                 height: 100.0,
                 child: CustomFormTextField(
-                  label: 'Unit Cost',
+                  label: '* Unit Cost',
                   placeholderText: 'Enter item\'s unit cost',
                   controller: _unitCostController,
                   enabled: !_isViewOnlyMode(),
@@ -439,7 +451,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
           ],
         ),
         CustomFormTextField(
-          label: 'Specification',
+          label: 'Specification (Optional)',
           placeholderText: 'Enter item\'s specification',
           maxLines: 4,
           controller: _specificationController,
@@ -447,6 +459,15 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return null;
+            }
+            return null;
+          },
+        ),
+        const SizedBox(
+          height: 20.0,
         ),
         SizedBox(
           height: 100.0,
@@ -477,7 +498,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
         _selectedItemName.value = value;
       },
       controller: _itemNameController,
-      label: 'Item Name',
+      label: '* Item Name',
       placeHolderText: 'Enter item\'s name',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
@@ -505,7 +526,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
             _itemDescriptionsController.text = value;
           },
           controller: _itemDescriptionsController,
-          label: 'Description',
+          label: '* Description',
           placeHolderText: 'Enter item\'s description',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -536,7 +557,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                 ),
               )
               .toList(),
-          label: 'Unit',
+          label: '* Unit',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
@@ -550,7 +571,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       valueListenable: _quantity,
       builder: (BuildContext context, int value, Widget? child) {
         return CustomFormTextField(
-          label: 'Quantity',
+          label: '* Quantity',
           placeholderText: 'Enter item\'s quantity',
           controller: _quantityController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -604,7 +625,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               _pickedDate.value = date;
             }
           },
-          label: 'Acquired Date',
+          label: '* Acquired Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox

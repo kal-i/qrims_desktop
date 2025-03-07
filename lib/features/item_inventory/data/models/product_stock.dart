@@ -12,7 +12,8 @@ class ProductStockModel extends ProductStockEntity {
   factory ProductStockModel.fromJson(Map<String, dynamic> json) {
     return ProductStockModel(
       productName: ProductNameModel.fromJson(json['product_name']),
-      productDescription: ProductDescriptionModel.fromJson(json['product_description']),
+      productDescription:
+          ProductDescriptionModel.fromJson(json['product_description']),
     );
   }
 
