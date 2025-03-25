@@ -33,6 +33,7 @@ Future<Response> _getInventoryEquipment(
     final inventoryProperty = await repository.getInventoryPropertyReport(
       startDate: startDate,
       endDate: endDate,
+      unitCost: 50001.0,
       assetSubClass: queryParams['asset_sub_class'] != null
           ? AssetSubClass.values.firstWhere(
               (e) =>

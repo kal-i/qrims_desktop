@@ -2,9 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
 // Core Services
-import 'core/services/document_service/document_service.dart';
-import 'core/services/document_service/font_service.dart';
-import 'core/services/document_service/image_service.dart';
+import 'core/services/excel_document_service/excel_document_service.dart';
+import 'core/services/pdf_document_service/document_service.dart';
+import 'core/services/pdf_document_service/font_service.dart';
+import 'core/services/pdf_document_service/image_service.dart';
 import 'core/services/entity_suggestions_service.dart';
 import 'core/services/http_service.dart';
 import 'core/services/item_suggestions_service.dart';

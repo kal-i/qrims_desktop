@@ -45,6 +45,9 @@ void _registerServicesDependencies() {
         imageService: serviceLocator(),
       ),
     )
+    ..registerSingleton<ExcelDocumentService>(
+      ExcelDocumentService(),
+    )
     ..registerSingleton<EntitySuggestionService>(
       EntitySuggestionService(
         httpService: serviceLocator(),

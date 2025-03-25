@@ -13,7 +13,7 @@ import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/enums/document_type.dart';
-import '../../../../core/services/document_service/document_service.dart';
+import '../../../../core/services/pdf_document_service/document_service.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../init_dependencies.dart';
 
@@ -41,12 +41,16 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
       ValueNotifier(pw.PageOrientation.portrait);
   final _copyController = TextEditingController();
   final _copyNotifier = ValueNotifier<int>(1);
+  final ValueNotifier<bool> _isInitialized =
+      ValueNotifier(false); // Track initialization
 
   @override
   void initState() {
     super.initState();
     _documentService = serviceLocator<DocumentService>();
-    _init();
+    _init().then((_) {
+      _isInitialized.value = true; // Mark initialization as complete
+    });
 
     _copyController.addListener(() {
       final newQuantity = int.tryParse(_copyController.text) ?? 0;
@@ -77,18 +81,30 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
     _selectedOrientation.dispose();
     _copyController.dispose();
     _copyNotifier.dispose();
+    _isInitialized.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BaseModal(
-      width: 1200.0,
-      height: 900.0,
-      headerTitle: 'Preview Document',
-      subtitle: 'Preview document before printing or saving locally.',
-      content: _buildDocumentPreview(),
-      footer: _buildActionRows(),
+    return ValueListenableBuilder(
+      valueListenable: _isInitialized,
+      builder: (context, isInitialized, child) {
+        if (!isInitialized) {
+          // Show a loading indicator while initializing
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          // Once initialized, build the actual content
+          return BaseModal(
+            width: 1200.0,
+            height: 900.0,
+            headerTitle: 'Preview Document',
+            subtitle: 'Preview document before printing or saving locally.',
+            content: _buildDocumentPreview(),
+            footer: _buildActionRows(),
+          );
+        }
+      },
     );
   }
 
@@ -110,7 +126,6 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
             Expanded(
               flex: 2,
               child: Container(
-                //padding: EdgeInsets.all(16),
                 color: Colors.grey[200],
                 child: ValueListenableBuilder(
                     valueListenable: _selectedPageFormat,
@@ -134,17 +149,13 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
                                   .then((doc) => doc.save()),
                               allowPrinting: false,
                               allowSharing: false,
-                              canChangePageFormat:
-                                  false, // Disables changing page format
-                              canChangeOrientation:
-                                  false, // Disables changing orientation
+                              canChangePageFormat: false,
+                              canChangeOrientation: false,
                             );
                           });
                     }),
               ),
             ),
-
-            // Right side: Print settings
             Expanded(
               child: _buildPreviewSettings(),
             ),
@@ -156,9 +167,7 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
 
   Widget _buildPreviewSettings() {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -172,25 +181,13 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
                         fontSize: 18.0,
                       ),
                 ),
-                const SizedBox(
-                  height: 20.0,
-                ),
+                const SizedBox(height: 20.0),
                 _buildDestinationSelection(),
-                const SizedBox(
-                  height: 20.0,
-                ),
+                const SizedBox(height: 20.0),
                 _buildPaperSizeSelection(),
-                const SizedBox(
-                  height: 20.0,
-                ),
-                //_buildOrientationSelection(),
-                // const SizedBox(
-                //   height: 20.0,
-                // ),
+                const SizedBox(height: 20.0),
                 _buildPrintCopiesCounter(),
                 const Divider(),
-                // Add more settings here as needed
-                // For instance, copies, color, orientation, etc.
                 _buildPrintWithSystemDialog(),
               ],
             ),
@@ -199,8 +196,6 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
       ),
     );
   }
-
-  // pick or direct print
 
   Widget _buildDestinationSelection() {
     return ValueListenableBuilder(
@@ -271,33 +266,6 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
       ),
     ];
   }
-
-  Widget _buildOrientationSelection() {
-    return ValueListenableBuilder(
-        valueListenable: _selectedOrientation,
-        builder: (context, selectedOrientation, child) {
-          return CustomDropdownButton(
-            value: selectedOrientation,
-            onChanged: (pw.PageOrientation? value) {
-              _selectedOrientation.value = value!;
-            },
-            label: 'Orientation',
-            items: pw.PageOrientation.values
-                .map((orientation) => DropdownMenuItem(
-                    value: orientation,
-                    child: Text(orientation.toString().split('.').last)))
-                .toList(),
-          );
-        });
-  }
-
-  // Widget _buildPrintCopiesCounter() {
-  //   return CustomCounterTextBox(
-  //     label: 'Copies',
-  //     controller: _copyController,
-  //     quantity: _copyNotifier,
-  //   );
-  // }
 
   Widget _buildPrintCopiesCounter() {
     return ValueListenableBuilder(
@@ -372,9 +340,7 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
           text: 'Cancel',
           width: 180.0,
         ),
-        const SizedBox(
-          width: 10.0,
-        ),
+        const SizedBox(width: 10.0),
         CustomFilledButton(
           onTap: _onPrint,
           text: 'Print',
@@ -399,14 +365,6 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
                   docType: widget.docType,
                 )
                 .then((doc) => doc.save()),
-
-            // await _documentService
-            //     .generateICS(
-            //         pageFormat: _selectedPageFormat.value,
-            //         orientation: _selectedOrientation.value)
-            //     .then(
-            //       (doc) => doc.save(),
-            //    ),
           );
         }
         DelightfulToastUtils.showDelightfulToast(

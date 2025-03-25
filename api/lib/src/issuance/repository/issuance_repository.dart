@@ -2385,7 +2385,9 @@ class IssuanceRepository {
             'brand_name': row[9], // brand_name
             'model_name': row[10], // model_name
             'serial_no': row[11], // serial_no
-            'property_no': row[0], // item_id
+            unitCost != null && unitCost <= 50000.0
+                ? 'semi_expendable_property_no'
+                : 'property_no': row[0], // item_id
             'unit': row[3], // unit
             'unit_value': row[4], // unit_cost
             'current_quantity_in_stock': row[12], // current_quantity_in_stock

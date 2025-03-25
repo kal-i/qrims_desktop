@@ -17,7 +17,7 @@ class GetInventoryPropertyReport
   Future<Either<Failure, List<Map<String, dynamic>>>> call(
     GenerateRPPEParams params,
   ) async {
-    return await issuanceRepository.getInventorySemiExpendablePropertyReport(
+    return await issuanceRepository.getInventoryPropertyReport(
       startDate: params.startDate,
       endDate: params.endDate,
       assetSubClass: params.assetSubClass,

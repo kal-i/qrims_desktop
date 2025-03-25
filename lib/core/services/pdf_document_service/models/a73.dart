@@ -92,7 +92,7 @@ class A73 implements BaseDocument {
       final article = inventoryProperty['article'].toString().toUpperCase();
       final description =
           '${inventoryProperty['brand_name']} ${inventoryProperty['model_name']} with SN: ${inventoryProperty['serial_no']}';
-      final semiExpendablePropertyNo = inventoryProperty['property_no'];
+      final propertyNo = inventoryProperty['property_no'];
       final unit = inventoryProperty['unit'];
       final unitValue =
           double.parse(inventoryProperty['unit_value'].toString());
@@ -126,7 +126,7 @@ class A73 implements BaseDocument {
         _buildContentTableRow(
           article: article,
           description: description,
-          semiExpendablePropertyNo: semiExpendablePropertyNo,
+          semiExpendablePropertyNo: propertyNo,
           unit: unit,
           unitValue: unitValue,
           totalQuantity: totalQuantity,
@@ -621,7 +621,7 @@ class A73 implements BaseDocument {
           data: 'Property Number',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 10.6,
+          verticalPadding: 14.8,
           horizontalPadding: 3.0,
           borderRight: false,
         ),

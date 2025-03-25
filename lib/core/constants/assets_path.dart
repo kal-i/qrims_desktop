@@ -47,3 +47,11 @@ class ImagePath {
   static const String sdoLogo = '$_folder/sdo_logo.png';
   static const String profile = '$_folder/profile.jpg';
 }
+
+class TemplatePath {
+  static const String _folder = '$_rootFolder/templates';
+  static const String _xls = '$_folder/xlsx';
+  static const String rpci = '$_xls/final-rpci-template.xlsx';
+  static const String rpsep = '$_xls/final-rpsep-template.xlsx';
+  static const String rpppe = '$_xls/final-rpppe-template.xlsx';
+}

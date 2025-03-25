@@ -290,7 +290,10 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     GetInventorySupplyReportEvent event,
     Emitter<IssuancesState> emit,
   ) async {
+    print('Processing get inventory supply report...');
     emit(IssuancesLoading());
+
+    print('loading get inventory supply report...');
 
     final response = await _getInventorySupplies(
       GenerateRPCIParams(
@@ -298,6 +301,8 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         endDate: event.endDate,
       ),
     );
+
+    print('Processed response...');
 
     response.fold(
       (l) => emit(IssuancesError(message: l.message)),

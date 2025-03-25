@@ -21,7 +21,9 @@ class DelightfulToastUtils {
               return Align(
                 alignment: Alignment.center,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600.0),
+                  constraints: const BoxConstraints(
+                    maxWidth: 300.0,
+                  ),
                   child: ToastCard(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     leading: Icon(
@@ -31,12 +33,16 @@ class DelightfulToastUtils {
                     title: Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 16.0, fontWeight: FontWeight.w600),
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     subtitle: Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 14.0, fontWeight: FontWeight.w400),
+                            fontSize: 10.0,
+                            fontWeight: FontWeight.w400,
+                          ),
                     ),
                   ),
                 ),
