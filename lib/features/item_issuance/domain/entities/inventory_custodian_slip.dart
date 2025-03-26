@@ -1,4 +1,5 @@
 import 'issuance.dart';
+import 'supplier.dart';
 
 class InventoryCustodianSlipEntity extends IssuanceEntity {
   const InventoryCustodianSlipEntity({
@@ -11,6 +12,10 @@ class InventoryCustodianSlipEntity extends IssuanceEntity {
     super.purchaseRequestEntity,
     super.entity,
     super.fundCluster,
+    this.supplierEntity,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
     required super.qrCodeImageData,
@@ -19,4 +24,8 @@ class InventoryCustodianSlipEntity extends IssuanceEntity {
   });
 
   final String icsId;
+  final SupplierEntity? supplierEntity;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
 }

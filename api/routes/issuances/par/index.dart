@@ -97,6 +97,11 @@ Future<Response> _createPAR(
     final prId = json['pr_id'] as String?;
     final entity = json['entity'] as String?;
     final fundClusterData = json['fund_cluster'] as String?;
+    final supplierName = json['supplier_name'] as String?;
+    final inspectionAndAcceptanceReportId =
+        json['inspection_and_acceptance_report_id'] as String?;
+    final contractNumber = json['contract_number'] as String?;
+    final purchaseOrderNumber = json['purchase_order_number'] as String?;
 
     if (issuanceItems == null) {
       return Response.json(
@@ -114,12 +119,22 @@ Future<Response> _createPAR(
     final issuingOfficerPosition = json['issuing_officer_position'] as String?;
     final issuingOfficerName = json['issuing_officer_name'] as String?;
 
+    int? supplierId;
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
     String? receivingOfficerId;
     String? issuingOfficerOfficeId;
     String? issuingOfficerPositionId;
     String? issuingOfficerId;
+
+    if (supplierName != null) {
+      supplierId = await issuanceRepository.checkSupplierIfExist(
+            supplierName: supplierName,
+          ) ??
+          await issuanceRepository.registerSupplier(
+            supplierName: supplierName,
+          );
+    }
 
     if (receivingOfficerOffice != null) {
       receivingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
@@ -191,6 +206,10 @@ Future<Response> _createPAR(
             )
           : null,
       fundCluster: fundCluster,
+      supplierId: supplierId,
+      inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
+      contractNumber: contractNumber,
+      purchaseOrderId: purchaseOrderNumber,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
     );

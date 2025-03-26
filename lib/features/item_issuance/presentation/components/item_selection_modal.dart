@@ -41,7 +41,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   late ItemInventoryBloc _itemInventoryBloc;
   late List<Map<String, dynamic>> _preselectedItems;
 
-  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
+  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('supply');
 
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
@@ -103,7 +103,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     _searchController.clear();
     _currentPage = 1;
 
-    _selectedFilterNotifier.value = '';
+    _selectedFilterNotifier.value = 'supply';
 
     _fetchItems();
   }

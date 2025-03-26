@@ -1,4 +1,5 @@
 import 'issuance.dart';
+import 'supplier.dart';
 
 class PropertyAcknowledgementReceiptEntity extends IssuanceEntity {
   const PropertyAcknowledgementReceiptEntity({
@@ -10,6 +11,10 @@ class PropertyAcknowledgementReceiptEntity extends IssuanceEntity {
     super.purchaseRequestEntity,
     super.entity,
     super.fundCluster,
+    this.supplierEntity,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
     required super.qrCodeImageData,
@@ -18,4 +23,8 @@ class PropertyAcknowledgementReceiptEntity extends IssuanceEntity {
   });
 
   final String parId;
+  final SupplierEntity? supplierEntity;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
 }

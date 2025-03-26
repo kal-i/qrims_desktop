@@ -110,15 +110,27 @@ class IssuanceRepository {
     final yearMonth =
         "${issuedDate.year}-${issuedDate.month.toString().padLeft(2, '0')}";
 
-    // Fetch all IDs for the given year and month
+    // Start building the LIKE pattern for the query
+    String likePattern = '%$yearMonth-%';
+
+    // If fundCluster is provided, include it in the pattern
+    if (fundCluster != null) {
+      likePattern =
+          '%${issuedDate.year}(${fundCluster.value})-${issuedDate.month.toString().padLeft(2, '0')}-%';
+    }
+
+    // Fetch all IDs for the given year, month, and fund cluster
     final result = await _conn.execute(
       Sql.named(
         '''
-      SELECT id FROM InventoryCustodianSlips
-      WHERE id LIKE '%$yearMonth-%'
-      ORDER BY id DESC;
-      ''',
+    SELECT id FROM InventoryCustodianSlips
+    WHERE id LIKE @likePattern
+    ORDER BY id DESC;
+    ''',
       ),
+      parameters: {
+        'likePattern': likePattern,
+      },
     );
 
     int maxN = 0; // Track the maximum sequence number
@@ -128,7 +140,8 @@ class IssuanceRepository {
         final id = row[0].toString();
         // Extract the sequence number (NNN) from the ID
         final parts = id.split('-');
-        if (parts.length >= 3) {
+        if (parts.length >= 4) {
+          // Changed from 3 to 4 to match your ID structure
           final lastPart = parts.last;
           final currentN = int.tryParse(lastPart) ?? 0;
           if (currentN > maxN) {
@@ -377,6 +390,53 @@ class IssuanceRepository {
     return batchItems;
   }
 
+  Future<int?> checkSupplierIfExist({
+    required String supplierName,
+  }) async {
+    print('Checking if supplier exists...');
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT * FROM Suppliers
+      WHERE name ILIKE @supplier_name;
+      ''',
+      ),
+      parameters: {
+        'supplier_name': supplierName,
+      },
+    );
+    print('Checked if supplier exists.');
+
+    if (result.isNotEmpty) {
+      print('Supplier exists.');
+      return result.first[0] as int;
+    } else {
+      print('Supplier does not exist.');
+      return null;
+    }
+  }
+
+  Future<int> registerSupplier({
+    required String supplierName,
+  }) async {
+    print('Registering a new supplier...');
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      INSERT INTO Suppliers (name)
+      VALUES (@supplier_name)
+      RETURNING supplier_id;
+      ''',
+      ),
+      parameters: {
+        'supplier_name': supplierName,
+      },
+    );
+    print('Registered a new supplier.');
+
+    return result.first[0] as int;
+  }
+
   Future<Issuance?> getIssuanceById({
     required String id,
   }) async {
@@ -451,11 +511,18 @@ class IssuanceRepository {
         '''
       SELECT
         iss.*,
-        ics.id AS ics_id
+        ics.id AS ics_id,
+        ics.supplier_id AS supplier_id,
+        s.name AS supplier_name,
+        ics.inspection_and_acceptance_report_id AS iar_no,
+        ics.contract_number AS cn,
+        ics.purchase_order_id AS po_no
       FROM
         Issuances iss
       JOIN
         InventoryCustodianSlips ics ON iss.id = ics.issuance_id
+      LEFT JOIN
+        Suppliers s ON ics.supplier_id = s.supplier_id
       WHERE
         iss.id = @issuance_id;
       ''',
@@ -471,6 +538,7 @@ class IssuanceRepository {
       PurchaseRequest? purchaseRequest;
       Entity? entity;
       FundCluster? fundCluster;
+      Supplier? supplier;
       Officer? receivingOfficer;
       Officer? issuingOfficer;
 
@@ -493,6 +561,13 @@ class IssuanceRepository {
         fundCluster = FundCluster.values.firstWhere(
           (e) => e.toString().split('.').last == row[5],
         );
+      }
+
+      if (row[12] != null && row[13] != null) {
+        supplier = Supplier.fromJson({
+          'supplier_id': row[12],
+          'name': row[13],
+        });
       }
 
       if (row[6] != null) {
@@ -521,6 +596,10 @@ class IssuanceRepository {
         'purchase_request': purchaseRequest?.toJson(),
         'entity': entity?.toJson(),
         'fund_cluster': fundCluster,
+        'supplier': supplier?.toJson(),
+        'inspection_and_acceptance_report_no': row[14],
+        'contract_number': row[15],
+        'purchase_order_number': row[16],
         'receiving_officer': receivingOfficer?.toJson(),
         'issuing_officer': issuingOfficer?.toJson(),
         'qr_code_image_data': row[8],
@@ -545,13 +624,20 @@ class IssuanceRepository {
     final issuanceResult = await _conn.execute(
       Sql.named(
         '''
-      SELECT
+	    SELECT
         iss.*,
-        par.id AS par_id
+        par.id AS par_id,
+		    par.supplier_id AS supplier_id,
+		    s.name AS supplier_name,
+		    par.inspection_and_acceptance_report_id AS iar_no,
+		    par.contract_number AS cn,
+		    par.purchase_order_id AS po_no
       FROM
         Issuances iss
       JOIN
         PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
+	    LEFT JOIN
+	  	  Suppliers s ON par.supplier_id = s.supplier_id
       WHERE
         iss.id = @issuance_id;
       ''',
@@ -569,6 +655,7 @@ class IssuanceRepository {
       FundCluster? fundCluster;
       Officer? receivingOfficer;
       Officer? issuingOfficer;
+      Supplier? supplier;
 
       if (row[3] != null) {
         purchaseRequest =
@@ -589,6 +676,13 @@ class IssuanceRepository {
         fundCluster = FundCluster.values.firstWhere(
           (e) => e.toString().split('.').last == row[5],
         );
+      }
+
+      if (row[12] != null && row[13] != null) {
+        supplier = Supplier.fromJson({
+          'supplier_id': row[12],
+          'name': row[13],
+        });
       }
 
       if (row[6] != null) {
@@ -618,6 +712,10 @@ class IssuanceRepository {
           'purchase_request': purchaseRequest?.toJson(),
           'entity': entity?.toJson(),
           'fund_cluster': fundCluster,
+          'supplier': supplier?.toJson(),
+          'inspection_and_acceptance_report_no': row[14],
+          'contract_number': row[15],
+          'purchase_order_number': row[16],
           'receiving_officer': receivingOfficer?.toJson(),
           'issuing_officer': issuingOfficer?.toJson(),
           'qr_code_image_data': row[8],
@@ -1649,6 +1747,10 @@ class IssuanceRepository {
     PurchaseRequest? purchaseRequest,
     String? entityId,
     FundCluster? fundCluster,
+    int? supplierId,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderId,
     String? receivingOfficerId,
     String? issuingOfficerId,
   }) async {
@@ -1661,12 +1763,16 @@ class IssuanceRepository {
     print('Generated ICS ID: $icsId');
 
     final concreteIssuanceEntityQuery = '''
-    INSERT INTO InventoryCustodianSlips (id, issuance_id)
-    VALUES (@id, @issuance_id);
+    INSERT INTO InventoryCustodianSlips (id, issuance_id, supplier_id, inspection_and_acceptance_report_id, contract_number, purchase_order_id)
+    VALUES (@id, @issuance_id, @supplier_id, @inspection_and_acceptance_report_id, @contract_number, @purchase_order_id);
     ''';
 
     final concreteIssuanceEntityParams = {
       'id': icsId,
+      'supplier_id': supplierId,
+      'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
+      'contract_number': contractNumber,
+      'purchase_order_id': purchaseOrderId,
     };
 
     return await _createIssuance(
@@ -1688,18 +1794,26 @@ class IssuanceRepository {
     PurchaseRequest? purchaseRequest,
     String? entityId,
     FundCluster? fundCluster,
+    int? supplierId,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderId,
     String? receivingOfficerId,
     String? issuingOfficerId,
   }) async {
     final parId = await _generateUniqueParId();
 
     final concreteIssuanceEntityQuery = '''
-    INSERT INTO PropertyAcknowledgementReceipts (id, issuance_id)
-    VALUES (@id, @issuance_id);
+    INSERT INTO PropertyAcknowledgementReceipts (id, issuance_id, supplier_id, inspection_and_acceptance_report_id, contract_number, purchase_order_id)
+    VALUES (@id, @issuance_id, @supplier_id, @inspection_and_acceptance_report_id, @contract_number, @purchase_order_id);
     ''';
 
     final concreteIssuanceEntityParams = {
       'id': parId,
+      'supplier_id': supplierId,
+      'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
+      'contract_number': contractNumber,
+      'purchase_order_id': purchaseOrderId,
     };
 
     return await _createIssuance(
@@ -2414,4 +2528,24 @@ class IssuanceRepository {
 
     return inventoryProperty;
   }
+
+  // Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
+  //   required String icsId,
+  // }) async {
+  //   final ics = await getIcsById(
+  //     id: icsId,
+  //   );
+
+  //   // before we generate a new sepc, we will check first if this particular
+  //   // issuance was already referenced, if yes, we'll just return those data
+
+  //   // Using the supplier, we'll create a pattern like extracting the first letter of each word in the name
+  //   // Then we will check in the batch items if the pattern exists, if it is, we will check if they sahre
+  //   // the same supplier name, if they do, we will just increment it based on the last no. recorded
+  //   // If not, we will create a new one by changing or adding some kind of pattern to generate a unique id
+  //   final supplierName = ics?.supplier?.supplierName;
+  //   final issuedItems = ics?.items;
+
+  //   for (final issuedItem in issuedItems!) {}
+  // }
 }

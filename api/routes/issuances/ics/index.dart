@@ -100,6 +100,11 @@ Future<Response> _createICS(
     final prId = json['pr_id'] as String?;
     final entity = json['entity'] as String?;
     final fundClusterData = json['fund_cluster'] as String?;
+    final supplierName = json['supplier_name'] as String?;
+    final inspectionAndAcceptanceReportId =
+        json['inspection_and_acceptance_report_id'] as String?;
+    final contractNumber = json['contract_number'] as String?;
+    final purchaseOrderNumber = json['purchase_order_number'] as String?;
 
     if (issuanceItems == null) {
       return Response.json(
@@ -117,12 +122,26 @@ Future<Response> _createICS(
     final issuingOfficerPosition = json['issuing_officer_position'] as String?;
     final issuingOfficerName = json['issuing_officer_name'] as String?;
 
+    int? supplierId;
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
     String? receivingOfficerId;
     String? issuingOfficerOfficeId;
     String? issuingOfficerPositionId;
     String? issuingOfficerId;
+
+    print('processing supplier');
+    if (supplierName != null && supplierName.isNotEmpty) {
+      supplierId = await issuanceRepository.checkSupplierIfExist(
+            supplierName: supplierName,
+          ) ??
+          await issuanceRepository.registerSupplier(
+            supplierName: supplierName,
+          );
+      print('processed supplier');
+    }
+
+    print('processed supplier');
 
     if (receivingOfficerOffice != null) {
       receivingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
@@ -195,6 +214,10 @@ Future<Response> _createICS(
             )
           : null,
       fundCluster: fundCluster,
+      supplierId: supplierId,
+      inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
+      contractNumber: contractNumber,
+      purchaseOrderId: purchaseOrderNumber,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
     );

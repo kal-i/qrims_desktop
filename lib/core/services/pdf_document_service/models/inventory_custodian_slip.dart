@@ -132,12 +132,38 @@ class InventoryCustodianSlip implements BaseDocument {
         );
       }
 
+      // Check if any of the PR, supplier, IAR, contract, or PO is not null
+      if (purchaseRequestEntity != null ||
+          ics.supplierEntity != null ||
+          ics.inspectionAndAcceptanceReportId != null ||
+          ics.contractNumber != null ||
+          ics.purchaseOrderNumber != null) {
+        // Add 3 empty rows
+        descriptionColumn.addAll(['', '', '']);
+      }
+
       print(
           'Item ID: ${issuedItem.itemEntity.shareableItemInformationEntity.id}');
       print('Description Column: $descriptionColumn');
       // Add PR information
       if (purchaseRequestEntity != null) {
         descriptionColumn.add('PR: ${purchaseRequestEntity.id}');
+      }
+
+      if (ics.supplierEntity != null) {
+        descriptionColumn.add('Supplier: ${ics.supplierEntity?.name}');
+      }
+
+      if (ics.inspectionAndAcceptanceReportId != null) {
+        descriptionColumn.add('IAR: ${ics.inspectionAndAcceptanceReportId}');
+      }
+
+      if (ics.contractNumber != null) {
+        descriptionColumn.add('CN: ${ics.contractNumber}');
+      }
+
+      if (ics.purchaseOrderNumber != null) {
+        descriptionColumn.add('PO: ${ics.purchaseOrderNumber}');
       }
 
       // Calculate row heights for description

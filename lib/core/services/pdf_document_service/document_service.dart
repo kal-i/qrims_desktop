@@ -26,12 +26,38 @@ class DocumentService {
     }
   }
 
+  // static double getRowHeight(
+  //   String text, {
+  //   double fontSize = 8.5,
+  // }) {
+  //   // Trim the text to remove leading/trailing whitespace and check if it's non-empty
+  //   if (text.trim().isNotEmpty) {
+  //     final lines = (text.length / 20)
+  //         .ceil(); // Calculate the number of lines based on text length
+  //     return lines * fontSize * 1.5; // Return the calculated row height
+  //   }
+  //   // If the text is empty or only whitespace, return 0 or a minimal height (optional)
+  //   return fontSize * 1.5; // Minimal row height in case of empty input
+  // }
+
   static double getRowHeight(
     String text, {
     double fontSize = 8.5,
+    double cellWidth = 100.0, // Add cellWidth to calculate based on cell size
   }) {
-    final lines = (text.length / 20).ceil();
-    return lines * fontSize * 1.5;
+    if (text.trim().isNotEmpty) {
+      // Estimate characters per line based on cellWidth and fontSize
+      final charsPerLine = (cellWidth / (fontSize * 0.6)).floor();
+
+      // Calculate the number of lines needed, rounding up for partially filled lines
+      final lines = (text.length / charsPerLine).ceil();
+
+      // Return the calculated height based on the number of lines
+      return lines * fontSize * 1.5;
+    }
+
+    // Return minimal row height for empty or whitespace-only text
+    return fontSize * 1.5;
   }
 
   Future<pw.Document> generateDocument({

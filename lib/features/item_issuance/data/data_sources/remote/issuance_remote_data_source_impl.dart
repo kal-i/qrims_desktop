@@ -32,6 +32,10 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? prId,
     String? entityName,
     FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
     String? receivingOfficerOffice,
     String? receivingOfficerPosition,
     String? receivingOfficerName,
@@ -48,6 +52,16 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
         if (fundCluster != null)
           'fund_cluster': fundCluster.toString().split('.').last,
+        if (supplierName != null && supplierName.isNotEmpty)
+          'supplier_name': supplierName,
+        if (inspectionAndAcceptanceReportId != null &&
+            inspectionAndAcceptanceReportId.isNotEmpty)
+          'inspection_and_acceptance_report_id':
+              inspectionAndAcceptanceReportId,
+        if (contractNumber != null && contractNumber.isNotEmpty)
+          'contract_number': contractNumber,
+        if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
+          'purchase_order_number': purchaseOrderNumber,
         if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
           'receiving_officer_office': receivingOfficerOffice,
         if (receivingOfficerPosition != null &&
@@ -85,6 +99,10 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? prId,
     String? entityName,
     FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
     String? receivingOfficerOffice,
     String? receivingOfficerPosition,
     String? receivingOfficerName,
@@ -100,6 +118,16 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
         if (fundCluster != null)
           'fund_cluster': fundCluster.toString().split('.').last,
+        if (supplierName != null && supplierName.isNotEmpty)
+          'supplier_name': supplierName,
+        if (inspectionAndAcceptanceReportId != null &&
+            inspectionAndAcceptanceReportId.isNotEmpty)
+          'inspection_and_acceptance_report_id':
+              inspectionAndAcceptanceReportId,
+        if (contractNumber != null && contractNumber.isNotEmpty)
+          'contract_number': contractNumber,
+        if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
+          'purchase_order_number': purchaseOrderNumber,
         if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
           'receiving_officer_office': receivingOfficerOffice,
         if (receivingOfficerPosition != null &&

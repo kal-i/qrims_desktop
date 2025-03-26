@@ -26,6 +26,10 @@ class CreateICS
       prId: params.prId,
       entityName: params.entityName,
       fundCluster: params.fundCluster,
+      supplierName: params.supplierName,
+      inspectionAndAcceptanceReportId: params.inspectionAndAcceptanceReportId,
+      contractNumber: params.contractNumber,
+      purchaseOrderNumber: params.purchaseOrderNumber,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
       receivingOfficerName: params.receivingOfficerName,
@@ -44,6 +48,10 @@ class CreateICSParams {
     this.prId,
     this.entityName,
     this.fundCluster,
+    this.supplierName,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
     this.receivingOfficerOffice,
     this.receivingOfficerPosition,
     this.receivingOfficerName,
@@ -58,6 +66,10 @@ class CreateICSParams {
   final String? prId;
   final String? entityName;
   final FundCluster? fundCluster;
+  final String? supplierName;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
   final String? receivingOfficerOffice;
   final String? receivingOfficerPosition;
   final String? receivingOfficerName;

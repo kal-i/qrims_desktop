@@ -43,6 +43,10 @@ final class CreateICSEvent extends IssuancesEvent {
     this.prId,
     this.entityName,
     this.fundCluster,
+    this.supplierName,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
     this.receivingOfficerOffice,
     this.receivingOfficerPosition,
     this.receivingOfficerName,
@@ -57,6 +61,10 @@ final class CreateICSEvent extends IssuancesEvent {
   final String? prId;
   final String? entityName;
   final FundCluster? fundCluster;
+  final String? supplierName;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
   final String? receivingOfficerOffice;
   final String? receivingOfficerPosition;
   final String? receivingOfficerName;
@@ -72,6 +80,10 @@ final class CreatePAREvent extends IssuancesEvent {
     this.prId,
     this.entityName,
     this.fundCluster,
+    this.supplierName,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
     this.receivingOfficerOffice,
     this.receivingOfficerPosition,
     this.receivingOfficerName,
@@ -85,6 +97,10 @@ final class CreatePAREvent extends IssuancesEvent {
   final String? prId;
   final String? entityName;
   final FundCluster? fundCluster;
+  final String? supplierName;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
   final String? receivingOfficerOffice;
   final String? receivingOfficerPosition;
   final String? receivingOfficerName;

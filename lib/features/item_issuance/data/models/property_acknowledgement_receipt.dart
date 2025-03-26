@@ -5,6 +5,7 @@ import '../../../purchase_request/data/models/purchase_request.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import 'issuance.dart';
 import 'issuance_item.dart';
+import 'supplier.dart';
 
 class PropertyAcknowledgementReceiptModel
     extends PropertyAcknowledgementReceiptEntity implements IssuanceModel {
@@ -17,6 +18,10 @@ class PropertyAcknowledgementReceiptModel
     super.purchaseRequestEntity,
     super.entity,
     super.fundCluster,
+    super.supplierEntity,
+    super.inspectionAndAcceptanceReportId,
+    super.contractNumber,
+    super.purchaseOrderNumber,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
     required super.qrCodeImageData,
@@ -31,6 +36,7 @@ class PropertyAcknowledgementReceiptModel
     PurchaseRequestModel? purchaseRequest;
     EntityModel? entity;
     FundCluster? fundCluster;
+    SupplierModel? supplier;
     OfficerModel? receivingOfficer;
     OfficerModel? issuingOfficer;
 
@@ -45,6 +51,10 @@ class PropertyAcknowledgementReceiptModel
     if (json['fund_cluster'] != null) {
       fundCluster = FundCluster.values.firstWhere(
           (e) => e.toString().split('.').last == json['fund_cluster']);
+    }
+
+    if (supplier != null) {
+      supplier = SupplierModel.fromJson(json['supplier']);
     }
 
     if (json['receiving_officer'] != null) {
@@ -73,6 +83,11 @@ class PropertyAcknowledgementReceiptModel
       purchaseRequestEntity: purchaseRequest,
       entity: entity,
       fundCluster: fundCluster,
+      supplierEntity: supplier,
+      inspectionAndAcceptanceReportId:
+          json['inspection_and_acceptance_report_id'] as String,
+      contractNumber: json['contract_number'] as String,
+      purchaseOrderNumber: json['purchase_order_number'] as String,
       receivingOfficerEntity: receivingOfficer,
       issuingOfficerEntity: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
@@ -98,6 +113,10 @@ class PropertyAcknowledgementReceiptModel
           (purchaseRequestEntity as PurchaseRequestModel).toJson(),
       'entity': (entity as EntityModel).toJson(),
       'fund_cluster': fundCluster.toString().split('.').last,
+      'supplier': (supplierEntity as SupplierModel).toJson(),
+      'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
+      'contract_number': contractNumber,
+      'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': (receivingOfficerEntity as OfficerModel).toJson(),
       'issuing_officer': (issuingOfficerEntity as OfficerModel).toJson(),
       'qr_code_image_data': qrCodeImageData,

@@ -66,6 +66,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   final _officeNameController = TextEditingController();
   final _purposeController = TextEditingController();
 
+  final _supplierNameController = TextEditingController();
+  final _inspectionAndAcceptanceReportIdController = TextEditingController();
+  final _contractNumberController = TextEditingController();
+  final _purchaseOrderNumberController = TextEditingController();
+
   final _receivingOfficerOfficeNameController = TextEditingController();
   final _receivingOfficerPositionNameController = TextEditingController();
   final _receivingOfficerNameController = TextEditingController();
@@ -196,6 +201,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             prId: _prIdController.text,
             entityName: _entityNameController.text,
             fundCluster: _selectedFundCluster.value,
+            supplierName: _supplierNameController.text,
+            inspectionAndAcceptanceReportId:
+                _inspectionAndAcceptanceReportIdController.text,
+            contractNumber: _contractNumberController.text,
+            purchaseOrderNumber: _purchaseOrderNumberController.text,
             receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
             receivingOfficerPosition:
                 _receivingOfficerPositionNameController.text,
@@ -218,6 +228,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             prId: _prIdController.text,
             entityName: _entityNameController.text,
             fundCluster: _selectedFundCluster.value,
+            supplierName: _supplierNameController.text,
+            inspectionAndAcceptanceReportId:
+                _inspectionAndAcceptanceReportIdController.text,
+            contractNumber: _contractNumberController.text,
+            purchaseOrderNumber: _purchaseOrderNumberController.text,
             receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
             receivingOfficerPosition:
                 _receivingOfficerPositionNameController.text,
@@ -282,6 +297,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     _responsibilityCenterCodeController.dispose();
     _officeNameController.dispose();
     _purposeController.dispose();
+
+    _supplierNameController.dispose();
+    _inspectionAndAcceptanceReportIdController.dispose();
+    _contractNumberController.dispose();
+    _purchaseOrderNumberController.dispose();
 
     _receivingOfficerOfficeNameController.dispose();
     _receivingOfficerPositionNameController.dispose();
@@ -507,6 +527,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           const SizedBox(
             height: 80.0,
           ),
+          if (widget.issuanceType != IssuanceType.ris)
+            _buildAdditionalInformationSection(),
           _buildActionsRow(),
         ],
       ),
@@ -1054,6 +1076,94 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               child: _buildReceivingOfficerNameSuggestionField(),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalInformationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Additional Information',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 24.0,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(
+          height: 5.0,
+        ),
+        Text(
+          'Optional information to be included in the document.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w400,
+              ),
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: CustomFormTextField(
+                controller: _supplierNameController,
+                label: 'Supplier Name',
+                placeholderText: 'Enter supplier name',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: CustomFormTextField(
+                controller: _inspectionAndAcceptanceReportIdController,
+                label: 'Inspection and Acceptance Report ID',
+                placeholderText: 'Enter inspection and acceptance report ID',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: CustomFormTextField(
+                controller: _contractNumberController,
+                label: 'Contract Number',
+                placeholderText: 'Enter contract number',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: CustomFormTextField(
+                controller: _purchaseOrderNumberController,
+                label: 'Purchase Order Number',
+                placeholderText: 'Enter purchase order number',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 50.0,
         ),
       ],
     );

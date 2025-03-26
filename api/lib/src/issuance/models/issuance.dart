@@ -31,6 +31,31 @@ enum IcsType {
   splv, // for low value goods
 }
 
+class Supplier {
+  const Supplier({
+    required this.supplierId,
+    required this.supplierName,
+  });
+
+  final int supplierId;
+  final String supplierName;
+
+  factory Supplier.fromJson(Map<String, dynamic> json) {
+    print('raw json received by supplier: $json');
+    return Supplier(
+      supplierId: json['supplier_id'] as int,
+      supplierName: json['name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'supplier_id': supplierId,
+      'name': supplierName,
+    };
+  }
+}
+
 class IssuanceItem {
   const IssuanceItem({
     required this.issuanceId,
@@ -217,9 +242,17 @@ class InventoryCustodianSlip extends Issuance {
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
+    this.supplier,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
   });
 
   final String icsId;
+  final Supplier? supplier;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
 
   factory InventoryCustodianSlip.fromJson(Map<String, dynamic> json) {
     print('received raw json by ics: $json');
@@ -227,6 +260,7 @@ class InventoryCustodianSlip extends Issuance {
     Entity? entity;
     FundCluster? fundCluster;
     PurchaseRequest? purchaseRequest;
+    Supplier? supplier;
     Officer? receivingOfficer;
     Officer? issuingOfficer;
 
@@ -461,6 +495,11 @@ class InventoryCustodianSlip extends Issuance {
       print('fc converted');
     }
 
+    if (json['supplier'] != null) {
+      supplier = Supplier.fromJson(json['supplier'] as Map<String, dynamic>);
+      print('supplier converted');
+    }
+
     if (json['receiving_officer'] != null) {
       receivingOfficer =
           Officer.fromJson(json['receiving_officer'] as Map<String, dynamic>);
@@ -488,6 +527,11 @@ class InventoryCustodianSlip extends Issuance {
       purchaseRequest: purchaseRequest,
       entity: entity, // done
       fundCluster: fundCluster,
+      supplier: supplier,
+      inspectionAndAcceptanceReportId:
+          json['inspection_and_acceptance_report_id'] as String?,
+      contractNumber: json['contract_number'] as String?,
+      purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
@@ -511,6 +555,10 @@ class InventoryCustodianSlip extends Issuance {
       'purchase_request': purchaseRequest?.toJson(),
       'entity': entity?.toJson(),
       'fund_cluster': fundCluster.toString().split('.').last,
+      'supplier': supplier?.toJson(),
+      'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
+      'contract_number': contractNumber,
+      'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
       'qr_code_image_data': qrCodeImageData,
@@ -537,15 +585,24 @@ class PropertyAcknowledgementReceipt extends Issuance {
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
+    this.supplier,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
   });
 
   final String parId;
+  final Supplier? supplier;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
 
   factory PropertyAcknowledgementReceipt.fromJson(Map<String, dynamic> json) {
     Entity? entity;
     PurchaseRequest? purchaseRequest;
     Officer? receivingOfficer;
     Officer? issuingOfficer;
+    Supplier? supplier;
 
     final prJson = json['purchase_request'];
 
@@ -750,6 +807,10 @@ class PropertyAcknowledgementReceipt extends Issuance {
       entity = Entity.fromJson(json['entity'] as Map<String, dynamic>);
     }
 
+    if (json['supplier'] != null) {
+      supplier = Supplier.fromJson(json['supplier'] as Map<String, dynamic>);
+    }
+
     if (json['receiving_officer'] != null) {
       receivingOfficer =
           Officer.fromJson(json['receiving_officer'] as Map<String, dynamic>);
@@ -777,6 +838,11 @@ class PropertyAcknowledgementReceipt extends Issuance {
             e.toString().split('.').last ==
             json['fund_cluster'].toString().split('.').last,
       ),
+      supplier: supplier,
+      inspectionAndAcceptanceReportId:
+          json['inspection_and_acceptance_report_id'] as String?,
+      contractNumber: json['contract_number'] as String?,
+      purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
@@ -799,6 +865,10 @@ class PropertyAcknowledgementReceipt extends Issuance {
       'purchase_request': purchaseRequest?.toJson(),
       'entity': entity?.toJson(),
       'fund_cluster': fundCluster.toString().split('.').last,
+      'supplier': supplier?.toJson(),
+      'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
+      'contract_number': contractNumber,
+      'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
       'qr_code_image_data': qrCodeImageData,
