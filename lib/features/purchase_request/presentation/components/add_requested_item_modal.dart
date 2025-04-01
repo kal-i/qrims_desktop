@@ -65,7 +65,9 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
       final data = {
         'product_name': _itemNameController.text.trim(),
         'product_description': _itemDescriptionController.text.trim(),
-        'specification': _itemSpecificationController.text,
+        'specification': _itemSpecificationController.text.isEmpty
+            ? ''
+            : _itemSpecificationController.text,
         'unit': _selectedUnit.value?.toString().split('.').last,
         'quantity': _quantity.value,
         'unit_cost': double.tryParse(_unitCostController.text.trim()) ?? 0.0,
@@ -103,76 +105,83 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
   }
 
   Widget _buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Row(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 15.0,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
             children: [
-              Expanded(
-                child: _buildItemNameSuggestionField(),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 15.0,
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _buildItemDescriptionSuggestionField(),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 15.0,
-          ),
-          IntrinsicHeight(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: _buildUnitSelection(),
-                ),
-                const SizedBox(
-                  width: 50.0,
-                ),
-                Expanded(
-                  child: _buildQuantityCounterField(),
-                  // CustomFormTextField(
-                  //   label: 'Quantity',
-                  // ),
-                ),
-                const SizedBox(
-                  width: 50.0,
-                ),
-                Expanded(
-                  child: CustomFormTextField(
-                    label: 'Unit Cost',
-                    controller: _unitCostController,
-                    placeholderText: 'Enter item\'s unit cost',
-                    fillColor:
-                        (context.watch<ThemeBloc>().state == AppTheme.light
-                            ? AppColor.lightCustomTextBox
-                            : AppColor.darkCustomTextBox),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildItemNameSuggestionField(),
                   ),
+                ],
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildItemDescriptionSuggestionField(),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              IntrinsicHeight(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: _buildUnitSelection(),
+                    ),
+                    const SizedBox(
+                      width: 50.0,
+                    ),
+                    Expanded(
+                      child: _buildQuantityCounterField(),
+                      // CustomFormTextField(
+                      //   label: 'Quantity',
+                      // ),
+                    ),
+                    const SizedBox(
+                      width: 50.0,
+                    ),
+                    Expanded(
+                      child: CustomFormTextField(
+                        label: 'Unit Cost',
+                        controller: _unitCostController,
+                        placeholderText: 'Enter item\'s unit cost',
+                        fillColor:
+                            (context.watch<ThemeBloc>().state == AppTheme.light
+                                ? AppColor.lightCustomTextBox
+                                : AppColor.darkCustomTextBox),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              CustomFormTextField(
+                label: 'Specification',
+                placeholderText: 'Enter item\'s specification',
+                maxLines: 4,
+                controller: _itemSpecificationController,
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+              ),
+            ],
           ),
-          const SizedBox(
-            height: 15.0,
-          ),
-          CustomFormTextField(
-            label: 'Specification',
-            placeholderText: 'Enter item\'s specification',
-            maxLines: 4,
-            controller: _itemSpecificationController,
-            fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                ? AppColor.lightCustomTextBox
-                : AppColor.darkCustomTextBox),
-          ),
-        ],
+        ),
       ),
     );
   }

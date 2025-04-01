@@ -101,7 +101,7 @@ class _ModalHeader extends StatelessWidget {
           Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 13.5,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w400,
                 ),
           ),

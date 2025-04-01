@@ -603,6 +603,8 @@ class _PurchaseRequestReusableViewState
                     onAdd: (Map<String, dynamic> requestedItem) {
                       // Ensure existing rows are not null
                       final existingRows = _tableRows.value ?? [];
+                      final requestedItemSpecification =
+                          requestedItem['product_specification'] as String?;
 
                       // Create a new TableData object
                       final newRow = TableData(
@@ -618,8 +620,16 @@ class _PurchaseRequestReusableViewState
                                     ),
                           ),
                           Text(
-                            capitalizeWord(
-                                '${requestedItem['product_description']}, ${requestedItem['specification']}'),
+                            (requestedItemSpecification == null ||
+                                    requestedItemSpecification.isEmpty ||
+                                    requestedItemSpecification.toLowerCase() ==
+                                        'na' ||
+                                    requestedItemSpecification.toLowerCase() ==
+                                        'n/a')
+                                ? capitalizeWord(
+                                    requestedItem['product_description'])
+                                : capitalizeWord(
+                                    '${requestedItem['product_description']}, ${requestedItem['specification']}'),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontSize: 14.0,

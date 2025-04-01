@@ -12,6 +12,7 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
     required this.page,
     required this.pageSize,
     this.prId,
+    this.requestingOfficerName,
     this.unitCost,
     this.startDate,
     this.endDate,
@@ -22,6 +23,7 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
   final int page;
   final int pageSize;
   final String? prId;
+  final String? requestingOfficerName;
   final double? unitCost;
   final DateTime? startDate;
   final DateTime? endDate;
@@ -33,6 +35,7 @@ final class GetPurchaseRequestsEvent extends PurchaseRequestsEvent {
         page,
         pageSize,
         prId,
+        requestingOfficerName,
         unitCost,
         startDate,
         endDate,

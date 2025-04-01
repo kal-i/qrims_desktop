@@ -2529,23 +2529,113 @@ class IssuanceRepository {
     return inventoryProperty;
   }
 
-  // Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
-  //   required String icsId,
-  // }) async {
-  //   final ics = await getIcsById(
-  //     id: icsId,
-  //   );
+  Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
+    required String icsId,
+    required FundCluster fundCluster,
+    DateTime? date, // if null, fallback to the date in the ICS
+  }) async {
+    final semiExpendablePropertyCardData = <Map<String, dynamic>>[];
 
-  //   // before we generate a new sepc, we will check first if this particular
-  //   // issuance was already referenced, if yes, we'll just return those data
+    // Retrieve the issuance details by ICS ID
+    final ics = await getIcsById(
+      id: icsId,
+    );
 
-  //   // Using the supplier, we'll create a pattern like extracting the first letter of each word in the name
-  //   // Then we will check in the batch items if the pattern exists, if it is, we will check if they sahre
-  //   // the same supplier name, if they do, we will just increment it based on the last no. recorded
-  //   // If not, we will create a new one by changing or adding some kind of pattern to generate a unique id
-  //   final supplierName = ics?.supplier?.supplierName;
-  //   final issuedItems = ics?.items;
+    // Check if this issuance has already been referenced in BatchItems
+    final existingData = await _conn.execute(
+      Sql.named('''
+      SELECT base_pattern, generated_pattern_id, issuance_id, supplier_id 
+      FROM BatchItems
+      WHERE issuance_id = @issuance_id;
+    '''),
+      parameters: {'issuance_id': icsId},
+    );
 
-  //   for (final issuedItem in issuedItems!) {}
-  // }
+    if (existingData.isNotEmpty) {
+      // If referenced, map and return the existing data
+      for (final data in existingData) {
+        semiExpendablePropertyCardData.add({
+          'base_pattern_id': data[0],
+          'generated_pattern_id': data[1],
+          'issuance_id': data[2],
+          'supplier_id': data[3],
+        });
+      }
+      return semiExpendablePropertyCardData;
+    }
+
+    // Generate a base pattern from the supplier's name
+    final supplierId = ics?.supplier?.supplierId.toString() ?? '';
+    final supplierName = ics?.supplier?.supplierName ?? '';
+    final issuedItems = ics?.items ?? [];
+    final basePattern = supplierName.split(' ').map((e) => e[0]).join();
+
+    // Increment base pattern if it already exists in BatchItems
+    var uniquePattern = basePattern;
+    int counter = 1;
+    while (await checkPatternIfExistsInBatchItems(
+        pattern: uniquePattern, supplierId: supplierId)) {
+      uniquePattern = '$basePattern${counter++}';
+    }
+
+    // Generate IDs for each issued item based on the base pattern and quantity
+    for (final issuedItem in issuedItems) {
+      final quantity = issuedItem.quantity;
+      final generatedIds = <String>[];
+
+      // Generate semi-expendable IDs following the pattern: ABC-YYYY(FC)-MM-NNN(i)
+      for (int i = 1; i <= quantity; i++) {
+        final datePart = (date ?? ics?.issuedDate)
+            ?.toIso8601String()
+            .substring(0, 10); // YYYY-MM-DD
+        final fundClusterPart =
+            fundCluster.toString(); // Simplified fund cluster
+        final generatedId =
+            '$uniquePattern-$datePart($fundClusterPart)-NNN($i)';
+        generatedIds.add(generatedId);
+
+        await _conn.execute(
+          Sql.named(
+            '''
+          INSERT INTO BatchItems (base_pattern, generated_pattern_id, issuance_id, supplier_id)
+          VALUES (@base_pattern, @generated_pattern_id, @issuance_id, @supplier_id);
+          ''',
+          ),
+          parameters: {
+            'base_pattern': basePattern,
+            'generated_pattern_id': generatedId,
+            'issuance_id': ics?.id,
+            'supplier_id': supplierId,
+          },
+        );
+
+        semiExpendablePropertyCardData.add({
+          'base_pattern_id': basePattern,
+          'generated_pattern_id': generatedId,
+          'issuance_id': ics?.id,
+          'supplier_id': supplierId,
+        });
+      }
+    }
+
+    return semiExpendablePropertyCardData;
+  }
+
+  Future<bool> checkPatternIfExistsInBatchItems({
+    required String pattern,
+    required String supplierId,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+      SELECT 1 FROM BatchItems WHERE base_pattern = @base_pattern AND supplier_id = @supplier_id;
+    ''',
+      ),
+      parameters: {
+        'base_pattern': pattern,
+        'supplier_id': supplierId,
+      },
+    );
+    return result.affectedRows > 0;
+  }
 }

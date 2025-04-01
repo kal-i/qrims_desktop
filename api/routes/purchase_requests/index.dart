@@ -55,6 +55,7 @@ Future<Response> _getPurchaseRequests(
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final prId = queryParams['pr_id'];
+    final requestingOfficerName = queryParams['requesting_officer_name'];
     final startDate = queryParams['start_date'] is String
         ? DateTime.parse(queryParams['start_date'] as String)
         : queryParams['start_date'] as DateTime?;
@@ -92,6 +93,7 @@ Future<Response> _getPurchaseRequests(
 
     final prFilteredCount = await prRepository.getPurchaseRequestsFilteredCount(
       prId: prId,
+      requestingOfficerName: requestingOfficerName,
       startDate: startDate,
       endDate: endDate,
       prStatus: prStatus,
@@ -101,6 +103,7 @@ Future<Response> _getPurchaseRequests(
       page: page,
       pageSize: pageSize,
       prId: prId,
+      requestingOfficerName: requestingOfficerName,
       startDate: startDate,
       endDate: endDate,
       prStatus: prStatus,

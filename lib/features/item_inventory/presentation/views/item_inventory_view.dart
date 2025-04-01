@@ -438,6 +438,10 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                                 item.shareableItemInformationEntity
                                         .specification
                                         ?.toLowerCase() ==
+                                    'na' ||
+                                item.shareableItemInformationEntity
+                                        .specification
+                                        ?.toLowerCase() ==
                                     'n/a')
                             ? capitalizeWord(
                                 '${item.productStockEntity.productDescription?.description}')

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/purchase_request_status.dart';
-import '../../../../../core/enums/unit.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
@@ -25,6 +24,7 @@ class PurchaseRequestRemoteDataSourceImpl
     required int page,
     required int pageSize,
     String? prId,
+    String? requestingOfficerName,
     double? unitCost,
     DateTime? startDate,
     DateTime? endDate,
@@ -36,6 +36,8 @@ class PurchaseRequestRemoteDataSourceImpl
         'page': page,
         'page_size': pageSize,
         if (prId != null && prId.isNotEmpty) 'pr_id': prId,
+        if (requestingOfficerName != null && requestingOfficerName.isNotEmpty)
+          'requesting_officer_name': requestingOfficerName,
         if (unitCost != null) 'unit_cost': unitCost,
         if (startDate != null) 'start_date': startDate,
         if (endDate != null) 'end_date': endDate,

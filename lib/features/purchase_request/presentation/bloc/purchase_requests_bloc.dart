@@ -50,6 +50,7 @@ class PurchaseRequestsBloc
         page: event.page,
         pageSize: event.pageSize,
         prId: event.prId,
+        requestingOfficerName: event.requestingOfficerName,
         unitCost: event.unitCost,
         startDate: event.startDate,
         endDate: event.endDate,

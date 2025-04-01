@@ -542,7 +542,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           ],
         ),
         CustomFormTextField(
-          label: 'Specification (Optional)',
+          label: 'Specification',
           placeholderText: 'Enter item\'s specification',
           maxLines: 4,
           controller: _specificationController,
