@@ -25,6 +25,7 @@ abstract interface class PurchaseRequestRemoteDataSource {
     required int pageSize,
     String? prId,
     String? requestingOfficerName,
+    String? search,
     double? unitCost,
     DateTime? startDate,
     DateTime? endDate,

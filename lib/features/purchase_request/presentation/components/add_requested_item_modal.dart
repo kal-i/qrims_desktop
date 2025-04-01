@@ -98,7 +98,7 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
       width: 900.0,
       height: 600.0,
       headerTitle: 'Add Requested Item',
-      subtitle: '',
+      subtitle: 'Put \'NA\' or \'N/A\' if specification is not required.',
       content: _buildForm(),
       footer: _buildActionsRow(),
     );

@@ -604,7 +604,7 @@ class _PurchaseRequestReusableViewState
                       // Ensure existing rows are not null
                       final existingRows = _tableRows.value ?? [];
                       final requestedItemSpecification =
-                          requestedItem['product_specification'] as String?;
+                          requestedItem['specification'] as String?;
 
                       // Create a new TableData object
                       final newRow = TableData(

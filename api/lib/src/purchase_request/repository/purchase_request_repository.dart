@@ -351,6 +351,7 @@ class PurchaseRequestRepository {
   Future<int> getPurchaseRequestsFilteredCount({
     String? prId,
     String? requestingOfficerId,
+    String? search,
     String? requestingOfficerName,
     double? unitCost,
     DateTime? startDate,
@@ -416,6 +417,13 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('rofc.name ILIKE @requesting_officer_name');
         params['requesting_officer_name'] = '%$requestingOfficerName%';
+      }
+
+      if (search != null && search.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write(
+            '(pr.id ILIKE @search_query OR rofc.name ILIKE @search_query)');
+        params['search_query'] = '%$search%';
       }
 
       if (unitCost != null) {
@@ -496,6 +504,7 @@ class PurchaseRequestRepository {
     required int pageSize,
     String? prId,
     String? receivingOfficerId,
+    String? search,
     String? requestingOfficerName,
     double? unitCost,
     DateTime? startDate,
@@ -585,6 +594,13 @@ class PurchaseRequestRepository {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write('rofc.name ILIKE @requesting_officer_name');
         params['requesting_officer_name'] = '%$requestingOfficerName%';
+      }
+
+      if (search != null && search.isNotEmpty) {
+        whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
+        whereClause.write(
+            '(pr.id ILIKE @search_query OR rofc.name ILIKE @search_query)');
+        params['search_query'] = '%$search%';
       }
 
       if (unitCost != null) {

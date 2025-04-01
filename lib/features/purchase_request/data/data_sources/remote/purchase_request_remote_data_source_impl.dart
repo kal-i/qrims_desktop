@@ -25,6 +25,7 @@ class PurchaseRequestRemoteDataSourceImpl
     required int pageSize,
     String? prId,
     String? requestingOfficerName,
+    String? search,
     double? unitCost,
     DateTime? startDate,
     DateTime? endDate,
@@ -38,6 +39,7 @@ class PurchaseRequestRemoteDataSourceImpl
         if (prId != null && prId.isNotEmpty) 'pr_id': prId,
         if (requestingOfficerName != null && requestingOfficerName.isNotEmpty)
           'requesting_officer_name': requestingOfficerName,
+        if (search != null && search.isNotEmpty) 'search': search,
         if (unitCost != null) 'unit_cost': unitCost,
         if (startDate != null) 'start_date': startDate,
         if (endDate != null) 'end_date': endDate,

@@ -107,8 +107,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
       GetPurchaseRequestsEvent(
         page: _currentPage,
         pageSize: _pageSize,
-        prId: _searchController.text,
-        requestingOfficerName: _searchController.text,
+        //prId: _searchController.text,
+        //requestingOfficerName: _searchController.text,
+        search: _searchController.text,
         // unitCost: unitCost,
         // date: date,
         prStatus: _selectedPrStatus(
