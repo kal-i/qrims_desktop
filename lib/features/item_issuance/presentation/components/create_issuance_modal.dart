@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
+import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/purchase_request_suggestions_service.dart';
+import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../../../../core/common/components/base_modal.dart';
@@ -27,7 +29,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
 
   final _prIdController = TextEditingController();
 
-  final ValueNotifier<bool> _isWithPr = ValueNotifier(false);
+  final ValueNotifier<String?> _selectedType = ValueNotifier(null);
 
   @override
   void initState() {
@@ -39,7 +41,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
   @override
   void dispose() {
     _prIdController.dispose();
-    _isWithPr.dispose();
+    _selectedType.dispose();
     super.dispose();
   }
 
@@ -47,7 +49,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 900.0,
-      height: 350.0,
+      height: 380.0,
       headerTitle: widget.issuanceType == IssuanceType.ics
           ? 'Create Inventory Custodian Slip'
           : widget.issuanceType == IssuanceType.par
@@ -72,9 +74,9 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
           height: 20.0,
         ),
         ValueListenableBuilder(
-            valueListenable: _isWithPr,
+            valueListenable: _selectedType,
             builder: (context, isWithPr, child) {
-              return isWithPr
+              return _selectedType.value == '/w PR'
                   ? _buildPurchaseRequestIdSuggestionField()
                   : const SizedBox.shrink();
             }),
@@ -96,37 +98,28 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
         const SizedBox(
           height: 10.0,
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isWithPr,
-          builder: (context, isWithPR, child) {
-            return Row(
-              children: [
-                Radio<bool>(
-                  value: true,
-                  groupValue: isWithPR,
-                  onChanged: (value) {
-                    _isWithPr.value = value!;
-                  },
-                ),
-                Text(
-                  'With PR',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(
-                  width: 20.0,
-                ),
-                Radio<bool>(
-                  value: false,
-                  groupValue: isWithPR,
-                  onChanged: (value) {
-                    _isWithPr.value = value!;
-                  },
-                ),
-                Text(
-                  'Without PR',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
+        ValueListenableBuilder(
+          valueListenable: _selectedType,
+          builder: (context, value, child) {
+            return CustomDropdownField(
+              onChanged: (newValue) {
+                _selectedType.value = newValue;
+              },
+              items: [
+                '/w PR',
+                'w/o PR',
+              ]
+                  .map(
+                    (type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(
+                        type,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              label: 'Issue Type',
+              placeholderText: 'Select Issue Type',
             );
           },
         ),
@@ -163,6 +156,26 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
         ),
         CustomFilledButton(
           onTap: () {
+            if (_selectedType.value == null) {
+              DelightfulToastUtils.showDelightfulToast(
+                context: context,
+                icon: Icons.info_outline,
+                title: 'Informtion',
+                subtitle: 'Please select an issue type.',
+              );
+              return;
+            }
+
+            if (_prIdController.text.isEmpty) {
+              DelightfulToastUtils.showDelightfulToast(
+                context: context,
+                icon: Icons.info_outline,
+                title: 'Informtion',
+                subtitle: 'Please select a PR ID.',
+              );
+              return;
+            }
+
             context.pop();
             context.go(
               RoutingConstants.nestedRegisterItemIssuanceViewRoutePath,
