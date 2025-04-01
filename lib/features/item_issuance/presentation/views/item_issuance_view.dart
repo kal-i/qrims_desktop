@@ -59,8 +59,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
     'Issuance ID',
-    'PR No',
-    'Requesting Officer Name',
+    'PR No.',
+    'Accountable Officer', // Receiving Officer Name
     'Status',
   ];
   late List<TableData> _tableRows;

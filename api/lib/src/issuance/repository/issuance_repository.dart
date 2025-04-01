@@ -966,11 +966,14 @@ class IssuanceRepository {
       final baseQuery = '''
       SELECT
         iss.*,
+        ofc.name,
         ics.id AS ics_id,
         par.id AS par_id,
         ris.id AS ris_id
       FROM
         Issuances iss
+      LEFT JOIN
+        Officers ofc ON iss.receiving_officer_id = ofc.id
       LEFT JOIN
         InventoryCustodianSlips ics ON iss.id = ics.issuance_id
       LEFT JOIN
@@ -983,7 +986,8 @@ class IssuanceRepository {
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        whereClause.write(' AND iss.id ILIKE @search_query');
+        whereClause.write(
+            ' AND iss.id ILIKE @search_query OR ofc.name ILIKE @search_query');
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -1033,9 +1037,9 @@ class IssuanceRepository {
       print(results);
 
       for (final row in results) {
-        final isICS = row[11] != null;
-        final isPAR = row[12] != null;
-        final isRIS = row[13] != null;
+        final isICS = row[12] != null;
+        final isPAR = row[13] != null;
+        final isRIS = row[14] != null;
 
         if (isICS) {
           final ics = await getIcsById(id: row[0] as String);

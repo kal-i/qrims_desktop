@@ -24,7 +24,7 @@ class GetPaginatedPurchaseRequests
       pageSize: params.pageSize,
       prId: params.prId,
       requestingOfficerName: params.requestingOfficerName,
-      search: params.search,
+      searchQuery: params.searchQuery,
       unitCost: params.unitCost,
       startDate: params.startDate,
       endDate: params.endDate,
@@ -40,7 +40,7 @@ class GetPaginatedPurchaseRequestsParams {
     required this.pageSize,
     required this.prId,
     required this.requestingOfficerName,
-    required this.search,
+    required this.searchQuery,
     required this.unitCost,
     required this.startDate,
     required this.endDate,
@@ -52,7 +52,7 @@ class GetPaginatedPurchaseRequestsParams {
   final int pageSize;
   final String? prId;
   final String? requestingOfficerName;
-  final String? search;
+  final String? searchQuery;
   final double? unitCost;
   final DateTime? startDate;
   final DateTime? endDate;

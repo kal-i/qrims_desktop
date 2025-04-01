@@ -504,7 +504,7 @@ class PurchaseRequestRepository {
     required int pageSize,
     String? prId,
     String? receivingOfficerId,
-    String? search,
+    String? searchQuery,
     String? requestingOfficerName,
     double? unitCost,
     DateTime? startDate,
@@ -596,11 +596,11 @@ class PurchaseRequestRepository {
         params['requesting_officer_name'] = '%$requestingOfficerName%';
       }
 
-      if (search != null && search.isNotEmpty) {
+      if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(whereClause.isNotEmpty ? ' AND ' : ' WHERE ');
         whereClause.write(
             '(pr.id ILIKE @search_query OR rofc.name ILIKE @search_query)');
-        params['search_query'] = '%$search%';
+        params['search_query'] = '%$searchQuery%';
       }
 
       if (unitCost != null) {
