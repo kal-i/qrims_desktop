@@ -1255,6 +1255,9 @@ class IssuanceRepository {
           }
 
           print('Issuance process completed. Issuance ID: $issuanceId');
+
+          // To be remove later
+          //await ctx.rollback();
         } catch (e, stackTrace) {
           print('Transaction failed: $e');
           print('Stack trace: $stackTrace');
@@ -1339,9 +1342,6 @@ class IssuanceRepository {
 
       // Step 4: Update the Items table to reduce stock
       await _updateItemStock(ctx, itemId, issuedQuantity);
-
-      // Step 5: Update the BatchItems table
-      // await _updateBatchItems(ctx, issuanceId, itemId, issuedQuantity);
     }
   }
 
@@ -1386,53 +1386,6 @@ class IssuanceRepository {
     );
   }
 
-  Future<void> _updateBatchItems(
-    TxSession ctx,
-    String issuanceId,
-    String itemId,
-    int issuedQuantity,
-  ) async {
-    // Select available batch items
-    final batchCodes = await ctx.execute(
-      Sql.named(
-        '''
-        SELECT batch_code FROM BatchItems
-        WHERE base_item_id = @base_item_id AND status = @status
-        LIMIT @limit;
-        ''',
-      ),
-      parameters: {
-        'base_item_id': itemId,
-        'status': BatchStatus.available.toString().split('.').last,
-        'limit': issuedQuantity,
-      },
-    );
-
-    if (batchCodes.length < issuedQuantity) {
-      throw Exception('Not enough available batch items for item $itemId');
-    }
-
-    // Update the available batch codes
-    for (final batchCodeRow in batchCodes) {
-      final batchCode = batchCodeRow[0] as String;
-      await ctx.execute(
-        Sql.named(
-          '''
-          UPDATE BatchItems
-          SET issuance_id = @issuance_id, status = @status, updated_at = @updated_at
-          WHERE batch_code = @batch_code;
-          ''',
-        ),
-        parameters: {
-          'batch_code': batchCode,
-          'issuance_id': issuanceId,
-          'status': BatchStatus.issued.toString().split('.').last,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-      );
-    }
-  }
-
   Future<void> _handleIssuanceWithPR(
     TxSession ctx,
     String issuanceId,
@@ -1442,98 +1395,77 @@ class IssuanceRepository {
     int totalRemainingQuantities = 0;
 
     // Preprocess issuanceItems into a map for faster lookup
-    // final Map<String, dynamic> issuanceItemsMap = {};
+    final Map<String, dynamic> issuanceItemsMap = {};
     for (final issuanceItem in issuanceItems) {
-      // final key =
-      //     '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
-      //     '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
-      //     '${issuanceItem['shareable_item_information']['unit']}';
-      // issuanceItemsMap[key] = issuanceItem;
-
-      final itemId =
-          issuanceItem['shareable_item_information']['base_item_id'] as String;
-      final issuedQuantity =
-          int.parse(issuanceItem['issued_quantity'] as String);
-
-      // Step 3: Insert into IssuanceItems table
-      await _insertIssuanceItem(ctx, issuanceId, itemId, issuedQuantity);
-
-      // await ctx.execute(
-      //   Sql.named(
-      //     '''
-      //          UPDATE RequestedItems
-      //          SET remaining_quantity = @remaining_quantity
-      //          WHERE id = @id;
-      //          ''',
-      //   ),
-      //   parameters: {
-      //     'id': requestedItem.id,
-      //     'remaining_quantity': remainingRequestedQuantity,
-      //   },
-      // );
-
-      // Step 4: Update the Items table to reduce stock
-      await _updateItemStock(ctx, itemId, issuedQuantity);
-
-      // Step 5: Update the BatchItems table
-      // await _updateBatchItems(ctx, issuanceId, itemId, issuedQuantity);
+      final key =
+          '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
+          '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
+          '${issuanceItem['shareable_item_information']['unit']}';
+      issuanceItemsMap[key] = issuanceItem;
     }
 
     // Iterate through each requested item in the purchase request
-    // for (final requestedItem in purchaseRequest.requestedItems) {
-    //   final requestedProductNameId = requestedItem.productName.id;
-    //   final requestedProductDescriptionId = requestedItem.productDescription.id;
-    //   final requestedUnit = requestedItem.unit.toString().split('.').last;
+    for (final requestedItem in purchaseRequest.requestedItems) {
+      final requestedProductNameId = requestedItem.productName.id;
+      final requestedProductDescriptionId = requestedItem.productDescription.id;
+      final requestedUnit = requestedItem.unit.toString().split('.').last;
 
-    //   // Construct a key for the requested item
-    //   final key =
-    //       '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
+      // Construct a key for the requested item
+      final key =
+          '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
 
-    //   // Check if the issuanceItems map contains the requested item
-    //   if (issuanceItemsMap.containsKey(key)) {
-    //     final issuanceItem = issuanceItemsMap[key];
-    //     final issuanceBaseItemId = issuanceItem['shareable_item_information']
-    //         ['base_item_id'] as String;
-    //     final issuanceQuantity =
-    //         int.parse(issuanceItem['issued_quantity'] as String);
+      // Check if the issuanceItems map contains the requested item
+      if (issuanceItemsMap.containsKey(key)) {
+        final issuanceItem = issuanceItemsMap[key];
+        final issuanceBaseItemId = issuanceItem['shareable_item_information']
+            ['base_item_id'] as String;
+        final issuanceQuantity =
+            int.parse(issuanceItem['issued_quantity'] as String);
 
-    //     // Calculate the quantity to issue
-    //     final issuedQuantity = min(requestedItem.quantity, issuanceQuantity);
+        // Calculate the quantity to issue
+        final issuedQuantity = min(requestedItem.quantity, issuanceQuantity);
 
-    //     if (issuedQuantity > 0) {
-    //       // Step 3: Insert into IssuanceItems table
-    //       await _insertIssuanceItem(
-    //           ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
+        if (issuedQuantity > 0) {
+          // Step 3: Insert into IssuanceItems table
+          await _insertIssuanceItem(
+              ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
 
-    //       // Step 4: Update the RequestedItems table
-    //       final remainingRequestedQuantity =
-    //           requestedItem.quantity - issuedQuantity;
-    //       totalRemainingQuantities += remainingRequestedQuantity;
+          // Step 4: Update the RequestedItems table
+          final remainingRequestedQuantity =
+              requestedItem.quantity - issuedQuantity;
+          totalRemainingQuantities += remainingRequestedQuantity;
 
-    //       await ctx.execute(
-    //         Sql.named(
-    //           '''
-    //           UPDATE RequestedItems
-    //           SET remaining_quantity = @remaining_quantity
-    //           WHERE id = @id;
-    //           ''',
-    //         ),
-    //         parameters: {
-    //           'id': requestedItem.id,
-    //           'remaining_quantity': remainingRequestedQuantity,
-    //         },
-    //       );
+          // we will also update the status, btw by default remaining qty is null
+          await ctx.execute(
+            Sql.named(
+              '''
+               UPDATE RequestedItems
+               SET remaining_quantity = @remaining_quantity, status = @status
+               WHERE id = @id;
+               ''',
+            ),
+            parameters: {
+              'id': requestedItem.id,
+              'remaining_quantity': remainingRequestedQuantity,
+              'status': remainingRequestedQuantity > 0
+                  ? FulfillmentStatus.partiallyFulfilled
+                      .toString()
+                      .split('.')
+                      .last
+                  : FulfillmentStatus.fulfilled.toString().split('.').last,
+            },
+          );
 
-    //       // Step 5: Update the Items table to reduce stock
-    //       await _updateItemStock(ctx, issuanceBaseItemId, issuedQuantity);
-
-    //       // Step 6: Update the BatchItems table
-    //       // await _updateBatchItems(ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
-    //     }
-    //   }
-    // }
+          // Step 5: Update the Items table to reduce stock
+          await _updateItemStock(ctx, issuanceBaseItemId, issuedQuantity);
+        }
+      }
+    }
 
     // Step 7: Update the PurchaseRequest status
+    // we can probably modify the logic for considering if the status is fulfilled
+    // by tapping into the fulfilmment status of each requested item, checking if
+    // it is not fulfilled, partially, or fulfilled
     await ctx.execute(
       Sql.named(
         '''
