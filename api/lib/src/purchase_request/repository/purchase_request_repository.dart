@@ -88,9 +88,9 @@ class PurchaseRequestRepository {
     try {
       for (int i = 0; i < requestedItems.length; i++) {
         final requestedItem = requestedItems[i];
-        final productNameId = requestedItem['product_name_id'] as String;
+        final productNameId = requestedItem['product_name_id'] as int;
         final productDescriptionId =
-            requestedItem['product_description_id'] as String;
+            requestedItem['product_description_id'] as int;
         final productSpecification = requestedItem['specification'] as String?;
         final unit = requestedItem['unit'] as Unit;
         final quantity = requestedItem['quantity'] as int;
