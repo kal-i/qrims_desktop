@@ -2352,9 +2352,13 @@ class IssuanceRepository {
                 pd.description AS product_description,
                 e.id AS equipment_id,
                 i.specification, 
+                mnf.name AS manufacturer_name,
                 b.name AS brand_name,
                 m.model_name AS model_name,
-                e.serial_no, 
+                e.serial_no,
+                e.estimated_useful_life,
+                e.asset_classification,
+                e.asset_sub_class,
                 i.quantity AS current_quantity_in_stock,
                 issi.issued_quantity AS total_quantity_issued_for_a_particular_row,
                 ent.id AS entity_id,
@@ -2371,6 +2375,8 @@ class IssuanceRepository {
                 ProductNames pn ON i.product_name_id = pn.id
             LEFT JOIN
                 ProductDescriptions pd ON i.product_description_id = pd.id
+            LEFT JOIN
+                Manufacturers mnf ON e.manufacturer_id = mnf.id
             LEFT JOIN
                 Brands b ON e.brand_id = b.id
             LEFT JOIN
@@ -2405,9 +2411,13 @@ class IssuanceRepository {
                 product_description,
                 equipment_id, 
                 specification, 
+                manufacturer_name,
                 brand_name, 
                 model_name, 
                 serial_no,
+                estimated_useful_life,
+                asset_classification,
+                asset_sub_class,
                 current_quantity_in_stock,
                 total_quantity_issued_for_a_particular_row,
                 entity_id,
@@ -2432,9 +2442,13 @@ class IssuanceRepository {
                 product_description,
                 equipment_id, 
                 specification, 
+                manufacturer_name,
                 brand_name, 
                 model_name, 
-                serial_no, 
+                serial_no,
+                estimated_useful_life,
+                asset_classification,
+                asset_sub_class,
                 current_quantity_in_stock,
                 total_quantity_issued_for_a_particular_row,
                 entity_name,
@@ -2464,9 +2478,13 @@ class IssuanceRepository {
             product_description,
             equipment_id,
             specification,
+            manufacturer_name,
             brand_name,
             model_name, 
             serial_no,
+            estimated_useful_life,
+            asset_classification,
+            asset_sub_class,
             current_quantity_in_stock,
             total_quantity_issued_for_a_particular_row,
             total_quantity_available_and_issued,
@@ -2500,27 +2518,31 @@ class IssuanceRepository {
             'article': row[5], // product_name
             'description': row[6], // product_description
             'specification': row[8], // specification
-            'brand_name': row[9], // brand_name
-            'model_name': row[10], // model_name
-            'serial_no': row[11], // serial_no
+            'manufacturer_name': row[9],
+            'brand_name': row[10], // brand_name
+            'model_name': row[11], // model_name
+            'serial_no': row[12], // serial_no
             unitCost != null && unitCost <= 50000.0
                 ? 'semi_expendable_property_no'
                 : 'property_no': row[0], // item_id
+            'estimated_useful_life': row[13],
+            'asset_classification': row[14],
+            'asset_sub_class': row[15],
             'unit': row[3], // unit
             'unit_value': row[4], // unit_cost
-            'current_quantity_in_stock': row[12], // current_quantity_in_stock
+            'current_quantity_in_stock': row[16], // current_quantity_in_stock
             'total_quantity_issued_for_a_particular_row':
-                row[13], // total_quantity_issued_for_a_particular_row
+                row[17], // total_quantity_issued_for_a_particular_row
             'total_quantity_available_and_issued':
-                row[14], // total_quantity_available_and_issued
+                row[18], // total_quantity_available_and_issued
             'balance_from_previous_row_after_issuance':
-                row[15], // balance_from_previous_row_after_issuance
+                row[19], // balance_from_previous_row_after_issuance
             'balance_per_row_after_issuance':
-                row[16], // balance_per_row_after_issuance
-            'entity_name': row[17], // entity_name
-            'receiving_officer_name': row[18], // receiving_officer_name
-            'receiving_officer_office': row[19], // receiving_officer_office
-            'receiving_officer_position': row[20], // receiving_officer_position
+                row[20], // balance_per_row_after_issuance
+            'entity_name': row[21], // entity_name
+            'receiving_officer_name': row[22], // receiving_officer_name
+            'receiving_officer_office': row[23], // receiving_officer_office
+            'receiving_officer_position': row[24], // receiving_officer_position
           },
         );
       }

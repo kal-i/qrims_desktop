@@ -1,6 +1,7 @@
 import 'package:excel/excel.dart';
 import '../../../utils/capitalizer.dart';
 
+import '../../../utils/readable_enum_converter.dart';
 import '../../../utils/standardize_position_name.dart';
 import 'header_info.dart';
 import 'cell_info.dart';
@@ -300,6 +301,20 @@ class RPPPEExcelDocument {
           ? '${capitalizeWord(inventoryProperty['receiving_officer_name'])}/${capitalizeWord(inventoryProperty['receiving_officer_office'])}-${standardizePositionName(inventoryProperty['receiving_officer_position'])}'
           : '\n';
 
+      final accountableOfficer = inventoryProperty['receiving_officer_name'];
+      final location = inventoryProperty['receiving_officer_office'];
+      final estimatedUsefulLife = inventoryProperty['estimated_useful_life'];
+      final assetClassification =
+          readableEnumConverter(inventoryProperty['asset_classification']);
+      final assetSubClass =
+          readableEnumConverter(inventoryProperty['asset_sub_class']);
+
+      final specification = inventoryProperty['specification'];
+      final manufacturer = inventoryProperty['manufacturer_name'];
+      final brand = inventoryProperty['brand_name'];
+      final model = inventoryProperty['model_name'];
+      final serialNo = inventoryProperty['serial_no'];
+
       final thinBorder = Border(borderStyle: BorderStyle.Thin);
 
       /// the 2nd elem (index 1) will be at the top
@@ -332,6 +347,16 @@ class RPPPEExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          accountableOfficer,
+          location,
+          estimatedUsefulLife,
+          assetClassification,
+          assetSubClass,
+          specification,
+          manufacturer,
+          brand,
+          model,
+          serialNo,
           cellStyle,
         );
 
@@ -348,6 +373,16 @@ class RPPPEExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          accountableOfficer,
+          location,
+          estimatedUsefulLife,
+          assetClassification,
+          assetSubClass,
+          specification,
+          manufacturer,
+          brand,
+          model,
+          serialNo,
           cellStyle,
         );
       }
@@ -367,6 +402,16 @@ class RPPPEExcelDocument {
     dynamic totalQuantity,
     int balanceAfterIssue,
     String remarks,
+    String? accountableOfficer,
+    String? location,
+    int? estimatedUsefulLife,
+    String assetClassification,
+    String assetSubClass,
+    String? specification,
+    String manufacturer,
+    String brand,
+    String model,
+    String serialNo,
     CellStyle? dataCellStyle,
   ) {
     /// Merge columns B (1), C (2), D (3), and E (4) into a single cell
@@ -404,18 +449,18 @@ class RPPPEExcelDocument {
       const CellInfo(13, '0'),
       CellInfo(14, remarks),
       const CellInfo(15, ''),
-      const CellInfo(16, ''),
-      const CellInfo(17, ''),
+      CellInfo(16, accountableOfficer ?? ''),
+      CellInfo(17, location ?? ''),
       const CellInfo(18, ''),
-      const CellInfo(19, ''),
+      CellInfo(19, estimatedUsefulLife.toString()),
       const CellInfo(20, ''),
-      const CellInfo(21, ''),
-      const CellInfo(22, ''),
-      const CellInfo(23, ''),
-      const CellInfo(24, ''),
-      const CellInfo(25, ''),
-      const CellInfo(26, ''),
-      const CellInfo(27, ''),
+      CellInfo(21, assetClassification),
+      CellInfo(22, assetSubClass),
+      CellInfo(23, specification ?? ''),
+      CellInfo(24, manufacturer),
+      CellInfo(25, brand),
+      CellInfo(26, model),
+      CellInfo(27, serialNo),
     ];
 
     for (var cellInfo in cells) {
