@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/enums/issuance_purpose.dart';
 import '../../core/enums/issuance_type.dart';
 import '../../core/enums/verification_purpose.dart';
-
 import '../../features/archive/presentation/views/archive_issuances_view.dart';
 import '../../features/archive/presentation/views/archive_officers_view.dart';
 import '../../features/archive/presentation/views/archive_users_view.dart';
@@ -434,8 +432,14 @@ class RouteChangeManager {
       '/dashboard': 'Dashboard',
       '/itemInventory': 'Inventory Management',
       '/itemInventory/viewItem': 'View Item Information',
+      '/itemInventory/viewSupplyItem': 'View Supply Item Information',
+      '/itemInventory/viewEquipmentItem': 'View Equipment Item Information',
       '/itemInventory/registerItem': 'Register Item',
+      '/itemInventory/registerSupplyItem': 'Register Supply Item',
+      '/itemInventory/registerEquipmentItem': 'Register Equipment Item',
       '/itemInventory/updateItem': 'Update Item',
+      '/itemInventory/updateSupplyItem': 'Update Supply Item',
+      '/itemInventory/updateEquipmentItem': 'Update Equipment Item',
       '/purchaseRequest': 'Purchase Request',
       '/purchaseRequest/viewPurchaseRequest': 'View Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',
