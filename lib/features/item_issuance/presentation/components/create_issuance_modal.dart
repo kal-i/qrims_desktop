@@ -166,7 +166,8 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
               return;
             }
 
-            if (_prIdController.text.isEmpty) {
+            if (_selectedType.value == '/w PR' &&
+                _prIdController.text.isEmpty) {
               DelightfulToastUtils.showDelightfulToast(
                 context: context,
                 icon: Icons.info_outline,
