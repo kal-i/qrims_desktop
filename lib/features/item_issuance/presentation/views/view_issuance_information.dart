@@ -12,6 +12,8 @@ import '../../../../core/common/components/custom_form_text_field.dart';
 
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
+import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/document_date_formatter.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
@@ -35,7 +37,7 @@ class ViewIssuanceInformation extends StatefulWidget {
 
 class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
   late IssuancesBloc _issuancesBloc;
-  late IssuanceEntity _issuanceEntity;
+  IssuanceEntity? _issuanceEntity;
 
   final _issuanceIdController = TextEditingController();
   final _concreteIssuanceIdController = TextEditingController();
@@ -245,7 +247,8 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
                         id: requestedItem.id.toString(),
                         columns: [
                           Text(
-                            requestedItem.productNameEntity.name,
+                            capitalizeWord(
+                                requestedItem.productNameEntity.name),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontSize: 14.0,
@@ -253,9 +256,9 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
                                     ),
                           ),
                           Text(
-                            requestedItem
+                            capitalizeWord(requestedItem
                                     .productDescriptionEntity.description ??
-                                'No description specified.',
+                                'No description specified.'),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontSize: 14.0,
@@ -271,7 +274,15 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
                                     ),
                           ),
                           Text(
-                            requestedItem.unitCost.toString(),
+                            formatCurrency(requestedItem.unitCost),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          Text(
+                            requestedItem.quantity.toString(),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontSize: 14.0,
@@ -287,7 +298,7 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
                                     ),
                           ),
                           Text(
-                            'Not complete',
+                            readableEnumConverter(requestedItem.status),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontSize: 14.0,
@@ -330,6 +341,8 @@ class _ViewIssuanceInformationState extends State<ViewIssuanceInformation> {
             }
 
             if (issuanceEntity is RequisitionAndIssueSlipEntity) {
+              _concreteIssuanceIdController.text = issuanceEntity.risId;
+
               final officeEntity = issuanceEntity.office;
               final approvingOfficerEntity =
                   issuanceEntity.approvingOfficerEntity;
