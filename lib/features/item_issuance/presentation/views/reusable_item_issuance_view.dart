@@ -392,7 +392,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                   ),
                         ),
                         Text(
-                          'Not complete',
+                          readableEnumConverter(requestedItem.status),
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontSize: 14.0,

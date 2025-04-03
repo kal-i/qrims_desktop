@@ -1422,20 +1422,28 @@ class IssuanceRepository {
         final issuanceQuantity =
             int.parse(issuanceItem['issued_quantity'] as String);
 
+        final remainingToFulfill =
+            requestedItem.remainingQuantity ?? requestedItem.quantity;
+
         // Calculate the quantity to issue
-        final issuedQuantity = min(requestedItem.quantity, issuanceQuantity);
+        // Why do I feel like the problem is here
+        final issuedQuantity = min(remainingToFulfill, issuanceQuantity);
 
         if (issuedQuantity > 0) {
           // Step 3: Insert into IssuanceItems table
           await _insertIssuanceItem(
-              ctx, issuanceId, issuanceBaseItemId, issuedQuantity);
+            ctx,
+            issuanceId,
+            issuanceBaseItemId,
+            issuedQuantity,
+          );
 
           // Step 4: Update the RequestedItems table
           final remainingRequestedQuantity =
               requestedItem.quantity - issuedQuantity;
           totalRemainingQuantities += remainingRequestedQuantity;
 
-          // we will also update the status, btw by default remaining qty is null
+          // Step: 5 Update RequestedItem remaining quantity and status
           await ctx.execute(
             Sql.named(
               '''
@@ -1463,9 +1471,26 @@ class IssuanceRepository {
     }
 
     // Step 7: Update the PurchaseRequest status
-    // we can probably modify the logic for considering if the status is fulfilled
-    // by tapping into the fulfilmment status of each requested item, checking if
-    // it is not fulfilled, partially, or fulfilled
+    await _updatePurchaseRequestStatus(
+      ctx,
+      purchaseRequest.id,
+      totalRemainingQuantities,
+    );
+  }
+
+  Future<void> _updatePurchaseRequestStatus(
+    TxSession ctx,
+    String prId,
+    int totalRemainingQuantities,
+  ) async {
+    final allItemsFulfilled = await _areAllRequestedItemsFulfilled(ctx, prId);
+
+    final status = allItemsFulfilled
+        ? PurchaseRequestStatus.fulfilled
+        : (totalRemainingQuantities > 0
+            ? PurchaseRequestStatus.partiallyFulfilled
+            : PurchaseRequestStatus.pending);
+
     await ctx.execute(
       Sql.named(
         '''
@@ -1475,15 +1500,32 @@ class IssuanceRepository {
         ''',
       ),
       parameters: {
-        'id': purchaseRequest.id,
-        'status': totalRemainingQuantities > 0
-            ? PurchaseRequestStatus.partiallyFulfilled
-                .toString()
-                .split('.')
-                .last
-            : PurchaseRequestStatus.fulfilled.toString().split('.').last,
+        'id': prId,
+        'status': status.toString().split('.').last,
       },
     );
+  }
+
+  Future<bool> _areAllRequestedItemsFulfilled(
+    TxSession ctx,
+    String prId,
+  ) async {
+    final result = await ctx.execute(
+      Sql.named(
+        '''
+        SELECT COUNT(*) as unfulfilled_count
+        FROM RequestedItems
+        WHERE pr_id = @pr_id
+        AND status != @status;
+        ''',
+      ),
+      parameters: {
+        'pr_id': prId,
+        'status': FulfillmentStatus.fulfilled.toString().split('.').last,
+      },
+    );
+
+    return (result.first[0] as int) == 0;
   }
 
   // Future<String> _createIssuance({
