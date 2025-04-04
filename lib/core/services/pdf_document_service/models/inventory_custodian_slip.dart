@@ -4,6 +4,8 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../../features/item_inventory/domain/entities/equipment.dart';
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
 import '../../../../init_dependencies.dart';
+import '../../../utils/capitalizer.dart';
+import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
@@ -25,6 +27,7 @@ class InventoryCustodianSlip implements BaseDocument {
 
     final ics = data as InventoryCustodianSlipEntity;
     final purchaseRequestEntity = data.purchaseRequestEntity;
+    final supplierEntity = data.supplierEntity;
     print('issued items length: ${ics.items.length}');
 
     // List to store all rows for the table
@@ -72,7 +75,7 @@ class InventoryCustodianSlip implements BaseDocument {
                       horizontalPadding: 1.0,
                       verticalPadding: 5.7,
                       isBold: false,
-                      borderWidthLeft: 2.0,
+                      borderWidthLeft: 1.5,
                       borderWidthBottom: 2.0,
                       borderTop: false,
                       borderRight: false,
@@ -101,7 +104,9 @@ class InventoryCustodianSlip implements BaseDocument {
     );
 
     // Loop through each item to generate rows
-    for (final issuedItem in ics.items) {
+    for (int i = 0; i < ics.items.length; i++) {
+      final issuedItem = ics.items[i];
+
       // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
         issuedItem.itemEntity.productStockEntity.productDescription
@@ -132,39 +137,9 @@ class InventoryCustodianSlip implements BaseDocument {
         );
       }
 
-      // Check if any of the PR, supplier, IAR, contract, or PO is not null
-      if (purchaseRequestEntity != null ||
-          ics.supplierEntity != null ||
-          ics.inspectionAndAcceptanceReportId != null ||
-          ics.contractNumber != null ||
-          ics.purchaseOrderNumber != null) {
-        // Add 3 empty rows
-        descriptionColumn.addAll(['', '', '']);
-      }
-
       print(
           'Item ID: ${issuedItem.itemEntity.shareableItemInformationEntity.id}');
       print('Description Column: $descriptionColumn');
-      // Add PR information
-      if (purchaseRequestEntity != null) {
-        descriptionColumn.add('PR: ${purchaseRequestEntity.id}');
-      }
-
-      if (ics.supplierEntity != null) {
-        descriptionColumn.add('Supplier: ${ics.supplierEntity?.name}');
-      }
-
-      if (ics.inspectionAndAcceptanceReportId != null) {
-        descriptionColumn.add('IAR: ${ics.inspectionAndAcceptanceReportId}');
-      }
-
-      if (ics.contractNumber != null) {
-        descriptionColumn.add('CN: ${ics.contractNumber}');
-      }
-
-      if (ics.purchaseOrderNumber != null) {
-        descriptionColumn.add('PO: ${ics.purchaseOrderNumber}');
-      }
 
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
@@ -172,35 +147,91 @@ class InventoryCustodianSlip implements BaseDocument {
       }).toList();
 
       // Add rows for this item
-      for (int i = 0; i < descriptionColumn.length; i++) {
+      for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildIcsTableRow(
-            quantity: i == 0 ? issuedItem.quantity.toString() : '\n',
-            unit: i == 0
+            quantity: j == 0 ? issuedItem.quantity.toString() : '\n',
+            unit: j == 0
                 ? readableEnumConverter(
                     issuedItem.itemEntity.shareableItemInformationEntity.unit)
                 : '\n',
-            unitCost: i == 0
-                ? issuedItem.itemEntity.shareableItemInformationEntity.unitCost
-                    .toString()
+            unitCost: j == 0
+                ? formatCurrency(issuedItem
+                    .itemEntity.shareableItemInformationEntity.unitCost)
                 : '\n',
-            totalCost: i == 0
-                ? issuedItem.itemEntity.shareableItemInformationEntity.unitCost
-                    .toString()
+            totalCost: j == 0
+                ? formatCurrency(issuedItem
+                    .itemEntity.shareableItemInformationEntity.unitCost)
                 : '\n',
-            description: descriptionColumn[i],
-            itemId: i == 0
+            description: descriptionColumn[j],
+            itemId: j == 0
                 ? issuedItem.itemEntity.shareableItemInformationEntity.id
                 : '\n',
-            estimatedUsefulLife: i == 0
+            estimatedUsefulLife: j == 0
                 ? issuedItem is EquipmentEntity
                     ? (issuedItem as EquipmentEntity).estimatedUsefulLife
                     : null
                 : null,
-            rowHeight: rowHeights[i],
-            borderBottom: i == descriptionColumn.length - 1 ? false : true,
+            rowHeight: rowHeights[j],
+            borderTop: i == 0 ? false : true,
+            isTopBorderSlashed: i == 0 ? false : true,
+            borderBottom: j == descriptionColumn.length - 1 ? false : true,
           ),
         );
+      }
+
+      if (i == ics.items.length - 1) {
+        if (purchaseRequestEntity != null ||
+            ics.supplierEntity != null ||
+            ics.inspectionAndAcceptanceReportId != null ||
+            ics.contractNumber != null ||
+            ics.purchaseOrderNumber != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: '\n',
+            ),
+          );
+        }
+
+        if (purchaseRequestEntity != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: 'PR: ${purchaseRequestEntity.id}',
+            ),
+          );
+        }
+
+        if (supplierEntity != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: 'Supplier: ${supplierEntity.name}',
+            ),
+          );
+        }
+
+        if (ics.inspectionAndAcceptanceReportId != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: 'IAR: ${ics.inspectionAndAcceptanceReportId}',
+            ),
+          );
+        }
+
+        if (ics.contractNumber != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: 'CN: ${ics.contractNumber}',
+            ),
+          );
+        }
+
+        if (ics.purchaseOrderNumber != null) {
+          tableRows.add(
+            _buildIcsTableRowFooter(
+              data: 'PO: ${ics.purchaseOrderNumber}',
+            ),
+          );
+        }
       }
     }
 
@@ -232,9 +263,9 @@ class InventoryCustodianSlip implements BaseDocument {
           DocumentComponents.buildRowTextValue(
             text: 'Entity Name:',
             value: purchaseRequestEntity != null
-                ? purchaseRequestEntity.entity.name
+                ? capitalizeWord(purchaseRequestEntity.entity.name)
                 : ics.entity != null
-                    ? ics.entity?.name ?? '\n'
+                    ? capitalizeWord(ics.entity?.name ?? '\n')
                     : '\n',
           ),
           pw.SizedBox(height: 3.0),
@@ -297,18 +328,36 @@ class InventoryCustodianSlip implements BaseDocument {
               ),
             ],
           ),
-          pw.SizedBox(height: 30.0),
-          if (withQr)
-            pw.Align(
-              alignment: pw.AlignmentDirectional.bottomEnd,
-              child: DocumentComponents.buildQrContainer(
-                data: data.id,
-              ),
-            ),
+          // pw.SizedBox(height: 30.0),
+          // if (withQr)
+          //   pw.Align(
+          //     alignment: pw.AlignmentDirectional.bottomEnd,
+          //     child: DocumentComponents.buildQrContainer(
+          //       data: data.id,
+          //     ),
+          //   ),
         ],
       ),
     );
 
     return pdf;
+  }
+
+  pw.TableRow _buildIcsTableRowFooter({
+    required String data,
+  }) {
+    return DocumentComponents.buildIcsTableRow(
+      quantity: '\n',
+      unit: '\n',
+      unitCost: '\n',
+      totalCost: '\n',
+      description: data,
+      itemId: '\n',
+      estimatedUsefulLife: null,
+      borderTop: true,
+      isTopBorderSlashed: true,
+      borderBottom: false,
+      rowHeight: 13.0,
+    );
   }
 }

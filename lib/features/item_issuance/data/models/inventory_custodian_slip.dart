@@ -37,9 +37,10 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
     PurchaseRequestModel? purchaseRequest;
     EntityModel? entity;
     FundCluster? fundCluster;
+    SupplierModel? supplier;
+
     OfficerModel? receivingOfficer;
     OfficerModel? issuingOfficer;
-    SupplierModel? supplier;
 
     if (json['purchase_request'] != null) {
       purchaseRequest = PurchaseRequestModel.fromJson(json['purchase_request']);

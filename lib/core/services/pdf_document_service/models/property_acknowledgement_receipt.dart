@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../../features/item_inventory/domain/entities/equipment.dart';
 import '../../../../features/item_issuance/domain/entities/property_acknowledgement_receipt.dart';
 import '../../../../init_dependencies.dart';
+import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
@@ -148,10 +149,6 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
         pageTheme: DocumentPageUtil.getPageTheme(
           pageFormat: pageFormat,
           orientation: pw.PageOrientation.portrait,
-          marginTop: 2.5,
-          marginRight: 2.5,
-          marginBottom: 1.3,
-          marginLeft: 3.2,
         ),
         build: (context) => [
           pw.Center(
@@ -181,9 +178,9 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
           DocumentComponents.buildRowTextValue(
             text: 'Entity Name:',
             value: purchaseRequestEntity != null
-                ? purchaseRequestEntity.entity.name
+                ? capitalizeWord(purchaseRequestEntity.entity.name)
                 : par.entity != null
-                    ? par.entity?.name ?? '\n'
+                    ? capitalizeWord(par.entity?.name ?? '\n')
                     : '\n',
             isUnderlined: true,
           ),
@@ -219,11 +216,11 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
           pw.Table(
             columnWidths: {
               0: const pw.FixedColumnWidth(80),
-              1: const pw.FixedColumnWidth(40),
-              2: const pw.FixedColumnWidth(240),
-              3: const pw.FixedColumnWidth(90),
-              4: const pw.FixedColumnWidth(90),
-              5: const pw.FixedColumnWidth(90),
+              1: const pw.FixedColumnWidth(70),
+              2: const pw.FixedColumnWidth(380),
+              3: const pw.FixedColumnWidth(100),
+              4: const pw.FixedColumnWidth(100),
+              5: const pw.FixedColumnWidth(100),
             },
             children: tableRows,
           ),
@@ -231,8 +228,8 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
           /// footer
           pw.Table(
             columnWidths: {
-              0: const pw.FixedColumnWidth(360.0),
-              1: const pw.FixedColumnWidth(270.0),
+              0: const pw.FixedColumnWidth(530.0),
+              1: const pw.FixedColumnWidth(300.0),
             },
             children: [
               pw.TableRow(
@@ -260,15 +257,15 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
             ],
           ),
 
-          pw.SizedBox(height: 30.0),
+          // pw.SizedBox(height: 30.0),
 
-          if (withQr)
-            pw.Align(
-              alignment: pw.AlignmentDirectional.bottomEnd,
-              child: DocumentComponents.buildQrContainer(
-                data: data.id,
-              ),
-            ),
+          // if (withQr)
+          //   pw.Align(
+          //     alignment: pw.AlignmentDirectional.bottomEnd,
+          //     child: DocumentComponents.buildQrContainer(
+          //       data: data.id,
+          //     ),
+          //   ),
         ],
       ),
     );

@@ -158,8 +158,9 @@ class DocumentComponents {
     double? fontSize,
     double? rowHeight,
     double solidBorderWidth = 3.0,
-    double slashedBorderWidth = 1.5,
+    double slashedBorderWidth = 1,
     bool isAlignCenter = true,
+    bool isTopBorderSlashed = false,
     bool isBottomBorderSlashed = false,
     bool borderTop = false,
     bool borderRight = true,
@@ -181,7 +182,12 @@ class DocumentComponents {
         border: pw.Border(
           top: borderTop
               ? pw.BorderSide(
-                  width: solidBorderWidth,
+                  style: isTopBorderSlashed
+                      ? pw.BorderStyle.dashed
+                      : pw.BorderStyle.solid,
+                  width: isTopBorderSlashed
+                      ? slashedBorderWidth
+                      : solidBorderWidth,
                 )
               : pw.BorderSide.none,
           right: borderRight
@@ -216,7 +222,9 @@ class DocumentComponents {
     String? itemId,
     int? estimatedUsefulLife,
     double? rowHeight,
+    borderTop = false,
     borderBottom = true,
+    isTopBorderSlashed = false,
   }) {
     return pw.TableRow(
       children: [
@@ -224,14 +232,18 @@ class DocumentComponents {
           data: quantity.toString(),
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
+          isTopBorderSlashed: isTopBorderSlashed,
           isBottomBorderSlashed: true,
         ),
         buildTableRowColumn(
           data: readableEnumConverter(unit),
+          borderTop: borderTop,
           borderRight: false,
           rowHeight: rowHeight,
           borderBottom: borderBottom,
+          isTopBorderSlashed: isTopBorderSlashed,
           isBottomBorderSlashed: true,
         ),
         pw.Row(
@@ -240,19 +252,23 @@ class DocumentComponents {
               width: 45.0,
               child: buildTableRowColumn(
                 data: unitCost.toString(),
+                borderTop: borderTop,
                 borderRight: false,
                 rowHeight: rowHeight,
                 borderBottom: borderBottom,
+                isTopBorderSlashed: isTopBorderSlashed,
                 isBottomBorderSlashed: true,
               ),
             ),
             pw.Expanded(
               child: buildTableRowColumn(
                 data: totalCost.toString(),
-                solidBorderWidth: 2.0,
+                solidBorderWidth: 1.5,
+                borderTop: borderTop,
                 borderRight: false,
                 rowHeight: rowHeight,
                 borderBottom: borderBottom,
+                isTopBorderSlashed: isTopBorderSlashed,
                 isBottomBorderSlashed: true,
               ),
             ),
@@ -260,17 +276,23 @@ class DocumentComponents {
         ),
         buildTableRowColumn(
           data: description ?? '\n', // truncateText(description ?? '\n', 40),
+          borderTop: borderTop,
+
           borderRight: false,
           rowHeight: rowHeight,
-          borderBottom: borderBottom,
+          borderBottom: borderBottom, isTopBorderSlashed: isTopBorderSlashed,
+
           isBottomBorderSlashed: true,
         ),
         buildTableRowColumn(
           data: itemId ?? '\n', //truncateText(itemId ?? '\n', 21),
           fontSize: 7.0,
+          borderTop: borderTop,
+
           borderRight: false,
           rowHeight: rowHeight,
-          borderBottom: borderBottom,
+          borderBottom: borderBottom, isTopBorderSlashed: isTopBorderSlashed,
+
           isBottomBorderSlashed: true,
         ),
         buildTableRowColumn(
@@ -280,7 +302,9 @@ class DocumentComponents {
                   : '$estimatedUsefulLife year'
               : '\n',
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
+          isTopBorderSlashed: isTopBorderSlashed,
           isBottomBorderSlashed: true,
         ),
       ],
@@ -417,7 +441,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                 ),
               ),
               pw.Text(
@@ -429,7 +453,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                 ),
               ),
               pw.Text(
@@ -437,7 +461,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 10.0,
+                  fontSize: 8.0,
                 ),
               ),
             ],

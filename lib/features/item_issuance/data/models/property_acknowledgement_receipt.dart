@@ -31,6 +31,7 @@ class PropertyAcknowledgementReceiptModel
 
   factory PropertyAcknowledgementReceiptModel.fromJson(
       Map<String, dynamic> json) {
+    print('supplier json: ${json['supplier']}');
     print('par model: $json');
 
     PurchaseRequestModel? purchaseRequest;
@@ -53,7 +54,27 @@ class PropertyAcknowledgementReceiptModel
           (e) => e.toString().split('.').last == json['fund_cluster']);
     }
 
-    if (supplier != null) {
+    // try {
+    //   print('Starting supplier conversion');
+    //   if (json.containsKey('supplier')) {
+    //     print('Supplier key exists in JSON');
+    //     if (json['supplier'] != null) {
+    //       print('Supplier JSON type: ${json['supplier'].runtimeType}');
+    //       print('Supplier JSON content: ${json['supplier']}');
+    //       supplier = SupplierModel.fromJson(json['supplier']);
+    //       print('Converted supplier: $supplier');
+    //     } else {
+    //       print('Supplier value is null');
+    //     }
+    //   } else {
+    //     print('Supplier key does not exist in JSON');
+    //   }
+    // } catch (e, stacktrace) {
+    //   print('Error during supplier conversion: $e');
+    //   print('Stacktrace: $stacktrace');
+    // }
+
+    if (json['supplier'] != null) {
       supplier = SupplierModel.fromJson(json['supplier']);
     }
 
@@ -70,6 +91,8 @@ class PropertyAcknowledgementReceiptModel
       return issuanceItem;
     }).toList();
 
+    print('conversion of items complete: $items');
+
     final par = PropertyAcknowledgementReceiptModel(
       id: json['id'] as String,
       parId: json['par_id'] as String,
@@ -85,9 +108,9 @@ class PropertyAcknowledgementReceiptModel
       fundCluster: fundCluster,
       supplierEntity: supplier,
       inspectionAndAcceptanceReportId:
-          json['inspection_and_acceptance_report_id'] as String,
-      contractNumber: json['contract_number'] as String,
-      purchaseOrderNumber: json['purchase_order_number'] as String,
+          json['inspection_and_acceptance_report_id'] as String?,
+      contractNumber: json['contract_number'] as String?,
+      purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficerEntity: receivingOfficer,
       issuingOfficerEntity: issuingOfficer,
       qrCodeImageData: json['qr_code_image_data'] as String,
