@@ -2541,79 +2541,107 @@ class IssuanceRepository {
       id: icsId,
     );
 
+    print('ics: $ics');
+
     // Check if this issuance has already been referenced in BatchItems
     final existingData = await _conn.execute(
       Sql.named('''
-      SELECT base_pattern, generated_pattern_id, issuance_id, supplier_id 
+      SELECT *
       FROM BatchItems
       WHERE issuance_id = @issuance_id;
     '''),
-      parameters: {'issuance_id': icsId},
+      parameters: {
+        'issuance_id': icsId,
+      },
     );
+
+    print('existingData: $existingData');
 
     if (existingData.isNotEmpty) {
       // If referenced, map and return the existing data
       for (final data in existingData) {
         semiExpendablePropertyCardData.add({
-          'base_pattern_id': data[0],
-          'generated_pattern_id': data[1],
-          'issuance_id': data[2],
-          'supplier_id': data[3],
+          'base_pattern_id': data[1],
+          'generated_pattern_id': data[2],
+          'issuance_id': data[3],
+          'supplier_id': data[4],
+          'base_item_id': data[5],
         });
       }
       return semiExpendablePropertyCardData;
     }
+
+    // Use issuedDate or provided date
+    final actualDate = date ?? ics?.issuedDate ?? DateTime.now();
+    final year = actualDate.year.toString();
+    final month = actualDate.month.toString().padLeft(2, '0');
 
     // Generate a base pattern from the supplier's name
     final supplierId = ics?.supplier?.supplierId.toString() ?? '';
     final supplierName = ics?.supplier?.supplierName ?? '';
     final issuedItems = ics?.items ?? [];
     final basePattern = supplierName.split(' ').map((e) => e[0]).join();
+    print('supplierId: $supplierId');
+    print('supplierName: $supplierName');
+    print('issuedItems: $issuedItems');
+    print('basePattern: $basePattern');
 
-    // Increment base pattern if it already exists in BatchItems
-    var uniquePattern = basePattern;
-    int counter = 1;
-    while (await checkPatternIfExistsInBatchItems(
-        pattern: uniquePattern, supplierId: supplierId)) {
-      uniquePattern = '$basePattern${counter++}';
-    }
-
-    // Generate IDs for each issued item based on the base pattern and quantity
     for (final issuedItem in issuedItems) {
-      final quantity = issuedItem.quantity;
-      final generatedIds = <String>[];
+      // Get current count of BatchItems to determine NNN
+      final result = await _conn.execute(
+        Sql.named(
+          '''
+        SELECT base_pattern 
+        FROM BatchItems 
+        ORDER BY base_pattern DESC
+        LIMIT 1;
+        ''',
+        ),
+      );
 
-      // Generate semi-expendable IDs following the pattern: ABC-YYYY(FC)-MM-NNN(i)
+      print('result: $result');
+
+      String extractedCount;
+      if (result.isNotEmpty && result.first.isNotEmpty) {
+        extractedCount = result.first[0].toString().split('-').last;
+      } else {
+        extractedCount = '0';
+      }
+
+      final incrementedCount = int.parse(extractedCount) + 1;
+      final nnn = incrementedCount.toString().padLeft(3, '0');
+      final uniquePattern =
+          '$basePattern-$year(${fundCluster.value})-$month-$nnn';
+      print('uniquePattern: $uniquePattern');
+
+      final quantity = issuedItem.quantity;
+
       for (int i = 1; i <= quantity; i++) {
-        final datePart = (date ?? ics?.issuedDate)
-            ?.toIso8601String()
-            .substring(0, 10); // YYYY-MM-DD
-        final fundClusterPart =
-            fundCluster.toString(); // Simplified fund cluster
-        final generatedId =
-            '$uniquePattern-$datePart($fundClusterPart)-NNN($i)';
-        generatedIds.add(generatedId);
+        final generatedId = '$uniquePattern($i)';
+        print(generatedId);
 
         await _conn.execute(
           Sql.named(
             '''
-          INSERT INTO BatchItems (base_pattern, generated_pattern_id, issuance_id, supplier_id)
-          VALUES (@base_pattern, @generated_pattern_id, @issuance_id, @supplier_id);
+          INSERT INTO BatchItems (base_pattern, generated_pattern_id, issuance_id, supplier_id, base_item_id)
+          VALUES (@base_pattern, @generated_pattern_id, @issuance_id, @supplier_id, @base_item_id);
           ''',
           ),
           parameters: {
-            'base_pattern': basePattern,
+            'base_pattern': uniquePattern,
             'generated_pattern_id': generatedId,
             'issuance_id': ics?.id,
             'supplier_id': supplierId,
+            'base_item_id': issuedItem.item.shareableItemInformationModel.id,
           },
         );
 
         semiExpendablePropertyCardData.add({
-          'base_pattern_id': basePattern,
+          'base_pattern_id': uniquePattern,
           'generated_pattern_id': generatedId,
           'issuance_id': ics?.id,
           'supplier_id': supplierId,
+          'base_item_id': issuedItem.item.shareableItemInformationModel.id,
         });
       }
     }

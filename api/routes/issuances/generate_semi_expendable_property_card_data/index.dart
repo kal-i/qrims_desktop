@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -20,14 +21,22 @@ Future<Response> _getSemiExpendablePropertyCardData(
 ) async {
   try {
     final queryParams = await context.request.uri.queryParameters;
+    final icsId = queryParams['ics_id'] as String;
+    final fundCluster = queryParams['fund_cluster'];
 
-    // final semiExpendablePropertyCardData =
-    //     await repository.generateSemiExpendablePropertyCardData(
-    //   icsId: icsId,
-    //   fundCluster: fundCluster,
-    // );
+    final semiExpendablePropertyCardData =
+        await repository.generateSemiExpendablePropertyCardData(
+      icsId: icsId,
+      fundCluster: FundCluster.values
+          .firstWhere((e) => e.toString().split('.').last == fundCluster),
+    );
 
-    return Response();
+    return Response.json(
+      statusCode: 200,
+      body: {
+        'semi_expendable_property_card_data': semiExpendablePropertyCardData,
+      },
+    );
   } catch (e) {
     return Response.json(
       statusCode: HttpStatus.internalServerError,

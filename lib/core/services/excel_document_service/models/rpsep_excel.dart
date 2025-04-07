@@ -16,8 +16,19 @@ class RPSEPExcelDocument {
         data['accountable_officer'] as Map<String, String>?;
     final inventorySemiExpendableProperties =
         data['inventory_report'] as List<Map<String, dynamic>>;
-    final approvingEntityOrAuthorizedRepresentative =
-        data['approving_entity_or_authorized_representative'] as String?;
+    dynamic approvingEntityOrAuthorizedRepresentative;
+    try {
+      approvingEntityOrAuthorizedRepresentative =
+          data.containsKey('approving_entity_or_authorized_representative')
+              ? data['approving_entity_or_authorized_representative']
+              : null;
+    } catch (e) {
+      print(
+          'Error accessing approving_entity_or_authorized_representative: $e');
+      approvingEntityOrAuthorizedRepresentative = null;
+    }
+
+    // Safely cast to String or set to null
     final coaRepresentative = data['coa_representative'] as String?;
     final certifyingOfficers =
         data['certifying_officers'] as List<Map<String, dynamic>>?;
@@ -720,6 +731,9 @@ class RPSEPExcelDocument {
     sheet.cell(startApprovingEntityOrAuthorizedRepresentativeCell).value =
         TextCellValue(approvingEntityOrAuthorizedRepresentativeName ??
             '_______________________________');
+
+    print(
+        'Debug: Cell value set for approvingEntityOrAuthorizedRepresentativeName = $approvingEntityOrAuthorizedRepresentativeName');
 
     sheet.merge(
       startApprovingEntityOrAuthorizedRepresentativeCell,
