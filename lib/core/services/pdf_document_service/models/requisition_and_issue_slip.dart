@@ -8,6 +8,7 @@ import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../features/item_issuance/domain/entities/requisition_and_issue_slip.dart';
 import '../../../../init_dependencies.dart';
 import '../../../enums/unit.dart';
+import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/format_position.dart';
@@ -33,10 +34,11 @@ class RequisitionAndIssueSlip implements BaseDocument {
 
     final String entityName;
     final String fundCluster;
-    final String division;
-    final String rcc;
-    final String office;
-    final String purpose;
+    String risId = '\n';
+    String division = '\n';
+    String rcc = '\n';
+    String office = '\n';
+    String purpose = '\n\n\n\n';
 
     final String pr;
     final List<String>
@@ -52,6 +54,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
     final String requestingOfficerName;
     final String requestingOfficerPosition;
 
+    // will remove these conditions later cause we will change the way we geenerate ris
     if (data is InventoryCustodianSlipModel) {
       final ics = data;
       final purchaseRequestEntity = ics.purchaseRequestEntity;
@@ -90,7 +93,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
       //requestQuantity = data.purchaseRequestEntity.quantity;
 
       receivingOfficerName = receivingOfficerEntity?.name ?? 'N/A';
-      receivingOfficerPosition = receivingOfficerEntity?.positionName ?? 'N\A';
+      receivingOfficerPosition = receivingOfficerEntity?.positionName ?? 'N/A';
       issuingOfficerName = issuingOfficerEntity?.name ?? 'N/A';
       issuingOfficerPosition = issuingOfficerEntity?.positionName ?? 'N/A';
     } else if (data is PropertyAcknowledgementReceiptModel) {
@@ -138,16 +141,19 @@ class RequisitionAndIssueSlip implements BaseDocument {
       issuingOfficerPosition = issuingOfficerEntity?.positionName ?? 'N/A';
     } else if (data is RequisitionAndIssueSlipEntity) {
       final ris = data;
+      risId = ris.risId;
       print(ris);
       final purchaseRequestEntity = ris.purchaseRequestEntity;
       final receivingOfficerEntity = ris.receivingOfficerEntity;
       final issuingOfficerEntity = ris.issuingOfficerEntity;
 
+      rcc = ris.responsibilityCenterCode ?? '\n';
+      division = ris.division ?? '\n';
+
       if (purchaseRequestEntity != null) {
         pr = purchaseRequestEntity.id;
         entityName = purchaseRequestEntity.entity.name;
         fundCluster = purchaseRequestEntity.fundCluster.toReadableString();
-        rcc = purchaseRequestEntity.responsibilityCenterCode ?? '\n';
         office = purchaseRequestEntity.officeEntity.officeName;
         purpose = purchaseRequestEntity.purpose;
 
@@ -167,7 +173,6 @@ class RequisitionAndIssueSlip implements BaseDocument {
         fundCluster = ris.fundCluster != null
             ? ris.fundCluster!.toReadableString()
             : '\n';
-        rcc = ris.responsibilityCenterCode ?? '\n';
         office = ris.office?.officeName ?? '\n';
         purpose = ris.purpose ?? '\n';
 
@@ -179,7 +184,6 @@ class RequisitionAndIssueSlip implements BaseDocument {
       }
 
       issuedItems = ris.items;
-      division = ris.division ?? '\n';
 
       //stockNo = data.purchaseRequestEntity.productNameEntity.id;
       //requestQuantity = data.purchaseRequestEntity.quantity;
@@ -320,14 +324,14 @@ class RequisitionAndIssueSlip implements BaseDocument {
         // the yes or no can be tricky, I must clarify this one
         tableRows.add(
           DocumentComponents.buildRISTableRow(
-            stockNo: i == 0 ? '$productNameId-$productDescriptionId' : '\n',
+            stockNo: i == 0 ? '$productNameId$productDescriptionId' : '\n',
             unit: i == 0 ? unit : '\n',
             description: descriptionColumn[i],
             requestQuantity: i == 0 ? requestQuantity : '\n',
-            yes: i == 0 ? '/' : '\n',
-            no: i == 0 ? 'X' : '\n',
+            yes: i == 0 ? '\n' : '\n',
+            no: i == 0 ? '\n' : '\n',
             issueQuantity: i == 0 ? issuedQuantity : '\n',
-            remarks: i == 0 ? 'To be clarify' : '\n',
+            remarks: i == 0 ? '\n' : '\n',
             rowHeight: rowHeights[i],
             borderBottom: i == descriptionColumn.length - 1 ? false : true,
           ),
@@ -374,7 +378,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
             children: [
               DocumentComponents.buildRowTextValue(
                 text: 'Entity Name:',
-                value: entityName,
+                value: capitalizeWord(entityName),
                 font: serviceLocator<FontService>().getFont('calibriBold'),
               ),
               DocumentComponents.buildRowTextValue(
@@ -400,12 +404,16 @@ class RequisitionAndIssueSlip implements BaseDocument {
                 children: [
                   DocumentComponents().buildRISHeaderContainer(
                     row1Title: 'Division:',
+                    row1Value: division.toUpperCase(),
                     row2Title: 'Office:',
+                    row2Value: capitalizeWord(office),
                     borderRight: false,
                   ),
                   DocumentComponents().buildRISHeaderContainer(
                     row1Title: 'Responsibility Center Code:',
+                    row1Value: rcc,
                     row2Title: 'RIS No.:',
+                    row2Value: risId,
                     isRow1Underlined: true,
                   ),
                 ],
@@ -480,7 +488,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
                           borderLeft: false,
                         ),
                         DocumentComponents.buildTableRowColumn(
-                          data: '\n\n\n\n',
+                          data: purpose,
                           borderRight: false,
                           borderLeft: false,
                         ),

@@ -451,4 +451,31 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
       throw ServerException(e.toString());
     }
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
+    required String icsId,
+    required FundCluster fundCluster,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'ics_id': icsId,
+        'fund_cluster': fundCluster.toString().split('.').last,
+      };
+
+      final response = await httpService.get(
+        endpoint: semiExpendablePropertyCardDataEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(
+            response.data['semi_expendable_property_card_data']);
+      } else {
+        throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
 }

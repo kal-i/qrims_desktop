@@ -209,3 +209,13 @@ final class GetInventoryPropertyReportEvent extends IssuancesEvent {
   final DateTime? endDate;
   final AssetSubClass? assetSubClass;
 }
+
+final class GenerateSemiExpendablePropertyCardDataEvent extends IssuancesEvent {
+  const GenerateSemiExpendablePropertyCardDataEvent({
+    required this.icsId,
+    required this.fundCluster,
+  });
+
+  final String icsId;
+  final FundCluster fundCluster;
+}

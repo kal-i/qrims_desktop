@@ -38,6 +38,7 @@ import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
 import '../components/generate_inventory_report_modal.dart';
+import '../components/generate_semi_expendable_property_card_modal.dart.dart';
 
 class ItemIssuanceView extends StatefulWidget {
   const ItemIssuanceView({super.key});
@@ -255,10 +256,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
       'title': 'Property Card',
       'type': DocumentType.propertyCard,
     },
-    {
-      'title': 'SPC',
-      'type': DocumentType.spc,
-    },
+    // {
+    //   'title': 'SPC',
+    //   'type': DocumentType.spc,
+    // },
     {
       'title': 'RSPI',
       'type': DocumentType.rspi,
@@ -446,7 +447,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         if (state is ICSRegistered ||
             state is PARRegistered ||
             state is RISRegistered ||
-            state is FetchedInventoryReport) {
+            state is FetchedInventoryReport ||
+            state is GeneratedSemiExpendablePropertyCardData) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();
@@ -546,15 +548,21 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     'text': 'Generate Issuance Document',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
                   },
-                if (!isAdmin)
-                  {
-                    'text': 'Generate RIS Document',
-                    'icon': HugeIcons.strokeRoundedDocumentAttachment,
-                  },
+
                 if (!isAdmin && issuance is! RequisitionAndIssueSlipEntity)
                   {
                     'text': 'Generate Sticker',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                  },
+                if (!isAdmin && issuance is! RequisitionAndIssueSlipEntity)
+                  {
+                    'text': 'Generate RIS Document',
+                    'icon': HugeIcons.strokeRoundedDocumentAttachment,
+                  },
+                if (issuance is InventoryCustodianSlipEntity)
+                  {
+                    'text': 'Generate Semi-expendable Property Card',
+                    'icon': HugeIcons.strokeRoundedFile01,
                   },
               ],
               object: issuance,
@@ -582,6 +590,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                       ),
                       onActionSelected: (index, action) {
                         final issuanceId = _tableRows[index].id;
+                        final issuanceObj = _tableRows[index].object;
                         String? path;
                         final Map<String, dynamic> extras = {
                           'issuance_id': issuanceId,
@@ -608,8 +617,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           }
 
                           if (action.contains('Generate Issuance Document')) {
-                            final issuanceObj = _tableRows[index].object;
-
                             showCustomDocumentPreview(
                               context: context,
                               documentObject: issuanceObj,
@@ -626,15 +633,12 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           if (action.contains('Generate RIS Document')) {
                             showCustomDocumentPreview(
                               context: context,
-                              documentObject: _tableRows[index].object,
+                              documentObject: issuanceObj,
                               docType: DocumentType.ris,
                             );
                           }
 
                           if (action.contains('Generate Sticker')) {
-                            final issuanceObj =
-                                _tableRows[index].object as IssuanceEntity;
-
                             print('Checking items...');
                             print(
                                 'Items: ${issuanceObj.items.map((e) => e.runtimeType)}'); // Debugging step
@@ -660,6 +664,17 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                               context: context,
                               documentObject: issuanceObj,
                               docType: DocumentType.sticker,
+                            );
+                          }
+
+                          if (action.contains(
+                              'Generate Semi-expendable Property Card')) {
+                            showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  GenerateSemiExpendablePropertyCardModal(
+                                ics: issuanceObj,
+                              ),
                             );
                           }
                         }

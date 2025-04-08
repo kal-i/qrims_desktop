@@ -1,3 +1,4 @@
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:equatable/equatable.dart';
 
 enum AssetClassification {
@@ -245,9 +246,6 @@ class Model {
   }
 }
 
-// todo: prolly add a flag for consumables to determine items for RIS
-// todo: bool isConsumable - set to false by default
-// todo: ui part - add a switch
 class Item extends Equatable {
   const Item({
     required this.id,
@@ -522,14 +520,6 @@ class ShareableItemInformationModel {
   }
 }
 
-// exclude the ff: params that will tie it to a specific item:
-// serial no
-// acquired date
-// manufacturer
-// brand
-// model
-// unit cost
-// estimated useful life
 abstract class BaseItemModel {
   const BaseItemModel({
     required this.productStock,
@@ -545,8 +535,8 @@ abstract class BaseItemModel {
       print('supp received');
       return Supply.fromJson(json);
     } else {
-      print('equipment');
-      return Equipment.fromJson(json);
+      print('inventory received');
+      return InventoryItem.fromJson(json);
     }
   }
 }
@@ -597,45 +587,46 @@ class Supply extends BaseItemModel {
   }
 }
 
-class Equipment extends BaseItemModel {
-  const Equipment({
+class InventoryItem extends BaseItemModel {
+  const InventoryItem({
     required this.id,
     required super.productStock,
     required super.shareableItemInformationModel,
-    required this.manufacturerBrand,
-    required this.model,
-    required this.serialNo,
-    required this.assetClassification,
-    required this.assetSubClass,
+    this.manufacturerBrand,
+    this.model,
+    this.serialNo,
+    this.assetClassification,
+    this.assetSubClass,
     this.estimatedUsefulLife = 1,
+    this.fundCluster,
   });
 
   final int id;
-  final ManufacturerBrand manufacturerBrand;
-  final Model model;
-  final String serialNo;
+  final ManufacturerBrand? manufacturerBrand;
+  final Model? model;
+  final String? serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final int? estimatedUsefulLife;
+  final FundCluster? fundCluster;
 
-  factory Equipment.fromJson(Map<String, dynamic> json) {
+  factory InventoryItem.fromJson(Map<String, dynamic> json) {
     print('received json data by equipment model: $json');
-    final assetClassificationString = json['asset_classification'] as String?;
-    final assetSubClassString = json['asset_sub_class'] as String?;
 
-    final assetClassification = assetClassificationString != null
+    final assetClassification = (json['asset_classification'] as String?) !=
+            null
         ? AssetClassification.values.firstWhere(
-            (e) => e.toString().split('.').last == assetClassificationString,
+            (e) => e.toString().split('.').last == json['asset_classification'],
             orElse: () => AssetClassification.unknown,
           )
-        : AssetClassification.unknown;
+        : null;
 
-    final assetSubClass = assetSubClassString != null
+    final assetSubClass = (json['asset_sub_class'] as String?) != null
         ? AssetSubClass.values.firstWhere(
-            (e) => e.toString().split('.').last == assetSubClassString,
+            (e) => e.toString().split('.').last == json['asset_sub_class'],
             orElse: () => AssetSubClass.unknown,
           )
-        : AssetSubClass.unknown;
+        : null;
 
     final productStock = ProductStock.fromJson({
       'product_name_id': json['product_name_id'],
@@ -657,32 +648,45 @@ class Equipment extends BaseItemModel {
       'acquired_date': json['acquired_date'],
     });
 
-    final manufacturerBrand = ManufacturerBrand.fromJson({
-      'manufacturer_id': json['manufacturer_id'],
-      'manufacturer_name': json['manufacturer_name'],
-      'brand_id': json['brand_id'],
-      'brand_name': json['brand_name'],
-    });
+    final manufacturerBrand =
+        (json['manufacturer_id'] != null || json['brand_id'] != null)
+            ? ManufacturerBrand.fromJson({
+                'manufacturer_id': json['manufacturer_id'],
+                'manufacturer_name': json['manufacturer_name'],
+                'brand_id': json['brand_id'],
+                'brand_name': json['brand_name'],
+              })
+            : null;
 
-    final model = Model.fromJson({
-      'model_id': json['model_id'],
-      'product_name_id': json['product_name_id'],
-      'brand_id': json['brand_id'],
-      'model_name': json['model_name'],
-    });
+    final model = (json['model_id'] != null)
+        ? Model.fromJson({
+            'model_id': json['model_id'],
+            'product_name_id': json['product_name_id'],
+            'brand_id': json['brand_id'],
+            'model_name': json['model_name'],
+          })
+        : null;
+
+    final fundCluster = (json['fund_cluster'] as String?) != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == json['fund_cluster'],
+            orElse: () => FundCluster.unknown,
+          )
+        : null;
 
     print('almost done processing the equipment model...');
 
-    return Equipment(
-      id: json['equipment_id'] as int, // this prob
+    return InventoryItem(
+      id: json['equipment_id'] as int,
       productStock: productStock,
       shareableItemInformationModel: shareableItemInformation,
       manufacturerBrand: manufacturerBrand,
       model: model,
-      serialNo: json['serial_no'] as String,
+      serialNo: json['serial_no'] as String?,
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
       estimatedUsefulLife: json['estimated_useful_life'] as int?,
+      fundCluster: fundCluster,
     );
   }
 
@@ -691,67 +695,13 @@ class Equipment extends BaseItemModel {
       'equipment_id': id,
       'product_stock': productStock.toJson(),
       'shareable_item_information': shareableItemInformationModel.toJson(),
-      'manufacturer_brand': manufacturerBrand.toJson(),
-      'model': model.toJson(),
+      'manufacturer_brand': manufacturerBrand?.toJson(),
+      'model': model?.toJson(),
       'serial_no': serialNo,
-      'asset_classification': assetClassification.toString().split('.').last,
-      'asset_sub_class': assetSubClass.toString().split('.').last,
+      'asset_classification': assetClassification?.toString().split('.').last,
+      'asset_sub_class': assetSubClass?.toString().split('.').last,
       'estimated_useful_life': estimatedUsefulLife,
-    };
-  }
-}
-
-enum BatchStatus {
-  available,
-  issued,
-}
-
-class BatchItem {
-  const BatchItem({
-    required this.id,
-    required this.baseItemId,
-    required this.batchCode,
-    this.status = BatchStatus.available,
-    required this.createdAt,
-    this.updatedAt,
-  });
-
-  final int id;
-  final String baseItemId;
-  final String batchCode;
-  final BatchStatus status;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
-
-  factory BatchItem.fromJson(Map<String, dynamic> json) {
-    return BatchItem(
-      id: json['id'] as int,
-      baseItemId: json['base_item_id'] as String,
-      batchCode: json['batch_code'] as String,
-      status: BatchStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
-      ),
-      createdAt: json['created_at'] is String
-          ? DateTime.parse(
-              json['creaated_at'] as String,
-            )
-          : json['created_at'] as DateTime,
-      updatedAt: json['updated_at'] != null
-          ? json['updated_at'] is String
-              ? DateTime.parse(json['updated_at'] as String)
-              : json['updated_at'] as DateTime
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'base_item_id': baseItemId,
-      'batch_code': batchCode,
-      'status': status.toString().split('.').last,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      'fund_cluster': fundCluster?.toString().split('.').last,
     };
   }
 }

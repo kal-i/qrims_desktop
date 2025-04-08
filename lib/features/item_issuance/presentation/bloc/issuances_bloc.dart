@@ -12,6 +12,7 @@ import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../../domain/usecases/create_ics.dart';
 import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/create_ris.dart';
+import '../../domain/usecases/generate_semi_expendable_property_card_data.dart';
 import '../../domain/usecases/get_inventory_property_report.dart';
 import '../../domain/usecases/get_inventory_semi_expendable_report.dart';
 import '../../domain/usecases/get_inventory_supply_report.dart';
@@ -36,6 +37,8 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required GetInventorySemiExpendablePropertyReport
         getInventorySemiExpendablePropertyReport,
     required GetInventoryPropertyReport getInventoryPropertyReport,
+    required GenerateSemiExpendablePropertyCardData
+        generateSemiExpendablePropertyCardData,
   })  : _getIssuanceById = getIssuanceById,
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
@@ -47,6 +50,8 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _getInventorySemiExpendablePropertyReport =
             getInventorySemiExpendablePropertyReport,
         _getInventoryPropertyReport = getInventoryPropertyReport,
+        _generateSemiExpendablePropertyCardData =
+            generateSemiExpendablePropertyCardData,
         super(IssuancesInitial()) {
     on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
@@ -59,6 +64,8 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<GetInventorySemiExpendablePropertyReportEvent>(
         _onGetInventorySemiExpendablePropertyReport);
     on<GetInventoryPropertyReportEvent>(_onGetInventoryPropertyReport);
+    on<GenerateSemiExpendablePropertyCardDataEvent>(
+        _onGenerateSemiExpendablePropertyCardData);
   }
 
   final GetIssuanceById _getIssuanceById;
@@ -72,6 +79,8 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final GetInventorySemiExpendablePropertyReport
       _getInventorySemiExpendablePropertyReport;
   final GetInventoryPropertyReport _getInventoryPropertyReport;
+  final GenerateSemiExpendablePropertyCardData
+      _generateSemiExpendablePropertyCardData;
 
   void _onGetIssuanceByIdEvent(
     GetIssuanceByIdEvent event,
@@ -365,6 +374,29 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         FetchedInventoryReport(
           inventoryReport: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGenerateSemiExpendablePropertyCardData(
+    GenerateSemiExpendablePropertyCardDataEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _generateSemiExpendablePropertyCardData(
+      GenerateSemiExpendablePropertyCardDataParams(
+        icsId: event.icsId,
+        fundCluster: event.fundCluster,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        GeneratedSemiExpendablePropertyCardData(
+          semiExpendablePropertyCardData: r,
         ),
       ),
     );

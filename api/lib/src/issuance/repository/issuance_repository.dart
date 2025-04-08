@@ -356,40 +356,6 @@ class IssuanceRepository {
     return issuanceItems;
   }
 
-  Future<List<BatchItem>> _getBatchItems({
-    required String issuanceId,
-  }) async {
-    final batchItems = <BatchItem>[];
-
-    final results = await _conn.execute(
-      Sql.named(
-        '''
-        SELECT * FROM BatchItems
-        WHERE issuance_id = @issuance_id;
-        ''',
-      ),
-      parameters: {
-        'issuance_id': issuanceId,
-      },
-    );
-
-    for (final row in results) {
-      final batchMap = {
-        'id': row[0],
-        'base_item_id': row[1],
-        'batch_code': row[2],
-        'status': row[3],
-        'issuance_id': row[4],
-        'created_at': row[5],
-        'updated_at': row[6]
-      };
-
-      batchItems.add(BatchItem.fromJson(batchMap));
-    }
-
-    return batchItems;
-  }
-
   Future<int?> checkSupplierIfExist({
     required String supplierName,
   }) async {
@@ -1422,8 +1388,8 @@ class IssuanceRepository {
         final issuanceQuantity =
             int.parse(issuanceItem['issued_quantity'] as String);
 
-        final remainingToFulfill =
-            requestedItem.remainingQuantity ?? requestedItem.quantity;
+        final remainingToFulfill = requestedItem.quantity;
+        // requestedItem.remainingQuantity ?? requestedItem.quantity;
 
         // Calculate the quantity to issue
         // Why do I feel like the problem is here

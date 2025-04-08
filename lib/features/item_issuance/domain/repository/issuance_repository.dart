@@ -114,4 +114,10 @@ abstract interface class IssuanceRepository {
     DateTime? endDate,
     AssetSubClass? assetSubClass,
   });
+
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      generateSemiExpendablePropertyCardData({
+    required String icsId,
+    required FundCluster fundCluster,
+  });
 }

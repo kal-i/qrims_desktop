@@ -1,6 +1,9 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
+import '../../../utils/capitalizer.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../utils/document_components.dart';
 import '../utils/document_page_util.dart';
 import 'base_document.dart';
@@ -14,6 +17,30 @@ class SPC implements BaseDocument {
   }) async {
     final pdf = pw.Document();
 
+    print('received data by sep: $data');
+    final ics = data['ics'] as InventoryCustodianSlipEntity;
+    final entity = ics.entity?.name;
+    final fundCluster = ics.fundCluster?.toReadableString();
+
+    // reference
+    final pr = ics.purchaseRequestEntity?.id;
+    final supplier = ics.supplierEntity?.name;
+    final iar = ics.inspectionAndAcceptanceReportId;
+    final cn = ics.contractNumber;
+    final po = ics.purchaseOrderNumber;
+
+    List<pw.TableRow> tableRows = [];
+
+    // we will used the issuance items count to generate paper
+    for (final issuedItem in ics.items) {
+      final semiExpendableProperty =
+          issuedItem.itemEntity.productStockEntity.productName.name;
+      final description = issuedItem
+          .itemEntity.productStockEntity.productDescription?.description;
+
+      // i should probably create a condition here that will get all ids from
+      // data based on the current issued item
+    }
     pdf.addPage(
       pw.MultiPage(
         pageTheme: DocumentPageUtil.getPageTheme(
@@ -36,18 +63,41 @@ class SPC implements BaseDocument {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text(
-                'Entity Name: _________________________________________________',
-                style: const pw.TextStyle(
-                  //font: FontService().getFont('timesNewRomanBold'),
-                  fontSize: 10.0,
+              pw.RichText(
+                text: pw.TextSpan(
+                  text: 'Entity Name: ',
+                  style: const pw.TextStyle(
+                    //font: FontService().getFont('timesNewRomanBold'),
+                    fontSize: 10.0,
+                  ),
+                  children: [
+                    pw.TextSpan(
+                      text: capitalizeWord(entity ?? '______________________'),
+                      style: const pw.TextStyle(
+                        //font: FontService().getFont('timesNewRomanBold'),
+                        fontSize: 10.0,
+                      ),
+                    )
+                  ],
                 ),
               ),
-              pw.Text(
-                'Fund Cluster: _______________________________',
-                style: const pw.TextStyle(
-                  //font: FontService().getFont('timesNewRomanBold'),
-                  fontSize: 10.0,
+              pw.RichText(
+                text: pw.TextSpan(
+                  text: 'Fund Cluster: ',
+                  style: const pw.TextStyle(
+                    //font: FontService().getFont('timesNewRomanBold'),
+                    fontSize: 10.0,
+                  ),
+                  children: [
+                    pw.TextSpan(
+                      text: capitalizeWord(
+                          fundCluster ?? '______________________'),
+                      style: const pw.TextStyle(
+                        //font: FontService().getFont('timesNewRomanBold'),
+                        fontSize: 10.0,
+                      ),
+                    )
+                  ],
                 ),
               ),
             ],

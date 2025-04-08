@@ -100,3 +100,11 @@ final class FetchedInventoryReport extends IssuancesState {
 
   final List<Map<String, dynamic>> inventoryReport;
 }
+
+final class GeneratedSemiExpendablePropertyCardData extends IssuancesState {
+  const GeneratedSemiExpendablePropertyCardData({
+    required this.semiExpendablePropertyCardData,
+  });
+
+  final List<Map<String, dynamic>> semiExpendablePropertyCardData;
+}

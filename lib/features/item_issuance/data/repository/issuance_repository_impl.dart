@@ -302,4 +302,23 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
       return left(Failure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      generateSemiExpendablePropertyCardData({
+    required String icsId,
+    required FundCluster fundCluster,
+  }) async {
+    try {
+      final response =
+          await issuanceRemoteDataSource.generateSemiExpendablePropertyCardData(
+        icsId: icsId,
+        fundCluster: fundCluster,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
 }

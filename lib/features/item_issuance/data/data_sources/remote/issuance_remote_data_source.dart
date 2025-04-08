@@ -109,4 +109,9 @@ abstract interface class IssuanceRemoteDataSource {
     DateTime? endDate,
     AssetSubClass? assetSubClass,
   });
+
+  Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
+    required String icsId,
+    required FundCluster fundCluster,
+  });
 }

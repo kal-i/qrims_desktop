@@ -256,7 +256,6 @@ class InventoryCustodianSlip extends Issuance {
 
   factory InventoryCustodianSlip.fromJson(Map<String, dynamic> json) {
     print('received raw json by ics: $json');
-    List<BatchItem>? batchItems;
     Entity? entity;
     FundCluster? fundCluster;
     PurchaseRequest? purchaseRequest;
@@ -370,17 +369,6 @@ class InventoryCustodianSlip extends Issuance {
 
       return issuanceItem;
     }).toList();
-
-    if (json['batch_items'] != null) {
-      batchItems = (json['batch_items'] as List<dynamic>).map(
-        (e) {
-          print('batch item: $e');
-          return BatchItem.fromJson(
-            e as Map<String, dynamic>,
-          );
-        },
-      ).toList();
-    }
 
     print('issuance items converted');
 

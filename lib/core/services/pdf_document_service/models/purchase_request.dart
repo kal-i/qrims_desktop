@@ -187,14 +187,14 @@ class PurchaseRequest implements BaseDocument {
             requestingOfficerEntity: requestingOfficerEntity,
             approvingOfficerEntity: approvingOfficerEntity,
           ),
-          pw.SizedBox(height: 30.0),
-          if (withQr)
-            pw.Align(
-              alignment: pw.AlignmentDirectional.bottomEnd,
-              child: DocumentComponents.buildQrContainer(
-                data: data.id,
-              ),
-            ),
+          // pw.SizedBox(height: 30.0),
+          // if (withQr)
+          //   pw.Align(
+          //     alignment: pw.AlignmentDirectional.bottomEnd,
+          //     child: DocumentComponents.buildQrContainer(
+          //       data: data.id,
+          //     ),
+          //   ),
         ],
       ),
     );
