@@ -677,7 +677,7 @@ class InventoryItem extends BaseItemModel {
     print('almost done processing the equipment model...');
 
     return InventoryItem(
-      id: json['equipment_id'] as int,
+      id: json['inventory_id'] as int,
       productStock: productStock,
       shareableItemInformationModel: shareableItemInformation,
       manufacturerBrand: manufacturerBrand,
@@ -692,7 +692,7 @@ class InventoryItem extends BaseItemModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'equipment_id': id,
+      'inventory_id': id,
       'product_stock': productStock.toJson(),
       'shareable_item_information': shareableItemInformationModel.toJson(),
       'manufacturer_brand': manufacturerBrand?.toJson(),

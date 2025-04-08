@@ -391,68 +391,6 @@ class ItemRepository {
     }
   }
 
-  Future<List<String>> generateBatchItems({
-    required DateTime acquiredDate,
-    required String baseItemId,
-    required String productName,
-    required int quantity,
-    FundCluster? fundCluster,
-  }) async {
-    if (productName.isEmpty) {
-      throw ArgumentError('Product name cannot be empty.');
-    }
-
-    // Format the product name (capitalize first letter of each word)
-    final formattedItemName = productName
-        .split(' ')
-        .map((word) =>
-            word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '')
-        .join('');
-
-    // Generate batch codes
-    final batchItemCodes = <String>[];
-    final batchInserts = <Map<String, dynamic>>[];
-
-    for (int i = 1; i <= quantity; i++) {
-      // Construct the batch code
-      final batchCode = fundCluster != null
-          ? '$formattedItemName-${acquiredDate.year}(${fundCluster.value})-${acquiredDate.month.toString().padLeft(2, '0')}-${i.toString().padLeft(3, '0')}'
-          : '$formattedItemName-${acquiredDate.year}${acquiredDate.month.toString().padLeft(2, '0')}-${i.toString().padLeft(3, '0')}';
-
-      batchItemCodes.add(batchCode);
-
-      // Prepare the insert parameters
-      batchInserts.add({
-        'base_item_id': baseItemId,
-        'batch_code': batchCode,
-      });
-    }
-
-    // Insert all batch items in a single query
-    try {
-      await _conn.execute(
-        Sql.named(
-          '''
-        INSERT INTO BatchItems (
-          base_item_id, 
-          batch_code
-        ) VALUES (
-          @base_item_id,
-          @batch_code
-        );
-        ''',
-        ),
-        parameters: batchInserts,
-      );
-    } catch (e) {
-      print('Error inserting batch items: $e');
-      rethrow; // Rethrow the exception to handle it at a higher level
-    }
-
-    print('Generated batch item codes: $batchItemCodes');
-    return batchItemCodes;
-  }
-
   Future<String?> checkSupplyIfExist({
     required int productNameId,
     required int productDescriptionId,
@@ -554,7 +492,7 @@ class ItemRepository {
     }
   }
 
-  Future<String> registerEquipment({
+  Future<String> registerInventoryItem({
     required String baseItemModelId,
     required int productNameId,
     required String manufacturerName,
@@ -564,6 +502,7 @@ class ItemRepository {
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     int? estimatedUsefulLife,
+    FundCluster? fundCluster,
   }) async {
     try {
       String? manufacturerId;
@@ -630,12 +569,12 @@ class ItemRepository {
       await _conn.execute(
         Sql.named(
           '''
-        INSERT INTO Equipment (
+        INSERT INTO InventoryItems (
           base_item_id, manufacturer_id, brand_id, model_id, serial_no, asset_classification,
           asset_sub_class, estimated_useful_life
         ) VALUES (
           @base_item_id, @manufacturer_id, @brand_id, @model_id, @serial_no, 
-          @asset_classification, @asset_sub_class, @estimated_useful_life
+          @asset_classification, @asset_sub_class, @estimated_useful_life, @fund_cluster
         );
         ''',
         ),
@@ -649,12 +588,13 @@ class ItemRepository {
               assetClassification.toString().split('.').last,
           'asset_sub_class': assetSubClass.toString().split('.').last,
           'estimated_useful_life': estimatedUsefulLife,
+          'fund_cluster': fundCluster.toString().split('.').last,
         },
       );
 
       return baseItemModelId;
     } catch (e) {
-      throw Exception('Error registering equipment item: $e');
+      throw Exception('Error registering inventory item: $e');
     }
   }
 
@@ -1164,7 +1104,7 @@ class ItemRepository {
           pn.name as product_name,
           pd.description as product_description,
           s.id as supply_id,
-          inv.id as equipment_id,
+          inv.id as inventory_id,
           inv.manufacturer_id,
           inv.brand_id,
           inv.model_id,
@@ -1222,7 +1162,7 @@ class ItemRepository {
       return Supply.fromJson(supplyMap);
     } else if (row[13] != null) {
       final inventoryMap = {
-        'equipment_id': row[13],
+        'inventory_id': row[13],
         'base_item_id': row[0],
         'product_name_id': row[1],
         'product_description_id': row[2],
@@ -1477,7 +1417,7 @@ class ItemRepository {
           pn.name as product_name,
           pd.description as product_description,
           s.id as supply_id,
-          inv.id as equipment_id,
+          inv.id as inventory_id,
           inv.manufacturer_id,
           inv.brand_id,
           inv.model_id,
@@ -1601,7 +1541,7 @@ class ItemRepository {
           itemList.add(Supply.fromJson(supplyMap));
         } else if (row[13] != null) {
           final inventoryMap = {
-            'equipment_id': row[13],
+            'inventory_id': row[13],
             'base_item_id': row[0],
             'product_name_id': row[1],
             'product_description_id': row[2],
@@ -1649,7 +1589,7 @@ class ItemRepository {
             pn.name as product_name,
             pd.description as product_description,
             s.id as supply_id,
-            inv.id as equipment_id,
+            inv.id as inventory_id,
             inv.manufacturer_id,
             inv.brand_id,
             inv.model_id,
@@ -1707,7 +1647,7 @@ class ItemRepository {
         return Supply.fromJson(supplyMap);
       } else if (row[13] != null) {
         final inventoryMap = {
-          'equipment_id': row[13],
+          'inventory_id': row[13],
           'base_item_id': row[0],
           'product_name_id': row[1],
           'product_description_id': row[2],
