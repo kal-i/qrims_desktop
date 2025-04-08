@@ -113,7 +113,7 @@ class IssuanceItem {
                   ['acquired_date'],
             }
           : {
-              'equipment_id': itemJson['equipment_id'] as int?,
+              'inventory_id': itemJson['inventory_id'] as int?,
               'base_item_id': itemJson['shareable_item_information']
                   ['base_item_id'],
               'product_name_id': itemJson['product_stock']['product_name']
@@ -151,6 +151,7 @@ class IssuanceItem {
               'asset_sub_class': itemJson['asset_sub_class'] as String?,
               'estimated_useful_life':
                   itemJson['estimated_useful_life'] as int?,
+              'fund_cluster': itemJson['fund_cluster'],
             };
 
       print('item data: $itemData');
@@ -174,7 +175,7 @@ class IssuanceItem {
       'issuance_id': issuanceId,
       'item': item is Supply
           ? (item as Supply).toJson()
-          : (item as Equipment).toJson(),
+          : (item as InventoryItem).toJson(),
       'issued_quantity': quantity,
     };
   }
@@ -304,7 +305,7 @@ class InventoryCustodianSlip extends Issuance {
               },
             }
           : {
-              'equipment_id': itemJson['item']['equipment_id'],
+              'inventory_id': itemJson['item']['inventory_id'],
               'shareable_item_information': {
                 'base_item_id': itemJson['item']['shareable_item_information']
                     ['base_item_id'],
@@ -359,6 +360,7 @@ class InventoryCustodianSlip extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
+              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -636,7 +638,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
               },
             }
           : {
-              'equipment_id': itemJson['item']['equipment_id'],
+              'inventory_id': itemJson['item']['inventory_id'],
               'shareable_item_information': {
                 'base_item_id': itemJson['item']['shareable_item_information']
                     ['base_item_id'],
@@ -691,6 +693,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
+              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -951,7 +954,7 @@ class RequisitionAndIssueSlip extends Issuance {
               },
             }
           : {
-              'equipment_id': itemJson['item']['equipment_id'],
+              'inventory_id': itemJson['item']['inventory_id'],
               'shareable_item_information': {
                 'base_item_id': itemJson['item']['shareable_item_information']
                     ['base_item_id'],
@@ -1006,6 +1009,7 @@ class RequisitionAndIssueSlip extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
+              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -1199,10 +1203,3 @@ class RequisitionAndIssueSlip extends Issuance {
     };
   }
 }
-
-// class SPC {
-//   final Entity? entity;
-//   final FundCluster? fundCluster;
-//   final List<Issuance> issuances;
-//   final
-// }
