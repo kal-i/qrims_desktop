@@ -461,6 +461,7 @@ class ShareableItemInformationModel {
     required this.encryptedId,
     required this.qrCodeImageData,
     this.acquiredDate,
+    this.fundCluster,
   });
 
   final String id;
@@ -473,12 +474,20 @@ class ShareableItemInformationModel {
   final String encryptedId;
   final String qrCodeImageData;
   final DateTime? acquiredDate;
+  final FundCluster? fundCluster;
 
   factory ShareableItemInformationModel.fromJson(Map<String, dynamic> json) {
     final unit = Unit.values.firstWhere(
       (e) => e.toString().split('.').last == json['unit'] as String,
       orElse: () => Unit.undetermined,
     );
+
+    final fundCluster = (json['fund_cluster'] as String?) != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == json['fund_cluster'],
+            orElse: () => FundCluster.unknown,
+          )
+        : null;
 
     final shareableItemInformationModel = ShareableItemInformationModel(
       id: json['base_item_id'] as String,
@@ -497,6 +506,7 @@ class ShareableItemInformationModel {
               ? DateTime.parse(json['acquired_date'] as String)
               : json['acquired_date'] as DateTime
           : null,
+      fundCluster: fundCluster,
     );
 
     print('Shareable Item Information Obj converted');
@@ -516,6 +526,7 @@ class ShareableItemInformationModel {
       'encrypted_id': encryptedId,
       'qr_code_image_data': qrCodeImageData,
       'acquired_date': acquiredDate?.toIso8601String(),
+      'fund_cluster': fundCluster.toString().split('.').last,
     };
   }
 }
@@ -569,6 +580,7 @@ class Supply extends BaseItemModel {
       'encrypted_id': json['encrypted_id'],
       'qr_code_image_data': json['qr_code_image_data'],
       'acquired_date': json['acquired_date'],
+      'fund_cluster': json['fund_cluster'],
     });
 
     return Supply(
@@ -598,7 +610,6 @@ class InventoryItem extends BaseItemModel {
     this.assetClassification,
     this.assetSubClass,
     this.estimatedUsefulLife = 1,
-    this.fundCluster,
   });
 
   final int id;
@@ -608,7 +619,6 @@ class InventoryItem extends BaseItemModel {
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final int? estimatedUsefulLife;
-  final FundCluster? fundCluster;
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     print('received json data by equipment model: $json');
@@ -646,6 +656,7 @@ class InventoryItem extends BaseItemModel {
       'encrypted_id': json['encrypted_id'],
       'qr_code_image_data': json['qr_code_image_data'],
       'acquired_date': json['acquired_date'],
+      'fund_cluster': json['fund_cluster'],
     });
 
     final manufacturerBrand =
@@ -667,13 +678,6 @@ class InventoryItem extends BaseItemModel {
           })
         : null;
 
-    final fundCluster = (json['fund_cluster'] as String?) != null
-        ? FundCluster.values.firstWhere(
-            (e) => e.toString().split('.').last == json['fund_cluster'],
-            orElse: () => FundCluster.unknown,
-          )
-        : null;
-
     print('almost done processing the equipment model...');
 
     return InventoryItem(
@@ -686,7 +690,6 @@ class InventoryItem extends BaseItemModel {
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
       estimatedUsefulLife: json['estimated_useful_life'] as int?,
-      fundCluster: fundCluster,
     );
   }
 
@@ -701,7 +704,6 @@ class InventoryItem extends BaseItemModel {
       'asset_classification': assetClassification?.toString().split('.').last,
       'asset_sub_class': assetSubClass?.toString().split('.').last,
       'estimated_useful_life': estimatedUsefulLife,
-      'fund_cluster': fundCluster?.toString().split('.').last,
     };
   }
 }

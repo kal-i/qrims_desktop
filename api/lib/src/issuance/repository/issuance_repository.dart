@@ -252,14 +252,15 @@ class IssuanceRepository {
         pn.name as product_name,
         pd.description as product_description,
         s.id as supply_id,
-        e.id as equipment_id,
-        e.manufacturer_id,
-        e.brand_id,
-        e.model_id,
-        e.serial_no,
-        e.asset_classification,
-        e.asset_sub_class,
-        e.estimated_useful_life,
+        inv.id as inventory_id,
+        inv.manufacturer_id,
+        inv.brand_id,
+        inv.model_id,
+        inv.serial_no,
+        inv.asset_classification,
+        inv.asset_sub_class,
+        inv.estimated_useful_life,
+        inv.fund_cluster,
         mnf.name as manufacturer_name,
         brnd.name as brand_name,
         md.model_name
@@ -274,13 +275,13 @@ class IssuanceRepository {
       LEFT JOIN
         Supplies s ON i.id = s.base_item_id
       LEFT JOIN
-        Equipment e ON i.id = e.base_item_id
+        InventoryItems inv ON i.id = inv.base_item_id
       LEFT JOIN
-        Manufacturers mnf ON e.manufacturer_id =  mnf.id
+        Manufacturers mnf ON inv.manufacturer_id =  mnf.id
       LEFT JOIN
-        Brands brnd ON e.brand_id = brnd.id
+        Brands brnd ON inv.brand_id = brnd.id
       LEFT JOIN
-        Models md ON e.model_id = md.id
+        Models md ON inv.model_id = md.id
       WHERE 
         iss.issuance_id = @issuance_id
       '''),
@@ -310,8 +311,8 @@ class IssuanceRepository {
         };
         item = Supply.fromJson(supplyMap).toJson();
       } else if (row[16] != null) {
-        final equipmentMap = {
-          'equipment_id': row[16],
+        final inventoryMap = {
+          'inventory_id': row[16],
           'base_item_id': row[3],
           'product_name_id': row[4],
           'product_description_id': row[5],
@@ -331,11 +332,12 @@ class IssuanceRepository {
           'asset_classification': row[21],
           'asset_sub_class': row[22],
           'estimated_useful_life': row[23],
-          'manufacturer_name': row[24],
-          'brand_name': row[25],
-          'model_name': row[26],
+          'fund_cluster': row[24],
+          'manufacturer_name': row[25],
+          'brand_name': row[26],
+          'model_name': row[27],
         };
-        item = Equipment.fromJson(equipmentMap).toJson();
+        item = InventoryItem.fromJson(inventoryMap).toJson();
       }
 
       print('issuance item result: $issuanceItemsResult');
