@@ -365,7 +365,8 @@ class ItemRepository {
           quantity, unit_cost, encrypted_id, qr_code_image_data, acquired_date
         ) VALUES (
           @id, @product_name_id, @product_description_id, @specification, @unit,
-          @quantity, @unit_cost, @encrypted_id, @qr_code_image_data, @acquired_date
+          @quantity, @unit_cost, @encrypted_id, @qr_code_image_data, 
+          @acquired_date, @fund_cluster
         );
         ''',
         ),
@@ -380,6 +381,7 @@ class ItemRepository {
           'encrypted_id': encryptedId,
           'qr_code_image_data': qrCodeImageData,
           'acquired_date': acquiredDate ?? DateTime.now().toIso8601String(),
+          'fund_cluster': fundCluster.toString().split('.').last,
         },
       );
 
@@ -502,7 +504,6 @@ class ItemRepository {
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     int? estimatedUsefulLife,
-    FundCluster? fundCluster,
   }) async {
     try {
       String? manufacturerId;
@@ -570,11 +571,11 @@ class ItemRepository {
         Sql.named(
           '''
         INSERT INTO InventoryItems (
-          base_item_id, manufacturer_id, brand_id, model_id, serial_no, asset_classification,
-          asset_sub_class, estimated_useful_life
+          base_item_id, manufacturer_id, brand_id, model_id, serial_no, 
+          asset_classification, asset_sub_class, estimated_useful_life
         ) VALUES (
           @base_item_id, @manufacturer_id, @brand_id, @model_id, @serial_no, 
-          @asset_classification, @asset_sub_class, @estimated_useful_life, @fund_cluster
+          @asset_classification, @asset_sub_class, @estimated_useful_life
         );
         ''',
         ),
@@ -588,7 +589,6 @@ class ItemRepository {
               assetClassification.toString().split('.').last,
           'asset_sub_class': assetSubClass.toString().split('.').last,
           'estimated_useful_life': estimatedUsefulLife,
-          'fund_cluster': fundCluster.toString().split('.').last,
         },
       );
 
@@ -1112,7 +1112,6 @@ class ItemRepository {
           inv.asset_classification,
           inv.asset_sub_class,
           inv.estimated_useful_life,
-          inv.fund_cluster,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
           md.model_name
@@ -1143,9 +1142,9 @@ class ItemRepository {
 
     final row = result.first;
 
-    if (row[12] != null) {
+    if (row[13] != null) {
       final supplyMap = {
-        'supply_id': row[12],
+        'supply_id': row[13],
         'base_item_id': row[0],
         'product_name_id': row[1],
         'product_description_id': row[2],
@@ -1156,11 +1155,12 @@ class ItemRepository {
         'qr_code_image_data': row[7],
         'unit_cost': row[8],
         'acquired_date': row[9],
-        'product_name': row[10],
-        'product_description': row[11],
+        'fund_cluster': row[10],
+        'product_name': row[11],
+        'product_description': row[12],
       };
       return Supply.fromJson(supplyMap);
-    } else if (row[13] != null) {
+    } else if (row[14] != null) {
       final inventoryMap = {
         'inventory_id': row[13],
         'base_item_id': row[0],
@@ -1173,16 +1173,16 @@ class ItemRepository {
         'qr_code_image_data': row[7],
         'unit_cost': row[8],
         'acquired_date': row[9],
-        'product_name': row[10],
-        'product_description': row[11],
-        'manufacturer_id': row[14],
-        'brand_id': row[15],
-        'model_id': row[16],
-        'serial_no': row[17],
-        'asset_classification': row[18],
-        'asset_sub_class': row[19],
-        'estimated_useful_life': row[20],
-        'fund_cluster': row[21],
+        'fund_cluster': row[10],
+        'product_name': row[11],
+        'product_description': row[12],
+        'manufacturer_id': row[15],
+        'brand_id': row[16],
+        'model_id': row[17],
+        'serial_no': row[18],
+        'asset_classification': row[19],
+        'asset_sub_class': row[20],
+        'estimated_useful_life': row[21],
         'manufacturer_name': row[22],
         'brand_name': row[23],
         'model_name': row[24],
@@ -1425,7 +1425,6 @@ class ItemRepository {
           inv.asset_classification,
           inv.asset_sub_class,
           inv.estimated_useful_life,
-          inv.fund_cluster,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
           md.model_name
@@ -1522,9 +1521,9 @@ class ItemRepository {
       print('raw res: $results');
 
       for (final row in results) {
-        if (row[12] != null) {
+        if (row[13] != null) {
           final supplyMap = {
-            'supply_id': row[12],
+            'supply_id': row[13],
             'base_item_id': row[0],
             'product_name_id': row[1],
             'product_description_id': row[2],
@@ -1535,13 +1534,14 @@ class ItemRepository {
             'qr_code_image_data': row[7],
             'unit_cost': row[8],
             'acquired_date': row[9],
-            'product_name': row[10],
-            'product_description': row[11],
+            'fund_cluster': row[10],
+            'product_name': row[11],
+            'product_description': row[12],
           };
           itemList.add(Supply.fromJson(supplyMap));
-        } else if (row[13] != null) {
+        } else if (row[14] != null) {
           final inventoryMap = {
-            'inventory_id': row[13],
+            'inventory_id': row[14],
             'base_item_id': row[0],
             'product_name_id': row[1],
             'product_description_id': row[2],
@@ -1552,16 +1552,16 @@ class ItemRepository {
             'qr_code_image_data': row[7],
             'unit_cost': row[8],
             'acquired_date': row[9],
-            'product_name': row[10],
-            'product_description': row[11],
-            'manufacturer_id': row[14],
-            'brand_id': row[15],
-            'model_id': row[16],
-            'serial_no': row[17],
-            'asset_classification': row[18],
-            'asset_sub_class': row[19],
-            'estimated_useful_life': row[20],
-            'fund_cluster': row[21],
+            'fund_cluster': row[10],
+            'product_name': row[11],
+            'product_description': row[12],
+            'manufacturer_id': row[15],
+            'brand_id': row[16],
+            'model_id': row[17],
+            'serial_no': row[18],
+            'asset_classification': row[19],
+            'asset_sub_class': row[20],
+            'estimated_useful_life': row[21],
             'manufacturer_name': row[22],
             'brand_name': row[23],
             'model_name': row[24],
@@ -1597,7 +1597,6 @@ class ItemRepository {
             inv.asset_classification,
             inv.asset_sub_class,
             inv.estimated_useful_life,
-            inv.fund_cluster,
             mnf.name as manufacturer_name,
             brnd.name as brand_name,
             md.model_name
@@ -1628,9 +1627,9 @@ class ItemRepository {
 
       final row = result.first;
 
-      if (row[12] != null) {
+      if (row[13] != null) {
         final supplyMap = {
-          'supply_id': row[12],
+          'supply_id': row[13],
           'base_item_id': row[0],
           'product_name_id': row[1],
           'product_description_id': row[2],
@@ -1641,13 +1640,14 @@ class ItemRepository {
           'qr_code_image_data': row[7],
           'unit_cost': row[8],
           'acquired_date': row[9],
-          'product_name': row[10],
-          'product_description': row[11],
+          'fund_cluster': row[10],
+          'product_name': row[11],
+          'product_description': row[12],
         };
         return Supply.fromJson(supplyMap);
-      } else if (row[13] != null) {
+      } else if (row[14] != null) {
         final inventoryMap = {
-          'inventory_id': row[13],
+          'inventory_id': row[14],
           'base_item_id': row[0],
           'product_name_id': row[1],
           'product_description_id': row[2],
@@ -1658,16 +1658,16 @@ class ItemRepository {
           'qr_code_image_data': row[7],
           'unit_cost': row[8],
           'acquired_date': row[9],
-          'product_name': row[10],
-          'product_description': row[11],
-          'manufacturer_id': row[14],
-          'brand_id': row[15],
-          'model_id': row[16],
-          'serial_no': row[17],
-          'asset_classification': row[18],
-          'asset_sub_class': row[19],
-          'estimated_useful_life': row[20],
-          'fund_cluster': row[21],
+          'fund_cluster': row[10],
+          'product_name': row[11],
+          'product_description': row[12],
+          'manufacturer_id': row[15],
+          'brand_id': row[16],
+          'model_id': row[17],
+          'serial_no': row[18],
+          'asset_classification': row[19],
+          'asset_sub_class': row[20],
+          'estimated_useful_life': row[21],
           'manufacturer_name': row[22],
           'brand_name': row[23],
           'model_name': row[24],
