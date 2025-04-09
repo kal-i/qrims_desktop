@@ -33,7 +33,7 @@ Future<Response> _getItemById(
         body: {
           'item': item is Supply
               ? item.toJson()
-              : item is Equipment
+              : item is InventoryItem
                   ? item.toJson()
                   : null,
         },
