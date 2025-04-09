@@ -260,7 +260,6 @@ class IssuanceRepository {
         inv.asset_classification,
         inv.asset_sub_class,
         inv.estimated_useful_life,
-        inv.fund_cluster,
         mnf.name as manufacturer_name,
         brnd.name as brand_name,
         md.model_name
@@ -293,9 +292,9 @@ class IssuanceRepository {
     for (final row in issuanceItemsResult) {
       Map<String, dynamic> item = {};
 
-      if (row[15] != null) {
+      if (row[16] != null) {
         final supplyMap = {
-          'supply_id': row[15],
+          'supply_id': row[16],
           'base_item_id': row[3],
           'product_name_id': row[4],
           'product_description_id': row[5],
@@ -306,13 +305,14 @@ class IssuanceRepository {
           'encrypted_id': row[9],
           'qr_code_image_data': row[10],
           'acquired_date': row[12],
-          'product_name': row[13],
-          'product_description': row[14],
+          'fund_cluster': row[13],
+          'product_name': row[14],
+          'product_description': row[15],
         };
         item = Supply.fromJson(supplyMap).toJson();
-      } else if (row[16] != null) {
+      } else if (row[17] != null) {
         final inventoryMap = {
-          'inventory_id': row[16],
+          'inventory_id': row[17],
           'base_item_id': row[3],
           'product_name_id': row[4],
           'product_description_id': row[5],
@@ -323,16 +323,16 @@ class IssuanceRepository {
           'encrypted_id': row[9],
           'qr_code_image_data': row[10],
           'acquired_date': row[12],
-          'product_name': row[13],
-          'product_description': row[14],
-          'manufacturer_id': row[17],
-          'brand_id': row[18],
-          'model_id': row[19],
-          'serial_no': row[20],
-          'asset_classification': row[21],
-          'asset_sub_class': row[22],
-          'estimated_useful_life': row[23],
-          'fund_cluster': row[24],
+          'fund_cluster': row[13],
+          'product_name': row[14],
+          'product_description': row[15],
+          'manufacturer_id': row[18],
+          'brand_id': row[19],
+          'model_id': row[20],
+          'serial_no': row[21],
+          'asset_classification': row[22],
+          'asset_sub_class': row[23],
+          'estimated_useful_life': row[24],
           'manufacturer_name': row[25],
           'brand_name': row[26],
           'model_name': row[27],
