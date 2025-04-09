@@ -111,6 +111,8 @@ class IssuanceItem {
                   ['qr_code_image_data'],
               'acquired_date': itemJson['shareable_item_information']
                   ['acquired_date'],
+              'fund_cluster': itemJson['shareable_item_information']
+                  ['fund_cluster'],
             }
           : {
               'inventory_id': itemJson['inventory_id'] as int?,
@@ -135,6 +137,8 @@ class IssuanceItem {
                   ['qr_code_image_data'],
               'acquired_date': itemJson['shareable_item_information']
                   ['acquired_date'],
+              'fund_cluster': itemJson['shareable_item_information']
+                  ['fund_cluster'],
               'manufacturer_id': itemJson['manufacturer_brand']['manufacturer']
                   ['manufacturer_id'] as String?,
               'manufacturer_name': itemJson['manufacturer_brand']
@@ -151,7 +155,6 @@ class IssuanceItem {
               'asset_sub_class': itemJson['asset_sub_class'] as String?,
               'estimated_useful_life':
                   itemJson['estimated_useful_life'] as int?,
-              'fund_cluster': itemJson['fund_cluster'],
             };
 
       print('item data: $itemData');
@@ -288,6 +291,8 @@ class InventoryCustodianSlip extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -322,6 +327,8 @@ class InventoryCustodianSlip extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -360,7 +367,6 @@ class InventoryCustodianSlip extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
-              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -621,6 +627,8 @@ class PropertyAcknowledgementReceipt extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -655,6 +663,8 @@ class PropertyAcknowledgementReceipt extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -693,7 +703,6 @@ class PropertyAcknowledgementReceipt extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
-              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -937,6 +946,8 @@ class RequisitionAndIssueSlip extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -971,6 +982,8 @@ class RequisitionAndIssueSlip extends Issuance {
                     ['shareable_item_information']['qr_code_image_data'],
                 'acquired_date': itemJson['item']['shareable_item_information']
                     ['acquired_date'],
+                'fund_cluster': itemJson['item']['shareable_item_information']
+                    ['fund_cluster'],
               },
               'product_stock': {
                 'product_name': {
@@ -1009,7 +1022,6 @@ class RequisitionAndIssueSlip extends Issuance {
               'asset_sub_class': itemJson['item']['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
                   ['estimated_useful_life'],
-              'fund_cluster': itemJson['item']['fund_cluster'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
