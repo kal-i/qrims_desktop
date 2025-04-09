@@ -497,10 +497,10 @@ class ItemRepository {
   Future<String> registerInventoryItem({
     required String baseItemModelId,
     required int productNameId,
-    required String manufacturerName,
-    required String brandName,
-    required String modelName,
-    required String serialNo,
+    required String? manufacturerName,
+    required String? brandName,
+    required String? modelName,
+    required String? serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     int? estimatedUsefulLife,
@@ -510,62 +510,67 @@ class ItemRepository {
       String? brandId;
       String? modelId;
 
-      /// check if manufacturer exists
-      final manufacturerResult = await checkManufacturerIfExist(
-        manufacturerName: manufacturerName,
-      );
-
-      if (manufacturerResult != null) {
-        manufacturerId = manufacturerResult;
-      } else {
-        manufacturerId = await registerManufacturer(
+      if (manufacturerName != null && manufacturerName.isNotEmpty) {
+        /// check if manufacturer exists
+        final manufacturerResult = await checkManufacturerIfExist(
           manufacturerName: manufacturerName,
         );
-      }
-      print('manufacturer id: $manufacturerId');
 
-      /// check if brand exists
-      final brandResult = await checkBrandIfExist(
-        brandName: brandName,
-      );
-      if (brandResult != null) {
-        brandId = brandResult;
-      } else {
-        brandId = await registerBrand(
+        manufacturerId = manufacturerResult ??
+            await registerManufacturer(
+              manufacturerName: manufacturerName,
+            );
+
+        print('manufacturer id: $manufacturerId');
+      }
+
+      if (brandName != null && brandName.isNotEmpty) {
+        /// check if brand exists
+        final brandResult = await checkBrandIfExist(
           brandName: brandName,
         );
+
+        brandId = brandResult ??
+            await registerBrand(
+              brandName: brandName,
+            );
+
+        print('brand id: $brandId');
       }
-      print('brand id: $brandId');
 
-      final manufacturerBrandResult = await checkManufacturerBrandIfExist(
-        manufacturerId: manufacturerId,
-        brandId: brandId,
-      );
-
-      if (manufacturerBrandResult == 0) {
-        await registerManufacturerBrand(
+      if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
+          (brandId != null && brandId.isNotEmpty)) {
+        final manufacturerBrandResult = await checkManufacturerBrandIfExist(
           manufacturerId: manufacturerId,
           brandId: brandId,
         );
+
+        if (manufacturerBrandResult == 0) {
+          await registerManufacturerBrand(
+            manufacturerId: manufacturerId,
+            brandId: brandId,
+          );
+        }
       }
 
-      /// check if model exists
-      final modelResult = await checkModelIfExist(
-        productNameId: productNameId,
-        brandId: brandId,
-        modelName: modelName,
-      );
-
-      if (modelResult != null) {
-        modelId = modelResult;
-      } else {
-        modelId = await registerModel(
+      if ((brandId != null && brandId.isNotEmpty) &&
+          (modelName != null && modelName.isNotEmpty)) {
+        /// check if model exists
+        final modelResult = await checkModelIfExist(
           productNameId: productNameId,
           brandId: brandId,
           modelName: modelName,
         );
+
+        modelId = modelResult ??
+            await registerModel(
+              productNameId: productNameId,
+              brandId: brandId,
+              modelName: modelName,
+            );
+
+        print('model id: $modelId');
       }
-      print('model id: $modelId');
 
       await _conn.execute(
         Sql.named(
