@@ -25,14 +25,14 @@ Future<Response> _getSummaryInformation(
     final weeklyTrends = await itemRepository.getWeeklyTrendsWithPercentage();
     final stockLevels = await itemRepository.getInventoryStockLevels();
     final suppliesCount = await itemRepository.getSuppliesCount();
-    final equipmentCount = await itemRepository.getEquipmentCount();
+    final inventoryCount = await itemRepository.getInventoryItemCount();
 
     return Response.json(
       body: {
         'weekly_trends': weeklyTrends,
         'stock_levels': stockLevels,
         'supplies_count': suppliesCount,
-        'equipment_count': equipmentCount,
+        'inventory_count': inventoryCount,
       },
     );
   } catch (e) {
