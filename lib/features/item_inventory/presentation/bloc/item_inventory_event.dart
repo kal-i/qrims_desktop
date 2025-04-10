@@ -48,6 +48,7 @@ final class FetchItems extends ItemInventoryEvent {
 
 final class SupplyItemRegister extends ItemInventoryEvent {
   const SupplyItemRegister({
+    this.fundCluster,
     required this.itemName,
     required this.description,
     this.specification,
@@ -57,6 +58,7 @@ final class SupplyItemRegister extends ItemInventoryEvent {
     this.acquiredDate,
   });
 
+  final FundCluster? fundCluster;
   final String itemName;
   final String description;
   final String? specification;
@@ -67,6 +69,7 @@ final class SupplyItemRegister extends ItemInventoryEvent {
 
   @override
   List<Object?> get props => [
+        fundCluster,
         itemName,
         description,
         specification,
@@ -77,18 +80,18 @@ final class SupplyItemRegister extends ItemInventoryEvent {
       ];
 }
 
-final class EquipmentItemRegister extends ItemInventoryEvent {
-  const EquipmentItemRegister({
+final class InventoryItemRegister extends ItemInventoryEvent {
+  const InventoryItemRegister({
     this.fundCluster,
     required this.itemName,
     required this.description,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
-    required this.manufacturerName,
-    required this.brandName,
-    required this.modelName,
-    required this.serialNo,
+    this.manufacturerName,
+    this.brandName,
+    this.modelName,
+    this.serialNo,
     this.assetClassification,
     this.assetSubClass,
     required this.unitCost,
@@ -99,13 +102,13 @@ final class EquipmentItemRegister extends ItemInventoryEvent {
   final FundCluster? fundCluster;
   final String itemName;
   final String description;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
-  final String manufacturerName;
-  final String brandName;
-  final String modelName;
-  final String serialNo;
+  final String? manufacturerName;
+  final String? brandName;
+  final String? modelName;
+  final String? serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final double unitCost;
@@ -114,6 +117,7 @@ final class EquipmentItemRegister extends ItemInventoryEvent {
 
   @override
   List<Object?> get props => [
+        fundCluster,
         itemName,
         description,
         manufacturerName,

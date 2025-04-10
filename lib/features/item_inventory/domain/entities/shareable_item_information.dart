@@ -1,3 +1,4 @@
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 
 class ShareableItemInformationEntity {
@@ -12,6 +13,7 @@ class ShareableItemInformationEntity {
     required this.encryptedId,
     required this.qrCodeImageData,
     this.acquiredDate,
+    this.fundCluster,
   });
 
   final String id;
@@ -24,4 +26,5 @@ class ShareableItemInformationEntity {
   final String encryptedId;
   final String qrCodeImageData;
   final DateTime? acquiredDate;
+  final FundCluster? fundCluster;
 }

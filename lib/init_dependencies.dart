@@ -65,7 +65,7 @@ import 'features/item_inventory/data/data_sources/remote/item_inventory_remote_d
 import 'features/item_inventory/data/data_sources/remote/item_inventory_remote_date_source.dart';
 import 'features/item_inventory/data/repository/item_inventory_repository_impl.dart';
 import 'features/item_inventory/domain/repository/item_inventory_repository.dart';
-import 'features/item_inventory/domain/usecases/register_equipment_item.dart';
+import 'features/item_inventory/domain/usecases/register_inventory_item.dart';
 import 'features/item_inventory/domain/usecases/register_supply_item.dart';
 import 'features/item_inventory/domain/usecases/get_item_by_id.dart';
 import 'features/item_inventory/domain/usecases/get_items.dart';

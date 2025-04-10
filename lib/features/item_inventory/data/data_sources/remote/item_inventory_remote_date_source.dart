@@ -20,6 +20,7 @@ abstract interface class ItemInventoryRemoteDateSource {
   });
 
   Future<BaseItemModel> registerSupplyItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
@@ -29,17 +30,17 @@ abstract interface class ItemInventoryRemoteDateSource {
     DateTime? acquiredDate,
   });
 
-  Future<List<BaseItemModel>> registerEquipmentItem({
+  Future<List<BaseItemModel>> registerInventoryItem({
     FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
     required Unit unit,
     required int quantity,
-    required String manufacturerName,
-    required String brandName,
-    required String modelName,
-    required String serialNo,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
+    String? serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required double unitCost,

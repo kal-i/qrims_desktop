@@ -6,7 +6,7 @@ class PaginatedItemResultModel extends PaginatedItemResultEntity {
     required super.items,
     required super.totalItemCount,
     required super.suppliesCount,
-    required super.equipmentCount,
+    required super.inventoryCount,
     required super.outOfStockCount,
   });
 
@@ -19,7 +19,7 @@ class PaginatedItemResultModel extends PaginatedItemResultEntity {
           .toList(),
       totalItemCount: json['total_item_count'],
       suppliesCount: json['supplies_count'] ?? 0,
-      equipmentCount: json['equipment_count'] ?? 0,
+      inventoryCount: json['inventory_count'] ?? 0,
       outOfStockCount: json['out_of_stock_count'] ?? 0,
     );
   }

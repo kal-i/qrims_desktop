@@ -28,7 +28,7 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../domain/entities/equipment.dart';
+import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/supply.dart';
 import '../bloc/item_inventory_bloc.dart';
 import '../components/filter_item_modal.dart';
@@ -54,8 +54,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
 
   final ValueNotifier<int> _totalItemsCount = ValueNotifier(0);
-  final ValueNotifier<int> _inStockCount = ValueNotifier(0);
-  final ValueNotifier<int> _lowStockCount = ValueNotifier(0);
+  final ValueNotifier<int> _suppliesCount = ValueNotifier(0);
+  final ValueNotifier<int> _inventoryCount = ValueNotifier(0);
   final ValueNotifier<int> _outOfStockCount = ValueNotifier(0);
 
   final _searchController = TextEditingController();
@@ -251,12 +251,12 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         ),
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _inStockCount,
-              builder: (context, inStockCount, child) {
+              valueListenable: _suppliesCount,
+              builder: (context, suppliesCount, child) {
                 return KPICard(
                   icon: HugeIcons.strokeRoundedPackageDelivered,
                   title: 'Supply Items',
-                  data: inStockCount.toString(),
+                  data: suppliesCount.toString(),
                   // baseColor: Colors.transparent,
                 );
               }),
@@ -266,12 +266,12 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         ),
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _lowStockCount,
-              builder: (context, lowStockCount, child) {
+              valueListenable: _inventoryCount,
+              builder: (context, inventoryCount, child) {
                 return KPICard(
                   icon: HugeIcons.strokeRoundedPackageProcess,
-                  title: 'Equipment Items',
-                  data: lowStockCount.toString(),
+                  title: 'Inventory Items',
+                  data: inventoryCount.toString(),
                   // baseColor: Colors.transparent,
                 );
               }),
@@ -323,7 +323,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     final Map<String, String> filterMapping = {
       'View All': '',
       'Supply': 'supply',
-      'Equipment': 'equipment',
+      'Inventory': 'inventory',
       'Out': 'out',
     };
     return FilterTableRow(
@@ -400,7 +400,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
 
         // just to reset the loading state
         if (state is SupplyItemRegistered ||
-            state is EquipmentItemRegistered ||
+            state is InventoryItemRegistered ||
             state is ItemUpdated) {
           _isLoading = false;
           _refreshItemList();
@@ -410,11 +410,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
           _isLoading = false;
           _totalRecords = state.totalItemCount;
           print(_totalRecords);
-          _inStockCount.value = state.inStockCount;
-          _lowStockCount.value = state.lowStockCount;
+          _suppliesCount.value = state.suppliesCount;
+          _inventoryCount.value = state.inventoryCount;
           _outOfStockCount.value = state.outOfStockCount;
-          _totalItemsCount.value = _inStockCount.value +
-              _lowStockCount.value +
+          _totalItemsCount.value = _suppliesCount.value +
+              _inventoryCount.value +
               _outOfStockCount.value;
           _tableRows.clear();
           _tableRows.addAll(
@@ -531,17 +531,17 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                             }
                           }
 
-                          if (itemObj is EquipmentEntity) {
+                          if (itemObj is InventoryItemEntity) {
                             if (action.contains('View')) {
                               extras['is_update'] = false;
                               path = RoutingConstants
-                                  .nestedViewEquipmentItemRoutePath;
+                                  .nestedViewInventoryItemRoutePath;
                             }
 
                             if (action.contains('Edit')) {
                               extras['is_update'] = true;
                               path = RoutingConstants
-                                  .nestedUpdateEquipmentItemViewRoutePath;
+                                  .nestedUpdateInventoryItemViewRoutePath;
                             }
                           }
 
@@ -586,22 +586,6 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
           ],
         );
       },
-    );
-  }
-
-  StatusStyle _quantityStatusStyler({required int quantity}) {
-    if (quantity > 5) {
-      return StatusStyle.green(label: 'In Stock');
-    } else if (quantity > 0) {
-      return StatusStyle.yellow(label: 'Low');
-    } else {
-      return StatusStyle.red(label: 'Out');
-    }
-  }
-
-  Widget _buildStatusHighlighter(int quantity) {
-    return HighlightStatusContainer(
-      statusStyle: _quantityStatusStyler(quantity: quantity),
     );
   }
 }

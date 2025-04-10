@@ -4,19 +4,19 @@ import 'weekly_item_trend.dart';
 class InventorySummaryEntity {
   const InventorySummaryEntity({
     required this.supplyWeeklyTrendEntities,
-    required this.equipmentWeeklyTrendEntities,
+    required this.inventoryWeeklyTrendEntities,
     required this.inventoryStocks,
     required this.supplyPercentageChange,
-    required this.equipmentPercentageChange,
+    required this.inventoryPercentageChange,
     required this.suppliesCount,
-    required this.equipmentCount,
+    required this.inventoryCount,
   });
 
   final List<WeeklyItemTrendEntity> supplyWeeklyTrendEntities;
-  final List<WeeklyItemTrendEntity> equipmentWeeklyTrendEntities;
+  final List<WeeklyItemTrendEntity> inventoryWeeklyTrendEntities;
   final List<InventoryStockEntity> inventoryStocks;
   final double supplyPercentageChange;
-  final double equipmentPercentageChange;
+  final double inventoryPercentageChange;
   final int suppliesCount;
-  final int equipmentCount;
+  final int inventoryCount;
 }

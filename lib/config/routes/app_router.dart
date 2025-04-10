@@ -15,7 +15,7 @@ import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/set_new_password_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
 import '../../features/item_inventory/presentation/views/item_inventory_view.dart';
-import '../../features/item_inventory/presentation/views/reusable_equipment_item_view.dart';
+import '../../features/item_inventory/presentation/views/reusable_inventory_item_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_supply_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
@@ -150,8 +150,8 @@ class AppRoutingConfig {
                 },
               ),
               GoRoute(
-                name: RoutingConstants.viewEquipmentItemRouteName,
-                path: RoutingConstants.viewEquipmentItemRoutePath,
+                name: RoutingConstants.viewInventoryItemRouteName,
+                path: RoutingConstants.viewInventoryItemRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -159,7 +159,7 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableEquipmentItemView(
+                    child: ReusableInventoryItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -184,8 +184,8 @@ class AppRoutingConfig {
                 },
               ),
               GoRoute(
-                name: RoutingConstants.registerEquipmentItemViewRouteName,
-                path: RoutingConstants.registerEquipmentItemViewRoutePath,
+                name: RoutingConstants.registerInventoryItemViewRouteName,
+                path: RoutingConstants.registerInventoryItemViewRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -193,7 +193,7 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableEquipmentItemView(
+                    child: ReusableInventoryItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -218,8 +218,8 @@ class AppRoutingConfig {
                 },
               ),
               GoRoute(
-                name: RoutingConstants.updateEquipmentItemViewRouteName,
-                path: RoutingConstants.updateEquipmentItemViewRoutePath,
+                name: RoutingConstants.updateInventoryItemViewRouteName,
+                path: RoutingConstants.updateInventoryItemViewRoutePath,
                 pageBuilder: (context, state) {
                   final Map<String, dynamic> extras =
                       state.extra as Map<String, dynamic>;
@@ -227,7 +227,7 @@ class AppRoutingConfig {
                   final itemId = extras['item_id'] as String?;
 
                   return MaterialPage(
-                    child: ReusableEquipmentItemView(
+                    child: ReusableInventoryItemView(
                       isUpdate: isUpdate,
                       itemId: itemId,
                     ),
@@ -433,13 +433,13 @@ class RouteChangeManager {
       '/itemInventory': 'Inventory Management',
       '/itemInventory/viewItem': 'View Item Information',
       '/itemInventory/viewSupplyItem': 'View Supply Item Information',
-      '/itemInventory/viewEquipmentItem': 'View Equipment Item Information',
+      '/itemInventory/viewInventoryItem': 'View Inventory Item Information',
       '/itemInventory/registerItem': 'Register Item',
       '/itemInventory/registerSupplyItem': 'Register Supply Item',
-      '/itemInventory/registerEquipmentItem': 'Register Equipment Item',
+      '/itemInventory/registerInventoryItem': 'Register Inventory Item',
       '/itemInventory/updateItem': 'Update Item',
       '/itemInventory/updateSupplyItem': 'Update Supply Item',
-      '/itemInventory/updateEquipmentItem': 'Update Equipment Item',
+      '/itemInventory/updateInventoryItem': 'Update Inventory Item',
       '/purchaseRequest': 'Purchase Request',
       '/purchaseRequest/viewPurchaseRequest': 'View Purchase Request',
       '/purchaseRequest/registerPurchaseRequest': 'Register Purchase Request',

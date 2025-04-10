@@ -17,9 +17,9 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/utils/capitalizer.dart';
-import '../../../item_inventory/data/models/equipment.dart';
+import '../../../item_inventory/data/models/inventory_item.dart';
 import '../../../item_inventory/data/models/supply.dart';
-import '../../../item_inventory/domain/entities/equipment.dart';
+import '../../../item_inventory/domain/entities/inventory_item.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../../item_inventory/presentation/bloc/item_inventory_bloc.dart';
 
@@ -202,7 +202,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
 
         // just to reset the loading state
         if (state is SupplyItemRegistered ||
-            state is EquipmentItemRegistered ||
+            state is InventoryItemRegistered ||
             state is ItemUpdated) {
           _isLoading = false;
           _refreshItemList();
@@ -299,7 +299,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                         _preselectedItems.add(
                           itemObj is SupplyEntity
                               ? (itemObj as SupplyModel).toJson()
-                              : (itemObj as EquipmentModel).toJson(),
+                              : (itemObj as InventoryItemModel).toJson(),
                         );
 
                         print('selected items to add: $_preselectedItems');
@@ -328,17 +328,17 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                             }
                           }
 
-                          if (itemObj is EquipmentEntity) {
+                          if (itemObj is InventoryItemEntity) {
                             if (action.contains('View')) {
                               extras['is_update'] = false;
                               path = RoutingConstants
-                                  .nestedViewEquipmentItemRoutePath;
+                                  .nestedViewInventoryItemRoutePath;
                             }
 
                             if (action.contains('Edit')) {
                               extras['is_update'] = true;
                               path = RoutingConstants
-                                  .nestedUpdateEquipmentItemViewRoutePath;
+                                  .nestedUpdateInventoryItemViewRoutePath;
                             }
                           }
 

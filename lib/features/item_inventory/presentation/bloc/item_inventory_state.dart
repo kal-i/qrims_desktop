@@ -15,15 +15,15 @@ final class ItemsLoaded extends ItemInventoryState {
   const ItemsLoaded({
     required this.items,
     required this.totalItemCount,
-    required this.inStockCount,
-    required this.lowStockCount,
+    required this.suppliesCount,
+    required this.inventoryCount,
     required this.outOfStockCount,
   });
 
   final List<BaseItemEntity> items;
   final int totalItemCount;
-  final int inStockCount;
-  final int lowStockCount;
+  final int suppliesCount;
+  final int inventoryCount;
   final int outOfStockCount;
 }
 
@@ -43,8 +43,8 @@ final class SupplyItemRegistered extends ItemInventoryState {
   final BaseItemEntity itemEntity;
 }
 
-final class EquipmentItemRegistered extends ItemInventoryState {
-  const EquipmentItemRegistered({
+final class InventoryItemRegistered extends ItemInventoryState {
+  const InventoryItemRegistered({
     required this.itemEntities,
   });
 

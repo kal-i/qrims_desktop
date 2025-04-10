@@ -33,45 +33,45 @@ class RoutingConstants {
 
   static const viewSupplyItemRouteName = 'viewSupplyItem';
   static const viewSupplyItemRoutePath = 'viewSupplyItem';
-  static const viewEquipmentItemRouteName = 'viewEquipmentItem';
-  static const viewEquipmentItemRoutePath = 'viewEquipmentItem';
+  static const viewInventoryItemRouteName = 'viewInventoryItem';
+  static const viewInventoryItemRoutePath = 'viewInventoryItem';
 
   static const registerSupplyItemViewRouteName = 'registerSupplyItemView';
   static const registerSupplyItemViewRoutePath = 'registerSupplyItem';
-  static const registerEquipmentItemViewRouteName = 'registerEquipmentItemView';
-  static const registerEquipmentItemViewRoutePath = 'registerEquipmentItem';
+  static const registerInventoryItemViewRouteName = 'registerInventoryItemView';
+  static const registerInventoryItemViewRoutePath = 'registerInventoryItem';
 
   static const updateSupplyItemViewRouteName = 'updateSupplyItemView';
   static const updateSupplyItemViewRoutePath = 'updateSupplyItem';
-  static const updateEquipmentItemViewRouteName = 'updateEquipmentItemView';
-  static const updateEquipmentItemViewRoutePath = 'updateEquipmentItem';
+  static const updateInventoryItemViewRouteName = 'updateInventoryItemView';
+  static const updateInventoryItemViewRoutePath = 'updateInventoryItem';
 
   static const nestedViewSupplyItemRouteName =
       '$itemInventoryViewRouteName/$viewSupplyItemRouteName';
   static const nestedViewSupplyItemRoutePath =
       '$itemInventoryViewRoutePath/$viewSupplyItemRoutePath';
-  static const nestedViewEquipmentItemRouteName =
-      '$itemInventoryViewRouteName/$viewEquipmentItemRouteName';
-  static const nestedViewEquipmentItemRoutePath =
-      '$itemInventoryViewRoutePath/$viewEquipmentItemRoutePath';
+  static const nestedViewInventoryItemRouteName =
+      '$itemInventoryViewRouteName/$viewInventoryItemRouteName';
+  static const nestedViewInventoryItemRoutePath =
+      '$itemInventoryViewRoutePath/$viewInventoryItemRoutePath';
 
   static const nestedRegisterSupplyItemViewRouteName =
       '$itemInventoryViewRouteName/$registerSupplyItemViewRouteName';
   static const nestedRegisterSupplyItemViewRoutePath =
       '$itemInventoryViewRoutePath/$registerSupplyItemViewRoutePath';
-  static const nestedRegisterEquipmentItemViewRouteName =
-      '$itemInventoryViewRouteName/$registerEquipmentItemViewRouteName';
-  static const nestedRegisterEquipmentItemViewRoutePath =
-      '$itemInventoryViewRoutePath/$registerEquipmentItemViewRoutePath';
+  static const nestedRegisterInventoryItemViewRouteName =
+      '$itemInventoryViewRouteName/$registerInventoryItemViewRouteName';
+  static const nestedRegisterInventoryItemViewRoutePath =
+      '$itemInventoryViewRoutePath/$registerInventoryItemViewRoutePath';
 
   static const nestedUpdateSupplyItemViewRouteName =
       '$itemInventoryViewRouteName/$updateSupplyItemViewRouteName';
   static const nestedUpdateSupplyItemViewRoutePath =
       '$itemInventoryViewRoutePath/$updateSupplyItemViewRoutePath';
-  static const nestedUpdateEquipmentItemViewRouteName =
-      '$itemInventoryViewRouteName/$updateEquipmentItemViewRouteName';
-  static const nestedUpdateEquipmentItemViewRoutePath =
-      '$itemInventoryViewRoutePath/$updateEquipmentItemViewRoutePath';
+  static const nestedUpdateInventoryItemViewRouteName =
+      '$itemInventoryViewRouteName/$updateInventoryItemViewRouteName';
+  static const nestedUpdateInventoryItemViewRoutePath =
+      '$itemInventoryViewRoutePath/$updateInventoryItemViewRoutePath';
 
   /// purchase request route paths
   static const purchaseRequestViewRouteName = 'purchaseRequestView';

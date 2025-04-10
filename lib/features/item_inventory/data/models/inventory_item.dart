@@ -1,43 +1,42 @@
 import '../../../../core/enums/asset_classification.dart';
 import '../../../../core/enums/asset_sub_class.dart';
-import '../../domain/entities/equipment.dart';
+import '../../domain/entities/inventory_item.dart';
 import 'base_item.dart';
 import 'manufacturer_brand.dart';
 import 'model.dart';
 import 'product_stock.dart';
 import 'shareable_item_information.dart';
 
-class EquipmentModel extends EquipmentEntity implements BaseItemModel {
-  const EquipmentModel({
+class InventoryItemModel extends InventoryItemEntity implements BaseItemModel {
+  const InventoryItemModel({
     required super.id,
     required super.productStockEntity,
     required super.shareableItemInformationEntity,
-    required super.manufacturerBrandEntity,
-    required super.modelEntity,
-    required super.serialNo,
-    required super.assetClassification,
-    required super.assetSubClass,
+    super.manufacturerBrandEntity,
+    super.modelEntity,
+    super.serialNo,
+    super.assetClassification,
+    super.assetSubClass,
     super.estimatedUsefulLife,
   });
 
-  factory EquipmentModel.fromJson(Map<String, dynamic> json) {
-    print('received json by equipment: $json');
-    final assetClassificationString = json['asset_classification'] as String?;
-    final assetSubClassString = json['asset_sub_class'] as String?;
+  factory InventoryItemModel.fromJson(Map<String, dynamic> json) {
+    print('received json by inventory: $json');
 
-    final assetClassification = assetClassificationString != null
+    final assetClassification = (json['asset_classification'] as String?) !=
+            null
         ? AssetClassification.values.firstWhere(
-            (e) => e.toString().split('.').last == assetClassificationString,
+            (e) => e.toString().split('.').last == json['asset_classification'],
             orElse: () => AssetClassification.unknown,
           )
-        : AssetClassification.unknown;
+        : null;
 
-    final assetSubClass = assetSubClassString != null
+    final assetSubClass = (json['asset_sub_class'] as String?) != null
         ? AssetSubClass.values.firstWhere(
-            (e) => e.toString().split('.').last == assetSubClassString,
+            (e) => e.toString().split('.').last == json['asset_sub_class'],
             orElse: () => AssetSubClass.unknown,
           )
-        : AssetSubClass.unknown;
+        : null;
 
     final productStock = ProductStockModel.fromJson(json['product_stock']);
     print('product stock converted');
@@ -46,32 +45,32 @@ class EquipmentModel extends EquipmentEntity implements BaseItemModel {
         json['shareable_item_information']);
     print('shareable item  info converted');
 
-    final manufacturerBrand =
-        ManufacturerBrandModel.fromJson(json['manufacturer_brand']);
+    final manufacturerBrand = json['manufacturer_brand'] != null
+        ? ManufacturerBrandModel.fromJson(json['manufacturer_brand'])
+        : null;
     print('manufacturer brand item  info converted');
 
-    final model = Model.fromJson(json['model']);
+    final model = json['model'] != null ? Model.fromJson(json['model']) : null;
     print('model  info converted');
-    print('${json['equipment_id']}');
 
-    final equipment = EquipmentModel(
-      id: json['equipment_id'] as int,
+    final inventoryItem = InventoryItemModel(
+      id: json['inventory_id'] as int,
       productStockEntity: productStock,
       shareableItemInformationEntity: shareableItemInformation,
       manufacturerBrandEntity: manufacturerBrand,
       modelEntity: model,
-      serialNo: json['serial_no'] as String,
+      serialNo: json['serial_no'] as String?,
       assetClassification: assetClassification,
       assetSubClass: assetSubClass,
       estimatedUsefulLife: json['estimated_useful_life'] as int?,
     );
-    print('equipment converted');
-    return equipment;
+    print('inventory converted');
+    return inventoryItem;
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'equipment_id': id,
+      'inventory_id': id,
       'product_stock': (productStockEntity as ProductStockModel).toJson(),
       'shareable_item_information':
           (shareableItemInformationEntity as ShareableItemInformationModel)

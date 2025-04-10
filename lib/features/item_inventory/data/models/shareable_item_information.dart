@@ -1,3 +1,4 @@
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../domain/entities/shareable_item_information.dart';
 
@@ -13,6 +14,7 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
     required super.encryptedId,
     required super.qrCodeImageData,
     super.acquiredDate,
+    super.fundCluster,
   });
 
   factory ShareableItemInformationModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,13 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
       (e) => e.toString().split('.').last == json['unit'] as String,
       orElse: () => Unit.undetermined,
     );
+
+    final fundCluster = (json['fund_cluster'] as String?) != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == json['fund_cluster'],
+            orElse: () => FundCluster.unknown,
+          )
+        : null;
 
     return ShareableItemInformationModel(
       id: json['base_item_id'] as String,
@@ -38,6 +47,7 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
               ? DateTime.parse(json['acquired_date'] as String)
               : json['acquired_date'] as DateTime
           : null,
+      fundCluster: fundCluster,
     );
   }
 
@@ -53,6 +63,7 @@ class ShareableItemInformationModel extends ShareableItemInformationEntity {
       'encrypted_id': encryptedId,
       'qr_code_image_data': qrCodeImageData,
       'acquired_date': acquiredDate?.toIso8601String(),
+      'fund_cluster': fundCluster.toString().split('.').last,
     };
   }
 }

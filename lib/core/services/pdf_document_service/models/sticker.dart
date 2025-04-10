@@ -1,7 +1,7 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../../features/item_inventory/domain/entities/equipment.dart';
+import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
 import '../../../../features/item_issuance/data/models/inventory_custodian_slip.dart';
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
 import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
@@ -50,7 +50,7 @@ class Sticker implements BaseDocument {
     }
 
     for (int i = 0; i < items.length; i++) {
-      final equipmentEntity = items[i].itemEntity as EquipmentEntity;
+      final equipmentEntity = items[i].itemEntity as InventoryItemEntity;
       final productStockEntity = equipmentEntity.productStockEntity;
       final shareableItemInformationEntity =
           equipmentEntity.shareableItemInformationEntity;
@@ -60,12 +60,12 @@ class Sticker implements BaseDocument {
       final productNameEntity = productStockEntity.productName;
       final productName = productNameEntity.name;
 
-      final brandEntity = manufacturerBrandEntity.brand;
-      final brandName = brandEntity.name;
+      final brandEntity = manufacturerBrandEntity?.brand;
+      final brandName = brandEntity?.name ?? 'N/A';
 
       final encryptedId = shareableItemInformationEntity.encryptedId;
       final baseItemId = shareableItemInformationEntity.id;
-      final modelName = modelEntity.modelName;
+      final modelName = modelEntity?.modelName ?? 'N/A';
 
       final serialNo = equipmentEntity.serialNo;
       final assetClassification =
@@ -77,7 +77,7 @@ class Sticker implements BaseDocument {
         readableEnumConverter(assetClassification),
         fundSource,
         '$productName/ $brandName/ $modelName'.toUpperCase(),
-        serialNo,
+        serialNo ?? 'N/A',
         unitCost.toString(),
         acquisitionDate,
         capitalizeWord(personAccountable),
@@ -202,21 +202,21 @@ class Sticker implements BaseDocument {
                     ),
                   ],
                 ),
-                if (withQr)
-                  DocumentComponents.buildContainer(
-                    horizontalPadding: 10.0,
-                    verticalPadding: 10.0,
-                    borderTop: false,
-                    borderWidthRight: 2.0,
-                    borderWidthBottom: 2.0,
-                    borderWidthLeft: 2.0,
-                    child: pw.Align(
-                      alignment: pw.AlignmentDirectional.bottomEnd,
-                      child: DocumentComponents.buildQrContainer(
-                        data: encryptedId,
-                      ),
-                    ),
-                  ),
+                // if (withQr)
+                //   DocumentComponents.buildContainer(
+                //     horizontalPadding: 10.0,
+                //     verticalPadding: 10.0,
+                //     borderTop: false,
+                //     borderWidthRight: 2.0,
+                //     borderWidthBottom: 2.0,
+                //     borderWidthLeft: 2.0,
+                //     child: pw.Align(
+                //       alignment: pw.AlignmentDirectional.bottomEnd,
+                //       child: DocumentComponents.buildQrContainer(
+                //         data: encryptedId,
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
           ),

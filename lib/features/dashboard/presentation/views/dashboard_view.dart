@@ -129,21 +129,21 @@ class _DashboardViewState extends State<DashboardView> {
                 _suppliesCount.value =
                     state.inventorySummaryEntity.suppliesCount;
                 _equipmentCount.value =
-                    state.inventorySummaryEntity.equipmentCount;
+                    state.inventorySummaryEntity.inventoryCount;
 
                 _suppliesTrends.value = state
                     .inventorySummaryEntity.supplyWeeklyTrendEntities
                     .map((e) => e.totalQuantity)
                     .toList();
                 _equipmentTrends.value = state
-                    .inventorySummaryEntity.equipmentWeeklyTrendEntities
+                    .inventorySummaryEntity.inventoryWeeklyTrendEntities
                     .map((e) => e.totalQuantity)
                     .toList();
 
                 _supplyPercentageChange.value =
                     state.inventorySummaryEntity.supplyPercentageChange;
                 _equipmentPercentageChange.value =
-                    state.inventorySummaryEntity.equipmentPercentageChange;
+                    state.inventorySummaryEntity.inventoryPercentageChange;
 
                 _inventoryStocks.value =
                     state.inventorySummaryEntity.inventoryStocks;

@@ -31,7 +31,7 @@ class RegisterNewItemModal extends StatelessWidget {
                 },
                 items: [
                   'Supply (Consumables)',
-                  'Equipment',
+                  'Inventory',
                 ]
                     .map(
                       (type) => DropdownMenuItem(
@@ -102,9 +102,9 @@ class _ActionsRow extends StatelessWidget {
                 RoutingConstants.nestedRegisterSupplyItemViewRoutePath,
                 extra: extra,
               );
-            } else if (selectedType == 'Equipment') {
+            } else if (selectedType == 'Inventory') {
               context.go(
-                RoutingConstants.nestedRegisterEquipmentItemViewRoutePath,
+                RoutingConstants.nestedRegisterInventoryItemViewRoutePath,
                 extra: extra,
               );
             }

@@ -1,5 +1,5 @@
 import '../../../item_inventory/data/models/base_item.dart';
-import '../../../item_inventory/data/models/equipment.dart';
+import '../../../item_inventory/data/models/inventory_item.dart';
 import '../../../item_inventory/data/models/supply.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../domain/entities/issuance_item.dart';
@@ -27,7 +27,7 @@ class IssuanceItemModel extends IssuanceItemEntity {
       'issuance_id': issuanceId,
       'item': itemEntity is SupplyEntity
           ? (itemEntity as SupplyModel).toJson()
-          : (itemEntity as EquipmentModel).toJson(),
+          : (itemEntity as InventoryItemModel).toJson(),
       'issued_quantity': quantity,
     };
   }

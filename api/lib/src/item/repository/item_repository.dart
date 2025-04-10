@@ -1742,7 +1742,6 @@ class ItemRepository {
     }
   }
 
-  // todo: item name and fc update must not be allowed
   Future<bool?> updateItemInformation({
     required String id,
     String? productName,
@@ -2645,9 +2644,9 @@ class ItemRepository {
 
     return {
       'supply_trends': supplyTrends,
-      'equipment_trends': inventoryTrends,
+      'inventory_trends': inventoryTrends,
       'supply_percentage_change': supplyPercentageChange,
-      'equipment_percentage_change': inventoryPercentageChange,
+      'inventory_percentage_change': inventoryPercentageChange,
     };
   }
 
@@ -2658,7 +2657,7 @@ class ItemRepository {
       SELECT
           CASE
               WHEN s.id IS NOT NULL THEN 'Supply'
-              WHEN inv.id IS NOT NULL THEN 'Equipment'
+              WHEN inv.id IS NOT NULL THEN 'Inventory'
               ELSE 'Unknown'
           END AS item_type,
           SUM(i.quantity) AS total_stock

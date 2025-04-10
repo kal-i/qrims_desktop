@@ -25,11 +25,11 @@ import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_order/presentation/components/custom_search_field.dart';
-import '../../domain/entities/equipment.dart';
+import '../../domain/entities/inventory_item.dart';
 import '../bloc/item_inventory_bloc.dart';
 
-class ReusableEquipmentItemView extends StatefulWidget {
-  const ReusableEquipmentItemView({
+class ReusableInventoryItemView extends StatefulWidget {
+  const ReusableInventoryItemView({
     super.key,
     required this.isUpdate,
     this.itemId,
@@ -39,11 +39,11 @@ class ReusableEquipmentItemView extends StatefulWidget {
   final String? itemId;
 
   @override
-  State<ReusableEquipmentItemView> createState() =>
-      _ReusableEquipmentItemViewState();
+  State<ReusableInventoryItemView> createState() =>
+      _ReusableInventoryItemViewState();
 }
 
-class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
+class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
   late ItemSuggestionsService _itemSuggestionsService;
 
   final _formKey = GlobalKey<FormState>();
@@ -131,7 +131,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
   void _saveItem() {
     if (_formKey.currentState!.validate()) {
       context.read<ItemInventoryBloc>().add(
-            EquipmentItemRegister(
+            InventoryItemRegister(
               fundCluster: _selectedFundCluster.value,
               itemName: _itemNameController.text,
               description: _itemDescriptionsController.text,
@@ -210,7 +210,7 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
     return Scaffold(
       body: BlocListener<ItemInventoryBloc, ItemInventoryState>(
         listener: (context, state) async {
-          if (state is EquipmentItemRegistered) {
+          if (state is InventoryItemRegistered) {
             final itemCount = state.itemEntities.length;
 
             DelightfulToastUtils.showDelightfulToast(
@@ -239,8 +239,8 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
           if (state is ItemFetched) {
             final initItemData = state.item;
 
-            if (initItemData is EquipmentEntity) {
-              final itemEntity = state.item as EquipmentEntity;
+            if (initItemData is InventoryItemEntity) {
+              final itemEntity = state.item as InventoryItemEntity;
               final productStockEntity = itemEntity.productStockEntity;
               final productNameEntity = productStockEntity.productName;
               final productDescriptionEntity =
@@ -249,8 +249,8 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                   itemEntity.shareableItemInformationEntity;
               final manufacturerBrandEntity =
                   itemEntity.manufacturerBrandEntity;
-              final manufacturerEntity = manufacturerBrandEntity.manufacturer;
-              final brandEntity = manufacturerBrandEntity.brand;
+              final manufacturerEntity = manufacturerBrandEntity?.manufacturer;
+              final brandEntity = manufacturerBrandEntity?.brand;
               final modelEntity = itemEntity.modelEntity;
 
               _itemIdController.text =
@@ -268,10 +268,10 @@ class _ReusableEquipmentItemViewState extends State<ReusableEquipmentItemView> {
                               'n/a')
                       ? 'No specification defined.'
                       : shareableItemInformationEntity.specification!;
-              _brandController.text = brandEntity.name;
-              _modelController.text = modelEntity.modelName;
-              _serialNoController.text = itemEntity.serialNo;
-              _manufacturerController.text = manufacturerEntity.name;
+              _brandController.text = brandEntity?.name ?? 'N/A';
+              _modelController.text = modelEntity?.modelName ?? 'N/A';
+              _serialNoController.text = itemEntity.serialNo ?? 'N/A';
+              _manufacturerController.text = manufacturerEntity?.name ?? 'N/A';
               _selectedAssetClassification.value =
                   AssetClassification.values.firstWhere(
                 (e) =>

@@ -259,8 +259,8 @@ void _registerItemInventoryDependencies() {
         itemInventoryRepository: serviceLocator(),
       ),
     )
-    ..registerFactory<RegisterEquipmentItem>(
-      () => RegisterEquipmentItem(
+    ..registerFactory<RegisterInventoryItem>(
+      () => RegisterInventoryItem(
         itemInventoryRepository: serviceLocator(),
       ),
     )
@@ -278,7 +278,7 @@ void _registerItemInventoryDependencies() {
       () => ItemInventoryBloc(
         getItems: serviceLocator(),
         registerSupplyItem: serviceLocator(),
-        registerEquipmentItem: serviceLocator(),
+        registerInventoryItem: serviceLocator(),
         getItemById: serviceLocator(),
         updateItem: serviceLocator(),
       ),

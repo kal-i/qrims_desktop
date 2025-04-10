@@ -1,5 +1,5 @@
 import '../../domain/entities/base_item.dart';
-import 'equipment.dart';
+import 'inventory_item.dart';
 import 'supply.dart';
 
 abstract class BaseItemModel extends BaseItemEntity {
@@ -14,8 +14,8 @@ abstract class BaseItemModel extends BaseItemEntity {
       print('supp received');
       return SupplyModel.fromJson(json);
     } else {
-      print('equipment');
-      return EquipmentModel.fromJson(json);
+      print('inventory');
+      return InventoryItemModel.fromJson(json);
     }
   }
 

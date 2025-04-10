@@ -8,7 +8,7 @@ import '../../../../core/enums/unit.dart';
 import '../../domain/entities/base_item.dart';
 import '../../domain/usecases/get_item_by_id.dart';
 import '../../domain/usecases/get_items.dart';
-import '../../domain/usecases/register_equipment_item.dart';
+import '../../domain/usecases/register_inventory_item.dart';
 import '../../domain/usecases/register_supply_item.dart';
 import '../../domain/usecases/update_item.dart';
 
@@ -19,25 +19,25 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
   ItemInventoryBloc({
     required GetItems getItems,
     required RegisterSupplyItem registerSupplyItem,
-    required RegisterEquipmentItem registerEquipmentItem,
+    required RegisterInventoryItem registerInventoryItem,
     required GetItemById getItemById,
     required UpdateItem updateItem,
   })  : _getItems = getItems,
         _registerSupplyItem = registerSupplyItem,
-        _registerEquipmentItem = registerEquipmentItem,
+        _registerInventoryItem = registerInventoryItem,
         _getItemById = getItemById,
         _updateItem = updateItem,
         super(ItemsInitial()) {
     on<FetchItems>(_onFetchItems);
     on<SupplyItemRegister>(_onRegisterSupplyItem);
-    on<EquipmentItemRegister>(_onRegisterEquipmentItem);
+    on<InventoryItemRegister>(_onRegisterInventoryItem);
     on<FetchItemById>(_onFetchItemById);
     on<ItemUpdate>(_onUpdateItem);
   }
 
   final GetItems _getItems;
   final RegisterSupplyItem _registerSupplyItem;
-  final RegisterEquipmentItem _registerEquipmentItem;
+  final RegisterInventoryItem _registerInventoryItem;
   final GetItemById _getItemById;
   final UpdateItem _updateItem;
 
@@ -67,8 +67,8 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
         ItemsLoaded(
           items: r.items,
           totalItemCount: r.totalItemCount,
-          inStockCount: r.suppliesCount,
-          lowStockCount: r.equipmentCount,
+          suppliesCount: r.suppliesCount,
+          inventoryCount: r.inventoryCount,
           outOfStockCount: r.outOfStockCount,
         ),
       ),
@@ -83,6 +83,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
 
     final response = await _registerSupplyItem(
       RegisterSupplyItemParams(
+        fundCluster: event.fundCluster,
         itemName: event.itemName,
         description: event.description,
         specification: event.specification,
@@ -107,13 +108,13 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
     );
   }
 
-  void _onRegisterEquipmentItem(
-    EquipmentItemRegister event,
+  void _onRegisterInventoryItem(
+    InventoryItemRegister event,
     Emitter<ItemInventoryState> emit,
   ) async {
     emit(ItemsLoading());
 
-    final response = await _registerEquipmentItem(
+    final response = await _registerInventoryItem(
       RegisterEquipmentItemParams(
         fundCluster: event.fundCluster,
         itemName: event.itemName,
@@ -140,7 +141,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
         ),
       ),
       (r) => emit(
-        EquipmentItemRegistered(
+        InventoryItemRegistered(
           itemEntities: r,
         ),
       ),

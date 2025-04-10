@@ -4,23 +4,23 @@ import 'base_item.dart';
 import 'manufacturer_brand.dart';
 import 'model.dart';
 
-class EquipmentEntity extends BaseItemEntity {
-  const EquipmentEntity({
+class InventoryItemEntity extends BaseItemEntity {
+  const InventoryItemEntity({
     required this.id,
     required super.productStockEntity,
     required super.shareableItemInformationEntity,
-    required this.manufacturerBrandEntity,
-    required this.modelEntity,
-    required this.serialNo,
-    required this.assetClassification,
-    required this.assetSubClass,
+    this.manufacturerBrandEntity,
+    this.modelEntity,
+    this.serialNo,
+    this.assetClassification,
+    this.assetSubClass,
     this.estimatedUsefulLife = 1,
   });
 
   final int id;
-  final ManufacturerBrandEntity manufacturerBrandEntity;
-  final ModelEntity modelEntity;
-  final String serialNo;
+  final ManufacturerBrandEntity? manufacturerBrandEntity;
+  final ModelEntity? modelEntity;
+  final String? serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final int? estimatedUsefulLife;

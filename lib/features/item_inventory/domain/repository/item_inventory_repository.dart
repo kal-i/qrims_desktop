@@ -23,6 +23,7 @@ abstract interface class ItemInventoryRepository {
   });
 
   Future<Either<Failure, BaseItemEntity>> registerSupplyItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
@@ -32,17 +33,17 @@ abstract interface class ItemInventoryRepository {
     DateTime? acquiredDate,
   });
 
-  Future<Either<Failure, List<BaseItemEntity>>> registerEquipmentItem({
+  Future<Either<Failure, List<BaseItemEntity>>> registerInventoryItem({
     FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
     required unit.Unit unit,
     required int quantity,
-    required String manufacturerName,
-    required String brandName,
-    required String modelName,
-    required String serialNo,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
+    String? serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required double unitCost,

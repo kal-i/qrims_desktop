@@ -70,6 +70,7 @@ class ItemInventoryRemoteDataSourceImpl
 
   @override
   Future<BaseItemModel> registerSupplyItem({
+    FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
@@ -80,6 +81,7 @@ class ItemInventoryRemoteDataSourceImpl
   }) async {
     try {
       final Map<String, dynamic> params = {
+        'type': 'supply',
         'product_name': itemName,
         'description': description,
         if (specification != null && specification.isNotEmpty)
@@ -89,6 +91,8 @@ class ItemInventoryRemoteDataSourceImpl
         'unit_cost': unitCost,
         if (acquiredDate != null)
           'acquired_date': acquiredDate.toIso8601String(),
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
       };
 
       final response = await httpService.post(
@@ -124,17 +128,17 @@ class ItemInventoryRemoteDataSourceImpl
   }
 
   @override
-  Future<List<BaseItemModel>> registerEquipmentItem({
+  Future<List<BaseItemModel>> registerInventoryItem({
     FundCluster? fundCluster,
     required String itemName,
     required String description,
     String? specification,
     required Unit unit,
     required int quantity,
-    required String manufacturerName,
-    required String brandName,
-    required String modelName,
-    required String serialNo,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
+    String? serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required double unitCost,
@@ -143,22 +147,28 @@ class ItemInventoryRemoteDataSourceImpl
   }) async {
     try {
       final Map<String, dynamic> params = {
+        'type': 'inventory',
         if (fundCluster != null)
           'fund_cluster': fundCluster.toString().split('.').last,
         'product_name': itemName,
         'description': description,
-        'manufacturer_name': manufacturerName,
-        'brand_name': brandName,
-        'model_name': modelName,
-        'serial_no': serialNo,
+        if (manufacturerName != null && manufacturerName.isNotEmpty)
+          'manufacturer_name': manufacturerName,
+        if (brandName != null && brandName.isNotEmpty) 'brand_name': brandName,
+        if (modelName != null && modelName.isNotEmpty) 'model_name': modelName,
+        if (serialNo != null && serialNo.isNotEmpty) 'serial_no': serialNo,
         if (specification != null && specification.isNotEmpty)
           'specification': specification,
-        'asset_classification': assetClassification.toString().split('.').last,
-        'asset_sub_class': assetSubClass.toString().split('.').last,
+        if (assetClassification != null)
+          'asset_classification':
+              assetClassification.toString().split('.').last,
+        if (assetSubClass != null)
+          'asset_sub_class': assetSubClass.toString().split('.').last,
         'unit': unit.toString().split('.').last,
         'quantity': quantity,
         'unit_cost': unitCost,
-        'estimated_useful_life': estimatedUsefulLife,
+        if (estimatedUsefulLife != null)
+          'estimated_useful_life': estimatedUsefulLife,
         if (acquiredDate != null)
           'acquired_date': acquiredDate.toIso8601String(),
       };

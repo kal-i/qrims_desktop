@@ -9,9 +9,9 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/base_item.dart';
 import '../repository/item_inventory_repository.dart';
 
-class RegisterEquipmentItem
+class RegisterInventoryItem
     implements UseCase<List<BaseItemEntity>, RegisterEquipmentItemParams> {
-  const RegisterEquipmentItem({
+  const RegisterInventoryItem({
     required this.itemInventoryRepository,
   });
 
@@ -21,7 +21,7 @@ class RegisterEquipmentItem
   Future<Either<Failure, List<BaseItemEntity>>> call(
     RegisterEquipmentItemParams params,
   ) async {
-    return await itemInventoryRepository.registerEquipmentItem(
+    return await itemInventoryRepository.registerInventoryItem(
       fundCluster: params.fundCluster,
       itemName: params.itemName,
       description: params.description,
@@ -46,13 +46,13 @@ class RegisterEquipmentItemParams {
     this.fundCluster,
     required this.itemName,
     required this.description,
-    required this.specification,
+    this.specification,
     required this.unit,
     required this.quantity,
-    required this.manufacturerName,
-    required this.brandName,
-    required this.modelName,
-    required this.serialNo,
+    this.manufacturerName,
+    this.brandName,
+    this.modelName,
+    this.serialNo,
     this.assetClassification,
     this.assetSubClass,
     required this.unitCost,
@@ -63,13 +63,13 @@ class RegisterEquipmentItemParams {
   final FundCluster? fundCluster;
   final String itemName;
   final String description;
-  final String specification;
+  final String? specification;
   final Unit unit;
   final int quantity;
-  final String manufacturerName;
-  final String brandName;
-  final String modelName;
-  final String serialNo;
+  final String? manufacturerName;
+  final String? brandName;
+  final String? modelName;
+  final String? serialNo;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final double unitCost;

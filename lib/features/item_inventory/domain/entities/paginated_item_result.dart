@@ -5,13 +5,13 @@ class PaginatedItemResultEntity {
     required this.items,
     required this.totalItemCount,
     required this.suppliesCount,
-    required this.equipmentCount,
+    required this.inventoryCount,
     required this.outOfStockCount,
   });
 
   final List<BaseItemEntity> items;
   final int totalItemCount;
   final int suppliesCount;
-  final int equipmentCount;
+  final int inventoryCount;
   final int outOfStockCount;
 }

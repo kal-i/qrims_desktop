@@ -1,7 +1,7 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../../features/item_inventory/domain/entities/equipment.dart';
+import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
 import '../../../../features/item_issuance/data/models/inventory_custodian_slip.dart';
 import '../../../../features/item_issuance/data/models/property_acknowledgement_receipt.dart';
 import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
@@ -278,16 +278,29 @@ class RequisitionAndIssueSlip implements BaseDocument {
       );
 
       // Add equipment-specific details if the item is EquipmentEntity
-      if (issuedItem is EquipmentEntity) {
-        final equipmentItem = issuedItem as EquipmentEntity;
-        descriptionColumn.addAll(
-          [
-            'Brand: ${equipmentItem.manufacturerBrandEntity.brand.name}',
-            'Model: ${equipmentItem.modelEntity.modelName}',
-            'SN: ${equipmentItem.serialNo}',
+      if (issuedItem is InventoryItemEntity) {
+        final equipmentItem = issuedItem as InventoryItemEntity;
+
+        if (equipmentItem.manufacturerBrandEntity?.brand.name != null) {
+          descriptionColumn.add(
+              'Brand: ${equipmentItem.manufacturerBrandEntity!.brand.name}');
+        }
+
+        if (equipmentItem.modelEntity?.modelName != null) {
+          descriptionColumn
+              .add('Model: ${equipmentItem.modelEntity!.modelName}');
+        }
+
+        if (equipmentItem.serialNo != null) {
+          descriptionColumn.add('SN: ${equipmentItem.serialNo}');
+        }
+
+        if (issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate !=
+            null) {
+          descriptionColumn.add(
             'Date Acquired: ${documentDateFormatter(issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate!)}',
-          ],
-        );
+          );
+        }
       }
 
       // Add PR information
