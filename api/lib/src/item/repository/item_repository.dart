@@ -1778,38 +1778,22 @@ class ItemRepository {
       String? modelId;
 
       if (productName != null && productName.isNotEmpty) {
-        final productNameResult = await checkProductNameIfExist(
-          productName: productName,
-        );
-
-        if (productNameResult != null) {
-          productNameId = productNameResult;
-        } else {
-          productNameId = await registerProductName(
-            productName: productName,
-          );
-          print('product name does not exist; created id: $productNameId');
-        }
-
-        baseItemSetClauses.add('product_name_id = @product_name_id');
-        baseItemParams['product_name_id'] = productNameId;
+        productNameId = await checkProductNameIfExist(
+              productName: productName,
+            ) ??
+            await registerProductName(
+              productName: productName,
+            );
       }
 
       if ((productNameId != null) &&
           (description != null && description.isNotEmpty)) {
-        final productDescriptionResult = await checkProductDescriptionIfExist(
-          productDescription: description,
-        );
-
-        if (productDescriptionResult != null) {
-          productDescriptionId = productDescriptionResult;
-        } else {
-          productDescriptionId = await registerProductDescription(
-            productDescription: description,
-          );
-          print(
-              'product desc does not exist; created id: $productDescriptionId');
-        }
+        productDescriptionId = await checkProductDescriptionIfExist(
+              productDescription: description,
+            ) ??
+            await registerProductDescription(
+              productDescription: description,
+            );
 
         final productStockResult = await checkProductStockIfExist(
           productNameId: productNameId,
@@ -1829,7 +1813,7 @@ class ItemRepository {
         baseItemParams['product_description_id'] = productDescriptionId;
       }
 
-      if (specification != null) {
+      if (specification != null && specification.isNotEmpty) {
         baseItemSetClauses.add('specification = @specification');
         baseItemParams['specification'] = specification;
       }
@@ -1861,18 +1845,12 @@ class ItemRepository {
       }
 
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
-        final manufacturerResult = await checkManufacturerIfExist(
-          manufacturerName: manufacturerName,
-        );
-
-        if (manufacturerResult != null) {
-          manufacturerId = manufacturerResult;
-        } else {
-          manufacturerId = await registerManufacturer(
-            manufacturerName: manufacturerName,
-          );
-          print('manufacturer does not exist; created id: $manufacturerId');
-        }
+        manufacturerId = await checkManufacturerIfExist(
+              manufacturerName: manufacturerName,
+            ) ??
+            await registerManufacturer(
+              manufacturerName: manufacturerName,
+            );
 
         equipmentSetClauses.add('manufacturer_id = @manufacturer_id');
         equipmentParams['manufacturer_id'] = manufacturerId;
@@ -1880,18 +1858,12 @@ class ItemRepository {
 
       if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
           (brandName != null && brandName.isNotEmpty)) {
-        final brandResult = await checkBrandIfExist(
-          brandName: brandName,
-        );
-
-        if (brandResult != null) {
-          brandId = brandResult;
-        } else {
-          brandId = await registerBrand(
-            brandName: brandName,
-          );
-          print('brand does not exist; created id: $brandId');
-        }
+        brandId = await checkBrandIfExist(
+              brandName: brandName,
+            ) ??
+            await registerBrand(
+              brandName: brandName,
+            );
 
         final manufacturerBrandResult = await checkManufacturerBrandIfExist(
           manufacturerId: manufacturerId,
@@ -1913,29 +1885,22 @@ class ItemRepository {
       if ((productNameId != null) &&
           (brandId != null && brandId.isNotEmpty) &&
           (modelName != null && modelName.isNotEmpty)) {
-        final modelResult = await checkModelIfExist(
-          productNameId: productNameId,
-          brandId: brandId,
-          modelName: modelName,
-        );
-
-        if (modelResult != null) {
-          modelId = modelResult;
-        } else {
-          modelId = await registerModel(
-            productNameId: productNameId,
-            brandId: brandId,
-            modelName: modelName,
-          );
-          print('model does not exist; created id: $modelId');
-        }
-        print('model id: $modelId');
+        modelId = await checkModelIfExist(
+              productNameId: productNameId,
+              brandId: brandId,
+              modelName: modelName,
+            ) ??
+            await registerModel(
+              productNameId: productNameId,
+              brandId: brandId,
+              modelName: modelName,
+            );
 
         equipmentSetClauses.add('model_id = @model_id');
         equipmentParams['model_id'] = modelId;
       }
 
-      if (serialNo != null) {
+      if (serialNo != null && serialNo.isNotEmpty) {
         equipmentSetClauses.add('serial_no = @serial_no');
         equipmentParams['serial_no'] = serialNo;
       }
