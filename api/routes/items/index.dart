@@ -18,6 +18,7 @@ Future<Response> onRequest(RequestContext context) async {
     HttpMethod.get => _getItems(context, repository),
     HttpMethod.post => _registerItem(
         context,
+        connection,
         repository,
         userActivityRepository,
         sessionRepository,
@@ -126,20 +127,13 @@ Future<Response> _getItems(
 
 Future<Response> _registerItem(
   RequestContext context,
+  Connection connection,
   ItemRepository itemRepository,
   UserActivityRepository userActivityRepository,
   SessionRepository sessionRepository,
 ) async {
   try {
-    final headers = context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
-
-    // get user (the one performing this ope) through the bearer token passed
-    // based on that, then we will check if they are authorized to perform the ope
-    // if it is, record as well in act db
-    // final bearerToken = headers['Authorization']?.substring(7) as String;
-    // final session = await sessionRepository.sessionFromToken(bearerToken);
-    // final responsibleUserId = session!.userId;
 
     // Extract and validate inputs
     final itemType = json['type'] as String?;
@@ -159,97 +153,223 @@ Future<Response> _registerItem(
         ? json['acquired_date'] is String
             ? DateTime.parse(json['acquired_date'] as String)
             : json['acquired_date'] as DateTime
-        : DateTime.now();
+        : null;
 
-    FundCluster? fundCluster;
-    AssetClassification? assetClassification;
-    AssetSubClass? assetSubClass;
-    Unit? unit;
+    FundCluster? fundCluster = json['fund_cluster'] != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == json['fund_cluster'])
+        : null;
+    AssetClassification? assetClassification = json['asset_classification'] !=
+            null
+        ? AssetClassification.values.firstWhere(
+            (e) => e.toString().split('.').last == json['asset_classification'])
+        : AssetClassification.unknown;
+    AssetSubClass? assetSubClass = json['asset_sub_class'] != null
+        ? AssetSubClass.values.firstWhere(
+            (e) => e.toString().split('.').last == json['asset_sub_class'])
+        : null;
+    Unit unit = json['unit'] != null
+        ? Unit.values
+            .firstWhere((e) => e.toString().split('.').last == json['unit'])
+        : Unit.undetermined;
 
-    try {
-      fundCluster = json['fund_cluster'] != null
-          ? FundCluster.values.firstWhere(
-              (e) => e.toString().split('.').last == json['fund_cluster'])
-          : null;
-      assetClassification = json['asset_classification'] != null
-          ? AssetClassification.values.firstWhere((e) =>
-              e.toString().split('.').last == json['asset_classification'])
-          : AssetClassification.unknown;
-
-      assetSubClass = json['asset_sub_class'] != null
-          ? AssetSubClass.values.firstWhere(
-              (e) => e.toString().split('.').last == json['asset_sub_class'])
-          : AssetSubClass.unknown;
-
-      unit = json['unit'] != null
-          ? Unit.values
-              .firstWhere((e) => e.toString().split('.').last == json['unit'])
-          : Unit.undetermined;
-    } catch (e) {
+    if (itemType == 'inventory' &&
+        serialNoInput != null &&
+        serialNoInput.trim().isNotEmpty &&
+        (manufacturerName == null ||
+            manufacturerName.isEmpty ||
+            brandName == null ||
+            brandName.isEmpty ||
+            modelName == null ||
+            modelName.isEmpty)) {
       return Response.json(
         statusCode: HttpStatus.badRequest,
         body: {
-          'message': 'Invalid asset classification, sub class, or unit.',
+          'message':
+              'Manufacturer, brand, and model are required when a serial no. is provided.'
         },
       );
     }
 
-    int? productNameId;
-    int? productDescriptionId;
+    // Register product name and description (outside transaction as they're lookup tables)
+    int productNameId;
+    int productDescriptionId;
 
-    final productNameResult = await itemRepository.checkProductNameIfExist(
-      productName: productName,
-    );
+    try {
+      productNameId = await itemRepository.checkProductNameIfExist(
+            productName: productName,
+          ) ??
+          await itemRepository.registerProductName(
+            productName: productName,
+          );
 
-    if (productNameResult != null) {
-      productNameId = productNameResult;
-    } else {
-      productNameId = await itemRepository.registerProductName(
-        productName: productName,
-      );
-    }
+      productDescriptionId =
+          await itemRepository.checkProductDescriptionIfExist(
+                productDescription: description,
+              ) ??
+              await itemRepository.registerProductDescription(
+                productDescription: description,
+              );
 
-    final productDescriptionResult =
-        await itemRepository.checkProductDescriptionIfExist(
-      productDescription: description,
-    );
-
-    if (productDescriptionResult != null) {
-      productDescriptionId = productDescriptionResult;
-    } else {
-      productDescriptionId = await itemRepository.registerProductDescription(
-        productDescription: description,
-      );
-    }
-    print('product name id: $productDescriptionId');
-
-    final productStockResult = await itemRepository.checkProductStockIfExist(
-      productNameId: productNameId,
-      productDescriptionId: productDescriptionId,
-    );
-
-    if (productStockResult == 0) {
-      await itemRepository.registerProductStock(
+      // Register product stock if needed
+      final productStockResult = await itemRepository.checkProductStockIfExist(
         productNameId: productNameId,
         productDescriptionId: productDescriptionId,
       );
+
+      if (productStockResult == 0) {
+        await itemRepository.registerProductStock(
+          productNameId: productNameId,
+          productDescriptionId: productDescriptionId,
+        );
+      }
+    } catch (e) {
+      return Response.json(
+        statusCode: HttpStatus.internalServerError,
+        body: {'message': 'Error registering product information: $e'},
+      );
     }
 
-    if (itemType == 'inventory') {
-      if (serialNoInput != null && serialNoInput.trim().isNotEmpty) {
-        // Split the serial number input if provided
-        final serialNos =
-            serialNoInput.split(' , ').map((s) => s.trim()).toList() ?? [];
+    // Run the main operation in a transaction
+    final response = await connection.runTx((ctx) async {
+      try {
+        if (itemType == 'inventory') {
+          final List<Map<String, dynamic>> registeredItems = [];
+          final serialNos =
+              serialNoInput?.split(',').map((s) => s.trim()).toList() ?? [];
 
-        // Register each item separately
-        // Each serial number corresponds to a single item
-        final List<Map<String, dynamic>> registeredItems = [];
+          // If serial numbers provided, register one item per serial number
+          if (serialNos.isNotEmpty) {
+            for (final serialNo in serialNos) {
+              try {
+                final baseItemModelId = await itemRepository.registerBaseItem(
+                  ctx: ctx,
+                  fundCluster: fundCluster,
+                  productName: productName,
+                  productNameId: productNameId,
+                  productDescriptionId: productDescriptionId,
+                  specification: specification,
+                  unit: unit,
+                  quantity: 1,
+                  unitCost: unitCost,
+                  acquiredDate: acquiredDate,
+                );
 
-        for (final serialNo in serialNos) {
-          try {
-            /// register base item model
-            final baseItemModelId = await itemRepository.registerBaseItem(
-              fundCluster: fundCluster,
+                final baseItemId = await itemRepository.registerInventoryItem(
+                  ctx: ctx,
+                  baseItemModelId: baseItemModelId,
+                  productNameId: productNameId,
+                  manufacturerName: manufacturerName,
+                  brandName: brandName,
+                  modelName: modelName,
+                  serialNo: serialNo,
+                  assetClassification: assetClassification,
+                  assetSubClass: assetSubClass,
+                  estimatedUsefulLife: estimatedUsefulLife,
+                );
+
+                final inventoryItem =
+                    await itemRepository.getConcreteItemByBaseItemId(
+                  ctx: ctx,
+                  baseItemId: baseItemId,
+                );
+
+                await itemRepository.registerInventoryActivity(
+                  ctx: ctx,
+                  baseItemId: baseItemId,
+                  action: InventoryActivity.added,
+                  quantity: 1,
+                );
+
+                if (inventoryItem != null) {
+                  registeredItems
+                      .add((inventoryItem as InventoryItem).toJson());
+                }
+              } catch (e) {
+                if (e.toString().contains(
+                    'duplicate key value violates unique constraint')) {
+                  return Response.json(
+                    statusCode: HttpStatus.conflict,
+                    body: {'message': 'Duplicate serial number: $serialNo'},
+                  );
+                }
+                rethrow;
+              }
+            }
+          } else {
+            // No serial numbers, register multiple items
+            for (int i = 0; i < quantity; i++) {
+              final baseItemModelId = await itemRepository.registerBaseItem(
+                ctx: ctx,
+                fundCluster: fundCluster,
+                productName: productName,
+                productNameId: productNameId,
+                productDescriptionId: productDescriptionId,
+                specification: specification,
+                unit: unit,
+                quantity: 1,
+                unitCost: unitCost,
+                acquiredDate: acquiredDate,
+              );
+
+              final baseItemId = await itemRepository.registerInventoryItem(
+                ctx: ctx,
+                baseItemModelId: baseItemModelId,
+                productNameId: productNameId,
+                manufacturerName: manufacturerName,
+                brandName: brandName,
+                modelName: modelName,
+                serialNo: null,
+                assetClassification: assetClassification,
+                assetSubClass: assetSubClass,
+                estimatedUsefulLife: estimatedUsefulLife,
+              );
+
+              final item = await itemRepository.getConcreteItemByBaseItemId(
+                ctx: ctx,
+                baseItemId: baseItemId,
+              );
+
+              await itemRepository.registerInventoryActivity(
+                ctx: ctx,
+                baseItemId: baseItemId,
+                action: InventoryActivity.added,
+                quantity: 1,
+              );
+
+              if (item != null) {
+                registeredItems.add((item as InventoryItem).toJson());
+              }
+            }
+          }
+
+          return Response.json(
+            statusCode: HttpStatus.ok,
+            body: {'items': registeredItems},
+          );
+        } else if (itemType == 'supply') {
+          String? baseItemId;
+
+          final supplyItemResult = await itemRepository.checkSupplyIfExist(
+            ctx: ctx,
+            productNameId: productNameId,
+            productDescriptionId: productDescriptionId,
+            specification: specification,
+            unit: unit,
+            unitCost: unitCost,
+            acquiredDate: acquiredDate,
+          );
+
+          if (supplyItemResult != null) {
+            baseItemId = supplyItemResult;
+            await itemRepository.updateSupplyItemQuantityByBaseItemId(
+              ctx: ctx,
+              baseItemId: baseItemId,
+              quantity: quantity,
+            );
+          } else {
+            baseItemId = await itemRepository.registerBaseItem(
+              ctx: ctx,
               productName: productName,
               productNameId: productNameId,
               productDescriptionId: productDescriptionId,
@@ -260,172 +380,45 @@ Future<Response> _registerItem(
               acquiredDate: acquiredDate,
             );
 
-            final baseItemId = await itemRepository.registerInventoryItem(
-              baseItemModelId: baseItemModelId,
-              productNameId: productNameId,
-              manufacturerName: manufacturerName,
-              brandName: brandName,
-              modelName: modelName,
-              serialNo: serialNo,
-              assetClassification: assetClassification,
-              assetSubClass: assetSubClass,
-              estimatedUsefulLife: estimatedUsefulLife,
+            await itemRepository.registerSupply(
+              ctx: ctx,
+              baseItemModelId: baseItemId,
             );
-
-            final inventoryItem =
-                await itemRepository.getConcreteItemByBaseItemId(
-              baseItemId: baseItemId,
-            );
-
-            await itemRepository.registerInventoryActivity(
-              baseItemId: baseItemId,
-              action: InventoryActivity.added,
-              quantity: quantity,
-            );
-
-            if (inventoryItem != null) {
-              registeredItems.add(
-                (inventoryItem as InventoryItem).toJson(),
-              );
-            }
-          } catch (e) {
-            if (e.toString().contains('Serial no. already exists.')) {
-              return Response.json(
-                statusCode: HttpStatus.conflict,
-                body: {
-                  'message': 'Duplicate serial number: $serialNo.',
-                },
-              );
-            }
-            rethrow;
           }
-        }
 
-        return Response.json(
-          statusCode: 200,
-          body: {
-            'items': registeredItems,
-          },
-        );
-      } else {
-        final List<Map<String, dynamic>> registeredItems = [];
-
-        for (int i = 0; i < quantity; i++) {
-          final baseItemModelId = await itemRepository.registerBaseItem(
-            fundCluster: fundCluster,
-            productName: productName,
-            productNameId: productNameId,
-            productDescriptionId: productDescriptionId,
-            specification: specification,
-            unit: unit,
-            quantity: 1,
-            unitCost: unitCost,
-            acquiredDate: acquiredDate,
-          );
-
-          final baseItemId = await itemRepository.registerInventoryItem(
-            baseItemModelId: baseItemModelId,
-            productNameId: productNameId,
-            manufacturerName: manufacturerName!,
-            brandName: brandName,
-            modelName: modelName,
-            serialNo: null, // Serial not provided
-            assetClassification: assetClassification,
-            assetSubClass: assetSubClass,
-            estimatedUsefulLife: estimatedUsefulLife,
-          );
-
-          final item = await itemRepository.getConcreteItemByBaseItemId(
+          final supplyItem = await itemRepository.getConcreteItemByBaseItemId(
+            ctx: ctx,
             baseItemId: baseItemId,
           );
 
           await itemRepository.registerInventoryActivity(
+            ctx: ctx,
             baseItemId: baseItemId,
             action: InventoryActivity.added,
-            quantity: 1,
+            quantity: quantity,
           );
 
-          if (item != null) {
-            registeredItems.add(
-              (item as InventoryItem).toJson(),
-            );
-          }
+          return Response.json(
+            statusCode: HttpStatus.ok,
+            body: {'item': (supplyItem as Supply).toJson()},
+          );
+        } else {
+          return Response.json(
+            statusCode: HttpStatus.badRequest,
+            body: {'message': 'Invalid or missing item type.'},
+          );
         }
-
-        return Response.json(
-          statusCode: 200,
-          body: {
-            'items': registeredItems,
-          },
-        );
+      } catch (e) {
+        await ctx.rollback();
+        rethrow;
       }
-    } else if (itemType == 'supply') {
-      /// check first if the supply item already exist
-      final supplyItemResult = await itemRepository.checkSupplyIfExist(
-        productNameId: productNameId,
-        productDescriptionId: productDescriptionId,
-        specification: specification,
-        unit: unit,
-        unitCost: unitCost,
-        acquiredDate: acquiredDate,
-      );
-      String? baseItemId;
+    });
 
-      if (supplyItemResult != null) {
-        print('Supply item checked result is not null');
-        baseItemId = supplyItemResult;
-        await itemRepository.updateSupplyItemQuantityByBaseItemId(
-          baseItemId: baseItemId,
-          quantity: quantity,
-        );
-      } else {
-        print('Supply item checked is null');
-        baseItemId = await itemRepository.registerBaseItem(
-          productName: productName,
-          productNameId: productNameId,
-          productDescriptionId: productDescriptionId,
-          specification: specification,
-          unit: unit,
-          quantity: quantity,
-          unitCost: unitCost,
-          acquiredDate: acquiredDate,
-        );
-
-        await itemRepository.registerSupply(
-          baseItemModelId: baseItemId,
-        );
-      }
-
-      final supplyItem = await itemRepository.getConcreteItemByBaseItemId(
-        baseItemId: baseItemId,
-      );
-
-      await itemRepository.registerInventoryActivity(
-        baseItemId: baseItemId,
-        action: InventoryActivity.added,
-        quantity: quantity,
-      );
-
-      return Response.json(
-        statusCode: 200,
-        body: {
-          'item': (supplyItem as Supply).toJson(),
-        },
-      );
-    } else {
-      return Response.json(
-        statusCode: 400,
-        body: {
-          'message': 'Invalid or missing item type.',
-        },
-      );
-    }
+    return response;
   } catch (e) {
     return Response.json(
-      statusCode: 500,
-      body: {
-        'message': 'Error registering item(s): $e.',
-      },
+      statusCode: HttpStatus.internalServerError,
+      body: {'message': 'Unexpected error: ${e.toString()}'},
     );
   }
 }

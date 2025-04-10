@@ -13,10 +13,12 @@ class ItemRepository {
   final Connection _conn;
 
   Future<String> _generateUniqueItemId(
+    TxSession? ctx,
     String itemName,
     FundCluster? fundCluster,
     DateTime? acquiredDate,
   ) async {
+    final conn = ctx ?? _conn;
     final now = DateTime.now();
     final dateToUse = acquiredDate ?? now;
     final year = dateToUse.year;
@@ -29,7 +31,7 @@ class ItemRepository {
         .join('');
 
     // Check for existing entries for this item + year + month + FC
-    final latestEntryResult = await _conn.execute(
+    final latestEntryResult = await conn.execute(
       Sql.named(
         '''
         SELECT id FROM Items
@@ -79,11 +81,14 @@ class ItemRepository {
     return uniqueId;
   }
 
-  Future<String> _generateUniqueManufacturerId() async {
+  Future<String> _generateUniqueManufacturerId(
+    TxSession? ctx,
+  ) async {
+    final conn = ctx ?? _conn;
     while (true) {
       final manufacturerId = generatedId('MNFCTR');
 
-      final result = await _conn.execute(
+      final result = await conn.execute(
         Sql.named('''
         SELECT COUNT(id) FROM Manufacturers Where id = @id;
         '''),
@@ -100,11 +105,12 @@ class ItemRepository {
     }
   }
 
-  Future<String> _generateUniqueBrandId() async {
+  Future<String> _generateUniqueBrandId(TxSession? ctx) async {
+    final conn = ctx ?? _conn;
     while (true) {
       final brandId = generatedId('BRND');
 
-      final result = await _conn.execute(
+      final result = await conn.execute(
         Sql.named('''
         SELECT COUNT(id) FROM Brands Where id = @id;
         '''),
@@ -121,11 +127,12 @@ class ItemRepository {
     }
   }
 
-  Future<String> _generateUniqueModelId() async {
+  Future<String> _generateUniqueModelId(TxSession? ctx) async {
+    final conn = ctx ?? _conn;
     while (true) {
       final modelId = generatedId('MDL');
 
-      final result = await _conn.execute(
+      final result = await conn.execute(
         Sql.named('''
         SELECT COUNT(id) FROM Models Where id = @id;
         '''),
@@ -162,6 +169,7 @@ class ItemRepository {
     try {
       /// generate an item id
       final itemId = await _generateUniqueItemId(
+        null,
         productName,
         fundCluster,
         acquiredDate,
@@ -330,6 +338,7 @@ class ItemRepository {
   }
 
   Future<String> registerBaseItem({
+    TxSession? ctx,
     FundCluster? fundCluster,
     required String productName,
     required int productNameId,
@@ -341,8 +350,11 @@ class ItemRepository {
     DateTime? acquiredDate,
   }) async {
     try {
+      final conn = ctx ?? _conn;
+
       /// generate an item id
       final itemId = await _generateUniqueItemId(
+        ctx,
         productName,
         fundCluster,
         acquiredDate,
@@ -357,12 +369,13 @@ class ItemRepository {
       final qrCodeImageData = await QrCodeUtils.generateQRCode(encryptedId);
       print('qr data id: $qrCodeImageData');
 
-      await _conn.execute(
+      await conn.execute(
         Sql.named(
           '''
         INSERT INTO Items (
           id, product_name_id, product_description_id, specification, unit, 
-          quantity, unit_cost, encrypted_id, qr_code_image_data, acquired_date
+          quantity, unit_cost, encrypted_id, qr_code_image_data, acquired_date,
+          fund_cluster
         ) VALUES (
           @id, @product_name_id, @product_description_id, @specification, @unit,
           @quantity, @unit_cost, @encrypted_id, @qr_code_image_data, 
@@ -394,6 +407,7 @@ class ItemRepository {
   }
 
   Future<String?> checkSupplyIfExist({
+    TxSession? ctx,
     required int productNameId,
     required int productDescriptionId,
     String? specification,
@@ -401,7 +415,8 @@ class ItemRepository {
     required double unitCost,
     DateTime? acquiredDate,
   }) async {
-    final baseItemResult = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final baseItemResult = await conn.execute(
       Sql.named(
         '''
         SELECT 
@@ -453,10 +468,12 @@ class ItemRepository {
   }
 
   Future<bool> updateSupplyItemQuantityByBaseItemId({
+    TxSession? ctx,
     required String baseItemId,
     required int quantity,
   }) async {
-    final result = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final result = await conn.execute(
       Sql.named(
         '''
         UPDATE Items
@@ -474,10 +491,12 @@ class ItemRepository {
   }
 
   Future<String> registerSupply({
+    TxSession? ctx,
     required String baseItemModelId,
   }) async {
     try {
-      await _conn.execute(
+      final conn = ctx ?? _conn;
+      await conn.execute(
         Sql.named(
           '''
           INSERT INTO Supplies (base_item_id) VALUES (@base_item_id);
@@ -495,17 +514,20 @@ class ItemRepository {
   }
 
   Future<String> registerInventoryItem({
+    TxSession? ctx,
     required String baseItemModelId,
     required int productNameId,
-    required String? manufacturerName,
-    required String? brandName,
-    required String? modelName,
-    required String? serialNo,
+    String? manufacturerName,
+    String? brandName,
+    String? modelName,
+    String? serialNo,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     int? estimatedUsefulLife,
   }) async {
     try {
+      final conn = ctx ?? _conn;
+
       String? manufacturerId;
       String? brandId;
       String? modelId;
@@ -513,11 +535,13 @@ class ItemRepository {
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
         /// check if manufacturer exists
         final manufacturerResult = await checkManufacturerIfExist(
+          ctx: ctx,
           manufacturerName: manufacturerName,
         );
 
         manufacturerId = manufacturerResult ??
             await registerManufacturer(
+              ctx: ctx,
               manufacturerName: manufacturerName,
             );
 
@@ -527,11 +551,13 @@ class ItemRepository {
       if (brandName != null && brandName.isNotEmpty) {
         /// check if brand exists
         final brandResult = await checkBrandIfExist(
+          ctx: ctx,
           brandName: brandName,
         );
 
         brandId = brandResult ??
             await registerBrand(
+              ctx: ctx,
               brandName: brandName,
             );
 
@@ -541,12 +567,14 @@ class ItemRepository {
       if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
           (brandId != null && brandId.isNotEmpty)) {
         final manufacturerBrandResult = await checkManufacturerBrandIfExist(
+          ctx: ctx,
           manufacturerId: manufacturerId,
           brandId: brandId,
         );
 
         if (manufacturerBrandResult == 0) {
           await registerManufacturerBrand(
+            ctx: ctx,
             manufacturerId: manufacturerId,
             brandId: brandId,
           );
@@ -557,6 +585,7 @@ class ItemRepository {
           (modelName != null && modelName.isNotEmpty)) {
         /// check if model exists
         final modelResult = await checkModelIfExist(
+          ctx: ctx,
           productNameId: productNameId,
           brandId: brandId,
           modelName: modelName,
@@ -564,6 +593,7 @@ class ItemRepository {
 
         modelId = modelResult ??
             await registerModel(
+              ctx: ctx,
               productNameId: productNameId,
               brandId: brandId,
               modelName: modelName,
@@ -572,7 +602,7 @@ class ItemRepository {
         print('model id: $modelId');
       }
 
-      await _conn.execute(
+      await conn.execute(
         Sql.named(
           '''
         INSERT INTO InventoryItems (
@@ -599,6 +629,12 @@ class ItemRepository {
 
       return baseItemModelId;
     } catch (e) {
+      if (e
+          .toString()
+          .contains('duplicate key value violates unique constraint')) {
+        print('Serial no. already exists');
+        throw Exception('Serial no. already exists.');
+      }
       throw Exception('Error registering inventory item: $e');
     }
   }
@@ -623,6 +659,7 @@ class ItemRepository {
     try {
       /// generate an item id
       final itemId = await _generateUniqueItemId(
+        null,
         productName,
         fundCluster,
         acquiredDate,
@@ -921,11 +958,13 @@ class ItemRepository {
   }
 
   Future<String> registerManufacturer({
+    TxSession? ctx,
     required String manufacturerName,
   }) async {
-    final manufacturerId = await _generateUniqueManufacturerId();
+    final conn = ctx ?? _conn;
+    final manufacturerId = await _generateUniqueManufacturerId(ctx);
 
-    await _conn.execute(
+    await conn.execute(
       Sql.named('''
       INSERT INTO Manufacturers (id, name)
       VALUES (@id, @name)
@@ -940,9 +979,11 @@ class ItemRepository {
   }
 
   Future<String?> checkManufacturerIfExist({
+    TxSession? ctx,
     required String manufacturerName,
   }) async {
-    final checkIfExists = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final checkIfExists = await conn.execute(
       Sql.named('''
         SELECT id FROM Manufacturers WHERE name ILIKE @name;
       '''),
@@ -961,10 +1002,14 @@ class ItemRepository {
     }
   }
 
-  Future<String> registerBrand({required String brandName}) async {
-    final brandId = await _generateUniqueBrandId();
+  Future<String> registerBrand({
+    TxSession? ctx,
+    required String brandName,
+  }) async {
+    final conn = ctx ?? _conn;
+    final brandId = await _generateUniqueBrandId(ctx);
 
-    await _conn.execute(
+    await conn.execute(
       Sql.named('''
       INSERT INTO Brands (id, name)
       VALUES (@id, @name)
@@ -979,9 +1024,11 @@ class ItemRepository {
   }
 
   Future<String?> checkBrandIfExist({
+    TxSession? ctx,
     required String brandName,
   }) async {
-    final checkIfExists = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final checkIfExists = await conn.execute(
       Sql.named('''
       SELECT id FROM Brands WHERE name ILIKE @name;
     '''),
@@ -1001,10 +1048,12 @@ class ItemRepository {
   }
 
   Future<void> registerManufacturerBrand({
+    TxSession? ctx,
     required String manufacturerId,
     required String brandId,
   }) async {
-    await _conn.execute(
+    final conn = ctx ?? _conn;
+    await conn.execute(
       Sql.named('''
       INSERT INTO ManufacturerBrands (manufacturer_id, brand_id)
       VALUES (@manufacturer_id, @brand_id)
@@ -1017,10 +1066,12 @@ class ItemRepository {
   }
 
   Future<int> checkManufacturerBrandIfExist({
+    TxSession? ctx,
     required String manufacturerId,
     required String brandId,
   }) async {
-    final checkIfExists = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final checkIfExists = await conn.execute(
       Sql.named('''
       SELECT COUNT(*) FROM ManufacturerBrands WHERE manufacturer_id = @manufacturer_id AND brand_id = @brand_id;
     '''),
@@ -1045,13 +1096,15 @@ class ItemRepository {
   }
 
   Future<String> registerModel({
+    TxSession? ctx,
     required int productNameId,
     required String brandId,
     required String modelName,
   }) async {
-    final modelId = await _generateUniqueModelId();
+    final conn = ctx ?? _conn;
+    final modelId = await _generateUniqueModelId(ctx);
 
-    await _conn.execute(
+    await conn.execute(
       Sql.named('''
       INSERT INTO Models (id, product_name_id, brand_id, model_name)
       VALUES (@id, @product_name_id, @brand_id, @model_name)
@@ -1068,11 +1121,13 @@ class ItemRepository {
   }
 
   Future<String?> checkModelIfExist({
+    TxSession? ctx,
     required int productNameId,
     required String brandId,
     required String modelName,
   }) async {
-    final checkIfExists = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final checkIfExists = await conn.execute(
       Sql.named('''
       SELECT id FROM Models WHERE product_name_id = @product_name_id AND brand_id = @brand_id AND model_name = @model_name;
     '''),
@@ -1099,9 +1154,11 @@ class ItemRepository {
   }
 
   Future<BaseItemModel?> getConcreteItemByBaseItemId({
+    TxSession? ctx,
     required String baseItemId,
   }) async {
-    final result = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final result = await conn.execute(
       Sql.named(
         '''
         SELECT
@@ -1167,7 +1224,7 @@ class ItemRepository {
       return Supply.fromJson(supplyMap);
     } else if (row[14] != null) {
       final inventoryMap = {
-        'inventory_id': row[13],
+        'inventory_id': row[14],
         'base_item_id': row[0],
         'product_name_id': row[1],
         'product_description_id': row[2],
@@ -2666,12 +2723,14 @@ class ItemRepository {
   }
 
   Future<bool> registerInventoryActivity({
+    TxSession? ctx,
     required String baseItemId,
     required InventoryActivity action,
     required int quantity,
   }) async {
     try {
-      final result = await _conn.execute(
+      final conn = ctx ?? _conn;
+      final result = await conn.execute(
         Sql.named(
           '''
           INSERT INTO InventoryActivities (
