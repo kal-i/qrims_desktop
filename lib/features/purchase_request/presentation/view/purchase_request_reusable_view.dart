@@ -383,7 +383,7 @@ class _PurchaseRequestReusableViewState
           if (_isViewOnlyMode()) _buildViewOnlyWidgets(),
           _buildPurchaseRequestInitialInformationFields(),
           const SizedBox(
-            height: 20.0,
+            height: 50.0,
           ),
           _buildItemInformationFields(),
           const SizedBox(
@@ -391,7 +391,7 @@ class _PurchaseRequestReusableViewState
           ),
           _buildRequestingOfficerInformationFields(),
           const SizedBox(
-            height: 50.0,
+            height: 20.0,
           ),
           _buildApprovingOfficerInformationFields(),
           const SizedBox(
@@ -495,7 +495,7 @@ class _PurchaseRequestReusableViewState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Purchase Request',
+          '**🧾 Purchase Request**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,
@@ -531,7 +531,7 @@ class _PurchaseRequestReusableViewState
           ),
         ),
         const SizedBox(
-          height: 15.0,
+          height: 20.0,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -548,7 +548,7 @@ class _PurchaseRequestReusableViewState
           ],
         ),
         const SizedBox(
-          height: 15.0,
+          height: 20.0,
         ),
         CustomFormTextField(
           label: 'Purpose',
@@ -575,7 +575,7 @@ class _PurchaseRequestReusableViewState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Item(s) Information',
+                  '**📦 Item(s) Information**',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 24.0,
                         fontWeight: FontWeight.w700,
@@ -723,7 +723,7 @@ class _PurchaseRequestReusableViewState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Associated Officers',
+          '**🧑‍💼 Associated Officers**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,

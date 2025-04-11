@@ -125,7 +125,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
         manufacturerName: event.manufacturerName,
         brandName: event.brandName,
         modelName: event.modelName,
-        serialNo: event.serialNo,
+        serialNos: event.serialNos,
         assetClassification: event.assetClassification,
         assetSubClass: event.assetSubClass,
         unitCost: event.unitCost,

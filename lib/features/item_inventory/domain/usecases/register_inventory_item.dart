@@ -31,7 +31,7 @@ class RegisterInventoryItem
       manufacturerName: params.manufacturerName,
       brandName: params.brandName,
       modelName: params.modelName,
-      serialNo: params.serialNo,
+      serialNos: params.serialNos,
       assetClassification: params.assetClassification,
       assetSubClass: params.assetSubClass,
       unitCost: params.unitCost,
@@ -52,7 +52,7 @@ class RegisterEquipmentItemParams {
     this.manufacturerName,
     this.brandName,
     this.modelName,
-    this.serialNo,
+    this.serialNos,
     this.assetClassification,
     this.assetSubClass,
     required this.unitCost,
@@ -69,7 +69,7 @@ class RegisterEquipmentItemParams {
   final String? manufacturerName;
   final String? brandName;
   final String? modelName;
-  final String? serialNo;
+  final List<String>? serialNos;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final double unitCost;

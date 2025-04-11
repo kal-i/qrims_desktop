@@ -138,7 +138,7 @@ class ItemInventoryRemoteDataSourceImpl
     String? manufacturerName,
     String? brandName,
     String? modelName,
-    String? serialNo,
+    List<String>? serialNos,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required double unitCost,
@@ -156,7 +156,7 @@ class ItemInventoryRemoteDataSourceImpl
           'manufacturer_name': manufacturerName,
         if (brandName != null && brandName.isNotEmpty) 'brand_name': brandName,
         if (modelName != null && modelName.isNotEmpty) 'model_name': modelName,
-        if (serialNo != null && serialNo.isNotEmpty) 'serial_no': serialNo,
+        if (serialNos != null && serialNos.isNotEmpty) 'serial_nos': serialNos,
         if (specification != null && specification.isNotEmpty)
           'specification': specification,
         if (assetClassification != null)

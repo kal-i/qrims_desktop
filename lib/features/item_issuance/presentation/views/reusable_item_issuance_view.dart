@@ -632,7 +632,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Purchase Request',
+          '**🧾 Purchase Request**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,
@@ -754,7 +754,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Item(s) Information',
+                  '**📦 Item(s) Information**',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 24.0,
                         fontWeight: FontWeight.w700,
@@ -963,7 +963,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Associated Officers',
+          '**🧑‍💼 Associated Officers**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,
@@ -1086,7 +1086,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Additional Information',
+          '**❓ Additional Information**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,

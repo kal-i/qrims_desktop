@@ -146,7 +146,9 @@ Future<Response> _registerItem(
     final manufacturerName = json['manufacturer_name'] as String?;
     final brandName = json['brand_name'] as String?;
     final modelName = json['model_name'] as String?;
-    final serialNoInput = json['serial_no'] as String?;
+    final serialNos = (json['serial_nos'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .toList();
 
     final estimatedUsefulLife = json['estimated_useful_life'] as int?;
     final acquiredDate = json['acquired_date'] != null
@@ -174,8 +176,8 @@ Future<Response> _registerItem(
         : Unit.undetermined;
 
     if (itemType == 'inventory' &&
-        serialNoInput != null &&
-        serialNoInput.trim().isNotEmpty &&
+        serialNos != null &&
+        serialNos.isNotEmpty &&
         (manufacturerName == null ||
             manufacturerName.isEmpty ||
             brandName == null ||
@@ -235,11 +237,9 @@ Future<Response> _registerItem(
       try {
         if (itemType == 'inventory') {
           final List<Map<String, dynamic>> registeredItems = [];
-          final serialNos =
-              serialNoInput?.split(',').map((s) => s.trim()).toList() ?? [];
 
           // If serial numbers provided, register one item per serial number
-          if (serialNos.isNotEmpty) {
+          if (serialNos != null && serialNos.isNotEmpty) {
             for (final serialNo in serialNos) {
               try {
                 final baseItemModelId = await itemRepository.registerBaseItem(
@@ -370,6 +370,7 @@ Future<Response> _registerItem(
           } else {
             baseItemId = await itemRepository.registerBaseItem(
               ctx: ctx,
+              fundCluster: fundCluster,
               productName: productName,
               productNameId: productNameId,
               productDescriptionId: productDescriptionId,

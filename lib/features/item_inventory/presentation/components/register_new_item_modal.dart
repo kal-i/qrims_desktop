@@ -17,33 +17,167 @@ class RegisterNewItemModal extends StatelessWidget {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 900.0,
-      height: 300.0,
+      height: 400.0,
       headerTitle: 'Register New Item',
       subtitle: 'Choose an item type to register.',
       content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValueListenableBuilder<String?>(
             valueListenable: selectedItemType,
             builder: (context, value, child) {
-              return CustomDropdownField(
-                onChanged: (newValue) {
-                  selectedItemType.value = newValue;
-                },
-                items: [
-                  'Supply (Consumables)',
-                  'Inventory',
-                ]
-                    .map(
-                      (type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(
-                          type,
-                        ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomDropdownField(
+                    onChanged: (newValue) {
+                      selectedItemType.value = newValue;
+                    },
+                    items: [
+                      'Supply',
+                      'Inventory',
+                    ]
+                        .map(
+                          (type) => DropdownMenuItem(
+                            value: type,
+                            child: Text(
+                              type,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    label: 'Item Type',
+                    placeholderText: 'Select Item Type',
+                  ),
+                  const SizedBox(height: 20.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10.0,
+                      vertical: 10.0,
+                    ),
+                    child: RichText(
+                      text: TextSpan(
+                        text: selectedItemType.value == 'Supply'
+                            ? '**📦 Supply Items** '
+                            : selectedItemType.value == 'Inventory'
+                                ? '**🔧 Inventory Items** '
+                                : '**❓ Item Type** ',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              height: 2.0,
+                            ),
+                        children: [
+                          selectedItemType.value == 'Supply'
+                              ? TextSpan(
+                                  text:
+                                      '(or consumables) are tracked in bulk. If a new batch of supplies has the ',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        height: 2.0,
+                                      ),
+                                  children: [
+                                    TextSpan(
+                                      text: '**same details** ',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            height: 2.0,
+                                          ),
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              '(e.g., name, description, specification, unit, unit price, acquisition date, and fund cluster) as an existing one, simply increase the quantity. Otherwise, it will be treated as a new record to accurately track each batch.',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                height: 2.0,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              : selectedItemType.value == 'Inventory'
+                                  ? TextSpan(
+                                      text: 'are stored as ',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                            height: 2.0,
+                                          ),
+                                      children: [
+                                        TextSpan(
+                                          text: '**separate records** ',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                height: 2.0,
+                                              ),
+                                          children: [
+                                            TextSpan(
+                                              text:
+                                                  'in the database, with each having assigned a ',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w500,
+                                                    height: 2.0,
+                                                  ),
+                                              children: [
+                                                TextSpan(
+                                                  text: '**unique id** ',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        height: 2.0,
+                                                      ),
+                                                  children: [
+                                                    TextSpan(
+                                                      text:
+                                                          ', often issued or tracked individually, and may have different properties (e.g., serial no.) for simplified tracking and management.',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyLarge
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            height: 2.0,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    )
+                                  : const TextSpan(
+                                      text: 'item type description...',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                        ],
                       ),
-                    )
-                    .toList(),
-                label: 'Item Type',
-                placeholderText: 'Select Item Type',
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -85,7 +219,7 @@ class _ActionsRow extends StatelessWidget {
               DelightfulToastUtils.showDelightfulToast(
                 context: context,
                 icon: Icons.info_outline,
-                title: 'Informtion',
+                title: 'Information',
                 subtitle: 'Please select an item type.',
               );
               return;
@@ -97,7 +231,7 @@ class _ActionsRow extends StatelessWidget {
               'is_update': false,
             };
 
-            if (selectedType == 'Supply (Consumables)') {
+            if (selectedType == 'Supply') {
               context.go(
                 RoutingConstants.nestedRegisterSupplyItemViewRoutePath,
                 extra: extra,

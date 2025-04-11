@@ -91,7 +91,7 @@ final class InventoryItemRegister extends ItemInventoryEvent {
     this.manufacturerName,
     this.brandName,
     this.modelName,
-    this.serialNo,
+    this.serialNos,
     this.assetClassification,
     this.assetSubClass,
     required this.unitCost,
@@ -108,7 +108,7 @@ final class InventoryItemRegister extends ItemInventoryEvent {
   final String? manufacturerName;
   final String? brandName;
   final String? modelName;
-  final String? serialNo;
+  final List<String>? serialNos;
   final AssetClassification? assetClassification;
   final AssetSubClass? assetSubClass;
   final double unitCost;
@@ -123,7 +123,7 @@ final class InventoryItemRegister extends ItemInventoryEvent {
         manufacturerName,
         brandName,
         modelName,
-        serialNo,
+        serialNos,
         specification,
         assetClassification,
         assetSubClass,

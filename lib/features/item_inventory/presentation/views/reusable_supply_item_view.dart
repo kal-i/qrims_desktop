@@ -12,12 +12,14 @@ import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_order/presentation/components/custom_search_field.dart';
@@ -56,6 +58,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   final ValueNotifier<Unit> _selectedUnit = ValueNotifier(Unit.undetermined);
 
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
+  final ValueNotifier<FundCluster?> _selectedFundCluster = ValueNotifier(null);
 
   bool _isViewOnlyMode() => !widget.isUpdate && widget.itemId != null;
 
@@ -108,6 +111,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               quantity: int.parse(_quantityController.text),
               unitCost: double.parse(_unitCostController.text),
               acquiredDate: _pickedDate.value,
+              fundCluster: _selectedFundCluster.value,
             ),
           );
     }
@@ -145,6 +149,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     _selectedUnit.dispose();
 
     _pickedDate.dispose();
+    _selectedFundCluster.dispose();
 
     super.dispose();
   }
@@ -282,7 +287,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Supply Item Information',
+          '**📦 Supply Item Information**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,
@@ -316,7 +321,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Item QR Code',
+          '**📱 Item QR Code**',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,
@@ -451,7 +456,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
           ],
         ),
         CustomFormTextField(
-          label: 'Specification (Optional)',
+          label: 'Specification (optional)',
           placeholderText: 'Enter item\'s specification',
           maxLines: 4,
           controller: _specificationController,
@@ -469,9 +474,22 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
         const SizedBox(
           height: 20.0,
         ),
-        SizedBox(
-          height: 100.0,
-          child: _buildAcquiredDateSelection(),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 100.0,
+                child: _buildAcquiredDateSelection(),
+              ),
+            ),
+            const SizedBox(width: 20.0),
+            Expanded(
+              child: SizedBox(
+                height: 100.0,
+                child: _buildFundClusterSelection(),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -625,11 +643,47 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               _pickedDate.value = date;
             }
           },
-          label: '* Acquired Date',
+          label: 'Acquired Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+        );
+      },
+    );
+  }
+
+  Widget _buildFundClusterSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedFundCluster,
+      builder: (context, selectedFundCluster, child) {
+        return CustomDropdownField(
+          //value: selectedFundCluster.toString(),
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) {
+              _selectedFundCluster.value = FundCluster.values.firstWhere(
+                  (e) => e.toString().split('.').last == value.split('.').last);
+            }
+          },
+          items: FundCluster.values
+              .map(
+                (fundCluster) => DropdownMenuItem(
+                  value: fundCluster.toString(),
+                  child: Text(
+                    fundCluster.toReadableString(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+              )
+              .toList(),
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
+          label: 'Fund Cluster',
+          placeholderText: 'Enter purchase request\'s fund cluster',
         );
       },
     );

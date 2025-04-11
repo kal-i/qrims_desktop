@@ -450,7 +450,7 @@ class ItemRepository {
     if (baseItemResult.isNotEmpty) {
       String baseItemId = baseItemResult.first[0] as String;
 
-      final supplyItemResult = await _conn.execute(
+      final supplyItemResult = await conn.execute(
         Sql.named(
           'SELECT base_item_id FROM Supplies WHERE base_item_id ILIKE @base_item_id;',
         ),

@@ -43,7 +43,7 @@ abstract interface class ItemInventoryRepository {
     String? manufacturerName,
     String? brandName,
     String? modelName,
-    String? serialNo,
+    List<String>? serialNos,
     AssetClassification? assetClassification,
     AssetSubClass? assetSubClass,
     required double unitCost,
