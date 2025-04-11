@@ -81,10 +81,10 @@ class IssuanceItem {
       print('issuance item received: $itemJson');
 
       // Check if required fields are present
-      if (itemJson['shareable_item_information'] == null) {
-        throw Exception(
-            "'shareable_item_information' is missing in the item JSON");
-      }
+      // if (itemJson['shareable_item_information'] == null) {
+      //   throw Exception(
+      //       "'shareable_item_information' is missing in the item JSON");
+      // }
 
       // Re-mapping
       final itemData = itemJson['supply_id'] != null

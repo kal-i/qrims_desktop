@@ -239,40 +239,109 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     );
   }
 
-  final predefinedTemplates = [
-    {
-      'title': 'RCPI',
-      'type': DocumentType.rpci,
-    },
-    {
-      'title': 'Annex A.8',
-      'type': DocumentType.annexA8,
-    },
-    {
-      'title': 'A73',
-      'type': DocumentType.a73,
-    },
-    {
-      'title': 'Property Card',
-      'type': DocumentType.propertyCard,
-    },
-    // {
-    //   'title': 'SPC',
-    //   'type': DocumentType.spc,
-    // },
-    {
-      'title': 'RSPI',
-      'type': DocumentType.rspi,
-    },
-    {
-      'title': 'RSMI',
-      'type': DocumentType.rsmi,
-    },
-    {
-      'title': 'Stock Card',
-      'type': DocumentType.stockCard,
-    },
-  ];
+  // final predefinedTemplates = [
+  //   {
+  //     'title': 'RCPI',
+  //     'type': DocumentType.rpci,
+  //   },
+  //   {
+  //     'title': 'Annex A.8',
+  //     'type': DocumentType.annexA8,
+  //   },
+  //   {
+  //     'title': 'A73',
+  //     'type': DocumentType.a73,
+  //   },
+  // {
+  //   'title': 'Property Card',
+  //   'type': DocumentType.propertyCard,
+  // },
+  // {
+  //   'title': 'SPC',
+  //   'type': DocumentType.spc,
+  // },
+  // {
+  //   'title': 'RSPI',
+  //   'type': DocumentType.rspi,
+  // },
+  // {
+  //   'title': 'RSMI',
+  //   'type': DocumentType.rsmi,
+  // },
+  // {
+  //   'title': 'Stock Card',
+  //   'type': DocumentType.stockCard,
+  // },
+  // ];
+
+  // Widget _buildPredefinedDocumentTemplatesRow() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.stretch,
+  //     children: [
+  //       Text(
+  //         'Predefined templates',
+  //         style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //               fontSize: 18.0,
+  //             ),
+  //       ),
+  //       const SizedBox(
+  //         height: 20.0,
+  //       ),
+  //       SizedBox(
+  //         height: 100.0, // Adjust the height as per your design
+  //         child: ListView.separated(
+  //           scrollDirection: Axis.horizontal,
+  //           itemCount: predefinedTemplates.length,
+  //           separatorBuilder: (context, index) => const SizedBox(width: 15.0),
+  //           itemBuilder: (context, index) {
+  //             final template = predefinedTemplates[index];
+  //             return SizedBox(
+  //               width: 200.0, // Adjust the width of each card as needed
+  //               child: DocumentCard(
+  //                 onTap: () => template['title'] == 'RCPI'
+  //                     ? showDialog(
+  //                         context: context,
+  //                         builder: (context) =>
+  //                             const GenerateInventoryReportModal(
+  //                           generateInventoryReportType:
+  //                               GenerateInventoryReportType.rcpi,
+  //                           modalTitle: 'RPCI',
+  //                         ),
+  //                       )
+  //                     : template['title'] == 'Annex A.8'
+  //                         ? showDialog(
+  //                             context: context,
+  //                             builder: (context) =>
+  //                                 const GenerateInventoryReportModal(
+  //                               generateInventoryReportType:
+  //                                   GenerateInventoryReportType.rcsep,
+  //                               modalTitle: 'RCSEP',
+  //                             ),
+  //                           )
+  //                         : template['title'] == 'A73'
+  //                             ? showDialog(
+  //                                 context: context,
+  //                                 builder: (context) =>
+  //                                     const GenerateInventoryReportModal(
+  //                                   generateInventoryReportType:
+  //                                       GenerateInventoryReportType.rcppe,
+  //                                   modalTitle: 'RCPPE',
+  //                                 ),
+  //                               )
+  //                             : showCustomDocumentPreview(
+  //                                 context: context,
+  //                                 documentObject: null,
+  //                                 docType: template['type'] as DocumentType,
+  //                               ),
+  //                 title: template['title'] as String,
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildPredefinedDocumentTemplatesRow() {
     return Column(
@@ -287,57 +356,54 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         const SizedBox(
           height: 20.0,
         ),
-        SizedBox(
-          height: 100.0, // Adjust the height as per your design
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: predefinedTemplates.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 15.0),
-            itemBuilder: (context, index) {
-              final template = predefinedTemplates[index];
-              return SizedBox(
-                width: 200.0, // Adjust the width of each card as needed
-                child: DocumentCard(
-                  onTap: () => template['title'] == 'RCPI'
-                      ? showDialog(
-                          context: context,
-                          builder: (context) =>
-                              const GenerateInventoryReportModal(
-                            generateInventoryReportType:
-                                GenerateInventoryReportType.rcpi,
-                            modalTitle: 'RPCI',
-                          ),
-                        )
-                      : template['title'] == 'Annex A.8'
-                          ? showDialog(
-                              context: context,
-                              builder: (context) =>
-                                  const GenerateInventoryReportModal(
-                                generateInventoryReportType:
-                                    GenerateInventoryReportType.rcsep,
-                                modalTitle: 'RCSEP',
-                              ),
-                            )
-                          : template['title'] == 'A73'
-                              ? showDialog(
-                                  context: context,
-                                  builder: (context) =>
-                                      const GenerateInventoryReportModal(
-                                    generateInventoryReportType:
-                                        GenerateInventoryReportType.rcppe,
-                                    modalTitle: 'RCPPE',
-                                  ),
-                                )
-                              : showCustomDocumentPreview(
-                                  context: context,
-                                  documentObject: null,
-                                  docType: template['type'] as DocumentType,
-                                ),
-                  title: template['title'] as String,
+        Row(
+          children: [
+            Expanded(
+              child: DocumentCard(
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => const GenerateInventoryReportModal(
+                    generateInventoryReportType:
+                        GenerateInventoryReportType.rcpi,
+                    modalTitle: 'RPCI',
+                  ),
                 ),
-              );
-            },
-          ),
+                title: 'RPCI',
+              ),
+            ),
+            const SizedBox(
+              width: 15.0,
+            ),
+            Expanded(
+              child: DocumentCard(
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => const GenerateInventoryReportModal(
+                    generateInventoryReportType:
+                        GenerateInventoryReportType.rcsep,
+                    modalTitle: 'RCSEP',
+                  ),
+                ),
+                title: 'RPSEP',
+              ),
+            ),
+            const SizedBox(
+              width: 15.0,
+            ),
+            Expanded(
+              child: DocumentCard(
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => const GenerateInventoryReportModal(
+                    generateInventoryReportType:
+                        GenerateInventoryReportType.rcppe,
+                    modalTitle: 'RPPPE',
+                  ),
+                ),
+                title: 'RPPPE',
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -559,11 +625,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     'text': 'Generate RIS Document',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
                   },
-                if (issuance is InventoryCustodianSlipEntity)
-                  {
-                    'text': 'Generate Semi-expendable Property Card',
-                    'icon': HugeIcons.strokeRoundedFile01,
-                  },
+                // if (issuance is InventoryCustodianSlipEntity)
+                //   {
+                //     'text': 'Generate Semi-expendable Property Card',
+                //     'icon': HugeIcons.strokeRoundedFile01,
+                //   },
               ],
               object: issuance,
             );

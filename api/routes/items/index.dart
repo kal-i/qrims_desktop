@@ -165,7 +165,7 @@ Future<Response> _registerItem(
             null
         ? AssetClassification.values.firstWhere(
             (e) => e.toString().split('.').last == json['asset_classification'])
-        : AssetClassification.unknown;
+        : null;
     AssetSubClass? assetSubClass = json['asset_sub_class'] != null
         ? AssetSubClass.values.firstWhere(
             (e) => e.toString().split('.').last == json['asset_sub_class'])
@@ -358,6 +358,7 @@ Future<Response> _registerItem(
             unit: unit,
             unitCost: unitCost,
             acquiredDate: acquiredDate,
+            fundCluster: fundCluster,
           );
 
           if (supplyItemResult != null) {

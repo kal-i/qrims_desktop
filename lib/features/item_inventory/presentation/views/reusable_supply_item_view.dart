@@ -222,6 +222,20 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                   .toString();
               _unitCostController.text = formatCurrency(
                   initItemData.shareableItemInformationEntity.unitCost);
+
+              _pickedDate.value =
+                  initItemData.shareableItemInformationEntity.acquiredDate ??
+                      DateTime.now();
+
+              _selectedFundCluster.value = FundCluster.values.firstWhere(
+                (e) =>
+                    e.toString().split('.').last ==
+                    shareableItemInformationEntity.fundCluster
+                        .toString()
+                        .split('.')
+                        .last,
+                orElse: () => FundCluster.unknown,
+              );
             }
           }
 
@@ -657,28 +671,29 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     return ValueListenableBuilder(
       valueListenable: _selectedFundCluster,
       builder: (context, selectedFundCluster, child) {
-        return CustomDropdownField(
-          //value: selectedFundCluster.toString(),
+        return CustomDropdownField<FundCluster>(
+          value: selectedFundCluster,
           onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedFundCluster.value = FundCluster.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
+            _selectedFundCluster.value = value;
           },
-          items: FundCluster.values
-              .map(
-                (fundCluster) => DropdownMenuItem(
-                  value: fundCluster.toString(),
-                  child: Text(
-                    fundCluster.toReadableString(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+          items: [
+            const DropdownMenuItem<FundCluster>(
+              value: null,
+              child: Text('Select fund cluster'),
+            ),
+            ...FundCluster.values.map(
+              (fundCluster) => DropdownMenuItem(
+                value: fundCluster,
+                child: Text(
+                  fundCluster.toReadableString(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),

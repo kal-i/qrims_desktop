@@ -24,6 +24,7 @@ class CustomFormTextField extends StatefulWidget {
     this.isNumeric = false,
     this.isCurrency = false,
     this.fillColor,
+    this.hasValidation = true,
   });
 
   final TextEditingController? controller;
@@ -40,6 +41,7 @@ class CustomFormTextField extends StatefulWidget {
   final bool isNumeric;
   final bool isCurrency;
   final Color? fillColor;
+  final bool hasValidation;
 
   @override
   State<CustomFormTextField> createState() => _CustomFormTextFieldState();
@@ -81,9 +83,9 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
             Text(
               widget.label!,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 13.0,
-                fontWeight: FontWeight.w600,
-              ),
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           TextFormField(
             controller: widget.controller,
@@ -96,9 +98,10 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               filled: true,
-              fillColor: widget.fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightBackground
-                  : AppColor.darkBackground),
+              fillColor: widget.fillColor ??
+                  (context.watch<ThemeBloc>().state == AppTheme.light
+                      ? AppColor.lightBackground
+                      : AppColor.darkBackground),
               disabledBorder: OutlineInputBorder(
                 borderSide: BorderSide.none,
                 // borderSide: BorderSide(
@@ -138,8 +141,8 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
               ),
               hintText: widget.placeholderText,
               hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColor.darkPlaceHolderText,
-              ),
+                    color: AppColor.darkPlaceHolderText,
+                  ),
               suffixIcon: widget.suffixIcon != null
                   ? Icon(
                       widget.suffixIcon,
@@ -154,10 +157,12 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
                   fontWeight: FontWeight.w500,
                 ),
             onTap: widget.onTap,
-            validator: widget.validator ??
-                ValidationBuilder(
-                        requiredMessage: '${widget.label} is required')
-                    .build(),
+            validator: widget.hasValidation
+                ? widget.validator ??
+                    ValidationBuilder(
+                            requiredMessage: '${widget.label} is required')
+                        .build()
+                : null,
           ),
         ],
       ),

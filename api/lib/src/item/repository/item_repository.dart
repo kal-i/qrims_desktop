@@ -414,6 +414,7 @@ class ItemRepository {
     required Unit unit,
     required double unitCost,
     DateTime? acquiredDate,
+    FundCluster? fundCluster,
   }) async {
     final conn = ctx ?? _conn;
     final baseItemResult = await conn.execute(
@@ -434,7 +435,9 @@ class ItemRepository {
         AND
           unit_cost = @unit_cost
         AND
-          acquired_date = @acquired_date
+          (acquired_date IS NULL OR acquired_date::DATE = @acquired_date::DATE)
+        AND 
+          fund_cluster = @fund_cluster
         ''',
       ),
       parameters: {
@@ -444,6 +447,7 @@ class ItemRepository {
         'unit': unit.toString().split('.').last,
         'unit_cost': unitCost,
         'acquired_date': acquiredDate,
+        'fund_cluster': fundCluster.toString().split('.').last,
       },
     );
 

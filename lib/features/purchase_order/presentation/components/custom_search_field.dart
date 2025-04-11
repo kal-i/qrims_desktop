@@ -21,6 +21,7 @@ class CustomSearchField extends StatelessWidget {
     this.enabled,
     this.scrollController,
     this.fillColor,
+    this.hasValidation = true,
   });
 
   final FutureOr<List<String>?> Function(String) suggestionsCallback;
@@ -32,6 +33,7 @@ class CustomSearchField extends StatelessWidget {
   final bool? enabled;
   final ScrollController? scrollController;
   final Color? fillColor;
+  final bool hasValidation;
 
   @override
   Widget build(BuildContext context) {
@@ -59,9 +61,10 @@ class CustomSearchField extends StatelessWidget {
               focusNode: focusNode,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightBackground
-                    : AppColor.darkBackground),
+                fillColor: fillColor ??
+                    (context.watch<ThemeBloc>().state == AppTheme.light
+                        ? AppColor.lightBackground
+                        : AppColor.darkBackground),
                 disabledBorder: OutlineInputBorder(
                   borderSide: BorderSide.none,
                   // borderSide: BorderSide(
@@ -101,17 +104,18 @@ class CustomSearchField extends StatelessWidget {
                 ),
                 hintText: placeHolderText,
                 hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColor.darkPlaceHolderText,
-                ),
+                      color: AppColor.darkPlaceHolderText,
+                    ),
               ),
               maxLines: maxLines,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w500,
                   ),
-              validator:
-                  ValidationBuilder(requiredMessage: '$label is required')
-                      .build(),
+              validator: hasValidation
+                  ? ValidationBuilder(requiredMessage: '$label is required')
+                      .build()
+                  : null,
             );
           },
           itemBuilder: (context, itemName) {

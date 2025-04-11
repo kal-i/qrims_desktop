@@ -33,7 +33,7 @@ class DocumentCard extends StatelessWidget {
           child: Container(
             key: contextMenuKey, // Assign the key here
             padding: const EdgeInsets.all(10.0),
-            height: 80.0,
+            height: 100.0,
             decoration: BoxDecoration(
               border: Border.all(
                 color: Theme.of(context).dividerColor,

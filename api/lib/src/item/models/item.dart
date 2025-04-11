@@ -621,7 +621,7 @@ class InventoryItem extends BaseItemModel {
   final int? estimatedUsefulLife;
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
-    print('received json data by equipment model: $json');
+    print('received json data by inventory model: $json');
 
     final assetClassification = (json['asset_classification'] as String?) !=
             null
