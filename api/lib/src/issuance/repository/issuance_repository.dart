@@ -2125,6 +2125,7 @@ class IssuanceRepository {
   Future<List<Map<String, dynamic>>> getInventorySupplyReport({
     required DateTime startDate,
     DateTime? endDate,
+    FundCluster? fundCluster,
   }) async {
     final inventorySupply = <Map<String, dynamic>>[];
 
@@ -2146,6 +2147,10 @@ class IssuanceRepository {
               ent.id AS entity_id,
               ent.name AS entity_name,
               rec_off.name AS receiving_officer_name,
+              rec_ofc.name AS receiving_officer_office,
+              rec_off_pos.position_name AS receiving_officer_position,
+              i.acquired_date AS date_acquired,
+              i.fund_cluster AS fund_cluster,
               ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY iss.id) AS row_num -- To order issuances for each item
           FROM
               Items i
@@ -2165,8 +2170,13 @@ class IssuanceRepository {
               entities ent ON iss.entity_id = ent.id
           LEFT JOIN
               officers rec_off ON iss.receiving_officer_id = rec_off.id
+          LEFT JOIN
+              positions rec_off_pos ON rec_off.position_id = rec_off_pos.id
+          LEFT JOIN
+              offices rec_ofc ON rec_off_pos.office_id = rec_ofc.id
           WHERE
               i.acquired_date BETWEEN @start_date AND @end_date -- Add date filter here
+              ${fundCluster != null ? 'AND i.fund_cluster = @fund_cluster' : ''}
       ),
       CumulativeIssued AS (
           SELECT
@@ -2183,6 +2193,10 @@ class IssuanceRepository {
               entity_id,
               entity_name,
               receiving_officer_name,
+              receiving_officer_office,
+              receiving_officer_position,              
+              date_acquired,
+              fund_cluster,
               row_num,
               SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id) AS total_issued_quantity_all_entities,
               SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id ORDER BY row_num) AS cumulative_issued_quantity
@@ -2204,6 +2218,10 @@ class IssuanceRepository {
               entity_id,
               entity_name,
               receiving_officer_name,
+              receiving_officer_office,
+              receiving_officer_position,  
+              date_acquired,
+              fund_cluster,
               row_num,
               total_issued_quantity_all_entities,
               current_quantity_in_stock + total_issued_quantity_all_entities AS total_quantity_available_and_issued,
@@ -2233,7 +2251,11 @@ class IssuanceRepository {
           balance_per_row_after_issuance,
           entity_id,
           entity_name,
-          receiving_officer_name
+          receiving_officer_name,
+          receiving_officer_office,
+          receiving_officer_position,  
+          date_acquired,
+          fund_cluster
       FROM
           RunningBalance
       ORDER BY
@@ -2244,6 +2266,8 @@ class IssuanceRepository {
         'start_date': startDate.toIso8601String(),
         'end_date':
             endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
       },
     );
 
@@ -2264,6 +2288,10 @@ class IssuanceRepository {
           'balance_per_row_after_issuance': row[12],
           'entity_name': row[14],
           'receiving_officer_name': row[15],
+          'receiving_officer_office': row[16],
+          'receiving_officer_position': row[17],
+          'date_acquired': (row[18] as DateTime).toIso8601String(),
+          'fund_cluster': row[19],
         },
       );
     }

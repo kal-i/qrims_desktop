@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
@@ -28,10 +29,16 @@ Future<Response> _getInventorySupply(
     final endDate = queryParams['end_date'] is String
         ? DateTime.parse(queryParams['end_date'] as String)
         : queryParams['end_date'] as DateTime?;
+    final fundCluster = queryParams['fund_cluster'] != null
+        ? FundCluster.values.firstWhere(
+            (e) => e.toString().split('.').last == queryParams['fund_cluster'],
+          )
+        : null;
 
     final inventorySupply = await repository.getInventorySupplyReport(
       startDate: startDate,
       endDate: endDate,
+      fundCluster: fundCluster,
     );
 
     return Response.json(
