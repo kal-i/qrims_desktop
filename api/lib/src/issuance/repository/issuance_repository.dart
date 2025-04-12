@@ -2304,6 +2304,7 @@ class IssuanceRepository {
     DateTime? endDate,
     double? unitCost, // Optional to support both cases
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   }) async {
     final inventoryProperty = <Map<String, dynamic>>[];
 
@@ -2320,15 +2321,15 @@ class IssuanceRepository {
                 i.unit_cost, 
                 pn.name AS product_name,
                 pd.description AS product_description,
-                e.id AS equipment_id,
+                inv.id AS inventory_id,
                 i.specification, 
                 mnf.name AS manufacturer_name,
                 b.name AS brand_name,
                 m.model_name AS model_name,
-                e.serial_no,
-                e.estimated_useful_life,
-                e.asset_classification,
-                e.asset_sub_class,
+                inv.serial_no,
+                inv.estimated_useful_life,
+                inv.asset_classification,
+                inv.asset_sub_class,
                 i.quantity AS current_quantity_in_stock,
                 issi.issued_quantity AS total_quantity_issued_for_a_particular_row,
                 ent.id AS entity_id,
@@ -2336,21 +2337,23 @@ class IssuanceRepository {
                 rec_off.name AS receiving_officer_name,
                 rec_ofc.name AS receiving_officer_office,
                 rec_off_pos.position_name AS receiving_officer_position,
+                i.acquired_date AS date_acquired,
+                i.fund_cluster AS fund_cluster,
                 ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY iss.id) AS row_num 
             FROM
                 Items i
             JOIN
-                Equipment e ON i.id = e.base_item_id 
+                InventoryItems inv ON i.id = inv.base_item_id 
             LEFT JOIN
                 ProductNames pn ON i.product_name_id = pn.id
             LEFT JOIN
                 ProductDescriptions pd ON i.product_description_id = pd.id
             LEFT JOIN
-                Manufacturers mnf ON e.manufacturer_id = mnf.id
+                Manufacturers mnf ON inv.manufacturer_id = mnf.id
             LEFT JOIN
-                Brands b ON e.brand_id = b.id
+                Brands b ON inv.brand_id = b.id
             LEFT JOIN
-                Models m ON e.model_id = m.id
+                Models m ON inv.model_id = m.id
             LEFT JOIN
                 IssuanceItems issi ON i.id = issi.item_id
             LEFT JOIN
@@ -2368,7 +2371,8 @@ class IssuanceRepository {
             WHERE
                 i.acquired_date BETWEEN @start_date AND @end_date
                 ${unitCost != null ? 'AND i.unit_cost ' + (unitCost <= 50000.0 ? '<= 50000' : '> 50000') : ''}
-                ${assetSubClass != null ? 'AND e.asset_sub_class = @asset_sub_class' : ''}
+                ${assetSubClass != null ? 'AND inv.asset_sub_class = @asset_sub_class' : ''}
+                ${fundCluster != null ? 'AND i.fund_cluster = @fund_cluster' : ''}
         ),
         CumulativeIssued AS (
             SELECT
@@ -2379,7 +2383,7 @@ class IssuanceRepository {
                 unit_cost, 
                 product_name,
                 product_description,
-                equipment_id, 
+                inventory_id, 
                 specification, 
                 manufacturer_name,
                 brand_name, 
@@ -2395,6 +2399,8 @@ class IssuanceRepository {
                 receiving_officer_name,
                 receiving_officer_office,
                 receiving_officer_position,
+                date_acquired,
+                fund_cluster,
                 row_num,
                 SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id) AS total_issued_quantity_all_entities,
                 SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id ORDER BY row_num) AS cumulative_issued_quantity
@@ -2410,7 +2416,7 @@ class IssuanceRepository {
                 unit_cost, 
                 product_name,
                 product_description,
-                equipment_id, 
+                inventory_id, 
                 specification, 
                 manufacturer_name,
                 brand_name, 
@@ -2425,6 +2431,8 @@ class IssuanceRepository {
                 receiving_officer_name,
                 receiving_officer_office,
                 receiving_officer_position,
+                date_acquired,
+                fund_cluster,
                 row_num,
                 total_issued_quantity_all_entities,
                 current_quantity_in_stock + total_issued_quantity_all_entities AS total_quantity_available_and_issued,
@@ -2446,7 +2454,7 @@ class IssuanceRepository {
             unit_cost,
             product_name,
             product_description,
-            equipment_id,
+            inventory_id,
             specification,
             manufacturer_name,
             brand_name,
@@ -2463,7 +2471,9 @@ class IssuanceRepository {
             entity_name,
             receiving_officer_name,
             receiving_officer_office,
-            receiving_officer_position
+            receiving_officer_position,
+            date_acquired,
+            fund_cluster
         FROM
             RunningBalance
         ORDER BY
@@ -2476,6 +2486,8 @@ class IssuanceRepository {
               endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
           if (assetSubClass != null)
             'asset_sub_class': assetSubClass.toString().split('.').last,
+          if (fundCluster != null)
+            'fund_cluster': fundCluster.toString().split('.').last,
         },
       );
 
@@ -2513,6 +2525,8 @@ class IssuanceRepository {
             'receiving_officer_name': row[22], // receiving_officer_name
             'receiving_officer_office': row[23], // receiving_officer_office
             'receiving_officer_position': row[24], // receiving_officer_position
+            'date_acquired': (row[25] as DateTime).toIso8601String(),
+            'fund_cluster': row[26],
           },
         );
       }
