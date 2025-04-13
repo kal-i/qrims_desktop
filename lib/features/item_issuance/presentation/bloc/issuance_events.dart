@@ -179,10 +179,12 @@ final class GetInventorySupplyReportEvent extends IssuancesEvent {
   const GetInventorySupplyReportEvent({
     required this.startDate,
     this.endDate,
+    this.fundCluster,
   });
 
   final DateTime startDate;
   final DateTime? endDate;
+  final FundCluster? fundCluster;
 }
 
 final class GetInventorySemiExpendablePropertyReportEvent
@@ -191,11 +193,13 @@ final class GetInventorySemiExpendablePropertyReportEvent
     required this.startDate,
     this.endDate,
     this.assetSubClass,
+    this.fundCluster,
   });
 
   final DateTime startDate;
   final DateTime? endDate;
   final AssetSubClass? assetSubClass;
+  final FundCluster? fundCluster;
 }
 
 final class GetInventoryPropertyReportEvent extends IssuancesEvent {
@@ -203,11 +207,13 @@ final class GetInventoryPropertyReportEvent extends IssuancesEvent {
     required this.startDate,
     this.endDate,
     this.assetSubClass,
+    this.fundCluster,
   });
 
   final DateTime startDate;
   final DateTime? endDate;
   final AssetSubClass? assetSubClass;
+  final FundCluster? fundCluster;
 }
 
 final class GenerateSemiExpendablePropertyCardDataEvent extends IssuancesEvent {

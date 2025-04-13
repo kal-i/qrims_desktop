@@ -369,11 +369,14 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   Future<List<Map<String, dynamic>>> getInventorySupplyReport({
     required DateTime startDate,
     DateTime? endDate,
+    FundCluster? fundCluster,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {
         'start_date': startDate.toIso8601String(),
         if (endDate != null) 'end_date': endDate.toIso8601String(),
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
       };
 
       final response = await httpService.get(
@@ -397,6 +400,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {
@@ -404,6 +408,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         if (endDate != null) 'end_date': endDate.toIso8601String(),
         if (assetSubClass != null)
           'asset_sub_class': assetSubClass.toString().split('.').last,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
       };
 
       final response = await httpService.get(
@@ -427,6 +433,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {
@@ -434,6 +441,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         if (endDate != null) 'end_date': endDate.toIso8601String(),
         if (assetSubClass != null)
           'asset_sub_class': assetSubClass.toString().split('.').last,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
       };
 
       final response = await httpService.get(

@@ -673,9 +673,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       builder: (context, selectedFundCluster, child) {
         return CustomDropdownField<FundCluster>(
           value: selectedFundCluster,
-          onChanged: (value) {
-            _selectedFundCluster.value = value;
-          },
+          onChanged: (value) => _selectedFundCluster.value = value,
           items: [
             const DropdownMenuItem<FundCluster>(
               value: null,
@@ -698,7 +696,6 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
-          placeholderText: 'Enter purchase request\'s fund cluster',
         );
       },
     );

@@ -1,6 +1,11 @@
 import 'package:excel/excel.dart';
+import '../../../enums/asset_classification.dart';
+import '../../../enums/asset_sub_class.dart';
+import '../../../enums/fund_cluster.dart';
 import '../../../utils/capitalizer.dart';
 
+import '../../../utils/document_date_formatter.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../../../utils/standardize_position_name.dart';
 import 'header_info.dart';
@@ -272,9 +277,20 @@ class RPPPEExcelDocument {
 
       final article =
           inventoryProperty['article']?.toString().toUpperCase() ?? 'UNKNOWN';
+      final desc = inventoryProperty['description'];
+      final specs = inventoryProperty['specification'] ?? '\n';
+      final manufacturer = inventoryProperty['manufacturer_name'] ?? '\n';
+      final brand = inventoryProperty['brand_name'] ?? '\n';
+      final model = inventoryProperty['model_name'] ?? '\n';
+      final sn = inventoryProperty['serial_no'] ?? '\n';
 
-      final description =
-          '${inventoryProperty['brand_name']} ${inventoryProperty['model_name']} with SN: ${inventoryProperty['serial_no']}';
+      final description = manufacturer.trim().isNotEmpty &&
+              brand.trim().isNotEmpty &&
+              model.trim().isNotEmpty &&
+              sn.trim().isNotEmpty
+          ? '$brand $model with SN: $sn'
+          : desc;
+
       final propertyNo = inventoryProperty['property_no'] ?? 'N/A';
       final unit = inventoryProperty['unit'] ?? 'N/A';
 
@@ -297,25 +313,64 @@ class RPPPEExcelDocument {
                   '0') ??
           0;
 
-      final remarks = inventoryProperty['receiving_officer_name'] != null
-          ? '${capitalizeWord(inventoryProperty['receiving_officer_name'])}/${capitalizeWord(inventoryProperty['receiving_officer_office'])}-${standardizePositionName(inventoryProperty['receiving_officer_position'])}'
+      final dateAcquired = documentDateFormatter(
+          DateTime.parse(inventoryProperty['date_acquired']));
+
+      final accountableOfficer =
+          capitalizeWord(inventoryProperty['receiving_officer_name'] ?? '\n');
+      final location =
+          capitalizeWord(inventoryProperty['receiving_officer_office'] ?? '\n');
+
+      final remarks = accountableOfficer.trim().isNotEmpty
+          ? '${capitalizeWord(accountableOfficer)} - ${inventoryProperty['total_quantity_issued_for_a_particular_row']}'
           : '\n';
 
-      final accountableOfficer = inventoryProperty['receiving_officer_name'];
-      final location = inventoryProperty['receiving_officer_office'];
-      final estimatedUsefulLife = inventoryProperty['estimated_useful_life'];
-      final assetClassification =
-          readableEnumConverter(inventoryProperty['asset_classification']);
-      final assetSubClass =
-          readableEnumConverter(inventoryProperty['asset_sub_class']);
+      FundCluster? matchedFundCluster;
+      if (inventoryProperty['fund_cluster'] != null) {
+        final match = FundCluster.values.where(
+          (e) =>
+              e.toString().split('.').last == inventoryProperty['fund_cluster'],
+        );
+        if (match.isNotEmpty) {
+          matchedFundCluster = match.first;
+        }
+      }
+      final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
-      final specification = inventoryProperty['specification'];
-      final manufacturer = inventoryProperty['manufacturer_name'];
-      final brand = inventoryProperty['brand_name'];
-      final model = inventoryProperty['model_name'];
-      final serialNo = inventoryProperty['serial_no'];
+      final estimatedUsefulLife =
+          inventoryProperty['estimated_useful_life'] ?? '\n';
 
-      final thinBorder = Border(borderStyle: BorderStyle.Thin);
+      AssetClassification? matchedAssetClassification;
+      if (inventoryProperty['asset_classification'] != null) {
+        final match = AssetClassification.values.where(
+          (e) =>
+              e.toString().split('.').last ==
+              inventoryProperty['asset_classification'],
+        );
+        if (match.isNotEmpty) {
+          matchedAssetClassification = match.first;
+        }
+      }
+      final assetClassification = matchedAssetClassification != null
+          ? readableEnumConverter(matchedAssetClassification)
+          : '\n';
+
+      AssetSubClass? matchedAssetSubClass;
+      if (inventoryProperty['asset_sub_class'] != null) {
+        final match = AssetSubClass.values.where(
+          (e) =>
+              e.toString().split('.').last ==
+              inventoryProperty['asset_sub_class'],
+        );
+        if (match.isNotEmpty) {
+          matchedAssetSubClass = match.first;
+        }
+      }
+      final assetSubClass = matchedAssetSubClass != null
+          ? readableEnumConverter(matchedAssetSubClass)
+          : '\n';
+
+      // final thinBorder = Border(borderStyle: BorderStyle.Thin);
 
       /// the 2nd elem (index 1) will be at the top
       /// while the 1st elem (index 0) will be at the bottom
@@ -347,16 +402,18 @@ class RPPPEExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
           accountableOfficer,
           location,
+          fundCluster,
           estimatedUsefulLife,
           assetClassification,
           assetSubClass,
-          specification,
+          specs,
           manufacturer,
           brand,
           model,
-          serialNo,
+          sn,
           cellStyle,
         );
 
@@ -373,16 +430,18 @@ class RPPPEExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
           accountableOfficer,
           location,
+          fundCluster,
           estimatedUsefulLife,
           assetClassification,
           assetSubClass,
-          specification,
+          specs,
           manufacturer,
           brand,
           model,
-          serialNo,
+          sn,
           cellStyle,
         );
       }
@@ -402,12 +461,14 @@ class RPPPEExcelDocument {
     dynamic totalQuantity,
     int balanceAfterIssue,
     String remarks,
-    String? accountableOfficer,
-    String? location,
-    int? estimatedUsefulLife,
+    String dateAcquired,
+    String accountableOfficer,
+    String location,
+    String fundCluster,
+    String estimatedUsefulLife,
     String assetClassification,
     String assetSubClass,
-    String? specification,
+    String specification,
     String manufacturer,
     String brand,
     String model,
@@ -448,15 +509,15 @@ class RPPPEExcelDocument {
       const CellInfo(12, '0'),
       const CellInfo(13, '0'),
       CellInfo(14, remarks),
-      const CellInfo(15, ''),
-      CellInfo(16, accountableOfficer ?? ''),
-      CellInfo(17, location ?? ''),
-      const CellInfo(18, ''),
-      CellInfo(19, estimatedUsefulLife.toString()),
+      CellInfo(15, dateAcquired),
+      CellInfo(16, accountableOfficer),
+      CellInfo(17, location),
+      CellInfo(18, fundCluster),
+      CellInfo(19, estimatedUsefulLife),
       const CellInfo(20, ''),
       CellInfo(21, assetClassification),
       CellInfo(22, assetSubClass),
-      CellInfo(23, specification ?? ''),
+      CellInfo(23, specification),
       CellInfo(24, manufacturer),
       CellInfo(25, brand),
       CellInfo(26, model),

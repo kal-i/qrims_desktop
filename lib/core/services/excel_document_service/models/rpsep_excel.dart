@@ -1,6 +1,11 @@
 import 'package:excel/excel.dart';
+import '../../../enums/asset_classification.dart';
+import '../../../enums/asset_sub_class.dart';
+import '../../../enums/fund_cluster.dart';
 import '../../../utils/capitalizer.dart';
 
+import '../../../utils/document_date_formatter.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../../../utils/standardize_position_name.dart';
 import 'header_info.dart';
@@ -265,9 +270,21 @@ class RPSEPExcelDocument {
               ?.toString()
               .toUpperCase() ??
           'UNKNOWN';
+      final desc = inventorySemiExpendableProperty['description'];
+      final specs = inventorySemiExpendableProperty['specification'] ?? '\n';
+      final manufacturer =
+          inventorySemiExpendableProperty['manufacturer_name'] ?? '\n';
+      final brand = inventorySemiExpendableProperty['brand_name'] ?? '\n';
+      final model = inventorySemiExpendableProperty['model_name'] ?? '\n';
+      final sn = inventorySemiExpendableProperty['serial_no'] ?? '\n';
 
-      final description =
-          '${inventorySemiExpendableProperty['brand_name']} ${inventorySemiExpendableProperty['model_name']} with SN: ${inventorySemiExpendableProperty['serial_no']}';
+      final description = manufacturer.trim().isNotEmpty &&
+              brand.trim().isNotEmpty &&
+              model.trim().isNotEmpty &&
+              sn.trim().isNotEmpty
+          ? '$brand $model with SN: $sn'
+          : desc;
+
       final semiExpendablePropertyNo =
           inventorySemiExpendableProperty['semi_expendable_property_no'] ??
               'N/A';
@@ -297,28 +314,63 @@ class RPSEPExcelDocument {
                   '0') ??
           0;
 
-      final remarks = inventorySemiExpendableProperty[
-                  'receiving_officer_name'] !=
-              null
-          ? '${capitalizeWord(inventorySemiExpendableProperty['receiving_officer_name'])}/${capitalizeWord(inventorySemiExpendableProperty['receiving_officer_office'])}-${standardizePositionName(inventorySemiExpendableProperty['receiving_officer_position'])}'
+      final dateAcquired = documentDateFormatter(
+          DateTime.parse(inventorySemiExpendableProperty['date_acquired']));
+
+      final accountableOfficer = capitalizeWord(
+          inventorySemiExpendableProperty['receiving_officer_name'] ?? '\n');
+      final location = capitalizeWord(
+          inventorySemiExpendableProperty['receiving_officer_office'] ?? '\n');
+
+      final remarks = accountableOfficer.trim().isNotEmpty
+          ? '${capitalizeWord(accountableOfficer)} - ${inventorySemiExpendableProperty['total_quantity_issued_for_a_particular_row']}'
           : '\n';
 
-      final accountableOfficer =
-          inventorySemiExpendableProperty['receiving_officer_name'];
-      final location =
-          inventorySemiExpendableProperty['receiving_officer_office'];
-      final estimatedUsefulLife =
-          inventorySemiExpendableProperty['estimated_useful_life'];
-      final assetClassification = readableEnumConverter(
-          inventorySemiExpendableProperty['asset_classification']);
-      final assetSubClass = readableEnumConverter(
-          inventorySemiExpendableProperty['asset_sub_class']);
+      FundCluster? matchedFundCluster;
+      if (inventorySemiExpendableProperty['fund_cluster'] != null) {
+        final match = FundCluster.values.where(
+          (e) =>
+              e.toString().split('.').last ==
+              inventorySemiExpendableProperty['fund_cluster'],
+        );
+        if (match.isNotEmpty) {
+          matchedFundCluster = match.first;
+        }
+      }
+      final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
-      final specification = inventorySemiExpendableProperty['specification'];
-      final manufacturer = inventorySemiExpendableProperty['manufacturer_name'];
-      final brand = inventorySemiExpendableProperty['brand_name'];
-      final model = inventorySemiExpendableProperty['model_name'];
-      final serialNo = inventorySemiExpendableProperty['serial_no'];
+      final estimatedUsefulLife =
+          inventorySemiExpendableProperty['estimated_useful_life'] ?? '\n';
+
+      AssetClassification? matchedAssetClassification;
+      if (inventorySemiExpendableProperty['asset_classification'] != null) {
+        final match = AssetClassification.values.where(
+          (e) =>
+              e.toString().split('.').last ==
+              inventorySemiExpendableProperty['asset_classification'],
+        );
+        if (match.isNotEmpty) {
+          matchedAssetClassification = match.first;
+        }
+      }
+      final assetClassification = matchedAssetClassification != null
+          ? readableEnumConverter(matchedAssetClassification)
+          : '\n';
+
+      AssetSubClass? matchedAssetSubClass;
+      if (inventorySemiExpendableProperty['asset_sub_class'] != null) {
+        final match = AssetSubClass.values.where(
+          (e) =>
+              e.toString().split('.').last ==
+              inventorySemiExpendableProperty['asset_sub_class'],
+        );
+        if (match.isNotEmpty) {
+          matchedAssetSubClass = match.first;
+        }
+      }
+      final assetSubClass = matchedAssetSubClass != null
+          ? readableEnumConverter(matchedAssetSubClass)
+          : '\n';
 
       final thinBorder = Border(borderStyle: BorderStyle.Thin);
 
@@ -350,16 +402,18 @@ class RPSEPExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
           accountableOfficer,
           location,
+          fundCluster,
           estimatedUsefulLife,
           assetClassification,
           assetSubClass,
-          specification,
+          specs,
           manufacturer,
           brand,
           model,
-          serialNo,
+          sn,
           cellStyle,
         );
 
@@ -376,16 +430,18 @@ class RPSEPExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
           accountableOfficer,
           location,
+          fundCluster,
           estimatedUsefulLife,
           assetClassification,
           assetSubClass,
-          specification,
+          specs,
           manufacturer,
           brand,
           model,
-          serialNo,
+          sn,
           cellStyle,
         );
       }
@@ -405,12 +461,14 @@ class RPSEPExcelDocument {
     dynamic totalQuantity,
     int balanceAfterIssue,
     String remarks,
-    String? accountableOfficer,
-    String? location,
-    int? estimatedUsefulLife,
+    String dateAcquired,
+    String accountableOfficer,
+    String location,
+    String fundCluster,
+    String estimatedUsefulLife,
     String assetClassification,
     String assetSubClass,
-    String? specification,
+    String specification,
     String manufacturer,
     String brand,
     String model,
@@ -451,15 +509,15 @@ class RPSEPExcelDocument {
       const CellInfo(10, '0'),
       const CellInfo(11, '0'),
       CellInfo(12, remarks),
-      const CellInfo(13, ''),
-      CellInfo(14, accountableOfficer ?? ''),
-      CellInfo(15, location ?? ''),
-      const CellInfo(16, ''),
-      CellInfo(17, estimatedUsefulLife.toString()),
+      CellInfo(13, dateAcquired),
+      CellInfo(14, accountableOfficer),
+      CellInfo(15, location),
+      CellInfo(16, fundCluster),
+      CellInfo(17, estimatedUsefulLife),
       const CellInfo(18, ''),
       CellInfo(19, assetClassification),
       CellInfo(20, assetSubClass),
-      CellInfo(21, specification ?? ''),
+      CellInfo(21, specification),
       CellInfo(22, manufacturer),
       CellInfo(23, brand),
       CellInfo(24, model),

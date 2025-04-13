@@ -1,6 +1,7 @@
 import 'package:fpdart/src/either.dart';
 
 import '../../../../core/enums/asset_sub_class.dart';
+import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repository/issuance_repository.dart';
@@ -21,6 +22,7 @@ class GetInventorySemiExpendablePropertyReport
       startDate: params.startDate,
       endDate: params.endDate,
       assetSubClass: params.assetSubClass,
+      fundCluster: params.fundCluster,
     );
   }
 }
@@ -30,9 +32,11 @@ class GenerateRPSEPParams {
     required this.startDate,
     this.endDate,
     this.assetSubClass,
+    this.fundCluster,
   });
 
   final DateTime startDate;
   final DateTime? endDate;
   final AssetSubClass? assetSubClass;
+  final FundCluster? fundCluster;
 }

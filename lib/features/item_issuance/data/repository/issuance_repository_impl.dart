@@ -248,11 +248,13 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getInventorySupplyReport({
     required DateTime startDate,
     DateTime? endDate,
+    FundCluster? fundCluster,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.getInventorySupplyReport(
         startDate: startDate,
         endDate: endDate,
+        fundCluster: fundCluster,
       );
 
       return right(response);
@@ -267,6 +269,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   }) async {
     try {
       final response =
@@ -274,6 +277,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
         startDate: startDate,
         endDate: endDate,
         assetSubClass: assetSubClass,
+        fundCluster: fundCluster,
       );
 
       return right(response);
@@ -288,6 +292,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   }) async {
     try {
       final response = await issuanceRemoteDataSource
@@ -295,6 +300,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
         startDate: startDate,
         endDate: endDate,
         assetSubClass: assetSubClass,
+        fundCluster: fundCluster,
       );
 
       return right(response);

@@ -99,6 +99,7 @@ abstract interface class IssuanceRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getInventorySupplyReport({
     required DateTime startDate,
     DateTime? endDate,
+    FundCluster? fundCluster,
   });
 
   Future<Either<Failure, List<Map<String, dynamic>>>>
@@ -106,6 +107,7 @@ abstract interface class IssuanceRepository {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   });
 
   Future<Either<Failure, List<Map<String, dynamic>>>>
@@ -113,6 +115,7 @@ abstract interface class IssuanceRepository {
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   });
 
   Future<Either<Failure, List<Map<String, dynamic>>>>

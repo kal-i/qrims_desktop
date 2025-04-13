@@ -233,6 +233,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
     _selectedItemName.dispose();
     _selectedManufacturer.dispose();
     _selectedBrand.dispose();
+    _selectedFundCluster.dispose();
     super.dispose();
   }
 

@@ -1,6 +1,9 @@
 import 'package:excel/excel.dart';
+import '../../../enums/fund_cluster.dart';
 import '../../../utils/capitalizer.dart';
 
+import '../../../utils/document_date_formatter.dart';
+import '../../../utils/fund_cluster_to_readable_string.dart';
 import 'header_info.dart';
 import 'cell_info.dart';
 
@@ -206,7 +209,6 @@ class RPCIExcelDocument {
       final stockNumber = inventorySupply['stock_number'];
       final unit = inventorySupply['unit'];
       final unitValue = double.parse(inventorySupply['unit_value'].toString());
-
       final totalQuantity =
           inventorySupply['balance_from_previous_row_after_issuance'] == 0
               ? inventorySupply['total_quantity_available_and_issued'] != null
@@ -222,9 +224,30 @@ class RPCIExcelDocument {
                   '0') ??
           0;
 
-      final remarks = inventorySupply['receiving_officer_name'] != null
-          ? '${capitalizeWord(inventorySupply['receiving_officer_name'])} - ${inventorySupply['total_quantity_issued_for_a_particular_row']}'
+      final dateAcquired = documentDateFormatter(
+          DateTime.parse(inventorySupply['date_acquired']));
+
+      final accountableOfficer =
+          capitalizeWord(inventorySupply['receiving_officer_name'] ?? '\n');
+      final location =
+          capitalizeWord(inventorySupply['receiving_officer_office'] ?? '\n');
+
+      final remarks = accountableOfficer.trim().isNotEmpty
+          ? '${capitalizeWord(accountableOfficer)} - ${inventorySupply['total_quantity_issued_for_a_particular_row']}'
           : '\n';
+
+      FundCluster? matchedFundCluster;
+      if (inventorySupply['fund_cluster'] != null) {
+        final match = FundCluster.values.where(
+          (e) =>
+              e.toString().split('.').last == inventorySupply['fund_cluster'],
+        );
+        if (match.isNotEmpty) {
+          matchedFundCluster = match.first;
+        }
+      }
+
+      final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
       if (i > 0) {
         final rowIndex = startRow + i - 1;
@@ -240,6 +263,10 @@ class RPCIExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
+          accountableOfficer,
+          location,
+          fundCluster,
           borderStyle,
         );
 
@@ -256,6 +283,10 @@ class RPCIExcelDocument {
           totalQuantity,
           balanceAfterIssue,
           remarks,
+          dateAcquired,
+          accountableOfficer,
+          location,
+          fundCluster,
           borderStyle,
         );
       }
@@ -275,6 +306,10 @@ class RPCIExcelDocument {
     dynamic totalQuantity,
     int balanceAfterIssue,
     String remarks,
+    String dateAcquired,
+    String accountableOfficer,
+    String location,
+    String fundCluster,
     Border borderStyle,
   ) {
     final cells = [
@@ -288,10 +323,10 @@ class RPCIExcelDocument {
       const CellInfo(8, '0'),
       const CellInfo(9, '0'),
       CellInfo(10, remarks),
-      const CellInfo(11, ''),
-      const CellInfo(12, ''),
-      const CellInfo(13, ''),
-      const CellInfo(14, ''),
+      CellInfo(11, dateAcquired),
+      CellInfo(12, accountableOfficer),
+      CellInfo(13, location),
+      CellInfo(14, fundCluster),
     ];
 
     for (var cellInfo in cells) {

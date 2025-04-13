@@ -316,6 +316,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       GenerateRPCIParams(
         startDate: event.startDate,
         endDate: event.endDate,
+        fundCluster: event.fundCluster,
       ),
     );
 
@@ -342,6 +343,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         startDate: event.startDate,
         endDate: event.endDate,
         assetSubClass: event.assetSubClass,
+        fundCluster: event.fundCluster,
       ),
     );
 
@@ -366,6 +368,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         startDate: event.startDate,
         endDate: event.endDate,
         assetSubClass: event.assetSubClass,
+        fundCluster: event.fundCluster,
       ),
     );
 

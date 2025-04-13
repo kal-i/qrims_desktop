@@ -21,7 +21,6 @@ import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/generate_inventory_report.dart';
 import '../../../../core/services/excel_document_service/excel_document_service.dart';
-import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/custom_date_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
@@ -49,10 +48,9 @@ class GenerateInventoryReportModal extends StatefulWidget {
 class _GenerateInventoryReportModalState
     extends State<GenerateInventoryReportModal> {
   late IssuancesBloc _issuancesBloc;
-  late OfficerSuggestionsService _officerSuggestionsService;
   late ExcelDocumentService _excelDocumentService;
 
-  final _inventoryTypeController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   final _accountableOfficerNameController = TextEditingController();
   final _accountableOfficerPositionaNameController = TextEditingController();
@@ -162,10 +160,59 @@ class _GenerateInventoryReportModalState
     return filePath;
   }
 
+  void _onGenerateReport() {
+    if (_formKey.currentState!.validate()) {
+      // Dispatch the event to generate RPCI
+      switch (widget.generateInventoryReportType) {
+        case GenerateInventoryReportType.rcpi:
+          _issuancesBloc.add(
+            GetInventorySupplyReportEvent(
+              startDate: _startDate.value,
+              endDate: _endDate.value,
+              fundCluster: _selectedFundCluster.value,
+            ),
+          );
+        case GenerateInventoryReportType.rcsep:
+          _issuancesBloc.add(
+            GetInventorySemiExpendablePropertyReportEvent(
+              startDate: _startDate.value,
+              endDate: _endDate.value,
+              assetSubClass: _selectedAssetSubClass.value,
+              fundCluster: _selectedFundCluster.value,
+            ),
+          );
+        case GenerateInventoryReportType.rcppe:
+          _issuancesBloc.add(
+            GetInventoryPropertyReportEvent(
+              startDate: _startDate.value,
+              endDate: _endDate.value,
+              assetSubClass: _selectedAssetSubClass.value,
+              fundCluster: _selectedFundCluster.value,
+            ),
+          );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _startDate.dispose();
     _endDate.dispose();
+    _asAtDate.dispose();
+
+    _selectedAssetSubClass.dispose();
+    _selectedFundCluster.dispose();
+
+    _accountableOfficerNameController.dispose();
+    _accountableOfficerPositionaNameController.dispose();
+    _locationController.dispose();
+    _accountableDate.dispose();
+
+    _approvingEntityOrAuthorizedRepresentativeController.dispose();
+    _coaRepresentativeController.dispose();
+
+    _officers.dispose();
+
     super.dispose();
   }
 
@@ -183,34 +230,37 @@ class _GenerateInventoryReportModalState
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 15.0,
-          ),
-          _buildDateRangeSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildInitialInformationSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildAccountableOfficerSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildApprovingEntityOrAuthorizedRepresentativeSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildCOARepresentativeSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
-          _buildCertifiedOfficersSection(),
-        ],
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 15.0,
+            ),
+            _buildDateRangeSection(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildInitialInformationSection(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildAccountableOfficerSection(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildApprovingEntityOrAuthorizedRepresentativeSection(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildCOARepresentativeSection(),
+            const SizedBox(
+              height: 50.0,
+            ),
+            _buildCertifiedOfficersSection(),
+          ],
+        ),
       ),
     );
   }
@@ -296,18 +346,6 @@ class _GenerateInventoryReportModalState
                   ],
                 ),
               ),
-            // Expanded(
-            //   child: CustomFormTextField(
-            //     label: '* Inventory Item Type',
-            //     placeholderText: 'Enter type of inventory item',
-            //     fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-            //         ? AppColor.lightCustomTextBox
-            //         : AppColor.darkCustomTextBox),
-            //   ),
-            // ),
-            // const SizedBox(
-            //   width: 20.0,
-            // ),
             Expanded(
               child: _buildAsAtDateSelection(),
             ),
@@ -352,8 +390,9 @@ class _GenerateInventoryReportModalState
             Expanded(
               child: CustomFormTextField(
                 controller: _accountableOfficerNameController,
-                label: '* Accountable officer Name',
+                label: 'Accountable officer Name',
                 placeholderText: 'Enter accountable officer\'s name',
+                hasValidation: false,
               ),
             ),
             const SizedBox(
@@ -362,8 +401,9 @@ class _GenerateInventoryReportModalState
             Expanded(
               child: CustomFormTextField(
                 controller: _accountableOfficerPositionaNameController,
-                label: '* Accountable officer Position',
+                label: 'Accountable officer Position',
                 placeholderText: 'Enter accountable officer\'s position',
+                hasValidation: false,
               ),
             ),
           ],
@@ -376,8 +416,9 @@ class _GenerateInventoryReportModalState
             Expanded(
               child: CustomFormTextField(
                 controller: _locationController,
-                label: '* Location',
+                label: 'Location',
                 placeholderText: 'Enter location',
+                hasValidation: false,
               ),
             ),
             const SizedBox(
@@ -418,9 +459,10 @@ class _GenerateInventoryReportModalState
         ),
         CustomFormTextField(
           controller: _approvingEntityOrAuthorizedRepresentativeController,
-          label: '* Approving Entity or Authorized Representative Name',
+          label: 'Approving Entity or Authorized Representative Name',
           placeholderText:
               'Enter approving entity or authorized representative\'s name',
+          hasValidation: false,
         ),
       ],
     );
@@ -452,8 +494,9 @@ class _GenerateInventoryReportModalState
         ),
         CustomFormTextField(
           controller: _coaRepresentativeController,
-          label: '* COA Representative Name',
+          label: 'COA Representative Name',
           placeholderText: 'Enter COA representative\'s name',
+          hasValidation: false,
         ),
       ],
     );
@@ -531,7 +574,10 @@ class _GenerateInventoryReportModalState
                         ),
                         const SizedBox(width: 10.0),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _removeOfficerField(index),
                         ),
                       ],
@@ -560,7 +606,7 @@ class _GenerateInventoryReportModalState
               _startDate.value = date;
             }
           },
-          label: '* Start Date',
+          label: 'Start Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -584,7 +630,7 @@ class _GenerateInventoryReportModalState
               _endDate.value = date;
             }
           },
-          label: '* End Date',
+          label: 'End Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -608,7 +654,7 @@ class _GenerateInventoryReportModalState
               _asAtDate.value = date;
             }
           },
-          label: '* As At Date',
+          label: 'As At Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -632,7 +678,7 @@ class _GenerateInventoryReportModalState
               _accountableDate.value = date;
             }
           },
-          label: '* Accountable Date',
+          label: 'Accountable Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -646,33 +692,30 @@ class _GenerateInventoryReportModalState
     return ValueListenableBuilder(
       valueListenable: _selectedAssetSubClass,
       builder: (context, selectedAssetSubClass, child) {
-        return CustomDropdownField(
-          //value: selectedFundCluster.toString(),
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedAssetSubClass.value = AssetSubClass.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
-          },
-          items: AssetSubClass.values
-              .map(
-                (assetSubClass) => DropdownMenuItem(
-                  value: assetSubClass.toString(),
-                  child: Text(
-                    readableEnumConverter(assetSubClass),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<AssetSubClass>(
+          onChanged: (value) => _selectedAssetSubClass.value = value,
+          items: [
+            const DropdownMenuItem<AssetSubClass>(
+              value: null,
+              child: Text('Select asset sub class'),
+            ),
+            ...AssetSubClass.values.map(
+              (assetSubClass) => DropdownMenuItem(
+                value: assetSubClass,
+                child: Text(
+                  readableEnumConverter(assetSubClass),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
-          label: '* Asset Sub Class',
-          placeholderText: 'Enter asset sub class',
+          label: 'Asset Sub Class',
         );
       },
     );
@@ -682,33 +725,30 @@ class _GenerateInventoryReportModalState
     return ValueListenableBuilder(
       valueListenable: _selectedFundCluster,
       builder: (context, selectedFundCluster, child) {
-        return CustomDropdownField(
-          //value: selectedFundCluster.toString(),
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedFundCluster.value = FundCluster.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
-          },
-          items: FundCluster.values
-              .map(
-                (fundCluster) => DropdownMenuItem(
-                  value: fundCluster.toString(),
-                  child: Text(
-                    fundCluster.toReadableString(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<FundCluster>(
+          onChanged: (value) => _selectedFundCluster.value = value,
+          items: [
+            const DropdownMenuItem<FundCluster>(
+              value: null,
+              child: Text('Select fund cluster'),
+            ),
+            ...FundCluster.values.map(
+              (fundCluster) => DropdownMenuItem(
+                value: fundCluster,
+                child: Text(
+                  fundCluster.toReadableString(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
-          label: '* Fund Cluster',
-          placeholderText: 'Enter fund cluster',
+          label: 'Fund Cluster',
         );
       },
     );
@@ -789,35 +829,8 @@ class _GenerateInventoryReportModalState
           ),
           const SizedBox(width: 10.0),
           CustomFilledButton(
-            onTap: () {
-              // Dispatch the event to generate RPCI
-              switch (widget.generateInventoryReportType) {
-                case GenerateInventoryReportType.rcpi:
-                  _issuancesBloc.add(
-                    GetInventorySupplyReportEvent(
-                      startDate: _startDate.value,
-                      endDate: _endDate.value,
-                    ),
-                  );
-                case GenerateInventoryReportType.rcsep:
-                  _issuancesBloc.add(
-                    GetInventorySemiExpendablePropertyReportEvent(
-                      startDate: _startDate.value,
-                      endDate: _endDate.value,
-                      assetSubClass: _selectedAssetSubClass.value,
-                    ),
-                  );
-                case GenerateInventoryReportType.rcppe:
-                  _issuancesBloc.add(
-                    GetInventoryPropertyReportEvent(
-                      startDate: _startDate.value,
-                      endDate: _endDate.value,
-                      assetSubClass: _selectedAssetSubClass.value,
-                    ),
-                  );
-              }
-            },
-            text: 'Create',
+            onTap: _onGenerateReport,
+            text: 'Generate',
             width: 180.0,
             height: 40.0,
           ),

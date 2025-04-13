@@ -96,18 +96,21 @@ abstract interface class IssuanceRemoteDataSource {
   Future<List<Map<String, dynamic>>> getInventorySupplyReport({
     required DateTime startDate,
     DateTime? endDate,
+    FundCluster? fundCluster,
   });
 
   Future<List<Map<String, dynamic>>> getInventorySemiExpendablePropertyReport({
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   });
 
   Future<List<Map<String, dynamic>>> getInventoryPropertyReport({
     required DateTime startDate,
     DateTime? endDate,
     AssetSubClass? assetSubClass,
+    FundCluster? fundCluster,
   });
 
   Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
