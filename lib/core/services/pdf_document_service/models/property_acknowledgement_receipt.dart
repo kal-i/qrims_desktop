@@ -5,6 +5,7 @@ import '../../../../features/item_inventory/domain/entities/inventory_item.dart'
 import '../../../../features/item_issuance/domain/entities/property_acknowledgement_receipt.dart';
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
+import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
@@ -26,8 +27,8 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     final pdf = pw.Document();
 
     final par = data as PropertyAcknowledgementReceiptEntity;
-    print(par.issuingOfficerEntity);
     final purchaseRequestEntity = data.purchaseRequestEntity;
+    final supplierEntity = data.supplierEntity;
 
     // List to store all rows for the table
     List<pw.TableRow> tableRows = [];
@@ -73,87 +74,139 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     );
 
     // Loop through each item to generate rows
-    for (final issuedItem in par.items) {
-      // Extract common information
+    for (int i = 0; i < par.items.length; i++) {
+      final issuanceItemEntity = par.items[i];
+      final itemEntity = issuanceItemEntity.itemEntity;
+      final productStockEntity = itemEntity.productStockEntity;
+      final productDescriptionEntity = productStockEntity.productDescription;
+      final shareableItemInformationEntity =
+          itemEntity.shareableItemInformationEntity;
+
+      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
-        issuedItem.itemEntity.productStockEntity.productDescription
-                ?.description ??
-            'No Description',
-        'Specifications',
+        productDescriptionEntity?.description ?? 'No description defined'
       ];
 
-      // Add specifications
-      descriptionColumn.addAll(
-        extractSpecification(
-          issuedItem.itemEntity.shareableItemInformationEntity.specification ??
-              'N/A',
-          ' - ',
-        ),
-      );
+      final specification = shareableItemInformationEntity.specification;
+      if (specification != null && specification.isNotEmpty) {
+        descriptionColumn.addAll(
+          [
+            'Specifications:',
+            ...extractSpecification(specification, ','),
+          ],
+        );
+      }
 
-      // Add equipment-specific details if the item is EquipmentEntity
-      if (issuedItem is InventoryItemEntity) {
-        final equipmentItem = issuedItem as InventoryItemEntity;
+      // Add inventory-specific details if the item is EquipmentEntity
+      if (itemEntity is InventoryItemEntity) {
+        final inventoryItem = itemEntity;
+        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+        final brandEntity = manufacturerBrandEntity?.brand;
+        final modelEntity = inventoryItem.modelEntity;
+        final serialNo = inventoryItem.serialNo;
 
-        if (equipmentItem.manufacturerBrandEntity?.brand.name != null) {
+        if (brandEntity != null) {
           descriptionColumn.add(
-              'Brand: ${equipmentItem.manufacturerBrandEntity!.brand.name}');
+            'Brand: ${brandEntity.name}',
+          );
         }
 
-        if (equipmentItem.modelEntity?.modelName != null) {
-          descriptionColumn
-              .add('Model: ${equipmentItem.modelEntity!.modelName}');
-        }
-
-        if (equipmentItem.serialNo != null) {
-          descriptionColumn.add('SN: ${equipmentItem.serialNo}');
-        }
-
-        if (issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate !=
-            null) {
+        if (modelEntity != null) {
           descriptionColumn.add(
-            'Date Acquired: ${documentDateFormatter(issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate!)}',
+            'Model: ${modelEntity.modelName}',
+          );
+        }
+
+        if (serialNo != null && serialNo.isNotEmpty) {
+          descriptionColumn.add(
+            'SN: $serialNo',
           );
         }
       }
 
-      // Add PR information
-      if (purchaseRequestEntity != null) {
-        descriptionColumn.add('PR: ${purchaseRequestEntity.id}');
-      }
-
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
-        return DocumentService.getRowHeight(row, fontSize: 8.5);
+        return DocumentService.getRowHeight(
+          row,
+          fontSize: 8.5,
+          cellWidth: 380.0,
+        );
       }).toList();
 
-      // Add rows for this item
-      for (int i = 0; i < descriptionColumn.length; i++) {
+      final baseItemId = shareableItemInformationEntity.id;
+      final quantity = issuanceItemEntity.quantity;
+      final unit = shareableItemInformationEntity.unit;
+      final unitCost = shareableItemInformationEntity.unitCost;
+      final dateAcquired = shareableItemInformationEntity.acquiredDate;
+
+      for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildParTableRow(
-            quantity: i == 0 ? issuedItem.quantity.toString() : '\n',
-            unit: i == 0
-                ? readableEnumConverter(
-                    issuedItem.itemEntity.shareableItemInformationEntity.unit)
-                : '\n',
-            description: descriptionColumn[i],
-            propertyNumber: i == 0
-                ? issuedItem.itemEntity.shareableItemInformationEntity.id
-                : '\n',
-            dateAcquired: i == 0
-                ? issuedItem is InventoryItemEntity
-                    ? documentDateFormatter(issuedItem.itemEntity
-                        .shareableItemInformationEntity.acquiredDate!)
-                    : '\n'
-                : '\n',
-            amount: i == 0
-                ? issuedItem.itemEntity.shareableItemInformationEntity.unitCost
-                    .toString()
-                : '\n',
+            quantity: j == 0 ? quantity.toString() : '\n',
+            unit: j == 0 ? readableEnumConverter(unit) : '\n',
+            description: descriptionColumn[j],
+            propertyNumber: j == 0 ? baseItemId : '\n',
+            dateAcquired: j == 0 ? documentDateFormatter(dateAcquired!) : '\n',
+            amount: j == 0 ? formatCurrency(unitCost) : '\n',
             rowHeight: rowHeights[i],
-            borderBottom: i == descriptionColumn.length - 1 ? false : true,
+            borderTop: i == 0 ? false : true,
+            borderBottom: j == descriptionColumn.length - 1 ? false : true,
           ),
         );
+      }
+
+      if (i == par.items.length - 1) {
+        if (purchaseRequestEntity != null ||
+            par.supplierEntity != null ||
+            par.inspectionAndAcceptanceReportId != null ||
+            par.contractNumber != null ||
+            par.purchaseOrderNumber != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: '\n',
+            ),
+          );
+        }
+
+        if (purchaseRequestEntity != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: 'PR: ${purchaseRequestEntity.id}',
+            ),
+          );
+        }
+
+        if (supplierEntity != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: 'Supplier: ${supplierEntity.name}',
+            ),
+          );
+        }
+
+        if (par.inspectionAndAcceptanceReportId != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: 'IAR: ${par.inspectionAndAcceptanceReportId}',
+            ),
+          );
+        }
+
+        if (par.contractNumber != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: 'CN: ${par.contractNumber}',
+            ),
+          );
+        }
+
+        if (par.purchaseOrderNumber != null) {
+          tableRows.add(
+            _buildParTableRowFooter(
+              data: 'PO: ${par.purchaseOrderNumber}',
+            ),
+          );
+        }
       }
     }
 
@@ -215,7 +268,7 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
               ),
               DocumentComponents.buildRowTextValue(
                 text: 'PAR No:',
-                value: data.parId,
+                value: par.parId,
                 isUnderlined: true,
               ),
             ],
@@ -284,5 +337,21 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     );
 
     return pdf;
+  }
+
+  pw.TableRow _buildParTableRowFooter({
+    required String data,
+  }) {
+    return DocumentComponents.buildParTableRow(
+      quantity: '\n',
+      unit: '\n',
+      description: data,
+      propertyNumber: '\n',
+      dateAcquired: '\n',
+      amount: '\n',
+      borderTop: true,
+      borderBottom: false,
+      rowHeight: 13.0,
+    );
   }
 }

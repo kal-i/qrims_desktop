@@ -28,7 +28,6 @@ class InventoryCustodianSlip implements BaseDocument {
     final ics = data as InventoryCustodianSlipEntity;
     final purchaseRequestEntity = data.purchaseRequestEntity;
     final supplierEntity = data.supplierEntity;
-    print('issued items length: ${ics.items.length}');
 
     // List to store all rows for the table
     List<pw.TableRow> tableRows = [];
@@ -105,86 +104,82 @@ class InventoryCustodianSlip implements BaseDocument {
 
     // Loop through each item to generate rows
     for (int i = 0; i < ics.items.length; i++) {
-      final issuedItem = ics.items[i];
+      final issuanceItemEntity = ics.items[i];
+      final itemEntity = issuanceItemEntity.itemEntity;
+      final productStockEntity = itemEntity.productStockEntity;
+      final productDescriptionEntity = productStockEntity.productDescription;
+      final shareableItemInformationEntity =
+          itemEntity.shareableItemInformationEntity;
 
       // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
-        issuedItem.itemEntity.productStockEntity.productDescription
-                ?.description ??
-            'No Description',
-        'Specifications',
+        productDescriptionEntity?.description ?? 'No description defined'
       ];
 
-      // Add specifications
-      descriptionColumn.addAll(
-        extractSpecification(
-          issuedItem.itemEntity.shareableItemInformationEntity.specification ??
-              'N/A',
-          ' - ',
-        ),
-      );
+      final specification = shareableItemInformationEntity.specification;
+      if (specification != null && specification.isNotEmpty) {
+        descriptionColumn.addAll(
+          [
+            'Specifications:',
+            ...extractSpecification(specification, ','),
+          ],
+        );
+      }
 
-      // Add equipment-specific details if the item is EquipmentEntity
-      if (issuedItem is InventoryItemEntity) {
-        final equipmentItem = issuedItem as InventoryItemEntity;
+      // Add inventory-specific details if the item is EquipmentEntity
+      if (itemEntity is InventoryItemEntity) {
+        final inventoryItem = itemEntity;
+        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+        final brandEntity = manufacturerBrandEntity?.brand;
+        final modelEntity = inventoryItem.modelEntity;
+        final serialNo = inventoryItem.serialNo;
 
-        if (equipmentItem.manufacturerBrandEntity?.brand.name != null) {
+        if (brandEntity != null) {
           descriptionColumn.add(
-              'Brand: ${equipmentItem.manufacturerBrandEntity!.brand.name}');
+            'Brand: ${brandEntity.name}',
+          );
         }
 
-        if (equipmentItem.modelEntity?.modelName != null) {
-          descriptionColumn
-              .add('Model: ${equipmentItem.modelEntity!.modelName}');
-        }
-
-        if (equipmentItem.serialNo != null) {
-          descriptionColumn.add('SN: ${equipmentItem.serialNo}');
-        }
-
-        if (issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate !=
-            null) {
+        if (modelEntity != null) {
           descriptionColumn.add(
-            'Date Acquired: ${documentDateFormatter(issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate!)}',
+            'Model: ${modelEntity.modelName}',
+          );
+        }
+
+        if (serialNo != null && serialNo.isNotEmpty) {
+          descriptionColumn.add(
+            'SN: $serialNo',
           );
         }
       }
 
-      print(
-          'Item ID: ${issuedItem.itemEntity.shareableItemInformationEntity.id}');
-      print('Description Column: $descriptionColumn');
-
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
-        return DocumentService.getRowHeight(row, fontSize: 8.5);
+        return DocumentService.getRowHeight(
+          row,
+          fontSize: 8.5,
+          cellWidth: 240.0,
+        );
       }).toList();
 
-      // Add rows for this item
+      final baseItemId = shareableItemInformationEntity.id;
+      final quantity = issuanceItemEntity.quantity;
+      final unit = shareableItemInformationEntity.unit;
+      final unitCost = shareableItemInformationEntity.unitCost;
+      final totalCost = unitCost * quantity;
+      final estimatedUsefulLife =
+          (itemEntity as InventoryItemEntity).estimatedUsefulLife;
+
       for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildIcsTableRow(
-            quantity: j == 0 ? issuedItem.quantity.toString() : '\n',
-            unit: j == 0
-                ? readableEnumConverter(
-                    issuedItem.itemEntity.shareableItemInformationEntity.unit)
-                : '\n',
-            unitCost: j == 0
-                ? formatCurrency(issuedItem
-                    .itemEntity.shareableItemInformationEntity.unitCost)
-                : '\n',
-            totalCost: j == 0
-                ? formatCurrency(issuedItem
-                    .itemEntity.shareableItemInformationEntity.unitCost)
-                : '\n',
+            quantity: j == 0 ? quantity.toString() : '\n',
+            unit: j == 0 ? readableEnumConverter(unit) : '\n',
+            unitCost: j == 0 ? formatCurrency(unitCost) : '\n',
+            totalCost: j == 0 ? formatCurrency(totalCost) : '\n',
             description: descriptionColumn[j],
-            itemId: j == 0
-                ? issuedItem.itemEntity.shareableItemInformationEntity.id
-                : '\n',
-            estimatedUsefulLife: j == 0
-                ? issuedItem is InventoryItemEntity
-                    ? (issuedItem as InventoryItemEntity).estimatedUsefulLife
-                    : null
-                : null,
+            itemId: j == 0 ? baseItemId : '\n',
+            estimatedUsefulLife: j == 0 ? estimatedUsefulLife : null,
             rowHeight: rowHeights[j],
             borderTop: i == 0 ? false : true,
             isTopBorderSlashed: i == 0 ? false : true,
@@ -295,7 +290,7 @@ class InventoryCustodianSlip implements BaseDocument {
               ),
               DocumentComponents.buildRowTextValue(
                 text: 'ICS No:',
-                value: data.icsId,
+                value: ics.icsId,
               ),
             ],
           ),

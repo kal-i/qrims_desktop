@@ -116,6 +116,11 @@ class RPCI implements BaseDocument {
       final rowHeight = DocumentService.getRowHeight(
         description,
         fontSize: 8.0,
+        cellWidth: pageFormat == PdfPageFormat.a4
+            ? 450.0
+            : pageFormat == PdfPageFormat.letter
+                ? 475.0
+                : 475.0,
       );
 
       tableRows.add(

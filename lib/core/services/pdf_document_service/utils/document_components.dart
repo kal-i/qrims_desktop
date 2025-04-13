@@ -275,24 +275,22 @@ class DocumentComponents {
           ],
         ),
         buildTableRowColumn(
-          data: description ?? '\n', // truncateText(description ?? '\n', 40),
+          data: description ?? '\n',
           borderTop: borderTop,
-
           borderRight: false,
           rowHeight: rowHeight,
-          borderBottom: borderBottom, isTopBorderSlashed: isTopBorderSlashed,
-
+          borderBottom: borderBottom,
+          isTopBorderSlashed: isTopBorderSlashed,
           isBottomBorderSlashed: true,
         ),
         buildTableRowColumn(
-          data: itemId ?? '\n', //truncateText(itemId ?? '\n', 21),
+          data: itemId ?? '\n',
           fontSize: 7.0,
           borderTop: borderTop,
-
           borderRight: false,
           rowHeight: rowHeight,
-          borderBottom: borderBottom, isTopBorderSlashed: isTopBorderSlashed,
-
+          borderBottom: borderBottom,
+          isTopBorderSlashed: isTopBorderSlashed,
           isBottomBorderSlashed: true,
         ),
         buildTableRowColumn(
@@ -319,6 +317,7 @@ class DocumentComponents {
     String? dateAcquired,
     String? amount,
     double? rowHeight,
+    borderTop = false,
     borderBottom = true,
   }) {
     return pw.TableRow(
@@ -327,18 +326,21 @@ class DocumentComponents {
           data: quantity.toString(),
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
         buildTableRowColumn(
           data: readableEnumConverter(unit),
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
         buildTableRowColumn(
           data: description ?? '\n',
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
         buildTableRowColumn(
@@ -346,6 +348,7 @@ class DocumentComponents {
           fontSize: 7.0,
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
         buildTableRowColumn(
@@ -353,11 +356,13 @@ class DocumentComponents {
           solidBorderWidth: 2.0,
           borderRight: false,
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
         buildTableRowColumn(
           data: amount.toString(),
           rowHeight: rowHeight,
+          borderTop: borderTop,
           borderBottom: borderBottom,
         ),
       ],

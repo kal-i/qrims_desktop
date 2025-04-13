@@ -6,6 +6,7 @@ import '../../../../features/item_issuance/data/models/inventory_custodian_slip.
 import '../../../../features/item_issuance/data/models/property_acknowledgement_receipt.dart';
 import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../features/item_issuance/domain/entities/requisition_and_issue_slip.dart';
+import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../../init_dependencies.dart';
 import '../../../enums/unit.dart';
 import '../../../utils/capitalizer.dart';
@@ -28,172 +29,49 @@ class RequisitionAndIssueSlip implements BaseDocument {
     required bool withQr,
   }) async {
     final pdf = pw.Document();
-    print(data);
 
-    final List<IssuanceItemEntity> issuedItems;
+    // data from the passed obj
+    // we'll create RIS from that
+    // things to get: ent, fc, division, office, rcc, iss_items, req_off?, app_off?, issng_off?, rec_off?, purpose?
+    // we will get the bool stock_available from qty
 
-    final String entityName;
+    final ris = data as RequisitionAndIssueSlipEntity;
+    final risId = ris.risId;
+    final division = ris.division ?? '\n';
+
+    final purchaseRequestEntity = ris.purchaseRequestEntity;
+    // we get this during the data from ics/par when there is associated alr
+    OfficerEntity? issuingOfficerEntity = ris.issuingOfficerEntity;
+    OfficerEntity? receivingOfficerEntity = ris.receivingOfficerEntity;
+
+    final String entity;
+    final String office;
     final String fundCluster;
-    String risId = '\n';
-    String division = '\n';
-    String rcc = '\n';
-    String office = '\n';
-    String purpose = '\n\n\n\n';
+    final String responsibilityCenterCode;
+    final String purpose;
 
-    final String pr;
-    final List<String>
-        stockNo; // combination of product_name_id and product_description_id
-    final int requestQuantity;
+    OfficerEntity? requestingOfficerEntity;
+    OfficerEntity? approvingOfficerEntity;
 
-    final String receivingOfficerName;
-    final String receivingOfficerPosition;
-    final String issuingOfficerName;
-    final String issuingOfficerPosition;
-    final String approvingOfficerName;
-    final String approvingOfficerPosition;
-    final String requestingOfficerName;
-    final String requestingOfficerPosition;
+    if (purchaseRequestEntity != null) {
+      entity = purchaseRequestEntity.entity.name;
+      office = purchaseRequestEntity.officeEntity.officeName;
+      fundCluster = purchaseRequestEntity.fundCluster.toReadableString();
+      responsibilityCenterCode =
+          purchaseRequestEntity.responsibilityCenterCode ?? '\n';
+      purpose = purchaseRequestEntity.purpose;
 
-    // will remove these conditions later cause we will change the way we geenerate ris
-    if (data is InventoryCustodianSlipModel) {
-      final ics = data;
-      final purchaseRequestEntity = ics.purchaseRequestEntity;
-      final receivingOfficerEntity = ics.receivingOfficerEntity;
-      final issuingOfficerEntity = ics.issuingOfficerEntity;
-
-      if (purchaseRequestEntity != null) {
-        pr = purchaseRequestEntity.id;
-        entityName = purchaseRequestEntity.entity.name;
-        fundCluster = purchaseRequestEntity.fundCluster.toReadableString();
-        rcc = purchaseRequestEntity.responsibilityCenterCode ?? '\n';
-        office = purchaseRequestEntity.officeEntity.officeName;
-        purpose = purchaseRequestEntity.purpose;
-
-        approvingOfficerName =
-            purchaseRequestEntity.approvingOfficerEntity.name;
-        approvingOfficerPosition =
-            purchaseRequestEntity.approvingOfficerEntity.positionName;
-        requestingOfficerName =
-            purchaseRequestEntity.requestingOfficerEntity.name;
-        requestingOfficerPosition =
-            purchaseRequestEntity.requestingOfficerEntity.positionName;
-      } else {
-        entityName = ics.entity?.name ?? '\n';
-        fundCluster = ics.fundCluster!.toReadableString();
-
-        approvingOfficerName = '\n';
-        approvingOfficerPosition = '\n';
-        requestingOfficerName = '\n';
-        requestingOfficerPosition = '\n';
-      }
-
-      issuedItems = ics.items;
-
-      //stockNo = data.purchaseRequestEntity.productNameEntity.id;
-      //requestQuantity = data.purchaseRequestEntity.quantity;
-
-      receivingOfficerName = receivingOfficerEntity?.name ?? 'N/A';
-      receivingOfficerPosition = receivingOfficerEntity?.positionName ?? 'N/A';
-      issuingOfficerName = issuingOfficerEntity?.name ?? 'N/A';
-      issuingOfficerPosition = issuingOfficerEntity?.positionName ?? 'N/A';
-    } else if (data is PropertyAcknowledgementReceiptModel) {
-      final par = data;
-      final purchaseRequestEntity = par.purchaseRequestEntity;
-      final receivingOfficerEntity = par.receivingOfficerEntity;
-      final issuingOfficerEntity = par.issuingOfficerEntity;
-
-      if (purchaseRequestEntity != null) {
-        pr = purchaseRequestEntity.id;
-        entityName = purchaseRequestEntity.entity.name;
-        fundCluster = purchaseRequestEntity.fundCluster.toReadableString();
-        rcc = purchaseRequestEntity.responsibilityCenterCode ?? '\n';
-        office = purchaseRequestEntity.officeEntity.officeName;
-        purpose = purchaseRequestEntity.purpose;
-
-        approvingOfficerName =
-            purchaseRequestEntity.approvingOfficerEntity.name;
-        approvingOfficerPosition =
-            purchaseRequestEntity.approvingOfficerEntity.positionName;
-        requestingOfficerName =
-            purchaseRequestEntity.requestingOfficerEntity.name;
-        requestingOfficerPosition =
-            purchaseRequestEntity.requestingOfficerEntity.positionName;
-      } else {
-        entityName = par.entity?.name ?? '\n';
-        fundCluster = par.fundCluster != null
-            ? par.fundCluster!.toReadableString()
-            : '\n';
-
-        approvingOfficerName = '\n';
-        approvingOfficerPosition = '\n';
-        requestingOfficerName = '\n';
-        requestingOfficerPosition = '\n';
-      }
-
-      issuedItems = par.items;
-
-      //stockNo = data.purchaseRequestEntity.productNameEntity.id;
-      //requestQuantity = data.purchaseRequestEntity.quantity;
-
-      receivingOfficerName = receivingOfficerEntity?.name ?? 'N/A';
-      receivingOfficerPosition = receivingOfficerEntity?.positionName ?? 'N\A';
-      issuingOfficerName = issuingOfficerEntity?.name ?? 'N/A';
-      issuingOfficerPosition = issuingOfficerEntity?.positionName ?? 'N/A';
-    } else if (data is RequisitionAndIssueSlipEntity) {
-      final ris = data;
-      risId = ris.risId;
-      print(ris);
-      final purchaseRequestEntity = ris.purchaseRequestEntity;
-      final receivingOfficerEntity = ris.receivingOfficerEntity;
-      final issuingOfficerEntity = ris.issuingOfficerEntity;
-
-      rcc = ris.responsibilityCenterCode ?? '\n';
-      division = ris.division ?? '\n';
-
-      if (purchaseRequestEntity != null) {
-        pr = purchaseRequestEntity.id;
-        entityName = purchaseRequestEntity.entity.name;
-        fundCluster = purchaseRequestEntity.fundCluster.toReadableString();
-        office = purchaseRequestEntity.officeEntity.officeName;
-        purpose = purchaseRequestEntity.purpose;
-
-        approvingOfficerName =
-            purchaseRequestEntity.approvingOfficerEntity.name;
-        approvingOfficerPosition =
-            purchaseRequestEntity.approvingOfficerEntity.positionName;
-        requestingOfficerName =
-            purchaseRequestEntity.requestingOfficerEntity.name;
-        requestingOfficerPosition =
-            purchaseRequestEntity.requestingOfficerEntity.positionName;
-      } else {
-        final approvingOfficerEntity = ris.approvingOfficerEntity;
-        final requestingOfficerEntity = ris.requestingOfficerEntity;
-
-        entityName = ris.entity?.name ?? '\n';
-        fundCluster = ris.fundCluster != null
-            ? ris.fundCluster!.toReadableString()
-            : '\n';
-        office = ris.office?.officeName ?? '\n';
-        purpose = ris.purpose ?? '\n';
-
-        approvingOfficerName = approvingOfficerEntity?.name ?? '\n';
-        approvingOfficerPosition = approvingOfficerEntity?.positionName ?? '\n';
-        requestingOfficerName = requestingOfficerEntity?.name ?? '\n';
-        requestingOfficerPosition =
-            requestingOfficerEntity?.positionName ?? '\n';
-      }
-
-      issuedItems = ris.items;
-
-      //stockNo = data.purchaseRequestEntity.productNameEntity.id;
-      //requestQuantity = data.purchaseRequestEntity.quantity;
-
-      receivingOfficerName = receivingOfficerEntity?.name ?? 'N/A';
-      receivingOfficerPosition = receivingOfficerEntity?.positionName ?? 'N/A';
-      issuingOfficerName = issuingOfficerEntity?.name ?? 'N/A';
-      issuingOfficerPosition = issuingOfficerEntity?.positionName ?? 'N/A';
+      requestingOfficerEntity = purchaseRequestEntity.requestingOfficerEntity;
+      approvingOfficerEntity = purchaseRequestEntity.approvingOfficerEntity;
     } else {
-      throw ArgumentError('Unsupported data type for RIS generation');
+      entity = ris.entity?.name ?? '\n';
+      office = ris.office?.officeName ?? '\n';
+      fundCluster = ris.fundCluster?.toReadableString() ?? '\n';
+      responsibilityCenterCode = ris.responsibilityCenterCode ?? '\n';
+      purpose = ris.purpose ?? '\n\n\n\n';
+
+      requestingOfficerEntity = ris.requestingOfficerEntity;
+      approvingOfficerEntity = ris.approvingOfficerEntity;
     }
 
     List<pw.TableRow> tableRows = [
@@ -259,96 +137,119 @@ class RequisitionAndIssueSlip implements BaseDocument {
     ];
 
     // Loop through each item to generate rows
-    for (final issuedItem in issuedItems) {
-      // Extract common information
+    for (int i = 0; i < ris.items.length; i++) {
+      final issuanceItemEntity = ris.items[i];
+      final itemEntity = issuanceItemEntity.itemEntity;
+      final productStockEntity = itemEntity.productStockEntity;
+      final productNameEntity = productStockEntity.productName;
+      final productDescriptionEntity = productStockEntity.productDescription;
+      final shareableItemInformationEntity =
+          itemEntity.shareableItemInformationEntity;
+
+      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
-        issuedItem.itemEntity.productStockEntity.productDescription
-                ?.description ??
-            'No Description',
-        'Specifications',
+        productDescriptionEntity?.description ?? 'No description defined'
       ];
 
-      // Add specifications
-      descriptionColumn.addAll(
-        extractSpecification(
-          issuedItem.itemEntity.shareableItemInformationEntity.specification ??
-              'N/A',
-          ' - ',
-        ),
-      );
+      final specification = shareableItemInformationEntity.specification;
+      if (specification != null && specification.isNotEmpty) {
+        descriptionColumn.addAll(
+          [
+            'Specifications:',
+            ...extractSpecification(specification, ','),
+          ],
+        );
+      }
 
-      // Add equipment-specific details if the item is EquipmentEntity
-      if (issuedItem is InventoryItemEntity) {
-        final equipmentItem = issuedItem as InventoryItemEntity;
+      // Add inventory-specific details if the item is EquipmentEntity
+      if (itemEntity is InventoryItemEntity) {
+        final inventoryItem = itemEntity;
+        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+        final brandEntity = manufacturerBrandEntity?.brand;
+        final modelEntity = inventoryItem.modelEntity;
+        final serialNo = inventoryItem.serialNo;
 
-        if (equipmentItem.manufacturerBrandEntity?.brand.name != null) {
+        if (brandEntity != null) {
           descriptionColumn.add(
-              'Brand: ${equipmentItem.manufacturerBrandEntity!.brand.name}');
+            'Brand: ${brandEntity.name}',
+          );
         }
 
-        if (equipmentItem.modelEntity?.modelName != null) {
-          descriptionColumn
-              .add('Model: ${equipmentItem.modelEntity!.modelName}');
-        }
-
-        if (equipmentItem.serialNo != null) {
-          descriptionColumn.add('SN: ${equipmentItem.serialNo}');
-        }
-
-        if (issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate !=
-            null) {
+        if (modelEntity != null) {
           descriptionColumn.add(
-            'Date Acquired: ${documentDateFormatter(issuedItem.itemEntity.shareableItemInformationEntity.acquiredDate!)}',
+            'Model: ${modelEntity.modelName}',
+          );
+        }
+
+        if (serialNo != null && serialNo.isNotEmpty) {
+          descriptionColumn.add(
+            'SN: $serialNo',
           );
         }
       }
 
-      // Add PR information
-      if (data.purchaseRequestEntity != null) {
-        descriptionColumn.add('PR: ${data.purchaseRequestEntity.id}');
-      }
-
       // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
-        return DocumentService.getRowHeight(row, fontSize: 8.5);
+        return DocumentService.getRowHeight(
+          row,
+          fontSize: 8.5,
+          cellWidth: 300.0,
+        );
       }).toList();
 
-      for (int i = 0; i < descriptionColumn.length; i++) {
-        final issuedItemEntity = issuedItem;
-        final itemEntity = issuedItemEntity.itemEntity;
-        final productStockEntity = itemEntity.productStockEntity;
-        final productNameEntity = productStockEntity.productName;
-        final productDescriptionEntity = productStockEntity.productDescription;
-        final shareableItemInformationEntity =
-            itemEntity.shareableItemInformationEntity;
+      final productNameId = productNameEntity.id;
+      final productDescriptionId = productDescriptionEntity?.id;
+      final stockNo = '$productNameId$productDescriptionId';
+      final unit = shareableItemInformationEntity.unit;
+      final stockQuantity = shareableItemInformationEntity.quantity;
+      final issuedQuantity = issuanceItemEntity.quantity;
 
-        // Stock No.
-        final productNameId = productNameEntity.id;
-        final productDescriptionId = productDescriptionEntity!.id;
+      int? requestedQuantity;
+      if (purchaseRequestEntity != null) {
+        for (final requestedItem
+            in purchaseRequestEntity.requestedItemEntities) {
+          final requestedProductNameId = requestedItem.productNameEntity.id;
+          final requestedProductDescriptionId =
+              requestedItem.productDescriptionEntity.id;
+          final requestedUnit = requestedItem.unit;
 
-        final unit = readableEnumConverter(shareableItemInformationEntity.unit);
+          if (productNameId == requestedProductNameId &&
+              productDescriptionId == requestedProductDescriptionId &&
+              unit == requestedUnit) {
+            requestedQuantity = requestedItem.quantity;
+          }
+        }
+      } else {
+        requestedQuantity = issuedQuantity;
+      }
 
-        // to be implement, I need to think of a way to determine the requested qty
-        // for that, I will access the pr requested items, but I must match the item being issued to the curr req
-        final requestQuantity = '0';
-
-        final issuedQuantity = issuedItemEntity.quantity.toString();
-
-        // the yes or no can be tricky, I must clarify this one
+      for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildRISTableRow(
-            stockNo: i == 0 ? '$productNameId$productDescriptionId' : '\n',
-            unit: i == 0 ? unit : '\n',
-            description: descriptionColumn[i],
-            requestQuantity: i == 0 ? requestQuantity : '\n',
-            yes: i == 0 ? '\n' : '\n',
-            no: i == 0 ? '\n' : '\n',
-            issueQuantity: i == 0 ? issuedQuantity : '\n',
-            remarks: i == 0 ? '\n' : '\n',
-            rowHeight: rowHeights[i],
-            borderBottom: i == descriptionColumn.length - 1 ? false : true,
+            stockNo: j == 0 ? stockNo : '\n',
+            unit: j == 0 ? readableEnumConverter(unit) : '\n',
+            description: descriptionColumn[j],
+            requestQuantity: j == 0 ? requestedQuantity.toString() : '\n',
+            yes: j == 0
+                ? stockQuantity > 0
+                    ? '/'
+                    : '\n'
+                : '\n',
+            no: j == 0
+                ? stockQuantity == 0
+                    ? '/'
+                    : '\n'
+                : '\n',
+            issueQuantity: j == 0 ? issuedQuantity.toString() : '\n',
+            remarks: j == 0 ? '\n' : '\n',
+            rowHeight: rowHeights[j],
+            borderBottom: j == descriptionColumn.length - 1 ? false : true,
           ),
         );
+      }
+
+      if (i == ris.items.length - 1) {
+        if (purchaseRequestEntity != null) {}
       }
     }
 
@@ -391,7 +292,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
             children: [
               DocumentComponents.buildRowTextValue(
                 text: 'Entity Name:',
-                value: capitalizeWord(entityName),
+                value: capitalizeWord(entity),
                 font: serviceLocator<FontService>().getFont('calibriBold'),
               ),
               DocumentComponents.buildRowTextValue(
@@ -424,7 +325,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
                   ),
                   DocumentComponents().buildRISHeaderContainer(
                     row1Title: 'Responsibility Center Code:',
-                    row1Value: rcc,
+                    row1Value: responsibilityCenterCode,
                     row2Title: 'RIS No.:',
                     row2Value: risId,
                     isRow1Underlined: true,
@@ -525,21 +426,25 @@ class RequisitionAndIssueSlip implements BaseDocument {
               DocumentComponents.buildRISFooterTableHeader(),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Printed Name:',
-                dataRowColumnOne: requestingOfficerName,
-                dataRowColumnTwo: approvingOfficerName,
-                dataRowColumnThree: issuingOfficerName,
-                dataRowColumnFour: receivingOfficerName,
+                dataRowColumnOne: requestingOfficerEntity?.name,
+                dataRowColumnTwo: approvingOfficerEntity?.name,
+                dataRowColumnThree: issuingOfficerEntity?.name,
+                dataRowColumnFour: receivingOfficerEntity?.name,
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Designation:',
                 dataRowColumnOne: formatPosition(
-                  '\n',
+                  requestingOfficerEntity?.positionName ?? '\n',
                 ),
                 dataRowColumnTwo: formatPosition(
-                  '\n',
+                  approvingOfficerEntity?.positionName ?? '\n',
                 ),
-                dataRowColumnThree: formatPosition('\n'),
-                dataRowColumnFour: formatPosition('\n'),
+                dataRowColumnThree: formatPosition(
+                  issuingOfficerEntity?.positionName ?? '\n',
+                ),
+                dataRowColumnFour: formatPosition(
+                  requestingOfficerEntity?.positionName ?? '\n',
+                ),
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Date:',

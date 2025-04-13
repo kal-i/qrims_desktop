@@ -88,7 +88,11 @@ class PurchaseRequest implements BaseDocument {
       }
 
       final rowHeights = descriptionColumn.map((row) {
-        return DocumentService.getRowHeight(row, fontSize: 8.5);
+        return DocumentService.getRowHeight(
+          row,
+          fontSize: 8.5,
+          cellWidth: 350.0,
+        );
       }).toList();
 
       for (int i = 0; i < descriptionColumn.length; i++) {

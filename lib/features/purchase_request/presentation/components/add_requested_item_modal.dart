@@ -66,7 +66,7 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
         'product_name': _itemNameController.text.trim(),
         'product_description': _itemDescriptionController.text.trim(),
         'specification': _itemSpecificationController.text.isEmpty
-            ? ''
+            ? null
             : _itemSpecificationController.text,
         'unit': _selectedUnit.value?.toString().split('.').last,
         'quantity': _quantity.value,
@@ -98,7 +98,8 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
       width: 900.0,
       height: 600.0,
       headerTitle: 'Add Requested Item',
-      subtitle: 'Put \'NA\' or \'N/A\' if specification is not required.',
+      subtitle:
+          'Fill in all required fields marked with (*) and leave optional fields blank if not applicable.',
       content: _buildForm(),
       footer: _buildActionsRow(),
     );
@@ -155,7 +156,7 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                     ),
                     Expanded(
                       child: CustomFormTextField(
-                        label: 'Unit Cost',
+                        label: '* Unit Cost',
                         controller: _unitCostController,
                         placeholderText: 'Enter item\'s unit cost',
                         fillColor:
@@ -171,13 +172,14 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                 height: 15.0,
               ),
               CustomFormTextField(
-                label: 'Specification',
+                label: 'Specification (optional)',
                 placeholderText: 'Enter item\'s specification',
                 maxLines: 4,
                 controller: _itemSpecificationController,
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
+                hasValidation: false,
               ),
             ],
           ),
@@ -207,8 +209,8 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
         _selectedItemName.value = value;
       },
       controller: _itemNameController,
-      label: 'Product Name',
-      placeHolderText: 'Enter product name',
+      label: '* Item Name',
+      placeHolderText: 'Enter item\'s name',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),
@@ -237,8 +239,8 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
             _itemDescriptionController.text = value;
           },
           controller: _itemDescriptionController,
-          label: 'Product Description',
-          placeHolderText: 'Enter product description',
+          label: '* Description',
+          placeHolderText: 'Enter item\'s description',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
@@ -289,7 +291,7 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
       valueListenable: _quantity,
       builder: (BuildContext context, int value, Widget? child) {
         return CustomFormTextField(
-          label: 'Quantity',
+          label: '* Quantity',
           placeholderText: 'Enter item\'s quantity',
           controller: _quantityController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
