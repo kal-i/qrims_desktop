@@ -4,7 +4,6 @@ import 'package:form_validator/form_validator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../../../config/sizing/sizing_config.dart';
 import '../../../../core/common/components/custom_loading_filled_button.dart';
 import '../../../../core/enums/verification_purpose.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
@@ -13,9 +12,6 @@ import '../components/custom_auth_password_text_box/custom_auth_password_text_bo
 import '../../../../config/routes/app_routing_constants.dart';
 import '../bloc/auth_bloc.dart';
 import '../components/custom_email_text_box.dart';
-import '../../../../config/themes/app_color.dart';
-import '../components/custom_container.dart';
-import '../../../../core/common/components/custom_filled_button/custom_filled_button.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});

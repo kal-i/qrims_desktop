@@ -33,6 +33,7 @@ import '../../domain/entities/issuance.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../bloc/issuances_bloc.dart';
+import '../components/create_existing_issuance_to_ris_modal.dart';
 import '../components/create_issuance_modal.dart';
 import '../components/custom_document_preview.dart';
 import '../components/custom_interactable_card.dart';
@@ -697,11 +698,18 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           }
 
                           if (action.contains('Generate RIS Document')) {
-                            showCustomDocumentPreview(
+                            showDialog(
                               context: context,
-                              documentObject: issuanceObj,
-                              docType: DocumentType.ris,
+                              builder: (context) =>
+                                  CreateExistingIssuanceToRISModal(
+                                issuanceEntity: issuanceObj,
+                              ),
                             );
+                            // showCustomDocumentPreview(
+                            //   context: context,
+                            //   documentObject: issuanceObj,
+                            //   docType: DocumentType.ris,
+                            // );
                           }
 
                           if (action.contains('Generate Sticker')) {

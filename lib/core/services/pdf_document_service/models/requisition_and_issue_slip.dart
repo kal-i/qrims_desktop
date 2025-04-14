@@ -2,15 +2,10 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
-import '../../../../features/item_issuance/data/models/inventory_custodian_slip.dart';
-import '../../../../features/item_issuance/data/models/property_acknowledgement_receipt.dart';
-import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../features/item_issuance/domain/entities/requisition_and_issue_slip.dart';
 import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../../init_dependencies.dart';
-import '../../../enums/unit.dart';
 import '../../../utils/capitalizer.dart';
-import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/format_position.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';

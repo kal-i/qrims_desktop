@@ -800,7 +800,7 @@ class IssuanceRepository {
         office = await OfficeRepository(_conn).getOfficeById(
           id: row[14] as String,
         );
-        print('converted office');
+        print('converted office: $office');
       }
 
       print('ris convertion---');
@@ -817,14 +817,14 @@ class IssuanceRepository {
           'purchase_request': purchaseRequest?.toJson(),
           'entity': entity?.toJson(),
           'fund_cluster': fundCluster,
-          'divison': row[12],
+          'division': row[12],
           'responsibility_center_code': row[13],
           'office': office?.toJson(),
           'purpose': row[15],
           'approving_officer': approvingOfficer?.toJson(),
           'issuing_officer': issuingOfficer?.toJson(),
           'receiving_officer': receivingOfficer?.toJson(),
-          'requested_officer': requestingOfficer?.toJson(),
+          'requesting_officer': requestingOfficer?.toJson(),
           'qr_code_image_data': row[8],
           'status': row[9],
           'is_archived': row[10],
@@ -1301,9 +1301,12 @@ class IssuanceRepository {
     List<dynamic> issuanceItems,
   ) async {
     for (final issuance in issuanceItems) {
-      final itemId =
-          issuance['shareable_item_information']['base_item_id'] as String;
-      final issuedQuantity = int.parse(issuance['issued_quantity'] as String);
+      print('issuance item: $issuance');
+      final itemId = issuance['item']['shareable_item_information']
+          ['base_item_id'] as String;
+      //issuance['shareable_item_information']['base_item_id'] as String;
+      final issuedQuantity = issuance['issued_quantity']
+          as int; //int.parse(issuance['issued_quantity'] as String);
 
       // Step 3: Insert into IssuanceItems table
       await _insertIssuanceItem(ctx, issuanceId, itemId, issuedQuantity);
@@ -1829,9 +1832,12 @@ class IssuanceRepository {
 
     return await _createIssuance(
       issuedDate: issuedDate,
-      purchaseRequest: purchaseRequest,
       issuanceItems: issuanceItems,
+      purchaseRequest: purchaseRequest,
+      entityId: entityId,
+      fundCluster: fundCluster,
       receivingOfficerId: receivingOfficerId,
+      issuingOfficerId: issuingOfficerId,
       concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
       concreteIssuanceEntityParams: concreteIssuanceEntityParams,
     );

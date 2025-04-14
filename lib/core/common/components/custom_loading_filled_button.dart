@@ -11,12 +11,14 @@ class CustomLoadingFilledButton extends StatelessWidget {
     this.onTap,
     required this.text,
     required this.isLoadingNotifier,
+    this.width,
     required this.height,
   });
 
   final VoidCallback? onTap;
   final String text;
   final ValueNotifier<bool> isLoadingNotifier;
+  final double? width;
   final double height;
 
   @override
@@ -26,6 +28,7 @@ class CustomLoadingFilledButton extends StatelessWidget {
       builder: (context, isLoading, child) {
         return CustomFilledButton(
           height: height,
+          width: width,
           onTap: isLoading ? null : onTap,
           text: text,
           prefixWidget: isLoading

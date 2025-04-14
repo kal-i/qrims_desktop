@@ -100,7 +100,7 @@ Future<Response> _createRIS(
     final division = json['division'] as String?;
     final responsibilityCenterCode =
         json['responsibility_center_code'] as String?;
-    final office = json['office'] as String?;
+    final office = json['office_name'] as String?;
     final purpose = json['purpose'] as String?;
 
     if (issuanceItems == null) {
@@ -133,12 +133,15 @@ Future<Response> _createRIS(
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
     String? receivingOfficerId;
+
     String? issuingOfficerOfficeId;
     String? issuingOfficerPositionId;
     String? issuingOfficerId;
+
     String? approvingOfficerOfficeId;
     String? approvingOfficerPositionId;
     String? approvingOfficerId;
+
     String? requestingOfficerOfficeId;
     String? requestingOfficerPositionId;
     String? requestingOfficerId;
@@ -207,7 +210,7 @@ Future<Response> _createRIS(
     }
 
     if (approvingOfficerName != null && approvingOfficerPositionId != null) {
-      issuingOfficerId = await officerRepository.checkOfficerIfExist(
+      approvingOfficerId = await officerRepository.checkOfficerIfExist(
             name: approvingOfficerName,
             positionId: approvingOfficerPositionId,
           ) ??
@@ -233,7 +236,7 @@ Future<Response> _createRIS(
     }
 
     if (requestingOfficerName != null && requestingOfficerPositionId != null) {
-      issuingOfficerId = await officerRepository.checkOfficerIfExist(
+      requestingOfficerId = await officerRepository.checkOfficerIfExist(
             name: requestingOfficerName,
             positionId: requestingOfficerPositionId,
           ) ??

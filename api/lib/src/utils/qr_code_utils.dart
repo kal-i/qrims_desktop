@@ -48,12 +48,12 @@ class QrCodeUtils {
     final base64Image = base64Encode(pngImageData);
 
     // Save the image file
-    final filePath =
-        'C:/Users/johnpaulmaceres/Documents/QR/qr_code_${encryptedId.hashCode}.png';
-    final file = File(filePath);
-    await file.writeAsBytes(img.encodePng(image));
+    // final filePath =
+    //     'C:/Users/johnpaulmaceres/Documents/QR/qr_code_${encryptedId.hashCode}.png';
+    // final file = File(filePath);
+    // await file.writeAsBytes(img.encodePng(image));
 
-    print('QR code image saved to: $filePath');
+    //print('QR code image saved to: $filePath');
 
     return base64Image;
   }

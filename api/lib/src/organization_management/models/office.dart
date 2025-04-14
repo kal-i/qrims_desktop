@@ -9,15 +9,15 @@ class Office {
 
   factory Office.fromJson(Map<String, dynamic> json) {
     return Office(
-      id: json['office_id'] as String,
-      officeName: json['office_name'] as String,
+      id: json['id'] as String,
+      officeName: json['name'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'office_id': id,
-      'office_name': officeName,
+      'id': id,
+      'name': officeName,
     };
   }
 }
