@@ -66,8 +66,7 @@ class _PurchaseRequestReusableViewState
   final _approvingOfficerPositionController = TextEditingController();
   final _approvingOfficerNameController = TextEditingController();
 
-  final ValueNotifier<FundCluster?> _selectedFundCluster =
-      ValueNotifier(FundCluster.unknown);
+  final ValueNotifier<FundCluster?> _selectedFundCluster = ValueNotifier(null);
   final ValueNotifier<String?> _selectedRequestingOfficerOffice =
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedRequestingOfficerPosition =
@@ -900,33 +899,31 @@ class _PurchaseRequestReusableViewState
     return ValueListenableBuilder(
       valueListenable: _selectedFundCluster,
       builder: (context, selectedFundCluster, child) {
-        return CustomDropdownField(
-          value: selectedFundCluster.toString(),
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedFundCluster.value = FundCluster.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
-          },
-          items: FundCluster.values
-              .map(
-                (fundCluster) => DropdownMenuItem(
-                  value: fundCluster.toString(),
-                  child: Text(
-                    fundCluster.toReadableString(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<FundCluster>(
+          value: selectedFundCluster,
+          onChanged: (value) => _selectedFundCluster.value = value,
+          items: [
+            const DropdownMenuItem<FundCluster>(
+              value: null,
+              child: Text('Select fund cluster'),
+            ),
+            ...FundCluster.values.map(
+              (fundCluster) => DropdownMenuItem(
+                value: fundCluster,
+                child: Text(
+                  fundCluster.toReadableString(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
-          placeholderText: 'Enter purchase request\'s fund cluster',
         );
       },
     );

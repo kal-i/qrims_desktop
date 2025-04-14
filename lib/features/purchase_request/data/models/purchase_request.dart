@@ -59,8 +59,8 @@ class PurchaseRequestModel extends PurchaseRequestEntity {
     final entity = EntityModel.fromJson(json['entity']);
 
     final office = OfficeModel.fromJson({
-      'id': json['office']['office_id'],
-      'name': json['office']['office_name'],
+      'id': json['office']['id'],
+      'name': json['office']['name'],
     });
 
     final requestedItems =

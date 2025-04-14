@@ -65,6 +65,9 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   ];
   late List<TableData> _tableRows;
 
+  // Add a new Set to track selected item IDs
+  final Set<String> _selectedItemIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -295,14 +298,31 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                       ),
                       onRowSelected: (index) {
                         final itemObj = _tableRows[index].object;
+                        final newItem = itemObj is SupplyEntity
+                            ? (itemObj as SupplyModel).toJson()
+                            : (itemObj as InventoryItemModel).toJson();
 
-                        _preselectedItems.add(
-                          itemObj is SupplyEntity
-                              ? (itemObj as SupplyModel).toJson()
-                              : (itemObj as InventoryItemModel).toJson(),
-                        );
+                        final baseItemId = newItem['shareable_item_information']
+                            ['base_item_id'];
 
-                        print('selected items to add: $_preselectedItems');
+                        if (_selectedItemIds.contains(baseItemId)) {
+                          _selectedItemIds.remove(baseItemId);
+                          _preselectedItems.removeWhere((item) =>
+                              item['shareable_item_information']
+                                  ['base_item_id'] ==
+                              baseItemId);
+                        } else {
+                          _selectedItemIds.add(baseItemId);
+
+                          final isDuplicate = _preselectedItems.any((item) =>
+                              item['shareable_item_information']
+                                  ['base_item_id'] ==
+                              baseItemId);
+
+                          if (!isDuplicate) {
+                            _preselectedItems.add(newItem);
+                          }
+                        }
                       },
                       onActionSelected: (index, action) {
                         final itemId = _tableRows[index].id;
@@ -400,10 +420,13 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
         ),
         CustomFilledButton(
           onTap: () {
-            print('Sending to main view: $_preselectedItems');
-            widget.onSelectedItems(
-              _preselectedItems,
-            );
+            // Only pass items that are currently selected
+            final selectedItems = _preselectedItems
+                .where((item) => _selectedItemIds.contains(
+                    item['shareable_item_information']['base_item_id']))
+                .toList();
+
+            widget.onSelectedItems(selectedItems);
             context.pop();
           },
           text: 'Add',

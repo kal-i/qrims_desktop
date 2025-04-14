@@ -538,34 +538,36 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   Widget _buildInitialInformationSection() {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildDateSelection(),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            if (widget.issuanceType == IssuanceType.ics)
+        if (widget.issuanceType == IssuanceType.ics)
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateSelection(),
+              ),
+              const SizedBox(
+                width: 20.0,
+              ),
               Expanded(
                 child: _buildIcsTypeSelection(),
               ),
-          ],
-        ),
+            ],
+          ),
         const SizedBox(
           height: 20.0,
         ),
         Row(
+          spacing: 20.0,
           children: [
             Expanded(
               child: _buildEntitySuggestionField(),
             ),
-            const SizedBox(
-              width: 20.0,
-            ),
             Expanded(
               child: _buildFundClusterSelection(),
             ),
+            if (widget.issuanceType != IssuanceType.ics)
+              Expanded(
+                child: _buildDateSelection(),
+              ),
           ],
         ),
         if (widget.issuanceType == IssuanceType.ris)
@@ -973,7 +975,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           height: 5.0,
         ),
         Text(
-          'Officers involved to this request.',
+          'Officers involved to this issuance.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w400,
@@ -1274,33 +1276,31 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     return ValueListenableBuilder(
       valueListenable: _selectedFundCluster,
       builder: (context, selectedFundCluster, child) {
-        return CustomDropdownField(
-          //value: selectedFundCluster.toString(),
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              _selectedFundCluster.value = FundCluster.values.firstWhere(
-                  (e) => e.toString().split('.').last == value.split('.').last);
-            }
-          },
-          items: FundCluster.values
-              .map(
-                (fundCluster) => DropdownMenuItem(
-                  value: fundCluster.toString(),
-                  child: Text(
-                    fundCluster.toReadableString(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<FundCluster>(
+          value: selectedFundCluster,
+          onChanged: (value) => _selectedFundCluster.value = value,
+          items: [
+            const DropdownMenuItem<FundCluster>(
+              value: null,
+              child: Text('Select fund cluster'),
+            ),
+            ...FundCluster.values.map(
+              (fundCluster) => DropdownMenuItem(
+                value: fundCluster,
+                child: Text(
+                  fundCluster.toReadableString(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
-          placeholderText: 'Enter fund cluster',
         );
       },
     );
@@ -1439,6 +1439,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),
+      hasValidation: false,
     );
   }
 
@@ -1593,6 +1594,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+          hasValidation: false,
         );
       },
     );
@@ -1755,6 +1757,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                   ? AppColor.lightCustomTextBox
                   : AppColor.darkCustomTextBox),
+              hasValidation: false,
             );
           },
         );

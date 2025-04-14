@@ -148,8 +148,8 @@ class PurchaseRequest {
     });
 
     final office = Office.fromJson({
-      'office_id': json['office_id'],
-      'office_name': json['office_name'],
+      'id': json['office_id'],
+      'name': json['office_name'],
     });
 
     final requestedItems = (json['requested_items'] as List<dynamic>)
