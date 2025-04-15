@@ -21,6 +21,7 @@ class CustomDropdownField<T> extends StatelessWidget {
     this.validator,
     this.valueToStringConverter,
     this.fillColor,
+    this.hasValidation = true,
   });
 
   final void Function(T?)? onChanged;
@@ -32,6 +33,7 @@ class CustomDropdownField<T> extends StatelessWidget {
   final String? Function(T?)? validator;
   final String Function(T?)? valueToStringConverter;
   final Color? fillColor;
+  final bool hasValidation;
 
   @override
   Widget build(BuildContext context) {
@@ -117,16 +119,21 @@ class CustomDropdownField<T> extends StatelessWidget {
                 fontSize: 12.0,
                 fontWeight: FontWeight.w500,
               ),
-          items:
-              items, // items.map((item) => DropdownMenuItem(value: item, child: Text(readableEnumConverter(item), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500,),),),).toList(),
-          validator: validator ??
-              (T? value) {
-                final String valueAsString = valueToStringConverter != null
-                    ? valueToStringConverter!(value)
-                    : value.toString();
-                return ValidationBuilder(requiredMessage: '$label is required')
-                    .build()(valueAsString);
-              },
+          items: items,
+          validator: hasValidation
+              ? validator ??
+                  (T? value) {
+                    if (value == null) {
+                      return '$label is required';
+                    }
+                    final String valueAsString = valueToStringConverter != null
+                        ? valueToStringConverter!(value)
+                        : value.toString();
+                    return ValidationBuilder(
+                            requiredMessage: '$label is required')
+                        .build()(valueAsString);
+                  }
+              : null,
         ),
       ],
     );

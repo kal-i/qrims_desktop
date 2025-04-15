@@ -18,6 +18,7 @@ class CustomDatePicker extends StatefulWidget {
     this.firstDate,
     this.lastDate,
     this.fillColor,
+    this.enabled = true,
   });
 
   final ValueChanged<DateTime?>? onDateChanged;
@@ -26,6 +27,7 @@ class CustomDatePicker extends StatefulWidget {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final Color? fillColor;
+  final bool enabled;
 
   @override
   State<CustomDatePicker> createState() => _CustomDatePickerState();
@@ -33,8 +35,12 @@ class CustomDatePicker extends StatefulWidget {
 
 class _CustomDatePickerState extends State<CustomDatePicker> {
   Future<void> _selectDate(BuildContext context) async {
+    if (!widget.enabled) return;
+
     DateTime now = DateTime.now();
-    DateTime initialDate = widget.dateController.text.isNotEmpty ? DateTime.parse(widget.dateController.text) : now;
+    DateTime initialDate = widget.dateController.text.isNotEmpty
+        ? DateTime.parse(widget.dateController.text)
+        : now;
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -52,13 +58,15 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
   @override
   Widget build(BuildContext context) {
     return CustomFormTextField(
-      fillColor: widget.fillColor ?? (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightBackground
-          : AppColor.darkBackground),
+      fillColor: widget.fillColor ??
+          (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightBackground
+              : AppColor.darkBackground),
       controller: widget.dateController,
       label: widget.label,
       suffixIcon: HugeIcons.strokeRoundedCalendar03,
-      onTap: () => _selectDate(context),
+      onTap: widget.enabled ? () => _selectDate(context) : null,
+      enabled: widget.enabled,
       validator: ValidationBuilder()
           .regExp(RegExp(r'^\d{4}-\d{2}-\d{2}$'), 'Invalid date format')
           .build(),

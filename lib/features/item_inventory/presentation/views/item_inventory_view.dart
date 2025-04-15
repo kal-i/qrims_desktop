@@ -14,7 +14,6 @@ import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/filter_table_row.dart';
-import '../../../../core/common/components/highlight_status_container.dart';
 import '../../../../core/common/components/kpi_card.dart';
 import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
@@ -26,6 +25,8 @@ import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/document_date_formatter.dart';
+import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -76,6 +77,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     'Unit',
     'Quantity',
     'Unit Cost',
+    'Date Acquired',
+    'Fund Cluster',
   ];
   late List<TableData> _tableRows;
 
@@ -104,6 +107,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       columnFlex: [
         2,
         3,
+        1,
+        1,
         1,
         1,
         1,
@@ -455,7 +460,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                       ),
                       Text(
                         readableEnumConverter(
-                            item.shareableItemInformationEntity.unit),
+                          item.shareableItemInformationEntity.unit,
+                        ),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
@@ -471,7 +477,26 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                       ),
                       Text(
                         formatCurrency(
-                            item.shareableItemInformationEntity.unitCost),
+                          item.shareableItemInformationEntity.unitCost,
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      Text(
+                        documentDateFormatter(
+                          item.shareableItemInformationEntity.acquiredDate!,
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      Text(
+                        item.shareableItemInformationEntity.fundCluster
+                                ?.toReadableString() ??
+                            'Not Specified.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
@@ -480,7 +505,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                     ],
                     menuItems: [
                       {'text': 'View', 'icon': FluentIcons.eye_12_regular},
-                      if (!isAdmin)
+                      if (!isAdmin && _selectedFilterNotifier.value != 'out')
                         {'text': 'Edit', 'icon': FluentIcons.edit_12_regular},
                     ],
                   ),

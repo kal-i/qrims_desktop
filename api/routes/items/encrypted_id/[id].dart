@@ -6,9 +6,9 @@ import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
 Future<Response> onRequest(
-    RequestContext context,
-    String id,
-    ) async {
+  RequestContext context,
+  String id,
+) async {
   final connection = context.read<Connection>();
   final repository = ItemRepository(connection);
   final decodedId = Uri.decodeComponent(id);
@@ -21,10 +21,10 @@ Future<Response> onRequest(
 }
 
 Future<Response> _getItemByEncryptedId(
-    RequestContext context,
-    ItemRepository repository,
-    String id,
-    ) async {
+  RequestContext context,
+  ItemRepository repository,
+  String id,
+) async {
   try {
     print(id);
     final item = await repository.getItemByEncryptedId(encryptedId: id);
@@ -55,10 +55,10 @@ Future<Response> _getItemByEncryptedId(
 }
 
 Future<Response> _updateItemInformation(
-    RequestContext context,
-    ItemRepository repository,
-    String id,
-    ) async {
+  RequestContext context,
+  ItemRepository repository,
+  String id,
+) async {
   final json = await context.request.json() as Map<String, dynamic>;
   final productName = json['product_name'] as String?;
   final description = json['description'] as String?;
@@ -67,13 +67,23 @@ Future<Response> _updateItemInformation(
   final modelName = json['model_name'] as String?;
   final serialNo = json['serial_no'] as String?;
   final specification = json['specification'] as String?;
-  final assetClassification = json['asset_classification'] != null ? AssetClassification.values.firstWhere((assetClassification) => assetClassification.toString().split('.'). last == (json['asset_classification'] as String)) : null;
-  final assetSubClass = json['asset_sub_class'] != null ? AssetSubClass.values.firstWhere((assetSubClass) => assetSubClass.toString().split('.').last == (json['asset_sub_class'] as String)) : null;
-  final unit = json['unit'] != null ? Unit.values.firstWhere((unit) => unit.toString().split('.').last == (json['unit'] as String)) : null;
+  final assetClassification = json['asset_classification'] != null
+      ? AssetClassification.values.firstWhere((assetClassification) =>
+          assetClassification.toString().split('.').last ==
+          (json['asset_classification'] as String))
+      : null;
+  final assetSubClass = json['asset_sub_class'] != null
+      ? AssetSubClass.values.firstWhere((assetSubClass) =>
+          assetSubClass.toString().split('.').last ==
+          (json['asset_sub_class'] as String))
+      : null;
+  final unit = json['unit'] != null
+      ? Unit.values.firstWhere(
+          (unit) => unit.toString().split('.').last == (json['unit'] as String))
+      : null;
   final quantity = json['quantity'] as int?;
   final unitCost = json['unit_cost'] as double?;
   final estimatedUsefulLife = json['estimated_useful_life'] as int?;
-  final acquiredDate = json['acquired_date'] is String ? DateTime.parse(json['acquired_date'] as String) : json['acquired_date'] as DateTime?;
 
   print(productName);
   print(description);
@@ -96,7 +106,6 @@ Future<Response> _updateItemInformation(
     quantity: quantity,
     unitCost: unitCost,
     estimatedUsefulLife: estimatedUsefulLife,
-    acquiredDate: acquiredDate,
   );
 
   if (result == true) {

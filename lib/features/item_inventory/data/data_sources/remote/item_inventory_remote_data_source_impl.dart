@@ -191,9 +191,10 @@ class ItemInventoryRemoteDataSourceImpl
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
-        if (e.response?.statusCode == 500 &&
-            errorMessage == 'Serial no. already exists.') {
-          throw const ServerException('Serial no. already exists.');
+        if (e.response?.statusCode == HttpStatus.conflict ||
+            e.response?.statusCode == HttpStatus.internalServerError) {
+          // Pass through the specific error message about which serial number exists
+          throw ServerException(errorMessage);
         }
         throw ServerException(
           'DioException: ${e.response?.statusCode} - ${e.response?.statusMessage}',
@@ -322,9 +323,10 @@ class ItemInventoryRemoteDataSourceImpl
         final errorData = e.response?.data as Map<String, dynamic>;
         final errorMessage = errorData['message'] ?? e.response?.statusMessage;
 
-        if (e.response?.statusCode == 500 &&
-            errorMessage == 'Serial no. already exists.') {
-          throw const ServerException('Serial no. already exists.');
+        if (e.response?.statusCode == HttpStatus.conflict ||
+            e.response?.statusCode == HttpStatus.internalServerError) {
+          // Pass through the specific error message about which serial number exists
+          throw ServerException(errorMessage);
         }
         throw ServerException(
           'DioException: ${e.response?.statusCode} - ${e.response?.statusMessage}',

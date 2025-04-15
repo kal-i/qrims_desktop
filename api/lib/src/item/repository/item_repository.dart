@@ -636,8 +636,11 @@ class ItemRepository {
       if (e
           .toString()
           .contains('duplicate key value violates unique constraint')) {
-        print('Serial no. already exists');
-        throw Exception('Serial no. already exists.');
+        // Extract serial number from the error detail
+        final serialNoMatch =
+            RegExp(r'Key \(serial_no\)=\((.+?)\)').firstMatch(e.toString());
+        final duplicateSerialNo = serialNoMatch?.group(1) ?? serialNo;
+        throw Exception('Serial no. "$duplicateSerialNo" already exists.');
       }
       throw Exception('Error registering inventory item: $e');
     }
@@ -1750,27 +1753,26 @@ class ItemRepository {
     required String id,
     String? productName,
     String? description,
+    String? specification,
+    Unit? unit,
+    int? quantity,
+    double? unitCost,
+    AssetClassification? assetClassification,
+    AssetSubClass? assetSubClass,
+    int? estimatedUsefulLife,
     String? manufacturerName,
     String? brandName,
     String? modelName,
     String? serialNo,
-    String? specification,
-    AssetClassification? assetClassification,
-    AssetSubClass? assetSubClass,
-    Unit? unit,
-    int? quantity,
-    double? unitCost,
-    int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   }) async {
     try {
       final List<String> baseItemSetClauses = [];
-      final List<String> equipmentSetClauses = [];
+      final List<String> inventorySetClauses = [];
 
       final Map<String, dynamic> baseItemParams = {
         'id': id,
       };
-      final Map<String, dynamic> equipmentParams = {
+      final Map<String, dynamic> inventoryParams = {
         'id': id,
       };
 
@@ -1842,11 +1844,6 @@ class ItemRepository {
         baseItemParams['unit_cost'] = unitCost;
       }
 
-      if (acquiredDate != null) {
-        baseItemSetClauses.add('acquired_date = @acquired_date');
-        baseItemParams['acquired_date'] = acquiredDate;
-      }
-
       if (manufacturerName != null && manufacturerName.isNotEmpty) {
         manufacturerId = await checkManufacturerIfExist(
               manufacturerName: manufacturerName,
@@ -1855,8 +1852,8 @@ class ItemRepository {
               manufacturerName: manufacturerName,
             );
 
-        equipmentSetClauses.add('manufacturer_id = @manufacturer_id');
-        equipmentParams['manufacturer_id'] = manufacturerId;
+        inventorySetClauses.add('manufacturer_id = @manufacturer_id');
+        inventoryParams['manufacturer_id'] = manufacturerId;
       }
 
       if ((manufacturerId != null && manufacturerId.isNotEmpty) &&
@@ -1881,8 +1878,8 @@ class ItemRepository {
           print('manufacturer brand does not exist; created one.');
         }
 
-        equipmentSetClauses.add('brand_id = @brand_id');
-        equipmentParams['brand_id'] = brandId;
+        inventorySetClauses.add('brand_id = @brand_id');
+        inventoryParams['brand_id'] = brandId;
       }
 
       if ((productNameId != null) &&
@@ -1899,31 +1896,19 @@ class ItemRepository {
               modelName: modelName,
             );
 
-        equipmentSetClauses.add('model_id = @model_id');
-        equipmentParams['model_id'] = modelId;
+        inventorySetClauses.add('model_id = @model_id');
+        inventoryParams['model_id'] = modelId;
       }
 
       if (serialNo != null && serialNo.isNotEmpty) {
-        equipmentSetClauses.add('serial_no = @serial_no');
-        equipmentParams['serial_no'] = serialNo;
-      }
-
-      if (assetClassification != null) {
-        equipmentSetClauses.add('asset_classification = @asset_classification');
-        equipmentParams['asset_classification'] =
-            assetClassification.toString().split('.').last;
-      }
-
-      if (assetSubClass != null) {
-        equipmentSetClauses.add('asset_sub_class = @asset_sub_class');
-        equipmentParams['asset_sub_class'] =
-            assetSubClass.toString().split('.').last;
+        inventorySetClauses.add('serial_no = @serial_no');
+        inventoryParams['serial_no'] = serialNo;
       }
 
       if (estimatedUsefulLife != null) {
-        equipmentSetClauses
+        inventorySetClauses
             .add('estimated_useful_life = @estimated_useful_life');
-        equipmentParams['estimated_useful_life'] = estimatedUsefulLife;
+        inventoryParams['estimated_useful_life'] = estimatedUsefulLife;
       }
 
       await _conn.execute(
@@ -1937,24 +1922,29 @@ class ItemRepository {
         parameters: baseItemParams,
       );
 
-      if (equipmentSetClauses.isNotEmpty) {
+      if (inventorySetClauses.isNotEmpty) {
         await _conn.execute(
           Sql.named(
             '''
           UPDATE InventoryItems
-          SET ${equipmentSetClauses.join(', ')}
+          SET ${inventorySetClauses.join(', ')}
           WHERE base_item_id = @id;
           ''',
           ),
-          parameters: equipmentParams,
+          parameters: inventoryParams,
         );
       }
 
       return true;
     } catch (e) {
-      if (e.toString().contains(
-          'duplicate key value violates unique constraints "items_serial_no_key"')) {
-        throw Exception('Serial no. already exists.');
+      if (e
+          .toString()
+          .contains('duplicate key value violates unique constraint')) {
+        // Extract serial number from the error detail
+        final serialNoMatch =
+            RegExp(r'Key \(serial_no\)=\((.+?)\)').firstMatch(e.toString());
+        final duplicateSerialNo = serialNoMatch?.group(1) ?? serialNo;
+        throw Exception('Serial no. "$duplicateSerialNo" already exists.');
       }
       throw Exception('Error updating item: $e');
     }

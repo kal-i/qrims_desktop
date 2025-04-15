@@ -61,14 +61,6 @@ Future<Response> _getItems(
           )
         : null;
 
-    print(page);
-    print(pageSize);
-    print(searchQuery);
-    print(sortBy);
-    print(sortAscending);
-    print(assetClassification);
-    print(assetSubClass);
-
     final itemList = await repository.getItems(
       page: page,
       pageSize: pageSize,
@@ -420,7 +412,11 @@ Future<Response> _registerItem(
   } catch (e) {
     return Response.json(
       statusCode: HttpStatus.internalServerError,
-      body: {'message': 'Unexpected error: ${e.toString()}'},
+      body: {
+        'message': e.toString().contains('Serial no.')
+            ? e.toString().replaceAll('Exception: ', '')
+            : 'Unexpected error: ${e.toString()}',
+      },
     );
   }
 }

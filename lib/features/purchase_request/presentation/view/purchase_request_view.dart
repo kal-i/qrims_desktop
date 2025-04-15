@@ -23,7 +23,7 @@ import '../../../../core/enums/purchase_request_status.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
-import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/document_date_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../item_issuance/presentation/components/custom_document_preview.dart';
 import '../../data/models/feedback.dart';
@@ -393,7 +393,7 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                         ),
                   ),
                   Text(
-                    dateFormatter(purchaseRequest.date),
+                    documentDateFormatter(purchaseRequest.date),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontSize: 14.0,
                           fontWeight: FontWeight.w500,

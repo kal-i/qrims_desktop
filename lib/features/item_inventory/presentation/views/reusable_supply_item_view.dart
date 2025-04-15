@@ -53,9 +53,9 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   final _quantityController = TextEditingController();
   final _unitCostController = TextEditingController();
 
-  final ValueNotifier<int> _quantity = ValueNotifier(0);
+  final ValueNotifier<int> _quantity = ValueNotifier(1);
   final ValueNotifier<String?> _selectedItemName = ValueNotifier(null);
-  final ValueNotifier<Unit> _selectedUnit = ValueNotifier(Unit.undetermined);
+  final ValueNotifier<Unit?> _selectedUnit = ValueNotifier(null);
 
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
   final ValueNotifier<FundCluster?> _selectedFundCluster = ValueNotifier(null);
@@ -81,21 +81,13 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     }
 
     _quantityController.addListener(() {
-      final newQuantity = int.tryParse(_quantityController.text) ?? 0;
+      final newQuantity = int.tryParse(_quantityController.text) ?? 1;
       _quantity.value = newQuantity;
     });
 
     _quantity.addListener(() {
       _quantityController.text = _quantity.value.toString();
     });
-  }
-
-  void _onUnitSelection(String? value) {
-    if (value != null && value.isNotEmpty) {
-      _selectedUnit.value = Unit.values.firstWhere(
-        (e) => e.toString().split('.').last == value.split('.').last,
-      );
-    }
   }
 
   void _saveItem() {
@@ -107,7 +99,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               specification: _specificationController.text.isEmpty
                   ? null
                   : _specificationController.text,
-              unit: _selectedUnit.value,
+              unit: _selectedUnit.value!,
               quantity: int.parse(_quantityController.text),
               unitCost: double.parse(_unitCostController.text),
               acquiredDate: _pickedDate.value,
@@ -511,14 +503,13 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
 
   Widget _buildItemNamesSuggestionField() {
     return CustomSearchField(
-      enabled: !_isViewOnlyMode(),
+      enabled: !widget.isUpdate && !_isViewOnlyMode(),
       suggestionsCallback: (productName) async {
         final itemNames = await _itemSuggestionsService.fetchItemNames(
             productName: productName);
 
         if (itemNames == []) {
           _itemDescriptionsController.clear();
-
           _selectedItemName.value = '';
         }
 
@@ -572,23 +563,29 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
     return ValueListenableBuilder(
       valueListenable: _selectedUnit,
       builder: (context, selectedUnit, child) {
-        return CustomDropdownField(
-          value: selectedUnit.toString(),
-          onChanged: !_isViewOnlyMode() ? _onUnitSelection : null,
-          items: Unit.values
-              .map(
-                (unit) => DropdownMenuItem(
-                  value: unit.toString(),
-                  child: Text(
-                    readableEnumConverter(unit),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<Unit>(
+          value: selectedUnit,
+          onChanged: !_isViewOnlyMode()
+              ? (value) => _selectedUnit.value = value
+              : null,
+          items: [
+            const DropdownMenuItem<Unit>(
+              value: null,
+              child: Text('Select unit'),
+            ),
+            ...Unit.values.map(
+              (unit) => DropdownMenuItem(
+                value: unit,
+                child: Text(
+                  readableEnumConverter(unit),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            )
+          ],
           label: '* Unit',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -604,7 +601,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       builder: (BuildContext context, int value, Widget? child) {
         return CustomFormTextField(
           label: '* Quantity',
-          placeholderText: 'Enter item\'s quantity',
+          placeholderText: value.toString(),
           controller: _quantityController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -626,7 +623,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               ),
               InkWell(
                 onTap: () {
-                  if (value != 0) {
+                  if (value != 1) {
                     _quantity.value--;
                     _quantityController.text == _quantity.value.toString();
                   }
@@ -652,11 +649,14 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
         );
 
         return CustomDatePicker(
-          onDateChanged: (DateTime? date) {
-            if (date != null) {
-              _pickedDate.value = date;
-            }
-          },
+          onDateChanged: !widget.isUpdate && !_isViewOnlyMode()
+              ? (DateTime? date) {
+                  if (date != null) {
+                    _pickedDate.value = date;
+                  }
+                }
+              : null,
+          enabled: !widget.isUpdate && !_isViewOnlyMode(),
           label: 'Acquired Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -673,7 +673,9 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
       builder: (context, selectedFundCluster, child) {
         return CustomDropdownField<FundCluster>(
           value: selectedFundCluster,
-          onChanged: (value) => _selectedFundCluster.value = value,
+          onChanged: !widget.isUpdate && !_isViewOnlyMode()
+              ? (value) => _selectedFundCluster.value = value
+              : null,
           items: [
             const DropdownMenuItem<FundCluster>(
               value: null,
@@ -696,6 +698,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
+          hasValidation: false,
         );
       },
     );

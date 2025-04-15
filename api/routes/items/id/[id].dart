@@ -63,11 +63,14 @@ Future<Response> _updateItemInformation(
   final json = await context.request.json() as Map<String, dynamic>;
   final productName = json['product_name'] as String?;
   final description = json['description'] as String?;
-  final manufacturerName = json['manufacturer_name'] as String?;
-  final brandName = json['brand_name'] as String?;
-  final modelName = json['model_name'] as String?;
-  final serialNo = json['serial_no'] as String?;
   final specification = json['specification'] as String?;
+
+  final unit = json['unit'] != null
+      ? Unit.values.firstWhere(
+          (unit) => unit.toString().split('.').last == (json['unit'] as String))
+      : null;
+  final quantity = json['quantity'] as int?;
+  final unitCost = json['unit_cost'] as double?;
   final assetClassification = json['asset_classification'] != null
       ? AssetClassification.values.firstWhere((assetClassification) =>
           assetClassification.toString().split('.').last ==
@@ -78,40 +81,68 @@ Future<Response> _updateItemInformation(
           assetSubClass.toString().split('.').last ==
           (json['asset_sub_class'] as String))
       : null;
-  final unit = json['unit'] != null
-      ? Unit.values.firstWhere(
-          (unit) => unit.toString().split('.').last == (json['unit'] as String))
-      : null;
-  final quantity = json['quantity'] as int?;
-  final unitCost = json['unit_cost'] as double?;
   final estimatedUsefulLife = json['estimated_useful_life'] as int?;
-  final acquiredDate = json['acquired_date'] is String
-      ? DateTime.parse(json['acquired_date'] as String)
-      : json['acquired_date'] as DateTime?;
+  final manufacturerName = json['manufacturer_name'] as String?;
+  final brandName = json['brand_name'] as String?;
+  final modelName = json['model_name'] as String?;
+  final serialNo = json['serial_no'] as String?;
 
-  final result = await repository.updateItemInformation(
-    id: id,
-    productName: productName,
-    description: description,
-    specification: specification,
-    unit: unit,
-    quantity: quantity,
-    manufacturerName: manufacturerName,
-    brandName: brandName,
-    modelName: modelName,
-    serialNo: serialNo,
-    assetClassification: assetClassification,
-    assetSubClass: assetSubClass,
-    unitCost: unitCost,
-    estimatedUsefulLife: estimatedUsefulLife,
-    acquiredDate: acquiredDate,
-  );
-
-  if (result == true) {
+  if (serialNo != null &&
+      serialNo.isNotEmpty &&
+      (manufacturerName == null ||
+          manufacturerName.isEmpty ||
+          brandName == null ||
+          brandName.isEmpty ||
+          modelName == null ||
+          modelName.isEmpty)) {
     return Response.json(
-      statusCode: 200,
+      statusCode: HttpStatus.badRequest,
       body: {
-        'message': 'Item $id is updated successfully.',
+        'message':
+            'Manufacturer, brand, and model are required when a serial no. is provided.'
+      },
+    );
+  }
+
+  try {
+    final result = await repository.updateItemInformation(
+      id: id,
+      productName: productName,
+      description: description,
+      specification: specification,
+      unit: unit,
+      quantity: quantity,
+      unitCost: unitCost,
+      assetClassification: assetClassification,
+      assetSubClass: assetSubClass,
+      estimatedUsefulLife: estimatedUsefulLife,
+      manufacturerName: manufacturerName,
+      brandName: brandName,
+      modelName: modelName,
+      serialNo: serialNo,
+    );
+
+    if (result == true) {
+      return Response.json(
+        statusCode: 200,
+        body: {
+          'message': 'Item $id is updated successfully.',
+        },
+      );
+    }
+  } catch (e) {
+    if (e.toString().contains('Serial no.')) {
+      return Response.json(
+        statusCode: HttpStatus.conflict,
+        body: {
+          'message': e.toString().replaceAll('Exception: ', ''),
+        },
+      );
+    }
+    return Response.json(
+      statusCode: HttpStatus.internalServerError,
+      body: {
+        'message': 'Error updating item: ${e.toString()}',
       },
     );
   }
@@ -119,7 +150,7 @@ Future<Response> _updateItemInformation(
   return Response.json(
     statusCode: HttpStatus.internalServerError,
     body: {
-      'message': 'Something went wrong while updating user.',
+      'message': 'Something went wrong while updating item.',
     },
   );
 }

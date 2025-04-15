@@ -66,8 +66,8 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
   final ValueNotifier<String?> _selectedItemName = ValueNotifier(null);
   final ValueNotifier<String?> _selectedManufacturer = ValueNotifier(null);
   final ValueNotifier<String?> _selectedBrand = ValueNotifier(null);
-  final ValueNotifier<Unit> _selectedUnit = ValueNotifier(Unit.undetermined);
-  final ValueNotifier<int> _quantity = ValueNotifier(0);
+  final ValueNotifier<Unit?> _selectedUnit = ValueNotifier(null);
+  final ValueNotifier<int> _quantity = ValueNotifier(1);
   final ValueNotifier<AssetClassification?> _selectedAssetClassification =
       ValueNotifier(null);
   final ValueNotifier<AssetSubClass?> _selectedAssetSubClassification =
@@ -96,7 +96,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
     }
 
     _quantityController.addListener(() {
-      final newQuantity = int.tryParse(_quantityController.text) ?? 0;
+      final newQuantity = int.tryParse(_quantityController.text) ?? 1;
       _quantity.value = newQuantity;
     });
 
@@ -105,21 +105,18 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
     });
   }
 
-  void _onUnitSelection(String? value) {
-    if (value != null && value.isNotEmpty) {
-      _selectedUnit.value = Unit.values.firstWhere(
-        (e) => e.toString().split('.').last == value.split('.').last,
-      );
-    }
-  }
-
   void _addSerial(String serial) {
     final trimmed = serial.trim();
     if (trimmed.isEmpty || _serialNumbers.value.contains(trimmed)) return;
-    _serialNoController.clear();
 
-    // Update the list and notify listeners
-    _serialNumbers.value = List.from(_serialNumbers.value)..add(trimmed);
+    // For update mode, replace existing serial number
+    if (widget.isUpdate) {
+      _serialNumbers.value = [trimmed];
+    } else {
+      // For create mode, add to list
+      _serialNumbers.value = List.from(_serialNumbers.value)..add(trimmed);
+    }
+    _serialNoController.clear();
   }
 
   void _removeSerial(String serial) {
@@ -147,14 +144,18 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               itemName: _itemNameController.text,
               description: _itemDescriptionsController.text,
               specification: _specificationController.text,
-              unit: _selectedUnit.value,
+              unit: _selectedUnit.value!,
               quantity: _serialNumbers.value.isNotEmpty
                   ? 1
                   : int.parse(_quantityController.text),
               manufacturerName: _manufacturerController.text,
               brandName: _brandController.text,
               modelName: _modelController.text,
-              serialNos: _serialNumbers.value,
+              serialNos: widget.isUpdate
+                  ? (_serialNumbers.value.isNotEmpty
+                      ? [_serialNumbers.value.first]
+                      : [])
+                  : _serialNumbers.value,
               assetClassification: _selectedAssetClassification.value,
               assetSubClass: _selectedAssetSubClassification.value,
               unitCost: double.parse(_unitCostController.text),
@@ -195,9 +196,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               assetClassification: _selectedAssetClassification.value,
               assetSubClass: _selectedAssetSubClassification.value,
               unit: _selectedUnit.value,
-              quantity: _serialNumbers.value.isNotEmpty
-                  ? 1
-                  : int.parse(_quantityController.text),
+              quantity: 1,
               unitCost: double.parse(_unitCostController.text),
               estimatedUsefulLife:
                   _estimatedUsefulLifeController.text.isNotEmpty
@@ -342,14 +341,12 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
 
           if (state is ItemsError) {
             DelightfulToastUtils.showDelightfulToast(
-              context: context,
-              icon: Icons.error_outline,
-              title: 'Error',
-              subtitle: widget.isUpdate
-                  ? 'Item update unsuccessful. ${state.message}'
-                  : 'Item registered unsuccessful. ${state.message}',
-            );
-            print('err: ${state.message}');
+                context: context,
+                icon: Icons.error_outline,
+                title: widget.isUpdate
+                    ? 'Item Update Error'
+                    : 'Item Registration Error',
+                subtitle: state.message);
           }
         },
         child: BlocBuilder<ItemInventoryBloc, ItemInventoryState>(
@@ -696,10 +693,12 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               spacing: 8.0,
               children: (serialNumbers.map(
                 (e) => Padding(
-                  padding: const EdgeInsets.only(right: 10.0),
+                  padding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
                   child: Chip(
                     label: Text(e),
-                    onDeleted: () => _removeSerial(e),
+                    onDeleted: widget.isUpdate && serialNumbers.length <= 1
+                        ? null // Prevent deletion of last chip in update mode
+                        : () => _removeSerial(e),
                   ),
                 ),
               )).toList(),
@@ -738,7 +737,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
 
   Widget _buildItemNamesSuggestionField() {
     return CustomSearchField(
-      enabled: widget.isUpdate || !_isViewOnlyMode(),
+      enabled: !widget.isUpdate && !_isViewOnlyMode(),
       suggestionsCallback: (productName) async {
         final itemNames = await _itemSuggestionsService.fetchItemNames(
             productName: productName);
@@ -958,6 +957,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+          hasValidation: false,
         );
       },
     );
@@ -967,23 +967,29 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
     return ValueListenableBuilder(
       valueListenable: _selectedUnit,
       builder: (context, selectedUnit, child) {
-        return CustomDropdownField(
-          value: selectedUnit.toString(),
-          onChanged: !_isViewOnlyMode() ? _onUnitSelection : null,
-          items: Unit.values
-              .map(
-                (unit) => DropdownMenuItem(
-                  value: unit.toString(),
-                  child: Text(
-                    readableEnumConverter(unit),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+        return CustomDropdownField<Unit>(
+          value: selectedUnit,
+          onChanged: !_isViewOnlyMode()
+              ? (value) => _selectedUnit.value = value
+              : null,
+          items: [
+            const DropdownMenuItem<Unit>(
+              value: null,
+              child: Text('Select unit'),
+            ),
+            ...Unit.values.map(
+              (unit) => DropdownMenuItem(
+                value: unit,
+                child: Text(
+                  readableEnumConverter(unit),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-              )
-              .toList(),
+              ),
+            )
+          ],
           label: '* Unit',
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
@@ -1024,6 +1030,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
+          hasValidation: false,
         );
       },
     );
@@ -1038,12 +1045,12 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
             builder: (BuildContext context, int value, Widget? child) {
               return CustomFormTextField(
                 label: '* Quantity',
-                placeholderText: 'Enter item\'s quantity',
+                placeholderText: value.toString(), // Changed this line
                 controller: _quantityController,
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
-                enabled: !_isViewOnlyMode(),
+                enabled: !widget.isUpdate && !_isViewOnlyMode(),
                 isNumeric: true,
                 hasValidation: serialNos.isEmpty,
                 suffixWidget: Column(
@@ -1061,7 +1068,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                     ),
                     InkWell(
                       onTap: () {
-                        if (value != 0) {
+                        if (value != 1) {
                           _quantity.value--;
                           _quantityController.text ==
                               _quantity.value.toString();
@@ -1089,11 +1096,14 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
         );
 
         return CustomDatePicker(
-          onDateChanged: (DateTime? date) {
-            if (date != null) {
-              _pickedDate.value = date;
-            }
-          },
+          onDateChanged: !widget.isUpdate && !_isViewOnlyMode()
+              ? (DateTime? date) {
+                  if (date != null) {
+                    _pickedDate.value = date;
+                  }
+                }
+              : null,
+          enabled: !widget.isUpdate && !_isViewOnlyMode(),
           label: 'Acquired Date',
           dateController: dateController,
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -1110,7 +1120,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
       builder: (context, selectedFundCluster, child) {
         return CustomDropdownField<FundCluster>(
           value: selectedFundCluster,
-          onChanged: widget.isUpdate || !_isViewOnlyMode()
+          onChanged: !widget.isUpdate && !_isViewOnlyMode()
               ? (value) => _selectedFundCluster.value = value
               : null,
           items: [
@@ -1136,6 +1146,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
           placeholderText: 'Enter purchase request\'s fund cluster',
+          hasValidation: false,
         );
       },
     );
