@@ -202,7 +202,6 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                   _estimatedUsefulLifeController.text.isNotEmpty
                       ? int.parse(_estimatedUsefulLifeController.text)
                       : null,
-              acquiredDate: _pickedDate.value,
             ),
           );
     }

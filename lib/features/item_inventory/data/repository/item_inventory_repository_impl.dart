@@ -177,7 +177,6 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
         unit: unit,
         unitCost: unitCost,
         estimatedUsefulLife: estimatedUsefulLife,
-        acquiredDate: acquiredDate,
       );
 
       return right(response);

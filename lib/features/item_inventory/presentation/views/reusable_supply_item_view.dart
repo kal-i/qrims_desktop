@@ -119,7 +119,6 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               specification: _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
-              acquiredDate: _pickedDate.value,
             ),
           );
     }

@@ -188,7 +188,6 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
         quantity: event.quantity,
         unitCost: event.unitCost,
         estimatedUsefulLife: event.estimatedUsefulLife,
-        acquiredDate: event.acquiredDate,
       ),
     );
 

@@ -67,6 +67,5 @@ abstract interface class ItemInventoryRemoteDateSource {
     int? quantity,
     double? unitCost,
     int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   });
 }

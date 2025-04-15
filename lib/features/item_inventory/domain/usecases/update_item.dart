@@ -25,13 +25,12 @@ class UpdateItem implements UseCase<bool, UpdateItemParams> {
       modelName: params.modelName,
       serialNo: params.serialNo,
       specification: params.specification,
-      assetClassification:  params.assetClassification,
+      assetClassification: params.assetClassification,
       assetSubClass: params.assetSubClass,
       unit: params.unit,
       quantity: params.quantity,
       unitCost: params.unitCost,
       estimatedUsefulLife: params.estimatedUsefulLife,
-      acquiredDate: params.acquiredDate,
     );
   }
 }
@@ -52,7 +51,6 @@ class UpdateItemParams {
     this.quantity,
     this.unitCost,
     this.estimatedUsefulLife,
-    this.acquiredDate,
   });
 
   final String id;
@@ -69,5 +67,4 @@ class UpdateItemParams {
   final int? quantity;
   final double? unitCost;
   final int? estimatedUsefulLife;
-  final DateTime? acquiredDate;
 }

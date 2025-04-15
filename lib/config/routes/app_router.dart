@@ -18,6 +18,7 @@ import '../../features/item_inventory/presentation/views/item_inventory_view.dar
 import '../../features/item_inventory/presentation/views/reusable_inventory_item_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_supply_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
+import '../../features/item_issuance/presentation/views/register_multiple_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/view_issuance_information.dart';
 import '../../features/navigation/presentation/views/navigation_view.dart';
@@ -319,6 +320,15 @@ class AppRoutingConfig {
                       issuanceType: type,
                       prId: prId,
                     ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.registerMultipleIssuanceViewRouteName,
+                path: RoutingConstants.registerMultipleIssuanceViewRoutePath,
+                pageBuilder: (context, state) {
+                  return const MaterialPage(
+                    child: RegisterMultipleIssuanceView(),
                   );
                 },
               ),

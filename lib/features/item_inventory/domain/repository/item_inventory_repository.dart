@@ -70,6 +70,5 @@ abstract interface class ItemInventoryRepository {
     int? quantity,
     double? unitCost,
     int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   });
 }

@@ -269,7 +269,6 @@ class ItemInventoryRemoteDataSourceImpl
     int? quantity,
     double? unitCost,
     int? estimatedUsefulLife,
-    DateTime? acquiredDate,
   }) async {
     try {
       // final Map<String, dynamic> queryParam = {
@@ -297,8 +296,6 @@ class ItemInventoryRemoteDataSourceImpl
         if (unitCost != null) 'unit_cost': unitCost,
         if (estimatedUsefulLife != null)
           'estimated_useful_life': estimatedUsefulLife,
-        if (acquiredDate != null)
-          'acquired_date': acquiredDate.toIso8601String(),
       };
 
       print('ds impl: $params');

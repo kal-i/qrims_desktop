@@ -165,7 +165,6 @@ class _RegisterItemViewState extends State<ReusableItemView> {
               unitCost: double.parse(_unitCostController.text),
               estimatedUsefulLife:
                   int.parse(_estimatedUsefulLifeController.text),
-              acquiredDate: _pickedDate.value,
             ),
           );
     }

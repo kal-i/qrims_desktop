@@ -164,7 +164,6 @@ final class ItemUpdate extends ItemInventoryEvent {
     this.quantity,
     this.unitCost,
     this.estimatedUsefulLife,
-    this.acquiredDate,
   });
 
   final String id;
@@ -181,5 +180,4 @@ final class ItemUpdate extends ItemInventoryEvent {
   final int? quantity;
   final double? unitCost;
   final int? estimatedUsefulLife;
-  final DateTime? acquiredDate;
 }

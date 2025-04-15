@@ -9,6 +9,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
+import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_icon_button.dart';
 import '../../../../core/common/components/custom_message_box.dart';
 import '../../../../core/common/components/filter_by_date_modal.dart';
@@ -436,20 +437,17 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
 
   Widget _buildActionButtons() {
     return Row(
+      spacing: 10.0,
       children: [
         ExpandableSearchButton(controller: _searchController),
-        const SizedBox(
-          width: 10.0,
-        ),
         _buildRefreshButton(),
-        const SizedBox(
-          width: 10.0,
-        ),
         _buildFilterButton(),
-        const SizedBox(
-          width: 10.0,
+        CustomFilledButton(
+          text: 'Multi issuance',
+          onTap: () => context.go(
+            RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
+          ),
         ),
-        //_buildSortButton(),
       ],
     );
   }
