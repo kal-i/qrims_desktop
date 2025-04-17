@@ -39,6 +39,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.createICS(
@@ -58,6 +59,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
         issuingOfficerOffice: issuingOfficerOffice,
         issuingOfficerPosition: issuingOfficerPosition,
         issuingOfficerName: issuingOfficerName,
+        receivedDate: receivedDate,
       );
 
       return right(response);
@@ -83,6 +85,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.createPAR(
@@ -101,6 +104,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
         issuingOfficerOffice: issuingOfficerOffice,
         issuingOfficerPosition: issuingOfficerPosition,
         issuingOfficerName: issuingOfficerName,
+        receivedDate: receivedDate,
       );
 
       return right(response);
@@ -132,6 +136,9 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     String? requestingOfficerOffice,
     String? requestingOfficerPosition,
     String? requestingOfficerName,
+    DateTime? receivedDate,
+    DateTime? approvedDate,
+    DateTime? requestDate,
   }) async {
     try {
       print('iss ris impl repo:$issuingOfficerPosition');
@@ -157,6 +164,9 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
         requestingOfficerOffice: requestingOfficerOffice,
         requestingOfficerPosition: requestingOfficerPosition,
         requestingOfficerName: requestingOfficerName,
+        receivedDate: receivedDate,
+        approvedDate: approvedDate,
+        requestDate: requestDate,
       );
 
       return right(response);

@@ -40,6 +40,9 @@ class CreateRIS
       requestingOfficerOffice: params.requestingOfficerOffice,
       requestingOfficerPosition: params.requestingOfficerPosition,
       requestingOfficerName: params.requestingOfficerName,
+      receivedDate: params.receivedDate,
+      approvedDate: params.approvedDate,
+      requestDate: params.requestDate,
     );
   }
 }
@@ -67,6 +70,9 @@ class CreateRISParams {
     this.requestingOfficerOffice,
     this.requestingOfficerPosition,
     this.requestingOfficerName,
+    this.receivedDate,
+    this.approvedDate,
+    this.requestDate,
   });
 
   final DateTime? issuedDate;
@@ -90,4 +96,7 @@ class CreateRISParams {
   final String? requestingOfficerOffice;
   final String? requestingOfficerPosition;
   final String? requestingOfficerName;
+  final DateTime? receivedDate;
+  final DateTime? approvedDate;
+  final DateTime? requestDate;
 }

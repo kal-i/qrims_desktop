@@ -43,6 +43,7 @@ abstract interface class IssuanceRepository {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   });
 
   Future<Either<Failure, PropertyAcknowledgementReceiptEntity>> createPAR({
@@ -61,6 +62,7 @@ abstract interface class IssuanceRepository {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   });
 
   Future<Either<Failure, RequisitionAndIssueSlipEntity>> createRIS({
@@ -85,6 +87,9 @@ abstract interface class IssuanceRepository {
     String? requestingOfficerOffice,
     String? requestingOfficerPosition,
     String? requestingOfficerName,
+    DateTime? receivedDate,
+    DateTime? approvedDate,
+    DateTime? requestDate,
   });
 
   Future<Either<Failure, IssuanceEntity?>> getIssuanceById({

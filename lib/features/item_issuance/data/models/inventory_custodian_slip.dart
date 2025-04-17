@@ -26,6 +26,7 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
     super.purchaseOrderNumber,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
+    super.receivedDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -99,6 +100,11 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
       purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficerEntity: receivingOfficer,
       issuingOfficerEntity: issuingOfficer,
+      receivedDate: json['received_date'] != null
+          ? json['received_date'] is String
+              ? DateTime.parse(json['received_date'] as String)
+              : json['received_date'] as DateTime
+          : null,
       qrCodeImageData: json['qr_code_image_data'] as String,
       status: IssuanceStatus.values.firstWhere(
         (e) => e.toString().split('.').last == json['status'],
@@ -133,6 +139,7 @@ class InventoryCustodianSlipModel extends InventoryCustodianSlipEntity
       'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': (receivingOfficerEntity as OfficerModel?)?.toJson(),
       'issuing_officer': (issuingOfficerEntity as OfficerModel?)?.toJson(),
+      'received_date': receivedDate?.toIso8601String(),
       'qr_code_image_data': qrCodeImageData,
       'status': status.toString().split('.').last,
       'is_archived': isArchived,

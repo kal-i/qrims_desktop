@@ -6,6 +6,7 @@ import '../../../../features/item_issuance/domain/entities/requisition_and_issue
 import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
+import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/format_position.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
@@ -443,6 +444,16 @@ class RequisitionAndIssueSlip implements BaseDocument {
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Date:',
+                dataRowColumnOne: ris.requestDate != null
+                    ? documentDateFormatter(ris.requestDate!)
+                    : '\n',
+                dataRowColumnTwo: ris.approvedDate != null
+                    ? documentDateFormatter(ris.approvedDate!)
+                    : '\n',
+                dataRowColumnThree: documentDateFormatter(ris.issuedDate),
+                dataRowColumnFour: ris.receivedDate != null
+                    ? documentDateFormatter(ris.receivedDate!)
+                    : '\n',
               ),
             ],
           ),

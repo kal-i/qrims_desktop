@@ -35,6 +35,7 @@ class CreatePAR
       issuingOfficerOffice: params.issuingOfficerOffice,
       issuingOfficerPosition: params.issuingOfficerPosition,
       issuingOfficerName: params.issuingOfficerName,
+      receivedDate: params.receivedDate,
     );
   }
 }
@@ -56,6 +57,7 @@ class CreatePARParams {
     this.issuingOfficerOffice,
     this.issuingOfficerPosition,
     this.issuingOfficerName,
+    this.receivedDate,
   });
 
   final DateTime? issuedDate;
@@ -73,4 +75,5 @@ class CreatePARParams {
   final String? issuingOfficerOffice;
   final String? issuingOfficerPosition;
   final String? issuingOfficerName;
+  final DateTime? receivedDate;
 }

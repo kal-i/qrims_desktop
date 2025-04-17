@@ -42,6 +42,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   }) async {
     try {
       final Map<String, dynamic> params = {
@@ -75,6 +76,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'issuing_officer_position': issuingOfficerPosition,
         if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
           'issuing_officer_name': issuingOfficerName,
+        if (receivedDate != null)
+          'received_date': receivedDate.toIso8601String(),
       };
 
       final response = await httpService.post(
@@ -109,6 +112,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   }) async {
     try {
       final Map<String, dynamic> params = {
@@ -141,6 +145,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'issuing_officer_position': issuingOfficerPosition,
         if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
           'issuing_officer_name': issuingOfficerName,
+        if (receivedDate != null)
+          'received_date': receivedDate.toIso8601String(),
       };
 
       final response = await httpService.post(
@@ -182,6 +188,9 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? requestingOfficerOffice,
     String? requestingOfficerPosition,
     String? requestingOfficerName,
+    DateTime? receivedDate,
+    DateTime? approvedDate,
+    DateTime? requestDate,
   }) async {
     try {
       print('iss ds impl: $issuingOfficerPosition');
@@ -227,6 +236,11 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'requesting_officer_position': requestingOfficerPosition,
         if (requestingOfficerName != null && requestingOfficerName.isNotEmpty)
           'requesting_officer_name': requestingOfficerName,
+        if (receivedDate != null)
+          'received_date': receivedDate.toIso8601String(),
+        if (approvedDate != null)
+          'approved_date': approvedDate.toIso8601String(),
+        if (requestDate != null) 'request_date': requestDate.toIso8601String(),
       };
 
       final response = await httpService.post(

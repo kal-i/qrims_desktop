@@ -26,6 +26,9 @@ class RequisitionAndIssuanceSlipModel extends RequisitionAndIssueSlipEntity
     super.issuingOfficerEntity,
     super.approvingOfficerEntity,
     super.requestingOfficerEntity,
+    super.receivedDate,
+    super.approvedDate,
+    super.requestDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -108,6 +111,21 @@ class RequisitionAndIssuanceSlipModel extends RequisitionAndIssueSlipEntity
       issuingOfficerEntity: issuingOfficer,
       approvingOfficerEntity: approvingOfficer,
       requestingOfficerEntity: requestingOfficer,
+      receivedDate: json['received_date'] != null
+          ? json['received_date'] is String
+              ? DateTime.parse(json['received_date'] as String)
+              : json['received_date'] as DateTime
+          : null,
+      approvedDate: json['approved_date'] != null
+          ? json['approved_date'] is String
+              ? DateTime.parse(json['approved_date'] as String)
+              : json['approved_date'] as DateTime
+          : null,
+      requestDate: json['request_date'] != null
+          ? json['request_date'] is String
+              ? DateTime.parse(json['request_date'] as String)
+              : json['request_date'] as DateTime
+          : null,
       qrCodeImageData: json['qr_code_image_data'] as String,
       status: IssuanceStatus.values
           .firstWhere((e) => e.toString().split('.').last == json['status']),
@@ -138,6 +156,9 @@ class RequisitionAndIssuanceSlipModel extends RequisitionAndIssueSlipEntity
       'issuing_officer': (issuingOfficerEntity as OfficerModel).toJson(),
       'approving_officer': (approvingOfficerEntity as OfficerModel).toJson(),
       'requesting_officer': (requestingOfficerEntity as OfficerModel).toJson(),
+      'received_date': receivedDate?.toIso8601String(),
+      'approved_date': approvedDate?.toIso8601String(),
+      'request_date': requestDate?.toIso8601String(),
       'qr_code_image_data': qrCodeImageData,
       'status': status.toString().split('.').last,
       'is_archived': isArchived,

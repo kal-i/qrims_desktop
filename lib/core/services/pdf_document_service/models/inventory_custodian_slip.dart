@@ -6,7 +6,6 @@ import '../../../../features/item_issuance/domain/entities/inventory_custodian_s
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
-import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
@@ -321,7 +320,7 @@ class InventoryCustodianSlip implements BaseDocument {
                         data.issuingOfficerEntity?.positionName ?? '\n',
                     officerOffice:
                         data.issuingOfficerEntity?.officeName ?? '\n',
-                    date: DateTime.now(),
+                    date: ics.issuedDate,
                     borderRight: false,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
@@ -331,6 +330,7 @@ class InventoryCustodianSlip implements BaseDocument {
                         data.receivingOfficerEntity?.positionName ?? '\n',
                     officerOffice:
                         data.receivingOfficerEntity?.officeName ?? '\n',
+                    date: ics.receivedDate,
                   ),
                 ],
               ),

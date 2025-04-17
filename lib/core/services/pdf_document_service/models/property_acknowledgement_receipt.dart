@@ -307,7 +307,7 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
                         data.issuingOfficerEntity?.positionName ?? '\n',
                     officerOffice:
                         data.issuingOfficerEntity?.officeName ?? '\n',
-                    date: DateTime.now(),
+                    date: par.issuedDate,
                     borderRight: false,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
@@ -317,6 +317,7 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
                         data.receivingOfficerEntity?.positionName ?? '\n',
                     officerOffice:
                         data.receivingOfficerEntity?.officeName ?? '\n',
+                    date: par.receivedDate,
                   ),
                 ],
               ),

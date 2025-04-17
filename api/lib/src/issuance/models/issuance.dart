@@ -19,6 +19,13 @@ enum FundCluster {
   unknown,
 }
 
+enum IssuanceItemStatus {
+  issued,
+  received,
+  returned,
+  lost,
+}
+
 enum IssuanceStatus {
   unreceived,
   received,
@@ -61,11 +68,23 @@ class IssuanceItem {
     required this.issuanceId,
     required this.item,
     required this.quantity,
+    this.status = IssuanceItemStatus.issued,
+    required this.issuedDate,
+    this.receivedDate,
+    this.returnedDate,
+    this.lostDate,
+    this.remarks,
   });
 
   final String issuanceId;
   final BaseItemModel item;
   final int quantity;
+  final IssuanceItemStatus status;
+  final DateTime issuedDate;
+  final DateTime? receivedDate;
+  final DateTime? returnedDate;
+  final DateTime? lostDate;
+  final String? remarks;
 
   factory IssuanceItem.fromJson(Map<String, dynamic> json) {
     try {
@@ -162,10 +181,34 @@ class IssuanceItem {
       final item = BaseItemModel.fromJson(itemData);
       print('item obj: $item');
 
+      final status = IssuanceItemStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+      );
+
       return IssuanceItem(
         issuanceId: json['issuance_id'] as String,
         item: item,
         quantity: json['issued_quantity'] as int,
+        status: status,
+        issuedDate: json['issued_date'] is String
+            ? DateTime.parse(json['issued_date'] as String)
+            : json['issued_date'] as DateTime,
+        receivedDate: json['received_date'] != null
+            ? json['received_date'] is String
+                ? DateTime.parse(json['received_date'] as String)
+                : json['received_date'] as DateTime
+            : null,
+        returnedDate: json['returned_date'] != null
+            ? json['returned_date'] is String
+                ? DateTime.parse(json['retuned_date'] as String)
+                : json['returned_date'] as DateTime
+            : null,
+        lostDate: json['lost_date'] != null
+            ? json['lost_date'] is String
+                ? DateTime.parse(json['lost_date'] as String)
+                : json['lost_date'] as DateTime
+            : null,
+        remarks: json['remarks'] as String?,
       );
     } catch (e) {
       print('Error parsing IssuanceItem from JSON: $e');
@@ -180,6 +223,12 @@ class IssuanceItem {
           ? (item as Supply).toJson()
           : (item as InventoryItem).toJson(),
       'issued_quantity': quantity,
+      'status': status.toString().split('.').last,
+      'issued_date': issuedDate.toIso8601String(),
+      'received_date': receivedDate?.toIso8601String(),
+      'returned_date': returnedDate?.toIso8601String(),
+      'lost_date': lostDate?.toIso8601String(),
+      'remarks': remarks,
     };
   }
 }
@@ -376,6 +425,12 @@ class InventoryCustodianSlip extends Issuance {
         'issuance_id': itemJson['issuance_id'],
         'item': itemData,
         'issued_quantity': itemJson['issued_quantity'],
+        'status': itemJson['status'],
+        'issued_date': itemJson['issued_date'],
+        'received_date': itemJson['received_date'],
+        'returned_date': itemJson['returned_date'],
+        'lost_date': itemJson['lost_date'],
+        'remarks': itemJson['remarks'],
       });
 
       return issuanceItem;
@@ -718,6 +773,12 @@ class PropertyAcknowledgementReceipt extends Issuance {
         'issuance_id': itemJson['issuance_id'],
         'item': itemData,
         'issued_quantity': itemJson['issued_quantity'],
+        'status': itemJson['status'],
+        'issued_date': itemJson['issued_date'],
+        'received_date': itemJson['received_date'],
+        'returned_date': itemJson['returned_date'],
+        'lost_date': itemJson['lost_date'],
+        'remarks': itemJson['remarks'],
       });
 
       return issuanceItem;
@@ -1047,6 +1108,12 @@ class RequisitionAndIssueSlip extends Issuance {
         'issuance_id': itemJson['issuance_id'],
         'item': itemData,
         'issued_quantity': itemJson['issued_quantity'],
+        'status': itemJson['status'],
+        'issued_date': itemJson['issued_date'],
+        'received_date': itemJson['received_date'],
+        'returned_date': itemJson['returned_date'],
+        'lost_date': itemJson['lost_date'],
+        'remarks': itemJson['remarks'],
       });
 
       return issuanceItem;

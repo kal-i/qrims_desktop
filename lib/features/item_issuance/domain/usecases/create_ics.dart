@@ -1,8 +1,8 @@
+import 'package:fpdart/src/either.dart';
+
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/ics_type.dart';
 import '../../../../core/error/failure.dart';
-import 'package:fpdart/src/either.dart';
-
 import '../../../../core/usecases/usecase.dart';
 import '../entities/inventory_custodian_slip.dart';
 import '../repository/issuance_repository.dart';
@@ -36,6 +36,7 @@ class CreateICS
       issuingOfficerOffice: params.issuingOfficerOffice,
       issuingOfficerPosition: params.issuingOfficerPosition,
       issuingOfficerName: params.issuingOfficerName,
+      receivedDate: params.receivedDate,
     );
   }
 }
@@ -58,6 +59,7 @@ class CreateICSParams {
     this.issuingOfficerOffice,
     this.issuingOfficerPosition,
     this.issuingOfficerName,
+    this.receivedDate,
   });
 
   final DateTime? issuedDate;
@@ -76,4 +78,5 @@ class CreateICSParams {
   final String? issuingOfficerOffice;
   final String? issuingOfficerPosition;
   final String? issuingOfficerName;
+  final DateTime? receivedDate;
 }

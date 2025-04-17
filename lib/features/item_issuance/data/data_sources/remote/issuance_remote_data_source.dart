@@ -40,6 +40,7 @@ abstract interface class IssuanceRemoteDataSource {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   });
 
   Future<PropertyAcknowledgementReceiptModel> createPAR({
@@ -58,6 +59,7 @@ abstract interface class IssuanceRemoteDataSource {
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
+    DateTime? receivedDate,
   });
 
   Future<RequisitionAndIssuanceSlipModel> createRIS({
@@ -82,6 +84,9 @@ abstract interface class IssuanceRemoteDataSource {
     String? requestingOfficerOffice,
     String? requestingOfficerPosition,
     String? requestingOfficerName,
+    DateTime? receivedDate,
+    DateTime? approvedDate,
+    DateTime? requestDate,
   });
 
   Future<IssuanceModel?> getIssuanceById({

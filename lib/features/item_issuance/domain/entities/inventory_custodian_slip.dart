@@ -18,6 +18,7 @@ class InventoryCustodianSlipEntity extends IssuanceEntity {
     this.purchaseOrderNumber,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
+    super.receivedDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,

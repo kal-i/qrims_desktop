@@ -2,7 +2,6 @@ import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/issuance_status.dart';
 import '../../../officer/domain/entities/officer.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
-import 'batch_item.dart';
 import 'issuance_item.dart';
 
 abstract class IssuanceEntity {
@@ -17,6 +16,7 @@ abstract class IssuanceEntity {
     this.fundCluster,
     this.receivingOfficerEntity,
     this.issuingOfficerEntity,
+    this.receivedDate,
     required this.qrCodeImageData,
     this.status = IssuanceStatus.unreceived,
     this.isArchived = false,
@@ -32,6 +32,7 @@ abstract class IssuanceEntity {
   final FundCluster? fundCluster;
   final OfficerEntity? receivingOfficerEntity;
   final OfficerEntity? issuingOfficerEntity;
+  final DateTime? receivedDate;
   final String qrCodeImageData;
   final IssuanceStatus status;
   final bool isArchived;

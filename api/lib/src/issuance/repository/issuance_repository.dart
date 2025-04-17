@@ -247,7 +247,7 @@ class IssuanceRepository {
     final issuanceItemsResult = await _conn.execute(
       Sql.named('''
       SELECT
-        iss.*, 
+        issi.*, 
         i.*,
         pn.name as product_name,
         pd.description as product_description,
@@ -262,11 +262,15 @@ class IssuanceRepository {
         inv.estimated_useful_life,
         mnf.name as manufacturer_name,
         brnd.name as brand_name,
-        md.model_name
+        md.model_name,
+        iss.issued_date as issued_date,
+        iss.received_date as received_date
       FROM 
-        IssuanceItems iss
+        IssuanceItems issi
+      LEFT JOIN
+        Issuances iss ON issi.issuance_id = iss.id
       LEFT JOIN 
-        Items i ON iss.item_id = i.id
+        Items i ON issi.item_id = i.id
       LEFT JOIN
         ProductNames pn ON i.product_name_id = pn.id
       LEFT JOIN
@@ -282,7 +286,7 @@ class IssuanceRepository {
       LEFT JOIN
         Models md ON inv.model_id = md.id
       WHERE 
-        iss.issuance_id = @issuance_id
+        issi.issuance_id = @issuance_id
       '''),
       parameters: {
         'issuance_id': issuanceId,
@@ -292,50 +296,50 @@ class IssuanceRepository {
     for (final row in issuanceItemsResult) {
       Map<String, dynamic> item = {};
 
-      if (row[16] != null) {
+      if (row[20] != null) {
         final supplyMap = {
-          'supply_id': row[16],
-          'base_item_id': row[3],
-          'product_name_id': row[4],
-          'product_description_id': row[5],
-          'specification': row[6],
-          'unit': row[7],
-          'quantity': row[8],
-          'unit_cost': row[11],
-          'encrypted_id': row[9],
-          'qr_code_image_data': row[10],
-          'acquired_date': row[12],
-          'fund_cluster': row[13],
-          'product_name': row[14],
-          'product_description': row[15],
+          'supply_id': row[20],
+          'base_item_id': row[7],
+          'product_name_id': row[8],
+          'product_description_id': row[9],
+          'specification': row[10],
+          'unit': row[11],
+          'quantity': row[12],
+          'unit_cost': row[15],
+          'encrypted_id': row[13],
+          'qr_code_image_data': row[14],
+          'acquired_date': row[16],
+          'fund_cluster': row[17],
+          'product_name': row[18],
+          'product_description': row[19],
         };
         item = Supply.fromJson(supplyMap).toJson();
-      } else if (row[17] != null) {
+      } else if (row[21] != null) {
         final inventoryMap = {
-          'inventory_id': row[17],
-          'base_item_id': row[3],
-          'product_name_id': row[4],
-          'product_description_id': row[5],
-          'specification': row[6],
-          'unit': row[7],
-          'quantity': row[8],
-          'unit_cost': row[11],
-          'encrypted_id': row[9],
-          'qr_code_image_data': row[10],
-          'acquired_date': row[12],
-          'fund_cluster': row[13],
-          'product_name': row[14],
-          'product_description': row[15],
-          'manufacturer_id': row[18],
-          'brand_id': row[19],
-          'model_id': row[20],
-          'serial_no': row[21],
-          'asset_classification': row[22],
-          'asset_sub_class': row[23],
-          'estimated_useful_life': row[24],
-          'manufacturer_name': row[25],
-          'brand_name': row[26],
-          'model_name': row[27],
+          'inventory_id': row[21],
+          'base_item_id': row[7],
+          'product_name_id': row[8],
+          'product_description_id': row[9],
+          'specification': row[10],
+          'unit': row[11],
+          'quantity': row[12],
+          'unit_cost': row[15],
+          'encrypted_id': row[13],
+          'qr_code_image_data': row[14],
+          'acquired_date': row[16],
+          'fund_cluster': row[17],
+          'product_name': row[18],
+          'product_description': row[19],
+          'manufacturer_id': row[22],
+          'brand_id': row[23],
+          'model_id': row[24],
+          'serial_no': row[25],
+          'asset_classification': row[26],
+          'asset_sub_class': row[27],
+          'estimated_useful_life': row[28],
+          'manufacturer_name': row[29],
+          'brand_name': row[30],
+          'model_name': row[31],
         };
         item = InventoryItem.fromJson(inventoryMap).toJson();
       }
@@ -348,6 +352,12 @@ class IssuanceRepository {
             'issuance_id': row[0],
             'item': item,
             'issued_quantity': row[2],
+            'status': row[3],
+            'issued_date': row[32],
+            'received_date': row[33],
+            'returned_date': row[4],
+            'lost_date': row[5],
+            'remarks': row[6],
           },
         ),
       );
@@ -1221,6 +1231,7 @@ class IssuanceRepository {
               ctx,
               issuanceId,
               issuanceItems,
+              receivedDate,
             );
           } else {
             // Handle issuance with PR
@@ -1229,6 +1240,7 @@ class IssuanceRepository {
               issuanceId,
               purchaseRequest,
               issuanceItems,
+              receivedDate,
             );
           }
 
@@ -1311,6 +1323,7 @@ class IssuanceRepository {
     TxSession ctx,
     String issuanceId,
     List<dynamic> issuanceItems,
+    DateTime? receivedDate,
   ) async {
     for (final issuance in issuanceItems) {
       print('issuance item: $issuance');
@@ -1321,7 +1334,8 @@ class IssuanceRepository {
           as int; //int.parse(issuance['issued_quantity'] as String);
 
       // Step 3: Insert into IssuanceItems table
-      await _insertIssuanceItem(ctx, issuanceId, itemId, issuedQuantity);
+      await _insertIssuanceItem(
+          ctx, issuanceId, itemId, issuedQuantity, receivedDate);
 
       // Step 4: Update the Items table to reduce stock
       await _updateItemStock(ctx, itemId, issuedQuantity);
@@ -1333,18 +1347,22 @@ class IssuanceRepository {
     String issuanceId,
     String itemId,
     int issuedQuantity,
+    DateTime? receivedDate,
   ) async {
     await ctx.execute(
       Sql.named(
         '''
-        INSERT INTO IssuanceItems (issuance_id, item_id, issued_quantity)
-        VALUES (@issuance_id, @item_id, @issued_quantity);
+        INSERT INTO IssuanceItems (issuance_id, item_id, issued_quantity, status)
+        VALUES (@issuance_id, @item_id, @issued_quantity, @status);
         ''',
       ),
       parameters: {
         'issuance_id': issuanceId,
         'item_id': itemId,
         'issued_quantity': issuedQuantity,
+        'status': receivedDate != null
+            ? IssuanceItemStatus.received.toString().split('.').last
+            : IssuanceItemStatus.issued.toString().split('.').last,
       },
     );
   }
@@ -1374,6 +1392,7 @@ class IssuanceRepository {
     String issuanceId,
     PurchaseRequest purchaseRequest,
     List<dynamic> issuanceItems,
+    DateTime? receivedDate,
   ) async {
     int totalRemainingQuantities = 0;
 
@@ -1419,6 +1438,7 @@ class IssuanceRepository {
             issuanceId,
             issuanceBaseItemId,
             issuedQuantity,
+            receivedDate,
           );
 
           // Step 4: Update the RequestedItems table

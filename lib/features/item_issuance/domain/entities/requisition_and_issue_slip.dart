@@ -20,6 +20,9 @@ class RequisitionAndIssueSlipEntity extends IssuanceEntity {
     super.issuingOfficerEntity,
     this.approvingOfficerEntity,
     this.requestingOfficerEntity,
+    super.receivedDate,
+    this.approvedDate,
+    this.requestDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -32,4 +35,6 @@ class RequisitionAndIssueSlipEntity extends IssuanceEntity {
   final String? purpose;
   final OfficerEntity? approvingOfficerEntity;
   final OfficerEntity? requestingOfficerEntity;
+  final DateTime? approvedDate;
+  final DateTime? requestDate;
 }
