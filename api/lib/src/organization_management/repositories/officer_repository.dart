@@ -617,4 +617,21 @@ class OfficerRepository {
     }
     return null;
   }
+
+  Future<bool> checkIfAccountableOfficerExist({
+    required String name,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT * FROM Officers WHERE name ILIKE @name;
+        ''',
+      ),
+      parameters: {
+        'name': name,
+      },
+    );
+
+    return result.isNotEmpty;
+  }
 }

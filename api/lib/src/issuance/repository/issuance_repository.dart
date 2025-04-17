@@ -2728,4 +2728,100 @@ class IssuanceRepository {
     );
     return result.affectedRows > 0;
   }
+
+  Future<List<Map<String, dynamic>>> getOfficerAccountability({
+    required String name,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final now = DateTime.now();
+
+    // We'll build the WHERE clause dynamically
+    final whereClauses = <String>[
+      'roff.name ILIKE @name',
+    ];
+    final parameters = <String, dynamic>{
+      'name': name,
+    };
+
+    // If startDate is provided, add date filtering
+    if (startDate != null) {
+      whereClauses.add('iss.issued_date BETWEEN @start_date AND @end_date');
+      parameters['start_date'] = startDate.toIso8601String();
+      parameters['end_date'] = (endDate ?? now).toIso8601String();
+    }
+
+    final whereClause = whereClauses.join(' AND ');
+
+    final result = await _conn.execute(
+      Sql.named('''
+      SELECT 
+        iss.id AS issuance_id,
+        issi.item_id AS base_item_id,
+        pn.name AS product_name,
+        pd.description AS product_description,
+        issi.issued_quantity,
+        issi.status,
+        issi.remarks,
+        iss.issued_date,
+        iss.received_date,
+        issi.returned_date,
+        issi.lost_date,
+        roff.name AS accountable_officer,
+        rpos.position_name AS accountable_officer_position,
+        rofc.name AS accountable_officer_office
+      FROM 
+        issuanceitems issi
+      JOIN
+        inventoryitems inv ON issi.item_id = inv.base_item_id
+      LEFT JOIN
+        items i ON issi.item_id = i.id
+      LEFT JOIN
+        productnames pn ON i.product_name_id = pn.id
+      LEFT JOIN
+        productdescriptions pd ON i.product_description_id = pd.id
+      LEFT JOIN
+        issuances iss ON issi.issuance_id = iss.id
+      LEFT JOIN
+        officers roff ON iss.receiving_officer_id = roff.id
+      LEFT JOIN
+        positions rpos ON roff.position_id = rpos.id
+      LEFT JOIN
+        offices rofc ON rpos.office_id = rofc.id
+      WHERE $whereClause
+    '''),
+      parameters: parameters,
+    );
+
+    if (result.isEmpty) {
+      print('empty res');
+      return [];
+    }
+
+    // Since we're fetching by name, assume one officer match (for now)
+    final response = {
+      'accountable_officer': {
+        'name': result.first[11],
+        'position': result.first[12],
+        'office': result.first[13],
+      },
+      'accountabilities': result
+          .map((row) => {
+                'issuance_id': row[0],
+                'base_item_id': row[1],
+                'product_name': row[2],
+                'product_description': row[3],
+                'issued_quantity': row[4],
+                'status': row[5],
+                'remarks': row[6],
+                'issued_date': (row[7] as DateTime).toIso8601String(),
+                'received_date': (row[8] as DateTime?)?.toIso8601String(),
+                'returned_date': (row[9] as DateTime?)?.toIso8601String(),
+                'lost_date': (row[10] as DateTime?)?.toIso8601String(),
+              })
+          .toList(),
+    };
+
+    return [response];
+  }
 }
