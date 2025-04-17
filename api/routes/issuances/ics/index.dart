@@ -122,6 +122,12 @@ Future<Response> _createICS(
     final issuingOfficerPosition = json['issuing_officer_position'] as String?;
     final issuingOfficerName = json['issuing_officer_name'] as String?;
 
+    final receivedDate = json['received_date'] != null
+        ? json['received_date'] is String
+            ? DateTime.parse(json['received_date'] as String)
+            : json['received_date'] as DateTime
+        : null;
+
     int? supplierId;
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
@@ -220,6 +226,7 @@ Future<Response> _createICS(
       purchaseOrderId: purchaseOrderNumber,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
+      receivedDate: receivedDate,
     );
 
     final ics = await issuanceRepository.getIcsById(

@@ -716,6 +716,7 @@ class _GenerateInventoryReportModalState
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Asset Sub Class',
+          hasValidation: false,
         );
       },
     );
@@ -749,6 +750,7 @@ class _GenerateInventoryReportModalState
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
+          hasValidation: false,
         );
       },
     );

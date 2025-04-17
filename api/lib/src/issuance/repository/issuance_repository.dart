@@ -437,9 +437,9 @@ class IssuanceRepository {
       );
 
       final row = result.first;
-      final isICS = row[11] != null;
-      final isPAR = row[12] != null;
-      final isRIS = row[13] != null;
+      final isICS = row[12] != null;
+      final isPAR = row[13] != null;
+      final isRIS = row[14] != null;
 
       if (isICS) {
         print('ICS');
@@ -531,10 +531,10 @@ class IssuanceRepository {
         );
       }
 
-      if (row[12] != null && row[13] != null) {
+      if (row[13] != null && row[14] != null) {
         supplier = Supplier.fromJson({
-          'supplier_id': row[12],
-          'name': row[13],
+          'supplier_id': row[13],
+          'name': row[14],
         });
       }
 
@@ -554,7 +554,7 @@ class IssuanceRepository {
 
       return InventoryCustodianSlip.fromJson({
         'id': row[0],
-        'ics_id': row[11],
+        'ics_id': row[12],
         'issued_date': row[1],
         'return_date': row[2],
         'items':
@@ -565,11 +565,12 @@ class IssuanceRepository {
         'entity': entity?.toJson(),
         'fund_cluster': fundCluster,
         'supplier': supplier?.toJson(),
-        'inspection_and_acceptance_report_no': row[14],
-        'contract_number': row[15],
-        'purchase_order_number': row[16],
+        'inspection_and_acceptance_report_no': row[15],
+        'contract_number': row[16],
+        'purchase_order_number': row[17],
         'receiving_officer': receivingOfficer?.toJson(),
         'issuing_officer': issuingOfficer?.toJson(),
+        'received_date': row[11],
         'qr_code_image_data': row[8],
         'status': row[9],
         'is_archived': row[10],
@@ -646,10 +647,10 @@ class IssuanceRepository {
         );
       }
 
-      if (row[12] != null && row[13] != null) {
+      if (row[13] != null && row[14] != null) {
         supplier = Supplier.fromJson({
-          'supplier_id': row[12],
-          'name': row[13],
+          'supplier_id': row[13],
+          'name': row[14],
         });
       }
 
@@ -671,7 +672,7 @@ class IssuanceRepository {
       final parObj = PropertyAcknowledgementReceipt.fromJson(
         {
           'id': row[0],
-          'par_id': row[11],
+          'par_id': row[12],
           'issued_date': row[1],
           'return_date': row[2],
           'items': issuanceItems
@@ -681,11 +682,12 @@ class IssuanceRepository {
           'entity': entity?.toJson(),
           'fund_cluster': fundCluster,
           'supplier': supplier?.toJson(),
-          'inspection_and_acceptance_report_no': row[14],
-          'contract_number': row[15],
-          'purchase_order_number': row[16],
+          'inspection_and_acceptance_report_no': row[15],
+          'contract_number': row[16],
+          'purchase_order_number': row[17],
           'receiving_officer': receivingOfficer?.toJson(),
           'issuing_officer': issuingOfficer?.toJson(),
+          'received_date': row[11],
           'qr_code_image_data': row[8],
           'status': row[9],
           'is_archived': row[10],
@@ -720,7 +722,9 @@ class IssuanceRepository {
         ris.office_id AS office_id,
         ris.purpose AS purpose,
         ris.approving_officer_id as approving_officer_id,
-        ris.requesting_officer_id as requesting_officer_id
+        ris.requesting_officer_id as requesting_officer_id,
+        ris.approved_date as approved_date,
+        ris.request_date as request_date
       FROM
         Issuances iss
       JOIN
@@ -782,23 +786,23 @@ class IssuanceRepository {
         print('converted issuing off');
       }
 
-      if (row[16] != null) {
+      if (row[17] != null) {
         approvingOfficer = await OfficerRepository(_conn).getOfficerById(
-          officerId: row[16] as String,
+          officerId: row[17] as String,
         );
         print('converted approving off');
       }
 
-      if (row[17] != null) {
+      if (row[18] != null) {
         requestingOfficer = await OfficerRepository(_conn).getOfficerById(
-          officerId: row[17] as String,
+          officerId: row[18] as String,
         );
         print('converted requesting off');
       }
 
-      if (row[14] != null) {
+      if (row[15] != null) {
         office = await OfficeRepository(_conn).getOfficeById(
-          id: row[14] as String,
+          id: row[15] as String,
         );
         print('converted office: $office');
       }
@@ -808,7 +812,7 @@ class IssuanceRepository {
       final risObj = RequisitionAndIssueSlip.fromJson(
         {
           'id': row[0],
-          'ris_id': row[11],
+          'ris_id': row[12],
           'issued_date': row[1],
           'return_date': row[2],
           'items': issuanceItems
@@ -817,14 +821,17 @@ class IssuanceRepository {
           'purchase_request': purchaseRequest?.toJson(),
           'entity': entity?.toJson(),
           'fund_cluster': fundCluster,
-          'division': row[12],
-          'responsibility_center_code': row[13],
+          'division': row[13],
+          'responsibility_center_code': row[14],
           'office': office?.toJson(),
-          'purpose': row[15],
+          'purpose': row[16],
           'approving_officer': approvingOfficer?.toJson(),
           'issuing_officer': issuingOfficer?.toJson(),
           'receiving_officer': receivingOfficer?.toJson(),
           'requesting_officer': requestingOfficer?.toJson(),
+          'received_date': row[11],
+          'approved_date': row[19],
+          'request_date': row[20],
           'qr_code_image_data': row[8],
           'status': row[9],
           'is_archived': row[10],
@@ -1005,9 +1012,9 @@ class IssuanceRepository {
       print(results);
 
       for (final row in results) {
-        final isICS = row[12] != null;
-        final isPAR = row[13] != null;
-        final isRIS = row[14] != null;
+        final isICS = row[13] != null;
+        final isPAR = row[14] != null;
+        final isRIS = row[15] != null;
 
         if (isICS) {
           final ics = await getIcsById(id: row[0] as String);
@@ -1176,6 +1183,7 @@ class IssuanceRepository {
     FundCluster? fundCluster,
     String? receivingOfficerId,
     String? issuingOfficerId,
+    DateTime? receivedDate,
     required String concreteIssuanceEntityQuery,
     required Map<String, dynamic> concreteIssuanceEntityParams,
   }) async {
@@ -1187,15 +1195,17 @@ class IssuanceRepository {
         try {
           // Step 1: Insert into the Issuances table
           await _insertIssuance(
-              ctx,
-              issuanceId,
-              issuedDate,
-              purchaseRequest,
-              entityId,
-              fundCluster,
-              receivingOfficerId,
-              issuingOfficerId,
-              qrCodeImageData);
+            ctx,
+            issuanceId,
+            issuedDate,
+            purchaseRequest,
+            entityId,
+            fundCluster,
+            receivingOfficerId,
+            issuingOfficerId,
+            receivedDate,
+            qrCodeImageData,
+          );
 
           // Step 2: Insert into the concrete issuance table
           await _insertConcreteIssuance(
@@ -1247,6 +1257,7 @@ class IssuanceRepository {
     FundCluster? fundCluster,
     String? receivingOfficerId,
     String? issuingOfficerId,
+    DateTime? receivedDate,
     String qrCodeImageData,
   ) async {
     await ctx.execute(
@@ -1254,11 +1265,11 @@ class IssuanceRepository {
         '''
         INSERT INTO Issuances (
           id, issued_date, purchase_request_id, entity_id, fund_cluster, 
-          receiving_officer_id, issuing_officer_id, qr_code_image_data
+          receiving_officer_id, issuing_officer_id, received_date, qr_code_image_data
         )
         VALUES (
           @id, @issued_date, @purchase_request_id, @entity_id, @fund_cluster, 
-          @receiving_officer_id, @issuing_officer_id, @qr_code_image_data
+          @receiving_officer_id, @issuing_officer_id, @received_date, @qr_code_image_data
         );
         ''',
       ),
@@ -1270,6 +1281,7 @@ class IssuanceRepository {
         'fund_cluster': fundCluster?.toString().split('.').last,
         'receiving_officer_id': receivingOfficerId,
         'issuing_officer_id': issuingOfficerId,
+        'received_date': receivedDate?.toIso8601String(),
         'qr_code_image_data': qrCodeImageData,
       },
     );
@@ -1702,6 +1714,7 @@ class IssuanceRepository {
     String? purchaseOrderId,
     String? receivingOfficerId,
     String? issuingOfficerId,
+    DateTime? receivedDate,
   }) async {
     final icsId = await _generateUniqueIcsId(
       type: type,
@@ -1732,6 +1745,7 @@ class IssuanceRepository {
       fundCluster: fundCluster,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
+      receivedDate: receivedDate,
       concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
       concreteIssuanceEntityParams: concreteIssuanceEntityParams,
     );
@@ -1749,6 +1763,7 @@ class IssuanceRepository {
     String? purchaseOrderId,
     String? receivingOfficerId,
     String? issuingOfficerId,
+    DateTime? receivedDate,
   }) async {
     final parId = await _generateUniqueParId();
 
@@ -1773,6 +1788,7 @@ class IssuanceRepository {
       fundCluster: fundCluster,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
+      receivedDate: receivedDate,
       concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
       concreteIssuanceEntityParams: concreteIssuanceEntityParams,
     );
@@ -1792,6 +1808,9 @@ class IssuanceRepository {
     String? issuingOfficerId,
     String? approvingOfficerId,
     String? requestingOfficerId,
+    DateTime? receivedDate,
+    DateTime? approvedDate,
+    DateTime? requestDate,
   }) async {
     final risId = await _generateUniqueRisId();
 
@@ -1806,7 +1825,9 @@ class IssuanceRepository {
       office_id,
       purpose,
       approving_officer_id,
-      requesting_officer_id
+      requesting_officer_id,
+      approved_date,
+      request_date
     )
     VALUES (
       @id, 
@@ -1816,7 +1837,9 @@ class IssuanceRepository {
       @office_id,
       @purpose, 
       @approving_officer_id,
-      @requesting_officer_id
+      @requesting_officer_id,
+      @approved_date,
+      @request_date
       );
     ''';
 
@@ -1828,6 +1851,8 @@ class IssuanceRepository {
       'purpose': purpose,
       'approving_officer_id': approvingOfficerId,
       'requesting_officer_id': requestingOfficerId,
+      'approved_date': approvedDate?.toIso8601String(),
+      'request_date': requestDate?.toIso8601String(),
     };
 
     return await _createIssuance(
@@ -1838,6 +1863,7 @@ class IssuanceRepository {
       fundCluster: fundCluster,
       receivingOfficerId: receivingOfficerId,
       issuingOfficerId: issuingOfficerId,
+      receivedDate: receivedDate,
       concreteIssuanceEntityQuery: concreteIssuanceEntityQuery,
       concreteIssuanceEntityParams: concreteIssuanceEntityParams,
     );

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart' as flutter_acrylic;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'config/routes/app_router.dart';
 import 'config/sizing/sizing_config.dart';
@@ -43,6 +44,7 @@ bool get isDesktop {
 void main() async {
   //debugPaintSizeEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   await initializeDependencies();
 
   if (!kIsWeb &&

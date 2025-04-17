@@ -71,6 +71,7 @@ dependencies:
   timeline_tile: ^2.0.0
   excel: ^4.0.6
   spreadsheet_decoder: ^2.3.0
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -100,6 +101,7 @@ flutter:
      - assets/icons/
      - assets/images/
      - assets/templates/xlsx/
+     - .env
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

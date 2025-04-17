@@ -197,6 +197,7 @@ abstract class Issuance {
     this.fundCluster,
     this.receivingOfficer,
     this.issuingOfficer,
+    this.receivedDate,
     required this.qrCodeImageData,
     this.status = IssuanceStatus.unreceived,
     this.isArchived = false,
@@ -212,6 +213,7 @@ abstract class Issuance {
   final FundCluster? fundCluster;
   final Officer? receivingOfficer;
   final Officer? issuingOfficer; // issuing officer or received from officer
+  final DateTime? receivedDate;
   final String qrCodeImageData;
   final IssuanceStatus status;
   final bool isArchived;
@@ -243,6 +245,7 @@ class InventoryCustodianSlip extends Issuance {
     super.fundCluster,
     super.receivingOfficer,
     super.issuingOfficer,
+    super.receivedDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -530,6 +533,10 @@ class InventoryCustodianSlip extends Issuance {
       purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
+      receivedDate:
+          json['received_date'] != null && json['received_date'] is String
+              ? DateTime.tryParse(json['received_date'] as String)
+              : json['received_date'] as DateTime?,
       qrCodeImageData: json['qr_code_image_data'] as String,
       status: IssuanceStatus.values
           .firstWhere((e) => e.toString().split('.').last == json['status']),
@@ -557,6 +564,7 @@ class InventoryCustodianSlip extends Issuance {
       'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
+      'received_date': receivedDate?.toIso8601String(),
       'qr_code_image_data': qrCodeImageData,
       'status': status.toString().split('.').last,
       'is_archived': isArchived,
@@ -578,6 +586,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
     super.fundCluster,
     super.receivingOfficer,
     super.issuingOfficer,
+    super.receivedDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -845,6 +854,10 @@ class PropertyAcknowledgementReceipt extends Issuance {
       purchaseOrderNumber: json['purchase_order_number'] as String?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
+      receivedDate:
+          json['received_date'] != null && json['received_date'] is String
+              ? DateTime.tryParse(json['received_date'] as String)
+              : json['received_date'] as DateTime?,
       qrCodeImageData: json['qr_code_image_data'] as String,
       status: IssuanceStatus.values
           .firstWhere((e) => e.toString().split('.').last == json['status']),
@@ -871,6 +884,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
       'purchase_order_number': purchaseOrderNumber,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
+      'received_date': receivedDate?.toIso8601String(),
       'qr_code_image_data': qrCodeImageData,
       'status': status.toString().split('.').last,
       'is_archived': isArchived,
@@ -896,6 +910,9 @@ class RequisitionAndIssueSlip extends Issuance {
     super.issuingOfficer,
     this.approvingOfficer,
     this.requestingOfficer,
+    super.receivedDate,
+    this.approvedDate,
+    this.requestDate,
     required super.qrCodeImageData,
     super.status,
     super.isArchived,
@@ -908,6 +925,8 @@ class RequisitionAndIssueSlip extends Issuance {
   final String? purpose;
   final Officer? approvingOfficer;
   final Officer? requestingOfficer;
+  final DateTime? approvedDate;
+  final DateTime? requestDate;
 
   factory RequisitionAndIssueSlip.fromJson(Map<String, dynamic> json) {
     PurchaseRequest? purchaseRequest;
@@ -1181,6 +1200,18 @@ class RequisitionAndIssueSlip extends Issuance {
       issuingOfficer: issuingOfficer,
       receivingOfficer: receivingOfficer,
       requestingOfficer: requestingOfficer,
+      receivedDate:
+          json['received_date'] != null && json['received_date'] is String
+              ? DateTime.tryParse(json['received_date'] as String)
+              : json['received_date'] as DateTime?,
+      approvedDate:
+          json['approved_date'] != null && json['approved_date'] is String
+              ? DateTime.tryParse(json['approved_date'] as String)
+              : json['approved_date'] as DateTime?,
+      requestDate:
+          json['request_date'] != null && json['request_date'] is String
+              ? DateTime.tryParse(json['request_date'] as String)
+              : json['request_date'] as DateTime?,
       qrCodeImageData: json['qr_code_image_data'] as String,
       status: IssuanceStatus.values.firstWhere(
         (e) =>
@@ -1209,6 +1240,9 @@ class RequisitionAndIssueSlip extends Issuance {
       'requesting_officer': requestingOfficer?.toJson(),
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
+      'received_date': receivedDate?.toIso8601String(),
+      'approved_date': approvedDate?.toIso8601String(),
+      'request_date': requestDate?.toIso8601String(),
       'qr_code_image_data': qrCodeImageData,
       'status': status.toString().split('.').last,
       'is_archived': isArchived,

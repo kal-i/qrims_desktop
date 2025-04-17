@@ -1,5 +1,4 @@
 /// auth endpoints
-const baseUrl = 'http://localhost:8080';
 const authEP = '/authentication';
 const basicAuthEP = '$authEP/basic';
 const registerEP = '$basicAuthEP/register';

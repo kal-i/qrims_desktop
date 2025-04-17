@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
-
-import '../constants/endpoints.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // not sure how it happened but when I encounter an err where the ep is correct
 // but the req is not pushing through, just comment then uncomment that part
@@ -9,7 +8,8 @@ class HttpService {
   String? bearerToken;
 
   HttpService(this.dio) {
-    dio.options.baseUrl = baseUrl;
+    dio.options.baseUrl =
+        'http://localhost:8080'; // dotenv.env['API_BASE_URL']!;
     dio.options.headers['Content-Type'] = 'application/json';
 
     dio.interceptors.add(
@@ -18,7 +18,8 @@ class HttpService {
           if (bearerToken != null) {
             options.headers['Authorization'] = 'Bearer $bearerToken';
           }
-          print('Request [${options.method}] => PATH: ${options.baseUrl}${options.path}, BODY: ${options.data}, HEADERS: ${options.headers}');
+          print(
+              'Request [${options.method}] => PATH: ${options.baseUrl}${options.path}, BODY: ${options.data}, HEADERS: ${options.headers}');
           return handler.next(options);
         },
         onResponse: (response, handler) {

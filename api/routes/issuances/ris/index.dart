@@ -130,6 +130,24 @@ Future<Response> _createRIS(
         json['requesting_officer_position'] as String?;
     final requestingOfficerName = json['requesting_officer_name'] as String?;
 
+    final receivedDate = json['received_date'] != null
+        ? json['received_date'] is String
+            ? DateTime.parse(json['received_date'] as String)
+            : json['received_date'] as DateTime
+        : null;
+
+    final approvedDate = json['approved_date'] != null
+        ? json['approved_date'] is String
+            ? DateTime.parse(json['approved_date'] as String)
+            : json['approved_date'] as DateTime
+        : null;
+
+    final requestDate = json['request_date'] != null
+        ? json['request_date'] is String
+            ? DateTime.parse(json['request_date'] as String)
+            : json['request_date'] as DateTime
+        : null;
+
     String? receivingOfficerOfficeId;
     String? receivingOfficerPositionId;
     String? receivingOfficerId;
@@ -279,6 +297,9 @@ Future<Response> _createRIS(
       issuingOfficerId: issuingOfficerId,
       approvingOfficerId: approvingOfficerId,
       requestingOfficerId: requestingOfficerId,
+      receivedDate: receivedDate,
+      approvedDate: approvedDate,
+      requestDate: requestDate,
     );
 
     final ris = await issuanceRepository.getRisById(
