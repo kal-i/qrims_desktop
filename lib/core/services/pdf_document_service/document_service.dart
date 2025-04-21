@@ -60,6 +60,40 @@ class DocumentService {
     return fontSize * 1.5;
   }
 
+  static double getStickerRowHeight(
+    String text, {
+    double fontSize = 8.0,
+    double cellWidth = 45.0,
+  }) {
+    if (text.trim().isEmpty) {
+      return fontSize * 1.5;
+    }
+
+    // Use more accurate character width estimation
+    final averageCharWidth = fontSize * 0.6;
+    final charsPerLine = (cellWidth / averageCharWidth).floor();
+
+    // Calculate lines needed with word wrapping consideration
+    final words = text.split(' ');
+    var currentLineLength = 0;
+    var lineCount = 1;
+
+    for (final word in words) {
+      if (currentLineLength + word.length > charsPerLine) {
+        lineCount++;
+        currentLineLength = word.length;
+      } else {
+        currentLineLength += word.length + 1; // +1 for space
+      }
+    }
+
+    // Set minimum height and calculate final height
+    final minHeight = fontSize * 1.5;
+    final calculatedHeight = lineCount * fontSize * 1.2;
+
+    return calculatedHeight > minHeight ? calculatedHeight : minHeight;
+  }
+
   Future<pw.Document> generateDocument({
     required PdfPageFormat pageFormat,
     required pw.PageOrientation orientation,

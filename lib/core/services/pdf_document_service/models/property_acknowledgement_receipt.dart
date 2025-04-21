@@ -9,6 +9,7 @@ import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -29,6 +30,14 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
     final par = data as PropertyAcknowledgementReceiptEntity;
     final purchaseRequestEntity = data.purchaseRequestEntity;
     final supplierEntity = data.supplierEntity;
+    final issuingOfficerPositionHistory =
+        par.issuingOfficerEntity?.getPositionAt(
+      par.issuedDate,
+    );
+    final receivingOfficerPositonHistory =
+        par.receivingOfficerEntity?.getPositionAt(
+      par.issuedDate,
+    );
 
     // List to store all rows for the table
     List<pw.TableRow> tableRows = [];
@@ -148,7 +157,7 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
             propertyNumber: j == 0 ? baseItemId : '\n',
             dateAcquired: j == 0 ? documentDateFormatter(dateAcquired!) : '\n',
             amount: j == 0 ? formatCurrency(unitCost) : '\n',
-            rowHeight: rowHeights[i],
+            rowHeight: rowHeights[j], // Fix: Use j instead of i
             borderTop: i == 0 ? false : true,
             borderBottom: j == descriptionColumn.length - 1 ? false : true,
           ),
@@ -302,21 +311,19 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
                 children: [
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received from:',
-                    officerName: data.issuingOfficerEntity?.name ?? '\n',
+                    officerName: data.issuingOfficerEntity?.name,
                     officerPosition:
-                        data.issuingOfficerEntity?.positionName ?? '\n',
-                    officerOffice:
-                        data.issuingOfficerEntity?.officeName ?? '\n',
+                        issuingOfficerPositionHistory?.positionName,
+                    officerOffice: issuingOfficerPositionHistory?.officeName,
                     date: par.issuedDate,
                     borderRight: false,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received by:',
-                    officerName: data.receivingOfficerEntity?.name ?? '\n',
+                    officerName: data.receivingOfficerEntity?.name,
                     officerPosition:
-                        data.receivingOfficerEntity?.positionName ?? '\n',
-                    officerOffice:
-                        data.receivingOfficerEntity?.officeName ?? '\n',
+                        receivingOfficerPositonHistory?.positionName,
+                    officerOffice: receivingOfficerPositonHistory?.officeName,
                     date: par.receivedDate,
                   ),
                 ],

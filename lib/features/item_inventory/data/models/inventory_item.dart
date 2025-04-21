@@ -68,6 +68,7 @@ class InventoryItemModel extends InventoryItemEntity implements BaseItemModel {
     return inventoryItem;
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'inventory_id': id,
@@ -76,8 +77,8 @@ class InventoryItemModel extends InventoryItemEntity implements BaseItemModel {
           (shareableItemInformationEntity as ShareableItemInformationModel)
               .toJson(),
       'manufacturer_brand':
-          (manufacturerBrandEntity as ManufacturerBrandModel).toJson(),
-      'model': (modelEntity as Model).toJson(),
+          (manufacturerBrandEntity as ManufacturerBrandModel?)?.toJson(),
+      'model': (modelEntity as Model?)?.toJson(),
       'serial_no': serialNo,
       'asset_classification': assetClassification.toString().split('.').last,
       'asset_sub_class': assetSubClass.toString().split('.').last,

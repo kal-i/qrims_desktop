@@ -327,8 +327,14 @@ class AppRoutingConfig {
                 name: RoutingConstants.registerMultipleIssuanceViewRouteName,
                 path: RoutingConstants.registerMultipleIssuanceViewRoutePath,
                 pageBuilder: (context, state) {
-                  return const MaterialPage(
-                    child: RegisterMultipleIssuanceView(),
+                  final Map<String, dynamic> extras =
+                      state.extra as Map<String, dynamic>;
+                  final type = extras['type'] as IssuanceType;
+
+                  return MaterialPage(
+                    child: RegisterMultipleIssuanceView(
+                      issuanceType: type,
+                    ),
                   );
                 },
               ),
@@ -457,6 +463,7 @@ class RouteChangeManager {
       '/itemIssuance': 'Item Issuance Management',
       '/itemIssuance/viewItemIssuance': 'View Item Issuance',
       '/itemIssuance/registerItemIssuance': 'Create Issuance',
+      '/itemIssuance/registerMultipleItemIssuance': 'Create Multiple Issuance',
       '/usersManagement': 'User Management',
       '/officersManagement': 'Officers Management',
       '/archiveUser': 'Archive Management',

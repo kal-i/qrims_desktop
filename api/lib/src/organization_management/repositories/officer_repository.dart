@@ -505,31 +505,34 @@ class OfficerRepository {
   }
 
   Future<int> getOfficerNamesFilteredCount({
-    required String positionId,
+    String? positionId,
     String? officerName,
   }) async {
     try {
       final Map<String, dynamic> params = {};
+      final whereConditions = <String>[];
 
       String baseQuery = '''
       SELECT COUNT(*)
       FROM Officers
       ''';
 
-      if (positionId.isNotEmpty) {
-        baseQuery += 'WHERE position_id = @position_id';
+      if (positionId != null && positionId.isNotEmpty) {
+        whereConditions.add('position_id = @position_id');
         params['position_id'] = positionId;
       }
 
       if (officerName != null && officerName.isNotEmpty) {
-        baseQuery += ' AND name ILIKE @name';
+        whereConditions.add('name ILIKE @name');
         params['name'] = '%$officerName%';
       }
 
+      if (whereConditions.isNotEmpty) {
+        baseQuery += ' WHERE ${whereConditions.join(' AND ')}';
+      }
+
       final result = await _conn.execute(
-        Sql.named(
-          baseQuery,
-        ),
+        Sql.named(baseQuery),
         parameters: params,
       );
 
@@ -543,26 +546,34 @@ class OfficerRepository {
   Future<List<String>> getOfficerNames({
     required int page,
     required int pageSize,
-    required String positionId,
+    String? positionId,
     String? officerName,
   }) async {
     try {
       final offset = (page - 1) * pageSize;
       final officeList = <String>[];
-      final Map<String, dynamic> params = {};
+      final Map<String, dynamic> params = {
+        'page_size': pageSize,
+        'offset': offset,
+      };
+      final whereConditions = <String>[];
 
       String baseQuery = '''
       SELECT name FROM Officers
       ''';
 
-      if (positionId.isNotEmpty) {
-        baseQuery += 'WHERE position_id = @position_id';
+      if (positionId != null && positionId.isNotEmpty) {
+        whereConditions.add('position_id = @position_id');
         params['position_id'] = positionId;
       }
 
       if (officerName != null && officerName.isNotEmpty) {
-        baseQuery += ' AND name ILIKE @name';
+        whereConditions.add('name ILIKE @name');
         params['name'] = '%$officerName%';
+      }
+
+      if (whereConditions.isNotEmpty) {
+        baseQuery += ' WHERE ${whereConditions.join(' AND ')}';
       }
 
       final finalQuery = '''
@@ -570,9 +581,6 @@ class OfficerRepository {
       ORDER BY name ASC
       LIMIT @page_size OFFSET @offset;
       ''';
-
-      params['page_size'] = pageSize;
-      params['offset'] = offset;
 
       final results = await _conn.execute(
         Sql.named(

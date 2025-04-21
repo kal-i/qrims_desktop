@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/themes/app_color.dart';
-import '../../../config/themes/app_theme.dart';
-import '../../../config/themes/bloc/theme_bloc.dart';
 
 class BaseContainer extends StatelessWidget {
   const BaseContainer({

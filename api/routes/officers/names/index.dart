@@ -30,18 +30,26 @@ Future<Response> _getOfficers(
     final queryParams = await context.request.uri.queryParameters;
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
-    final officeName = queryParams['office_name'] as String;
-    final positionName = queryParams['position_name'] as String;
+    final officeName = queryParams['office_name'];
+    final positionName = queryParams['position_name'];
     final officerName = queryParams['officer_name'];
 
-    final officeId = await officeRepository.checkOfficeIfExist(
-      officeName: officeName,
-    );
+    String? officeId;
+    String? positionId;
 
-    final positionId = await positionRepository.checkIfPositionExist(
-      officeId: officeId,
-      positionName: positionName,
-    );
+    if (officeName != null && officeName.isNotEmpty) {
+      officeId = await officeRepository.checkOfficeIfExist(
+        officeName: officeName,
+      );
+    }
+
+    if ((officeId != null && officeId.isNotEmpty) &&
+        (positionName != null && positionName.isNotEmpty)) {
+      positionId = await positionRepository.checkIfPositionExist(
+        officeId: officeId,
+        positionName: positionName,
+      );
+    }
 
     final officers = await officerRepository.getOfficerNames(
       page: page,

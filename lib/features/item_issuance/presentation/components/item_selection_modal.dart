@@ -28,10 +28,12 @@ class ItemSelectionModal extends StatefulWidget {
     super.key,
     required this.onSelectedItems,
     this.preselectedItems,
+    this.excludeItemIds,
   });
 
   final Function(List<Map<String, dynamic>> selectedItems) onSelectedItems;
   final List<Map<String, dynamic>>? preselectedItems;
+  final Set<dynamic>? excludeItemIds; // Add this line
 
   @override
   State<ItemSelectionModal> createState() => _ItemSelectionModalState();
@@ -73,7 +75,17 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     super.initState();
     _itemInventoryBloc = context.read<ItemInventoryBloc>();
 
-    _preselectedItems = widget.preselectedItems ?? [];
+    final excludeIds = widget.excludeItemIds ?? {};
+
+    // Filter out excluded items from preselectedItems
+    _preselectedItems = (widget.preselectedItems ?? [])
+        .where((item) => !excludeIds
+            .contains(item['shareable_item_information']['base_item_id']))
+        .toList();
+
+    // Initialize selected IDs from filtered preselected items
+    _selectedItemIds.addAll(_preselectedItems.map((item) =>
+        item['shareable_item_information']['base_item_id'].toString()));
 
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_onFilterChanged);
@@ -222,9 +234,11 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
               .map((item) => item['shareable_item_information']['base_item_id'])
               .toSet();
 
+          final excludeIds = widget.excludeItemIds ?? {};
+
           _tableRows.addAll(state.items.where((item) {
-            return !selectedItemIds
-                .contains(item.shareableItemInformationEntity.id);
+            // Exclude items assigned to other officers
+            return !excludeIds.contains(item.shareableItemInformationEntity.id);
           }).map((item) {
             return TableData(
               id: item.shareableItemInformationEntity.id,
@@ -410,6 +424,20 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        // Add Clear Selection button
+        CustomOutlineButton(
+          onTap: () {
+            setState(() {
+              _selectedItemIds.clear();
+              _preselectedItems.clear();
+            });
+          },
+          text: 'Clear Selection',
+          width: 150.0,
+        ),
+        const SizedBox(
+          width: 10.0,
+        ),
         CustomOutlineButton(
           onTap: () => context.pop(),
           text: 'Cancel',

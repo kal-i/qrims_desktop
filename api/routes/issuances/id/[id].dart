@@ -4,7 +4,9 @@ import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
 import 'package:api/src/notification/model/notification.dart';
 import 'package:api/src/notification/repository/notification_repository.dart';
+import 'package:api/src/organization_management/repositories/office_repository.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
+import 'package:api/src/organization_management/repositories/position_repository.dart';
 import 'package:api/src/purchase_request/repository/purchase_request_repository.dart';
 import 'package:api/src/session/session_repository.dart';
 import 'package:api/src/user/repository/user_repository.dart';
@@ -18,6 +20,8 @@ Future<Response> onRequest(
   final connection = context.read<Connection>();
   final notifRepository = NotificationRepository(connection);
   final issuanceRepository = IssuanceRepository(connection);
+  final officeRepository = OfficeRepository(connection);
+  final positionRepository = PositionRepository(connection);
   final officerRepository = OfficerRepository(connection);
   final prRepository = PurchaseRequestRepository(connection);
   final userRepository = UserRepository(connection);
@@ -35,7 +39,15 @@ Future<Response> onRequest(
         sessionRepository,
         id,
       ),
-    // Http.put => _updateIssuance(context, issuanceRepository, id),
+    HttpMethod.put => _updateIssuance(
+        context,
+        connection,
+        officeRepository,
+        positionRepository,
+        officerRepository,
+        issuanceRepository,
+        id,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
@@ -222,4 +234,80 @@ Future<Response> _receiveIssuance(
       },
     );
   }
+}
+
+Future<Response> _updateIssuance(
+  RequestContext context,
+  Connection connection,
+  OfficeRepository officeRepository,
+  PositionRepository positionRepository,
+  OfficerRepository officerRepository,
+  IssuanceRepository issuanceRepository,
+  String id,
+) async {
+  final json = await context.request.json();
+  final receivingOfficerName = json['receiving_officer_name'] as String;
+  final receivingOfficerPosition = json['receiving_officer_position'] as String;
+  final receivingOfficerOffice = json['receiving_officer_office'] as String;
+  final receivedDate = json['received_date'] is String
+      ? DateTime.parse(json['received_date'] as String)
+      : json['received_date'] as DateTime;
+
+  final issuanceEntity = await issuanceRepository.getIssuanceById(
+    id: id,
+  );
+
+  if (issuanceEntity == null) {
+    return Response.json(
+      statusCode: HttpStatus.notFound,
+      body: {
+        'message': 'Base issuance entity not found.',
+      },
+    );
+  }
+
+  final receivingOfficerOfficeId = await officeRepository.checkOfficeIfExist(
+    officeName: receivingOfficerOffice,
+  );
+
+  final receivingOfficerPositionId =
+      await positionRepository.checkIfPositionExist(
+    officeId: receivingOfficerOfficeId,
+    positionName: receivingOfficerPosition,
+  );
+
+  final receivingOfficerId = await officerRepository.checkOfficerIfExist(
+        name: receivingOfficerName,
+        positionId: receivingOfficerPositionId,
+      ) ??
+      await officerRepository.registerOfficer(
+        name: receivingOfficerName,
+        positionId: receivingOfficerPositionId,
+      );
+
+  await connection.runTx((ctx) async {
+    final updatedBaseIssuanceEntity =
+        await issuanceRepository.receiveIssuanceEntity(
+      ctx: ctx,
+      baseIssuanceEntityId: issuanceEntity.id,
+      receivingOfficerId: receivingOfficerId,
+      receivedDate: receivedDate,
+    );
+
+    if (updatedBaseIssuanceEntity) {
+      return Response.json(
+        statusCode: 200,
+        body: {
+          'message': 'Base issuance entity updated: $id',
+        },
+      );
+    }
+  });
+
+  return Response.json(
+    statusCode: HttpStatus.internalServerError,
+    body: {
+      'message': 'Failed to update issuance.',
+    },
+  );
 }

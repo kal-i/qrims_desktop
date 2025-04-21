@@ -55,13 +55,15 @@ class OfficerSuggestionsService {
   }
 
   Future<List<String>?> fetchOfficers({
-    required String officeName,
-    required String positionName,
+    String? officeName,
+    String? positionName,
     String? officerName,
   }) async {
     final Map<String, dynamic> queryParams = {
-      'office_name': officeName,
-      'position_name': positionName,
+      if (officeName != null && officeName.isNotEmpty)
+        'office_name': officeName,
+      if (positionName != null && positionName.isNotEmpty)
+        'position_name': positionName,
       if (officerName != null && officerName.isNotEmpty)
         'officer_name': officerName,
     };

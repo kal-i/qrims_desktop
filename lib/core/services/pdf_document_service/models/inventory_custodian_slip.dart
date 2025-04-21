@@ -8,6 +8,7 @@ import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -27,6 +28,14 @@ class InventoryCustodianSlip implements BaseDocument {
     final ics = data as InventoryCustodianSlipEntity;
     final purchaseRequestEntity = data.purchaseRequestEntity;
     final supplierEntity = data.supplierEntity;
+    final issuingOfficerPositionHistory =
+        ics.issuingOfficerEntity?.getPositionAt(
+      ics.issuedDate,
+    );
+    final receivingOfficerPositonHistory =
+        ics.receivingOfficerEntity?.getPositionAt(
+      ics.issuedDate,
+    );
 
     // List to store all rows for the table
     List<pw.TableRow> tableRows = [];
@@ -315,21 +324,19 @@ class InventoryCustodianSlip implements BaseDocument {
                 children: [
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received from:',
-                    officerName: data.issuingOfficerEntity?.name ?? '\n',
+                    officerName: data.issuingOfficerEntity?.name,
                     officerPosition:
-                        data.issuingOfficerEntity?.positionName ?? '\n',
-                    officerOffice:
-                        data.issuingOfficerEntity?.officeName ?? '\n',
+                        issuingOfficerPositionHistory?.positionName,
+                    officerOffice: issuingOfficerPositionHistory?.officeName,
                     date: ics.issuedDate,
                     borderRight: false,
                   ),
                   DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received by:',
-                    officerName: data.receivingOfficerEntity?.name ?? '\n',
+                    officerName: data.receivingOfficerEntity?.name,
                     officerPosition:
-                        data.receivingOfficerEntity?.positionName ?? '\n',
-                    officerOffice:
-                        data.receivingOfficerEntity?.officeName ?? '\n',
+                        receivingOfficerPositonHistory?.positionName,
+                    officerOffice: receivingOfficerPositonHistory?.officeName,
                     date: ics.receivedDate,
                   ),
                 ],

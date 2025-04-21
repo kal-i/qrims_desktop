@@ -1327,11 +1327,9 @@ class IssuanceRepository {
   ) async {
     for (final issuance in issuanceItems) {
       print('issuance item: $issuance');
-      final itemId = issuance['item']['shareable_item_information']
-          ['base_item_id'] as String;
-      //issuance['shareable_item_information']['base_item_id'] as String;
-      final issuedQuantity = issuance['issued_quantity']
-          as int; //int.parse(issuance['issued_quantity'] as String);
+      final itemId =
+          issuance['shareable_item_information']['base_item_id'] as String;
+      final issuedQuantity = int.parse(issuance['issued_quantity'] as String);
 
       // Step 3: Insert into IssuanceItems table
       await _insertIssuanceItem(
@@ -2823,5 +2821,203 @@ class IssuanceRepository {
     };
 
     return [response];
+  }
+
+  //Future<bool> updateBaseIssuanceEntityInformation({
+  Future<bool> receiveIssuanceEntity({
+    required TxSession ctx,
+    required String baseIssuanceEntityId,
+    required String receivingOfficerId,
+    required DateTime receivedDate,
+  }) async {
+    final setClauses = <String>[
+      'received_date = @received_date',
+    ];
+    final params = {
+      'id': baseIssuanceEntityId,
+      'received_date': receivedDate.toIso8601String(),
+    };
+
+    if (receivingOfficerId.isNotEmpty) {
+      setClauses.add('receiving_officer_id = @receiving_officer_id');
+      params['receiving_officer_id'] = receivingOfficerId;
+    }
+
+    if (setClauses.isEmpty) return false;
+
+    final setClause = setClauses.join(', ');
+
+    final result = await ctx.execute(
+      Sql.named(
+        '''
+        UPDATE Issuances
+        SET $setClause
+        WHERE id = @id;
+        ''',
+      ),
+      parameters: params,
+    );
+
+    await ctx.execute(
+      Sql.named(
+        '''
+        UPDATE IssuanceItems
+        SET status = @status
+        WHERE issuance_id = @issuance_id
+        ''',
+      ),
+      parameters: {
+        'issuance_id': baseIssuanceEntityId,
+        'status': IssuanceItemStatus.received.toString().split('.').last,
+      },
+    );
+
+    return result.affectedRows > 0;
+  }
+
+  Future<bool> updateIcsOrParEntityInformation({
+    required TxSession ctx,
+    required String baseIssuanceEntityId,
+    String? supplierId,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderId,
+  }) async {
+    final setClauses = <String>[];
+    final params = {
+      'id': baseIssuanceEntityId,
+    };
+
+    final issuanceType = await determineConcreteIssuanceEntityType(
+      ctx: ctx,
+      baseIssuanceEntityId: baseIssuanceEntityId,
+    );
+
+    if (issuanceType != null) {
+      final issuanceEntity = issuanceType == 'ICS'
+          ? 'InventoryCustodianSlips'
+          : 'PropertyAcknowledgementReceipts';
+
+      if (supplierId != null && supplierId.isNotEmpty) {
+        setClauses.add('supplier_id = @supplier_id');
+        params['supplier_id'] = supplierId;
+      }
+
+      if (inspectionAndAcceptanceReportId != null &&
+          inspectionAndAcceptanceReportId.isNotEmpty) {
+        setClauses.add(
+            'inspection_and_acceptance_report_id = @inspection_and_acceptance_report_id');
+        params['inspection_and_acceptance_report_id'] =
+            inspectionAndAcceptanceReportId;
+      }
+
+      if (contractNumber != null && contractNumber.isNotEmpty) {
+        setClauses.add('contract_number = @contract_number');
+        params['contract_number'] = contractNumber;
+      }
+
+      if (purchaseOrderId != null && purchaseOrderId.isNotEmpty) {
+        setClauses.add('purchase_order_id = @purchase_request_id');
+        params['purchase_request_id'] = purchaseOrderId;
+      }
+
+      if (setClauses.isEmpty) return false;
+
+      final setClause = setClauses.join(', ');
+
+      final result = await ctx.execute(
+        Sql.named(
+          '''
+        UPDATE $issuanceEntity
+        SET $setClause
+        WHERE id = @id;
+        ''',
+        ),
+        parameters: params,
+      );
+
+      return result.affectedRows > 0;
+    }
+
+    return false;
+  }
+
+  Future<bool> updateRisEntityInformation({
+    required TxSession ctx,
+    required String baseIssuanceEntityId,
+    String? division,
+    String? rcc,
+    String? officeId,
+    String? purpose,
+  }) async {
+    final setClauses = <String>[];
+    final params = {
+      'id': baseIssuanceEntityId,
+    };
+
+    if (division != null && division.isNotEmpty) {
+      setClauses.add('division = @division');
+      params['division'] = division;
+    }
+
+    if (rcc != null && rcc.isNotEmpty) {
+      setClauses
+          .add('responsibility_center_code = @responsibility_center_code');
+      params['responsibility_center_code'] = rcc;
+    }
+
+    if (officeId != null && officeId.isNotEmpty) {
+      setClauses.add('office_id = @office_id');
+      params['office_id'] = officeId;
+    }
+
+    if (purpose != null && purpose.isNotEmpty) {
+      setClauses.add('purpose = @purpose');
+      params['purpose'] = purpose;
+    }
+
+    if (setClauses.isEmpty) return false;
+
+    final setClause = setClauses.join(', ');
+
+    final result = await ctx.execute(
+      Sql.named(
+        '''
+        UPDATE Issuances
+        SET $setClause
+        WHERE id = @id;
+        ''',
+      ),
+      parameters: params,
+    );
+
+    return result.affectedRows > 0;
+  }
+
+  Future<String?> determineConcreteIssuanceEntityType({
+    required TxSession ctx,
+    required String baseIssuanceEntityId,
+  }) async {
+    final isICS = await ctx.execute(
+      Sql.named(
+          'SELECT 1 FROM InventoryCustodianSlips WHERE issuance_id = @id;'),
+      parameters: {
+        'id': baseIssuanceEntityId,
+      },
+    );
+
+    if (isICS.isNotEmpty) return 'ICS';
+
+    final isPAR = await ctx.execute(
+      Sql.named(
+          'SELECT 1 FROM PropertyAcknowledgementReceipts WHERE issuance_id = @id'),
+      parameters: {
+        'id': baseIssuanceEntityId,
+      },
+    );
+
+    if (isPAR.isNotEmpty) return 'PAR';
+
+    return null;
   }
 }

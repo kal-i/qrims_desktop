@@ -182,103 +182,113 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       return;
     }
 
-    final shouldProceed = await showConfirmationDialog(
-      context: context,
-      confirmationTitle: 'Register Issuance',
-      confirmationMessage: 'Are you sure you want to register the issuance?',
-    );
+    if (_formKey.currentState!.validate()) {
+      final shouldProceed = await showConfirmationDialog(
+        context: context,
+        confirmationTitle: 'Register Issuance',
+        confirmationMessage: 'Are you sure you want to register the issuance?',
+      );
 
-    if (shouldProceed) {
-      if (widget.issuanceType == IssuanceType.ics) {
-        _issuancesBloc.add(
-          CreateICSEvent(
-            issuedDate: _pickedDate.value,
-            type: _selectedIcsType.value,
-            issuanceItems: (_issuedTableRows.value)
-                .map((issuedTableRow) =>
-                    issuedTableRow.object as Map<String, dynamic>)
-                .toList(),
-            prId: _prIdController.text,
-            entityName: _entityNameController.text,
-            fundCluster: _selectedFundCluster.value,
-            supplierName: _supplierNameController.text,
-            inspectionAndAcceptanceReportId:
-                _inspectionAndAcceptanceReportIdController.text,
-            contractNumber: _contractNumberController.text,
-            purchaseOrderNumber: _purchaseOrderNumberController.text,
-            receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
-            receivingOfficerPosition:
-                _receivingOfficerPositionNameController.text,
-            receivingOfficerName: _receivingOfficerNameController.text,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
-          ),
-        );
-      }
+      if (shouldProceed) {
+        if (widget.issuanceType == IssuanceType.ics) {
+          _issuancesBloc.add(
+            CreateICSEvent(
+              issuedDate: _pickedDate.value,
+              type: _selectedIcsType.value,
+              issuanceItems: (_issuedTableRows.value)
+                  .map((issuedTableRow) =>
+                      issuedTableRow.object as Map<String, dynamic>)
+                  .toList(),
+              prId: _prIdController.text,
+              entityName: _entityNameController.text,
+              fundCluster: _selectedFundCluster.value,
+              supplierName: _supplierNameController.text,
+              inspectionAndAcceptanceReportId:
+                  _inspectionAndAcceptanceReportIdController.text,
+              contractNumber: _contractNumberController.text,
+              purchaseOrderNumber: _purchaseOrderNumberController.text,
+              receivingOfficerOffice:
+                  _receivingOfficerOfficeNameController.text,
+              receivingOfficerPosition:
+                  _receivingOfficerPositionNameController.text,
+              receivingOfficerName: _receivingOfficerNameController.text,
+              issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+              issuingOfficerPosition:
+                  _issuingOfficerPositionNameController.text,
+              issuingOfficerName: _issuingOfficerNameController.text,
+            ),
+          );
+        }
 
-      if (widget.issuanceType == IssuanceType.par) {
-        _issuancesBloc.add(
-          CreatePAREvent(
-            issuedDate: _pickedDate.value,
-            issuanceItems: (_issuedTableRows.value)
-                .map((issuedTableRow) =>
-                    issuedTableRow.object as Map<String, dynamic>)
-                .toList(),
-            prId: _prIdController.text,
-            entityName: _entityNameController.text,
-            fundCluster: _selectedFundCluster.value,
-            supplierName: _supplierNameController.text,
-            inspectionAndAcceptanceReportId:
-                _inspectionAndAcceptanceReportIdController.text,
-            contractNumber: _contractNumberController.text,
-            purchaseOrderNumber: _purchaseOrderNumberController.text,
-            receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
-            receivingOfficerPosition:
-                _receivingOfficerPositionNameController.text,
-            receivingOfficerName: _receivingOfficerNameController.text,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
-          ),
-        );
-      }
+        if (widget.issuanceType == IssuanceType.par) {
+          _issuancesBloc.add(
+            CreatePAREvent(
+              issuedDate: _pickedDate.value,
+              issuanceItems: (_issuedTableRows.value)
+                  .map((issuedTableRow) =>
+                      issuedTableRow.object as Map<String, dynamic>)
+                  .toList(),
+              prId: _prIdController.text,
+              entityName: _entityNameController.text,
+              fundCluster: _selectedFundCluster.value,
+              supplierName: _supplierNameController.text,
+              inspectionAndAcceptanceReportId:
+                  _inspectionAndAcceptanceReportIdController.text,
+              contractNumber: _contractNumberController.text,
+              purchaseOrderNumber: _purchaseOrderNumberController.text,
+              receivingOfficerOffice:
+                  _receivingOfficerOfficeNameController.text,
+              receivingOfficerPosition:
+                  _receivingOfficerPositionNameController.text,
+              receivingOfficerName: _receivingOfficerNameController.text,
+              issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+              issuingOfficerPosition:
+                  _issuingOfficerPositionNameController.text,
+              issuingOfficerName: _issuingOfficerNameController.text,
+            ),
+          );
+        }
 
-      if (widget.issuanceType == IssuanceType.ris) {
-        print(
-            'issuing off pos selected: ${_issuingOfficerPositionNameController.text}');
-        _issuancesBloc.add(
-          CreateRISEvent(
-            issuedDate: _pickedDate.value,
-            issuanceItems: (_issuedTableRows.value)
-                .map((issuedTableRow) =>
-                    issuedTableRow.object as Map<String, dynamic>)
-                .toList(),
-            prId: _prIdController.text,
-            entityName: _entityNameController.text,
-            fundCluster: _selectedFundCluster.value,
-            division: _divisionController.text,
-            responsibilityCenterCode: _responsibilityCenterCodeController.text,
-            officeName: _officeNameController.text,
-            purpose: _purposeController.text,
-            receivingOfficerOffice: _receivingOfficerOfficeNameController.text,
-            receivingOfficerPosition:
-                _receivingOfficerPositionNameController.text,
-            receivingOfficerName: _receivingOfficerNameController.text,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
-            approvingOfficerOffice: _approvingOfficerOfficeNameController.text,
-            approvingOfficerPosition:
-                _approvingOfficerPositionNameController.text,
-            approvingOfficerName: _approvingOfficerNameController.text,
-            requestingOfficerOffice:
-                _requestingOfficerOfficeNameController.text,
-            requestingOfficerPosition:
-                _requestingOfficerPositionNameController.text,
-            requestingOfficerName: _requestingOfficerNameController.text,
-          ),
-        );
+        if (widget.issuanceType == IssuanceType.ris) {
+          print(
+              'issuing off pos selected: ${_issuingOfficerPositionNameController.text}');
+          _issuancesBloc.add(
+            CreateRISEvent(
+              issuedDate: _pickedDate.value,
+              issuanceItems: (_issuedTableRows.value)
+                  .map((issuedTableRow) =>
+                      issuedTableRow.object as Map<String, dynamic>)
+                  .toList(),
+              prId: _prIdController.text,
+              entityName: _entityNameController.text,
+              fundCluster: _selectedFundCluster.value,
+              division: _divisionController.text,
+              responsibilityCenterCode:
+                  _responsibilityCenterCodeController.text,
+              officeName: _officeNameController.text,
+              purpose: _purposeController.text,
+              receivingOfficerOffice:
+                  _receivingOfficerOfficeNameController.text,
+              receivingOfficerPosition:
+                  _receivingOfficerPositionNameController.text,
+              receivingOfficerName: _receivingOfficerNameController.text,
+              issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+              issuingOfficerPosition:
+                  _issuingOfficerPositionNameController.text,
+              issuingOfficerName: _issuingOfficerNameController.text,
+              approvingOfficerOffice:
+                  _approvingOfficerOfficeNameController.text,
+              approvingOfficerPosition:
+                  _approvingOfficerPositionNameController.text,
+              approvingOfficerName: _approvingOfficerNameController.text,
+              requestingOfficerOffice:
+                  _requestingOfficerOfficeNameController.text,
+              requestingOfficerPosition:
+                  _requestingOfficerPositionNameController.text,
+              requestingOfficerName: _requestingOfficerNameController.text,
+            ),
+          );
+        }
       }
     }
   }
@@ -329,6 +339,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     _selectedApprovingOfficerPosition.dispose();
     _selectedIssuingOfficerOffice.dispose();
     _selectedIssuingOfficerPosition.dispose();
+
+    _pickedDate.dispose();
 
     super.dispose();
   }
@@ -1117,6 +1129,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
+                hasValidation: false,
               ),
             ),
             const SizedBox(
@@ -1130,6 +1143,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
+                hasValidation: false,
               ),
             ),
           ],
@@ -1147,6 +1161,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
+                hasValidation: false,
               ),
             ),
             const SizedBox(
@@ -1160,6 +1175,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
+                hasValidation: false,
               ),
             ),
           ],

@@ -370,10 +370,10 @@ class DocumentComponents {
   }
 
   static pw.Widget buildReusableIssuanceFooterContainer({
-    required String title,
-    required String officerName,
-    required String officerPosition,
-    required String officerOffice,
+    String? title,
+    String? officerName,
+    String? officerPosition,
+    String? officerOffice,
     DateTime? date,
     bool borderRight = true,
     bool isPAR = false,
@@ -402,12 +402,12 @@ class DocumentComponents {
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
           pw.Text(
-            title,
+            title ?? '\n',
             style: pw.TextStyle(
               font: serviceLocator<FontService>().getFont(
                 isPAR ? 'timesNewRomanBold' : 'timesNewRomanRegular',
               ),
-              fontSize: 8.0,
+              fontSize: 7.0,
             ),
           ),
           pw.SizedBox(
@@ -417,11 +417,11 @@ class DocumentComponents {
             mainAxisAlignment: pw.MainAxisAlignment.center,
             children: [
               pw.Text(
-                officerName.toUpperCase(),
+                officerName?.toUpperCase() ?? '\n',
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanBold'),
-                  fontSize: 8.0,
+                  fontSize: 7.0,
                   decoration: isPAR ? pw.TextDecoration.underline : null,
                 ),
               ),
@@ -430,15 +430,17 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 8.0,
+                  fontSize: 6.0,
                 ),
               ),
               pw.Text(
-                '${formatPosition(officerPosition.toUpperCase())} - ${officerOffice.toUpperCase()}',
+                officerPosition != null && officerOffice != null
+                    ? '${officerPosition.toUpperCase()} - ${officerOffice.toUpperCase()}'
+                    : '\n',
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 8.0,
+                  fontSize: 6.5,
                 ),
               ),
               pw.Text(
@@ -446,7 +448,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 8.0,
+                  fontSize: 6.0,
                 ),
               ),
               pw.Text(
@@ -458,7 +460,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 8.0,
+                  fontSize: 7.0,
                 ),
               ),
               pw.Text(
@@ -466,7 +468,7 @@ class DocumentComponents {
                 style: pw.TextStyle(
                   font: serviceLocator<FontService>()
                       .getFont('timesNewRomanRegular'),
-                  fontSize: 8.0,
+                  fontSize: 6.0,
                 ),
               ),
             ],
@@ -733,9 +735,7 @@ class DocumentComponents {
     String? value,
     double? height,
     bool borderTop = true,
-    bool borderRight = true,
     bool borderBottom = true,
-    bool borderLeft = true,
   }) {
     return pw.TableRow(
       children: [
@@ -746,11 +746,13 @@ class DocumentComponents {
           borderTop: borderTop,
           borderRight: false,
           borderBottom: borderBottom,
+          borderLeft: false,
+          borderWidthBottom: 1.5,
           child: pw.Text(
             title,
             style: pw.TextStyle(
               font: serviceLocator<FontService>().getFont('calibriBold'),
-              fontSize: 8.5,
+              fontSize: 8.0,
             ),
           ),
         ),
@@ -759,14 +761,15 @@ class DocumentComponents {
           horizontalPadding: 3.0,
           verticalPadding: 3.0,
           borderTop: borderTop,
-          borderRight: borderRight,
+          borderRight: false,
           borderBottom: borderBottom,
-          borderLeft: borderLeft,
+          borderWidthBottom: 1.5,
+          borderWidthLeft: 1.5,
           child: pw.Text(
             value ?? '',
             style: pw.TextStyle(
-              font: serviceLocator<FontService>().getFont('calibriBold'),
-              fontSize: 8.5,
+              font: serviceLocator<FontService>().getFont('calibriRegular'),
+              fontSize: 8.0,
             ),
           ),
         ),
@@ -778,40 +781,40 @@ class DocumentComponents {
     return pw.Column(
       children: [
         pw.Container(
-          height: 48.75,
-          width: 48.75,
+          height: 40.0,
+          width: 40.0,
           child: serviceLocator<ImageService>().getImage('depedSeal'),
         ),
         pw.SizedBox(
-          height: 5.0,
+          height: 3.0,
         ),
         pw.Text(
           'DEPARTMENT OF EDUCATION',
           style: pw.TextStyle(
             font: serviceLocator<FontService>().getFont('calibriBold'),
-            fontSize: 10,
+            fontSize: 9.0,
             // fontWeight: pw.FontWeight.bold,
           ),
         ),
         pw.SizedBox(
-          height: 5.0,
+          height: 3.0,
         ),
         pw.Text(
           'Schools Division of Legazpi City',
           style: pw.TextStyle(
             font: serviceLocator<FontService>().getFont('calibriBold'),
-            fontSize: 10,
+            fontSize: 9.0,
             //fontWeight: pw.FontWeight.bold,
           ),
         ),
         pw.SizedBox(
-          height: 5.0,
+          height: 3.0,
         ),
         pw.Text(
           'Legazpi City',
           style: pw.TextStyle(
             font: serviceLocator<FontService>().getFont('calibriBold'),
-            fontSize: 10,
+            fontSize: 9.0,
             //fontWeight: pw.FontWeight.bold,
           ),
         ),

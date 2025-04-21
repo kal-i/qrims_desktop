@@ -158,16 +158,16 @@ class IssuanceItem {
                   ['acquired_date'],
               'fund_cluster': itemJson['shareable_item_information']
                   ['fund_cluster'],
-              'manufacturer_id': itemJson['manufacturer_brand']['manufacturer']
-                  ['manufacturer_id'] as String?,
+              'manufacturer_id': itemJson['manufacturer_brand']?['manufacturer']
+                  ?['manufacturer_id'] as String?,
               'manufacturer_name': itemJson['manufacturer_brand']
-                  ['manufacturer']['manufacturer_name'] as String?,
-              'brand_id': itemJson['manufacturer_brand']['brand']['brand_id']
+                  ?['manufacturer']?['manufacturer_name'] as String?,
+              'brand_id': itemJson['manufacturer_brand']?['brand']?['brand_id']
                   as String?,
-              'brand_name': itemJson['manufacturer_brand']['brand']
-                  ['brand_name'] as String?,
-              'model_id': itemJson['model']['model_id'] as String?,
-              'model_name': itemJson['model']['model_name'] as String?,
+              'brand_name': itemJson['manufacturer_brand']?['brand']
+                  ?['brand_name'] as String?,
+              'model_id': itemJson['model']?['model_id'] as String?,
+              'model_name': itemJson['model']?['model_name'] as String?,
               'serial_no': itemJson['serial_no'] as String?,
               'asset_classification':
                   itemJson['asset_classification'] as String?,
@@ -362,63 +362,53 @@ class InventoryCustodianSlip extends Issuance {
               },
             }
           : {
-              'inventory_id': itemJson['item']['inventory_id'],
-              'shareable_item_information': {
-                'base_item_id': itemJson['item']['shareable_item_information']
-                    ['base_item_id'],
-                'specification': itemJson['item']['shareable_item_information']
-                    ['specification'],
-                'unit': itemJson['item']['shareable_item_information']['unit'],
-                'quantity': itemJson['item']['shareable_item_information']
-                    ['quantity'],
-                'unit_cost': itemJson['item']['shareable_item_information']
-                    ['unit_cost'],
-                'encrypted_id': itemJson['item']['shareable_item_information']
-                    ['encrypted_id'],
-                'qr_code_image_data': itemJson['item']
-                    ['shareable_item_information']['qr_code_image_data'],
-                'acquired_date': itemJson['item']['shareable_item_information']
-                    ['acquired_date'],
-                'fund_cluster': itemJson['item']['shareable_item_information']
-                    ['fund_cluster'],
-              },
+              'inventory_id': itemJson['item']?['inventory_id'],
+              'shareable_item_information': itemJson['item']
+                  ?['shareable_item_information'],
               'product_stock': {
                 'product_name': {
-                  'product_name_id': itemJson['item']['product_stock']
-                      ['product_name']['product_name_id'],
-                  'product_name': itemJson['item']['product_stock']
-                      ['product_name']['product_name'],
+                  'product_name_id': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name_id'],
+                  'product_name': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name'],
                 },
                 'product_description': {
-                  'product_description_id': itemJson['item']['product_stock']
-                      ['product_description']['product_description_id'],
-                  'product_description': itemJson['item']['product_stock']
-                      ['product_description']['product_description'],
+                  'product_description_id': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description_id'],
+                  'product_description': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description'],
                 },
               },
-              'manufacturer_brand': {
-                'manufacturer': {
-                  'manufacturer_id': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_id'],
-                  'manufacturer_name': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_name'],
-                },
-                'brand': {
-                  'brand_id': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_id'],
-                  'brand_name': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_name'],
-                },
-              },
-              'model': {
-                'model_id': itemJson['item']['model']['model_id'],
-                'model_name': itemJson['item']['model']['model_name'],
-              },
-              'serial_no': itemJson['item']['serial_no'],
-              'asset_classification': itemJson['item']['asset_classification'],
-              'asset_sub_class': itemJson['item']['asset_sub_class'],
+              'manufacturer_brand': itemJson['item']?['manufacturer_brand'] ==
+                      null
+                  ? null
+                  : {
+                      'manufacturer': {
+                        'manufacturer_id': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_id'],
+                        'manufacturer_name': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_name'],
+                      },
+                      'brand': {
+                        'brand_id': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_id'],
+                        'brand_name': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_name'],
+                      },
+                    },
+              'model': itemJson['item']?['model'] == null
+                  ? null
+                  : {
+                      'model_id': itemJson['item']?['model']?['model_id'],
+                      'model_name': itemJson['item']?['model']?['model_name'],
+                    },
+              'serial_no': itemJson['item']?['serial_no'],
+              'asset_classification': itemJson['item']?['asset_classification'],
+              'asset_sub_class': itemJson['item']?['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
-                  ['estimated_useful_life'],
+                  ?['estimated_useful_life'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -710,63 +700,53 @@ class PropertyAcknowledgementReceipt extends Issuance {
               },
             }
           : {
-              'inventory_id': itemJson['item']['inventory_id'],
-              'shareable_item_information': {
-                'base_item_id': itemJson['item']['shareable_item_information']
-                    ['base_item_id'],
-                'specification': itemJson['item']['shareable_item_information']
-                    ['specification'],
-                'unit': itemJson['item']['shareable_item_information']['unit'],
-                'quantity': itemJson['item']['shareable_item_information']
-                    ['quantity'],
-                'unit_cost': itemJson['item']['shareable_item_information']
-                    ['unit_cost'],
-                'encrypted_id': itemJson['item']['shareable_item_information']
-                    ['encrypted_id'],
-                'qr_code_image_data': itemJson['item']
-                    ['shareable_item_information']['qr_code_image_data'],
-                'acquired_date': itemJson['item']['shareable_item_information']
-                    ['acquired_date'],
-                'fund_cluster': itemJson['item']['shareable_item_information']
-                    ['fund_cluster'],
-              },
+              'inventory_id': itemJson['item']?['inventory_id'],
+              'shareable_item_information': itemJson['item']
+                  ?['shareable_item_information'],
               'product_stock': {
                 'product_name': {
-                  'product_name_id': itemJson['item']['product_stock']
-                      ['product_name']['product_name_id'],
-                  'product_name': itemJson['item']['product_stock']
-                      ['product_name']['product_name'],
+                  'product_name_id': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name_id'],
+                  'product_name': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name'],
                 },
                 'product_description': {
-                  'product_description_id': itemJson['item']['product_stock']
-                      ['product_description']['product_description_id'],
-                  'product_description': itemJson['item']['product_stock']
-                      ['product_description']['product_description'],
+                  'product_description_id': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description_id'],
+                  'product_description': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description'],
                 },
               },
-              'manufacturer_brand': {
-                'manufacturer': {
-                  'manufacturer_id': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_id'],
-                  'manufacturer_name': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_name'],
-                },
-                'brand': {
-                  'brand_id': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_id'],
-                  'brand_name': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_name'],
-                },
-              },
-              'model': {
-                'model_id': itemJson['item']['model']['model_id'],
-                'model_name': itemJson['item']['model']['model_name'],
-              },
-              'serial_no': itemJson['item']['serial_no'],
-              'asset_classification': itemJson['item']['asset_classification'],
-              'asset_sub_class': itemJson['item']['asset_sub_class'],
+              'manufacturer_brand': itemJson['item']?['manufacturer_brand'] ==
+                      null
+                  ? null
+                  : {
+                      'manufacturer': {
+                        'manufacturer_id': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_id'],
+                        'manufacturer_name': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_name'],
+                      },
+                      'brand': {
+                        'brand_id': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_id'],
+                        'brand_name': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_name'],
+                      },
+                    },
+              'model': itemJson['item']?['model'] == null
+                  ? null
+                  : {
+                      'model_id': itemJson['item']?['model']?['model_id'],
+                      'model_name': itemJson['item']?['model']?['model_name'],
+                    },
+              'serial_no': itemJson['item']?['serial_no'],
+              'asset_classification': itemJson['item']?['asset_classification'],
+              'asset_sub_class': itemJson['item']?['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
-                  ['estimated_useful_life'],
+                  ?['estimated_useful_life'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({
@@ -1045,63 +1025,53 @@ class RequisitionAndIssueSlip extends Issuance {
               },
             }
           : {
-              'inventory_id': itemJson['item']['inventory_id'],
-              'shareable_item_information': {
-                'base_item_id': itemJson['item']['shareable_item_information']
-                    ['base_item_id'],
-                'specification': itemJson['item']['shareable_item_information']
-                    ['specification'],
-                'unit': itemJson['item']['shareable_item_information']['unit'],
-                'quantity': itemJson['item']['shareable_item_information']
-                    ['quantity'],
-                'unit_cost': itemJson['item']['shareable_item_information']
-                    ['unit_cost'],
-                'encrypted_id': itemJson['item']['shareable_item_information']
-                    ['encrypted_id'],
-                'qr_code_image_data': itemJson['item']
-                    ['shareable_item_information']['qr_code_image_data'],
-                'acquired_date': itemJson['item']['shareable_item_information']
-                    ['acquired_date'],
-                'fund_cluster': itemJson['item']['shareable_item_information']
-                    ['fund_cluster'],
-              },
+              'inventory_id': itemJson['item']?['inventory_id'],
+              'shareable_item_information': itemJson['item']
+                  ?['shareable_item_information'],
               'product_stock': {
                 'product_name': {
-                  'product_name_id': itemJson['item']['product_stock']
-                      ['product_name']['product_name_id'],
-                  'product_name': itemJson['item']['product_stock']
-                      ['product_name']['product_name'],
+                  'product_name_id': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name_id'],
+                  'product_name': itemJson['item']?['product_stock']
+                      ?['product_name']?['product_name'],
                 },
                 'product_description': {
-                  'product_description_id': itemJson['item']['product_stock']
-                      ['product_description']['product_description_id'],
-                  'product_description': itemJson['item']['product_stock']
-                      ['product_description']['product_description'],
+                  'product_description_id': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description_id'],
+                  'product_description': itemJson['item']?['product_stock']
+                      ?['product_description']?['product_description'],
                 },
               },
-              'manufacturer_brand': {
-                'manufacturer': {
-                  'manufacturer_id': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_id'],
-                  'manufacturer_name': itemJson['item']['manufacturer_brand']
-                      ['manufacturer']['manufacturer_name'],
-                },
-                'brand': {
-                  'brand_id': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_id'],
-                  'brand_name': itemJson['item']['manufacturer_brand']['brand']
-                      ['brand_name'],
-                },
-              },
-              'model': {
-                'model_id': itemJson['item']['model']['model_id'],
-                'model_name': itemJson['item']['model']['model_name'],
-              },
-              'serial_no': itemJson['item']['serial_no'],
-              'asset_classification': itemJson['item']['asset_classification'],
-              'asset_sub_class': itemJson['item']['asset_sub_class'],
+              'manufacturer_brand': itemJson['item']?['manufacturer_brand'] ==
+                      null
+                  ? null
+                  : {
+                      'manufacturer': {
+                        'manufacturer_id': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_id'],
+                        'manufacturer_name': itemJson['item']
+                                ?['manufacturer_brand']?['manufacturer']
+                            ?['manufacturer_name'],
+                      },
+                      'brand': {
+                        'brand_id': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_id'],
+                        'brand_name': itemJson['item']?['manufacturer_brand']
+                            ?['brand']?['brand_name'],
+                      },
+                    },
+              'model': itemJson['item']?['model'] == null
+                  ? null
+                  : {
+                      'model_id': itemJson['item']?['model']?['model_id'],
+                      'model_name': itemJson['item']?['model']?['model_name'],
+                    },
+              'serial_no': itemJson['item']?['serial_no'],
+              'asset_classification': itemJson['item']?['asset_classification'],
+              'asset_sub_class': itemJson['item']?['asset_sub_class'],
               'estimated_useful_life': itemJson['item']
-                  ['estimated_useful_life'],
+                  ?['estimated_useful_life'],
             };
 
       final issuanceItem = IssuanceItem.fromJson({

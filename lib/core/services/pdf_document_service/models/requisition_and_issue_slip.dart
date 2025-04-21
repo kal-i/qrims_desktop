@@ -8,8 +8,8 @@ import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
-import '../../../utils/format_position.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -39,6 +39,13 @@ class RequisitionAndIssueSlip implements BaseDocument {
     // we get this during the data from ics/par when there is associated alr
     OfficerEntity? issuingOfficerEntity = ris.issuingOfficerEntity;
     OfficerEntity? receivingOfficerEntity = ris.receivingOfficerEntity;
+    final issuingOfficerPositionHistory = issuingOfficerEntity?.getPositionAt(
+      ris.issuedDate,
+    );
+    final receivingOfficerPositonHistory =
+        receivingOfficerEntity?.getPositionAt(
+      ris.issuedDate,
+    );
 
     final String entity;
     final String office;
@@ -69,6 +76,15 @@ class RequisitionAndIssueSlip implements BaseDocument {
       requestingOfficerEntity = ris.requestingOfficerEntity;
       approvingOfficerEntity = ris.approvingOfficerEntity;
     }
+
+    final approvingOfficerPositionHistory =
+        approvingOfficerEntity?.getPositionAt(
+      ris.issuedDate,
+    );
+    final requestingOfficerPositionHistory =
+        requestingOfficerEntity?.getPositionAt(
+      ris.issuedDate,
+    );
 
     List<pw.TableRow> tableRows = [
       pw.TableRow(
@@ -429,18 +445,14 @@ class RequisitionAndIssueSlip implements BaseDocument {
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Designation:',
-                dataRowColumnOne: formatPosition(
-                  requestingOfficerEntity?.positionName ?? '\n',
-                ),
-                dataRowColumnTwo: formatPosition(
-                  approvingOfficerEntity?.positionName ?? '\n',
-                ),
-                dataRowColumnThree: formatPosition(
-                  issuingOfficerEntity?.positionName ?? '\n',
-                ),
-                dataRowColumnFour: formatPosition(
-                  requestingOfficerEntity?.positionName ?? '\n',
-                ),
+                dataRowColumnOne:
+                    requestingOfficerPositionHistory?.positionName ?? '\n',
+                dataRowColumnTwo:
+                    approvingOfficerPositionHistory?.positionName ?? '\n',
+                dataRowColumnThree:
+                    issuingOfficerPositionHistory?.positionName ?? '\n',
+                dataRowColumnFour:
+                    receivingOfficerPositonHistory?.positionName ?? '\n',
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Date:',

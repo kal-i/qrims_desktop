@@ -27,6 +27,7 @@ import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
+import '../../../../core/utils/document_date_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
@@ -61,8 +62,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   late TableConfig _tableConfig;
   final List<String> _tableHeaders = [
     'Issuance ID',
-    'PR No.',
     'Accountable Officer', // Receiving Officer Name
+    'Date Issued',
     'Status',
   ];
   late List<TableData> _tableRows;
@@ -445,6 +446,18 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           text: 'Multi issuance',
           onTap: () => context.go(
             RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
+            extra: {
+              'type': IssuanceType.par,
+            },
+          ),
+        ),
+        CustomFilledButton(
+          text: 'Find Officer Accountability',
+          onTap: () => context.go(
+            RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
+            extra: {
+              'type': IssuanceType.ics,
+            },
           ),
         ),
       ],
@@ -558,14 +571,13 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
               id: issuance.id,
               columns: [
                 Text(
-                  issuance.id,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                Text(
-                  issuance.purchaseRequestEntity?.id ?? 'N/A',
+                  issuance is InventoryCustodianSlipEntity
+                      ? issuance.icsId
+                      : issuance is PropertyAcknowledgementReceiptEntity
+                          ? issuance.parId
+                          : issuance is RequisitionAndIssueSlipEntity
+                              ? issuance.risId
+                              : 'N/A',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
@@ -574,6 +586,13 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                 Text(
                   capitalizeWord(
                       issuance.receivingOfficerEntity?.name ?? 'N/A'),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                Text(
+                  documentDateFormatter(issuance.issuedDate),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
