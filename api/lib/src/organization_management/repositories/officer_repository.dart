@@ -38,38 +38,36 @@ class OfficerRepository {
     try {
       final officerId = await _generateUniqueOfficerId();
 
-      await _conn.runTx(
-        (ctx) async {
-          await ctx.execute(
-            Sql.named(
-              '''
+      await _conn.runTx((ctx) async {
+        await ctx.execute(
+          Sql.named(
+            '''
               INSERT INTO Officers (id, user_id, name, position_id)
               VALUES (@id, @user_id, @name, @position_id)
               ''',
-            ),
-            parameters: {
-              'id': officerId,
-              'user_id': userId,
-              'name': name,
-              'position_id': positionId,
-            },
-          );
+          ),
+          parameters: {
+            'id': officerId,
+            'user_id': userId,
+            'name': name,
+            'position_id': positionId,
+          },
+        );
 
-          await ctx.execute(
-            Sql.named(
-              '''
+        await ctx.execute(
+          Sql.named(
+            '''
               INSERT INTO PositionHistory (officer_id, position_id, created_at)
               VALUES (@officer_id, @position_id, @created_at);
               ''',
-            ),
-            parameters: {
-              'officer_id': officerId,
-              'position_id': positionId,
-              'created_at': DateTime.now().toIso8601String(),
-            },
-          );
-        },
-      );
+          ),
+          parameters: {
+            'officer_id': officerId,
+            'position_id': positionId,
+            'created_at': DateTime.now().toIso8601String(),
+          },
+        );
+      });
 
       return officerId;
     } catch (e) {
