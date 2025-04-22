@@ -369,6 +369,11 @@ void _registerItemIssuanceDependencies() {
         issuanceRepository: serviceLocator(),
       ),
     )
+    ..registerFactory<CreateMultiplePAR>(
+      () => CreateMultiplePAR(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
     ..registerFactory<CreateRIS>(
       () => CreateRIS(
         issuanceRepository: serviceLocator(),
@@ -407,6 +412,7 @@ void _registerItemIssuanceDependencies() {
         createICS: serviceLocator(),
         createMultipleICS: serviceLocator(),
         createPAR: serviceLocator(),
+        createMultiplePAR: serviceLocator(),
         createRIS: serviceLocator(),
         updateIssuanceArchiveStatus: serviceLocator(),
         getInventorySupplies: serviceLocator(),

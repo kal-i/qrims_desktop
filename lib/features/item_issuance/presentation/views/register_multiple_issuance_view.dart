@@ -204,6 +204,25 @@ class _RegisterMultipleIssuanceViewState
         ),
       );
     }
+
+    if (widget.issuanceType == IssuanceType.par) {
+      _issuancesBloc.add(
+        CreateMultiplePAREvent(
+          issuedDate: _pickedDate.value,
+          receivingOfficers: _officers.value,
+          entityName: _entityNameController.text,
+          fundCluster: _selectedFundCluster.value,
+          supplierName: _supplierNameController.text,
+          inspectionAndAcceptanceReportId:
+              _inspectionAndAcceptanceReportIdController.text,
+          contractNumber: _contractNumberController.text,
+          purchaseOrderNumber: _purchaseOrderNumberController.text,
+          issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+          issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+          issuingOfficerName: _issuingOfficerNameController.text,
+        ),
+      );
+    }
   }
 
   @override
@@ -244,6 +263,17 @@ class _RegisterMultipleIssuanceViewState
               context: context,
               title: 'Success',
               subtitle: '${state.icsItems.length} ICS created successfully.',
+            );
+            await Future.delayed(const Duration(seconds: 3));
+            context.pop();
+          }
+
+          if (state is MultiplePARRegistered) {
+            DelightfulToastUtils.showDelightfulToast(
+              icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+              context: context,
+              title: 'Success',
+              subtitle: '${state.parItems.length} PAR created successfully.',
             );
             await Future.delayed(const Duration(seconds: 3));
             context.pop();

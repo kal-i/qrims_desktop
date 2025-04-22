@@ -78,6 +78,21 @@ abstract interface class IssuanceRemoteDataSource {
     DateTime? receivedDate,
   });
 
+  Future<List<PropertyAcknowledgementReceiptModel>> createMultiplePAR({
+    DateTime? issuedDate,
+    required List<dynamic> receivingOfficers,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    DateTime? receivedDate,
+  });
+
   Future<RequisitionAndIssuanceSlipModel> createRIS({
     DateTime? issuedDate,
     required List<dynamic> issuanceItems,

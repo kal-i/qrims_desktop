@@ -85,6 +85,14 @@ final class PARRegistered extends IssuancesState {
   final PropertyAcknowledgementReceiptEntity par;
 }
 
+final class MultiplePARRegistered extends IssuancesState {
+  const MultiplePARRegistered({
+    required this.parItems,
+  });
+
+  final List<PropertyAcknowledgementReceiptEntity> parItems;
+}
+
 final class RISRegistered extends IssuancesState {
   const RISRegistered({
     required this.ris,

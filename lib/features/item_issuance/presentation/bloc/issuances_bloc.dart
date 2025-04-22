@@ -11,6 +11,7 @@ import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../../domain/usecases/create_ics.dart';
 import '../../domain/usecases/create_multiple_ics.dart';
+import '../../domain/usecases/create_mutiple_par.dart';
 import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/create_ris.dart';
 import '../../domain/usecases/generate_semi_expendable_property_card_data.dart';
@@ -33,6 +34,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required CreateICS createICS,
     required CreateMultipleICS createMultipleICS,
     required CreatePAR createPAR,
+    required CreateMultiplePAR createMultiplePAR,
     required CreateRIS createRIS,
     required UpdateIssuanceArchiveStatus updateIssuanceArchiveStatus,
     required GetInventorySupplyReport getInventorySupplies,
@@ -47,6 +49,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _createICS = createICS,
         _createMultipleICS = createMultipleICS,
         _createPar = createPAR,
+        _createMultiplePAR = createMultiplePAR,
         _createRIS = createRIS,
         _updateIssuanceArchiveStatus = updateIssuanceArchiveStatus,
         _getInventorySupplies = getInventorySupplies,
@@ -62,6 +65,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<CreateICSEvent>(_onCreateICS);
     on<CreateMultipleICSEvent>(_onCreateMultipleICS);
     on<CreatePAREvent>(_onCreatePAR);
+    on<CreateMultiplePAREvent>(_onCreateMultiplePAR);
     on<CreateRISEvent>(_onCreateRIS);
     on<UpdateIssuanceArchiveStatusEvent>(_onUpdateIssuanceArchiveStatus);
     on<GetInventorySupplyReportEvent>(_onGetInventorySupplyReport);
@@ -78,6 +82,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final CreateICS _createICS;
   final CreateMultipleICS _createMultipleICS;
   final CreatePAR _createPar;
+  final CreateMultiplePAR _createMultiplePAR;
   final CreateRIS _createRIS;
   final UpdateIssuanceArchiveStatus _updateIssuanceArchiveStatus;
   final GetInventorySupplyReport _getInventorySupplies;
@@ -269,6 +274,40 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         PARRegistered(
           par: r,
+        ),
+      ),
+    );
+  }
+
+  void _onCreateMultiplePAR(
+    CreateMultiplePAREvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _createMultiplePAR(
+      CreateMultiplePARParams(
+        issuedDate: event.issuedDate,
+        receivingOfficers: event.receivingOfficers,
+        entityName: event.entityName,
+        fundCluster: event.fundCluster,
+        supplierName: event.supplierName,
+        inspectionAndAcceptanceReportId: event.inspectionAndAcceptanceReportId,
+        contractNumber: event.contractNumber,
+        purchaseOrderNumber: event.purchaseOrderNumber,
+        issuingOfficerOffice: event.issuingOfficerOffice,
+        issuingOfficerPosition: event.issuingOfficerPosition,
+        issuingOfficerName: event.issuingOfficerName,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(
+        IssuancesError(message: l.message),
+      ),
+      (r) => emit(
+        MultiplePARRegistered(
+          parItems: r,
         ),
       ),
     );

@@ -524,6 +524,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         if (state is ICSRegistered ||
             state is MultipleICSRegistered ||
             state is PARRegistered ||
+            state is MultiplePARRegistered ||
             state is RISRegistered ||
             state is FetchedInventoryReport ||
             state is GeneratedSemiExpendablePropertyCardData) {

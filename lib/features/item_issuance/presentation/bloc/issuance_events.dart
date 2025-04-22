@@ -139,6 +139,34 @@ final class CreatePAREvent extends IssuancesEvent {
   final String? issuingOfficerName;
 }
 
+final class CreateMultiplePAREvent extends IssuancesEvent {
+  const CreateMultiplePAREvent({
+    this.issuedDate,
+    required this.receivingOfficers,
+    this.entityName,
+    this.fundCluster,
+    this.supplierName,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
+  });
+
+  final DateTime? issuedDate;
+  final List receivingOfficers;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? supplierName;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
+}
+
 final class CreateRISEvent extends IssuancesEvent {
   const CreateRISEvent({
     this.issuedDate,

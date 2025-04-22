@@ -26,7 +26,7 @@ Future<Response> onRequest(RequestContext context) async {
   final sessionRepository = SessionRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.post => _createICS(
+    HttpMethod.post => _createMultipleICS(
         context,
         connection,
         entityRepository,
@@ -43,7 +43,7 @@ Future<Response> onRequest(RequestContext context) async {
   };
 }
 
-Future<Response> _createICS(
+Future<Response> _createMultipleICS(
   RequestContext context,
   Connection connection,
   EntityRepository entityRepository,
@@ -166,13 +166,10 @@ Future<Response> _createICS(
   try {
     for (final receivingOfficer in receivingOfficers) {
       final officer = receivingOfficer['officer'] as Map<String, dynamic>;
-      print('receiving officer: $receivingOfficer');
       final officerName = officer['name'] as String?;
-      print('officer name: $officerName');
       final positionName = officer['position'] as String?;
       final officeName = officer['office'] as String?;
       final issuanceItems = receivingOfficer['items'] as List<dynamic>;
-      print('issuance items: $issuanceItems');
 
       String? officeId;
       String? positionId;

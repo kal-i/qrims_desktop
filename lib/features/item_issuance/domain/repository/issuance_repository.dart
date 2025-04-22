@@ -82,6 +82,22 @@ abstract interface class IssuanceRepository {
     DateTime? receivedDate,
   });
 
+  Future<Either<Failure, List<PropertyAcknowledgementReceiptEntity>>>
+      createMultiplePAR({
+    DateTime? issuedDate,
+    required List<dynamic> receivingOfficers,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    DateTime? receivedDate,
+  });
+
   Future<Either<Failure, RequisitionAndIssueSlipEntity>> createRIS({
     DateTime? issuedDate,
     required List<dynamic> issuanceItems,
