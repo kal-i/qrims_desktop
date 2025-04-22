@@ -8,6 +8,7 @@ import 'excel_document_factory.dart';
 import 'models/excel_rpci.dart';
 import 'models/excel_rpppe.dart';
 import 'models/excel_rpsep.dart';
+import 'models/ics_excel_document.dart';
 import 'models/rpci_excel.dart';
 import 'models/rpppe_excel.dart';
 import 'models/rpsep_excel.dart';
@@ -70,6 +71,8 @@ class ExcelDocumentService {
   /// Returns the template path based on the document type
   String _getTemplatePath(DocumentType docType) {
     switch (docType) {
+      case DocumentType.ics:
+        return TemplatePath.ics;
       case DocumentType.rpci:
         return TemplatePath.rpci;
       case DocumentType.annexA8:
@@ -189,6 +192,12 @@ class ExcelDocumentService {
     DocumentType docType,
   ) {
     switch (docType) {
+      case DocumentType.ics:
+        IcsExcelDocument.modifyAndMapData(
+          sheet,
+          data,
+        );
+        break;
       case DocumentType.rpci:
         RPCIExcelDocument.modifyAndMapData(
           sheet,

@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../config/routes/app_routing_constants.dart';
 import '../../../../config/themes/app_color.dart';
@@ -24,10 +27,12 @@ import '../../../../core/enums/issuance_status.dart';
 import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
+import '../../../../core/services/excel_document_service/excel_document_service.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/common/components/custom_data_table.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/document_date_formatter.dart';
+import '../../../../init_dependencies.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
@@ -51,6 +56,7 @@ class ItemIssuanceView extends StatefulWidget {
 
 class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   late IssuancesBloc _issuancesBloc;
+  late ExcelDocumentService _excelDocumentService;
 
   late DateTime? _selectedStartDate;
   late DateTime? _selectedEndDate;
@@ -81,6 +87,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
+    _excelDocumentService = serviceLocator<ExcelDocumentService>();
+
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_fetchIssuances);
 
@@ -129,6 +137,64 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
       _currentPage = 1;
       _fetchIssuances();
     });
+  }
+
+  Future<void> _generateAndSaveExcel(
+    dynamic dataObject,
+    DocumentType docType,
+  ) async {
+    try {
+      // Allow the user to pick a directory
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+      if (selectedDirectory == null) {
+        // User canceled the picker
+        return;
+      }
+
+      // Generate the base file name (FileName-YYYY-MM)
+      String baseFileName =
+          '${docType.toString().split('.').last}-${DateFormat('yyyy-MM').format(DateTime.now())}';
+
+      // Find the next available file name
+      String outputFilePath =
+          _getNextAvailableFileName(selectedDirectory, baseFileName);
+
+      await _excelDocumentService.generateAndSaveExcel(
+        data: dataObject,
+        docType: docType,
+        outputPath: outputFilePath,
+      );
+
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: HugeIcons.strokeRoundedXsl02,
+        title: 'File Saved',
+        subtitle: 'Document saved successfully at $outputFilePath',
+      );
+    } catch (e) {
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: HugeIcons.strokeRoundedFileNotFound,
+        title: 'File Unsaved',
+        subtitle: 'Failed to save document: $e',
+      );
+    }
+  }
+
+  String _getNextAvailableFileName(String directory, String baseFileName) {
+    int n = 1; // Start with N = 1
+    String fileName = '$baseFileName-$n.xlsx'; // Initial file name
+    String filePath = '$directory/$fileName';
+
+    // Check if the file already exists
+    while (File(filePath).existsSync()) {
+      n++; // Increment N
+      fileName = '$baseFileName-$n.xlsx'; // Update file name
+      filePath = '$directory/$fileName';
+    }
+
+    return filePath;
   }
 
   @override
@@ -702,6 +768,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           }
 
                           if (action.contains('Generate Issuance Document')) {
+                            _generateAndSaveExcel(
+                              issuanceObj,
+                              DocumentType.ics,
+                            );
+
                             showCustomDocumentPreview(
                               context: context,
                               documentObject: issuanceObj,

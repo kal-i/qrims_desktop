@@ -7,7 +7,6 @@ import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
-import '../../../utils/standardize_position_name.dart';
 import 'header_info.dart';
 import 'cell_info.dart';
 

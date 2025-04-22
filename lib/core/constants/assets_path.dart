@@ -51,6 +51,7 @@ class ImagePath {
 class TemplatePath {
   static const String _folder = '$_rootFolder/templates';
   static const String _xls = '$_folder/xlsx';
+  static const String ics = '$_xls/final-ics-template.xlsx';
   static const String rpci = '$_xls/final-rpci-template.xlsx';
   static const String rpsep = '$_xls/final-rpsep-template.xlsx';
   static const String rpppe = '$_xls/final-rpppe-template.xlsx';
