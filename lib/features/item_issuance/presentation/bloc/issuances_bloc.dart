@@ -10,6 +10,7 @@ import '../../domain/entities/matched_item_with_pr.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../../domain/usecases/create_ics.dart';
+import '../../domain/usecases/create_multiple_ics.dart';
 import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/create_ris.dart';
 import '../../domain/usecases/generate_semi_expendable_property_card_data.dart';
@@ -30,6 +31,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required GetPaginatedIssuances getPaginatedIssuances,
     required MatchItemWithPr matchItemWithPr,
     required CreateICS createICS,
+    required CreateMultipleICS createMultipleICS,
     required CreatePAR createPAR,
     required CreateRIS createRIS,
     required UpdateIssuanceArchiveStatus updateIssuanceArchiveStatus,
@@ -43,6 +45,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
         _createICS = createICS,
+        _createMultipleICS = createMultipleICS,
         _createPar = createPAR,
         _createRIS = createRIS,
         _updateIssuanceArchiveStatus = updateIssuanceArchiveStatus,
@@ -57,6 +60,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
     on<MatchItemWithPrEvent>(_onMatchItemWithPrEvent);
     on<CreateICSEvent>(_onCreateICS);
+    on<CreateMultipleICSEvent>(_onCreateMultipleICS);
     on<CreatePAREvent>(_onCreatePAR);
     on<CreateRISEvent>(_onCreateRIS);
     on<UpdateIssuanceArchiveStatusEvent>(_onUpdateIssuanceArchiveStatus);
@@ -72,6 +76,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final GetPaginatedIssuances _getPaginatedIssuances;
   final MatchItemWithPr _matchItemWithPr;
   final CreateICS _createICS;
+  final CreateMultipleICS _createMultipleICS;
   final CreatePAR _createPar;
   final CreateRIS _createRIS;
   final UpdateIssuanceArchiveStatus _updateIssuanceArchiveStatus;
@@ -191,6 +196,41 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         ICSRegistered(
           ics: r,
+        ),
+      ),
+    );
+  }
+
+  void _onCreateMultipleICS(
+    CreateMultipleICSEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _createMultipleICS(
+      CreateMultipleICSParams(
+        issuedDate: event.issuedDate,
+        type: event.type,
+        receivingOfficers: event.receivingOfficers,
+        entityName: event.entityName,
+        fundCluster: event.fundCluster,
+        supplierName: event.supplierName,
+        inspectionAndAcceptanceReportId: event.inspectionAndAcceptanceReportId,
+        contractNumber: event.contractNumber,
+        purchaseOrderNumber: event.purchaseOrderNumber,
+        issuingOfficerOffice: event.issuingOfficerOffice,
+        issuingOfficerPosition: event.issuingOfficerPosition,
+        issuingOfficerName: event.issuingOfficerName,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(
+        IssuancesError(message: l.message),
+      ),
+      (r) => emit(
+        MultipleICSRegistered(
+          icsItems: r,
         ),
       ),
     );

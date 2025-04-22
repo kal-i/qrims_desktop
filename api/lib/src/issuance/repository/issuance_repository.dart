@@ -1325,18 +1325,32 @@ class IssuanceRepository {
     List<dynamic> issuanceItems,
     DateTime? receivedDate,
   ) async {
-    for (final issuance in issuanceItems) {
-      print('issuance item: $issuance');
-      final itemId =
-          issuance['shareable_item_information']['base_item_id'] as String;
-      final issuedQuantity = int.parse(issuance['issued_quantity'] as String);
+    for (final item in issuanceItems) {
+      final Map<String, dynamic> issuanceItem = item as Map<String, dynamic>;
+      final shareableItemInformation =
+          issuanceItem['shareable_item_information'] as Map<String, dynamic>;
+      final baseItemId = shareableItemInformation['base_item_id'] as String;
 
-      // Step 3: Insert into IssuanceItems table
+      int issuedQuantity = issuanceItem.containsKey('issued_quantity') &&
+              issuanceItem['issued_quantity'] != null &&
+              issuanceItem['issued_quantity'] is String
+          ? int.tryParse(issuanceItem['issued_quantity'].toString()) ?? 0
+          : int.tryParse(shareableItemInformation['quantity'].toString()) ?? 0;
+
+      print('issued quantity: $issuedQuantity');
+
       await _insertIssuanceItem(
-          ctx, issuanceId, itemId, issuedQuantity, receivedDate);
-
-      // Step 4: Update the Items table to reduce stock
-      await _updateItemStock(ctx, itemId, issuedQuantity);
+        ctx,
+        issuanceId,
+        baseItemId,
+        issuedQuantity,
+        receivedDate,
+      );
+      await _updateItemStock(
+        ctx,
+        baseItemId,
+        issuedQuantity,
+      );
     }
   }
 
@@ -2429,7 +2443,7 @@ class IssuanceRepository {
                 item_id,
                 product_name_id, 
                 product_description_id, 
-                unit,
+                unit, 
                 unit_cost, 
                 product_name,
                 product_description,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../config/themes/app_color.dart';
 import '../../../../config/themes/app_theme.dart';
@@ -17,12 +18,13 @@ import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/entity_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/issuances_bloc.dart';
-import '../components/accountable_officer.dart';
+import '../components/accountable_officer_card.dart';
 import '../components/add_receiving_officer_modal.dart';
 import '../components/item_selection_modal.dart';
 
@@ -114,6 +116,15 @@ class _RegisterMultipleIssuanceViewState
     _officers.value = updated;
   }
 
+  void _removeOfficerItem(int officerIndex, int itemIndex) {
+    final updated = List<Map<String, dynamic>>.from(_officers.value);
+    final items =
+        List<Map<String, dynamic>>.from(updated[officerIndex]['items']);
+    items.removeAt(itemIndex);
+    updated[officerIndex]['items'] = items;
+    _officers.value = updated;
+  }
+
   void _showAddItemModal(int officerIndex) {
     final currentOfficerItems = (_officers.value[officerIndex]['items'] as List)
         .map((e) => Map<String, dynamic>.from(e))
@@ -157,6 +168,44 @@ class _RegisterMultipleIssuanceViewState
     );
   }
 
+  void _saveIssuance() async {
+    // Ensure each officer has at least 1 item
+    final officersWithoutItems = _officers.value.where((officer) {
+      final items = officer['items'] as List?;
+      return items == null || items.isEmpty;
+    }).toList();
+
+    if (officersWithoutItems.isNotEmpty) {
+      DelightfulToastUtils.showDelightfulToast(
+        icon: Icons.error_outline,
+        context: context,
+        title: 'Issuance Error',
+        subtitle: 'Each officer must have at least one item assigned.',
+      );
+      return;
+    }
+
+    if (widget.issuanceType == IssuanceType.ics) {
+      _issuancesBloc.add(
+        CreateMultipleICSEvent(
+          issuedDate: _pickedDate.value,
+          type: _selectedIcsType.value,
+          receivingOfficers: _officers.value,
+          entityName: _entityNameController.text,
+          fundCluster: _selectedFundCluster.value,
+          supplierName: _supplierNameController.text,
+          inspectionAndAcceptanceReportId:
+              _inspectionAndAcceptanceReportIdController.text,
+          contractNumber: _contractNumberController.text,
+          purchaseOrderNumber: _purchaseOrderNumberController.text,
+          issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+          issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+          issuingOfficerName: _issuingOfficerNameController.text,
+        ),
+      );
+    }
+  }
+
   @override
   dispose() {
     _globalSelectedItems.dispose();
@@ -188,7 +237,27 @@ class _RegisterMultipleIssuanceViewState
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<IssuancesBloc, IssuancesState>(
-        listener: (context, state) async {},
+        listener: (context, state) async {
+          if (state is MultipleICSRegistered) {
+            DelightfulToastUtils.showDelightfulToast(
+              icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+              context: context,
+              title: 'Success',
+              subtitle: '${state.icsItems.length} ICS created successfully.',
+            );
+            await Future.delayed(const Duration(seconds: 3));
+            context.pop();
+          }
+
+          if (state is IssuancesError) {
+            DelightfulToastUtils.showDelightfulToast(
+              icon: Icons.error_outline,
+              context: context,
+              title: 'Error',
+              subtitle: state.message,
+            );
+          }
+        },
         child: BlocBuilder<IssuancesBloc, IssuancesState>(
           builder: (context, state) {
             return Column(
@@ -511,6 +580,8 @@ class _RegisterMultipleIssuanceViewState
                               child: AccountableOfficerCard(
                                 officer: value[index],
                                 isDragging: true,
+                                onRemoveItem:
+                                    null, // No remove in drag feedback
                               ),
                             ),
                           ),
@@ -523,6 +594,8 @@ class _RegisterMultipleIssuanceViewState
                               officer: value[index],
                               onRemove: () => _removeOfficer(index),
                               onAddItem: () => _showAddItemModal(index),
+                              onRemoveItem: (itemIdx) =>
+                                  _removeOfficerItem(index, itemIdx),
                             ),
                           ),
                         ),
@@ -802,7 +875,7 @@ class _RegisterMultipleIssuanceViewState
           width: 10.0,
         ),
         CustomFilledButton(
-          onTap: () => print('officers: ${_officers.value}'),
+          onTap: _saveIssuance,
           text: 'Create',
           width: 180.0,
           height: 40.0,

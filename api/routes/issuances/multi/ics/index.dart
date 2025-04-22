@@ -126,7 +126,6 @@ Future<Response> _createICS(
         await issuanceRepository.registerSupplier(
           supplierName: supplierName,
         );
-    print('processed supplier');
   }
 
   if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty) {
@@ -162,92 +161,92 @@ Future<Response> _createICS(
         )
       : null;
 
-  final response = await connection.runTx((ctx) async {
-    try {
-      final List<Map<String, dynamic>> registerIcsItems = [];
+  final List<Map<String, dynamic>> registerIcsItems = [];
 
-      for (final receivingOfficer in receivingOfficers) {
-        final officer = receivingOfficer['officer'] as Map<String, dynamic>;
-        final officerName = officer['name'] as String?;
-        final positionName = officer['position'] as String?;
-        final officeName = officer['office'] as String?;
-        final issuanceItems = officer['items'] as List<dynamic>;
+  try {
+    for (final receivingOfficer in receivingOfficers) {
+      final officer = receivingOfficer['officer'] as Map<String, dynamic>;
+      print('receiving officer: $receivingOfficer');
+      final officerName = officer['name'] as String?;
+      print('officer name: $officerName');
+      final positionName = officer['position'] as String?;
+      final officeName = officer['office'] as String?;
+      final issuanceItems = receivingOfficer['items'] as List<dynamic>;
+      print('issuance items: $issuanceItems');
 
-        String? officeId;
-        String? positionId;
-        String? officerId;
+      String? officeId;
+      String? positionId;
+      String? officerId;
 
-        if (officeName != null && officeName.isNotEmpty) {
-          officeId = await officeRepository.checkOfficeIfExist(
-            officeName: officeName,
-          );
-        }
-
-        if ((officeId != null && officeId.isNotEmpty) &&
-            (positionName != null && positionName.isNotEmpty)) {
-          positionId = await positionRepository.checkIfPositionExist(
-            officeId: officeId,
-            positionName: positionName,
-          );
-        }
-
-        if ((positionId != null && positionId.isNotEmpty) &&
-            (officerName != null && officerName.isNotEmpty)) {
-          officerId = await officerRepository.checkOfficerIfExist(
-                name: officerName,
-                positionId: positionId,
-              ) ??
-              await officerRepository.registerOfficer(
-                name: officerName,
-                positionId: positionId,
-              );
-        }
-
-        final baseIssuanceId = await issuanceRepository.createICS(
-          type: type,
-          issuedDate: issuedDate,
-          issuanceItems: issuanceItems,
-          entityId: entity != null
-              ? await entityRepository.checkEntityIfExist(
-                  entityName: entity,
-                )
-              : null,
-          fundCluster: fundCluster,
-          supplierId: supplierId,
-          inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
-          contractNumber: contractNumber,
-          purchaseOrderId: purchaseOrderNumber,
-          receivingOfficerId: officerId,
-          issuingOfficerId: issuingOfficerId,
-          receivedDate: receivedDate,
+      if (officeName != null && officeName.isNotEmpty) {
+        officeId = await officeRepository.checkOfficeIfExist(
+          officeName: officeName,
         );
-
-        final ics = await issuanceRepository.getIcsById(
-          id: baseIssuanceId,
-        );
-
-        if (ics != null) {
-          registerIcsItems.add(ics.toJson());
-        }
       }
 
-      return Response.json(
-        statusCode: 200,
-        body: {
-          'ics_items': registerIcsItems,
-        },
-      );
-    } catch (e) {
-      await ctx.rollback();
-      return Response.json(
-        statusCode: 500,
-        body: {
-          'message': 'Failed to create ICS.',
-          'error': e.toString(),
-        },
-      );
-    }
-  });
+      if ((officeId != null && officeId.isNotEmpty) &&
+          (positionName != null && positionName.isNotEmpty)) {
+        positionId = await positionRepository.checkIfPositionExist(
+          officeId: officeId,
+          positionName: positionName,
+        );
+      }
 
-  return response;
+      if ((positionId != null && positionId.isNotEmpty) &&
+          (officerName != null && officerName.isNotEmpty)) {
+        officerId = await officerRepository.checkOfficerIfExist(
+              name: officerName,
+              positionId: positionId,
+            ) ??
+            await officerRepository.registerOfficer(
+              name: officerName,
+              positionId: positionId,
+            );
+      }
+
+      final baseIssuanceId = await issuanceRepository.createICS(
+        type: type,
+        issuedDate: issuedDate,
+        issuanceItems: issuanceItems,
+        entityId: entity != null
+            ? await entityRepository.checkEntityIfExist(
+                entityName: entity,
+              )
+            : null,
+        fundCluster: fundCluster,
+        supplierId: supplierId,
+        inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
+        contractNumber: contractNumber,
+        purchaseOrderId: purchaseOrderNumber,
+        receivingOfficerId: officerId,
+        issuingOfficerId: issuingOfficerId,
+        receivedDate: receivedDate,
+      );
+
+      final ics = await issuanceRepository.getIcsById(
+        id: baseIssuanceId,
+      );
+
+      if (ics != null) {
+        registerIcsItems.add(ics.toJson());
+      }
+    }
+  } catch (e, stackTrace) {
+    print('Error during ICS issuance: $e');
+    print(stackTrace);
+    return Response.json(
+      statusCode: 500,
+      body: {
+        'message': 'Failed to process one or more ICS issuances.',
+        'error': e.toString(),
+      },
+    );
+  }
+
+  return Response.json(
+    statusCode: 200,
+    body: {
+      'ics_items': registerIcsItems,
+    },
+  );
 }

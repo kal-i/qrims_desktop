@@ -43,6 +43,22 @@ abstract interface class IssuanceRemoteDataSource {
     DateTime? receivedDate,
   });
 
+  Future<List<InventoryCustodianSlipModel>> createMultipleICS({
+    DateTime? issuedDate,
+    IcsType? type,
+    required List<dynamic> receivingOfficers,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    DateTime? receivedDate,
+  });
+
   Future<PropertyAcknowledgementReceiptModel> createPAR({
     DateTime? issuedDate,
     required List<dynamic> issuanceItems,

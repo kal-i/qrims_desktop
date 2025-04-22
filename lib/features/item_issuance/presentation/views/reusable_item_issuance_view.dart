@@ -487,6 +487,15 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             await Future.delayed(const Duration(seconds: 3));
             context.pop();
           }
+
+          if (state is IssuancesError) {
+            DelightfulToastUtils.showDelightfulToast(
+              icon: Icons.error_outline,
+              context: context,
+              title: 'Error',
+              subtitle: state.message,
+            );
+          }
         },
         child: BlocBuilder<IssuancesBloc, IssuancesState>(
           builder: (context, state) {

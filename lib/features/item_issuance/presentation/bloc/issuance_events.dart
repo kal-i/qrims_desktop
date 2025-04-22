@@ -73,6 +73,36 @@ final class CreateICSEvent extends IssuancesEvent {
   final String? issuingOfficerName;
 }
 
+final class CreateMultipleICSEvent extends IssuancesEvent {
+  const CreateMultipleICSEvent({
+    this.issuedDate,
+    this.type,
+    required this.receivingOfficers,
+    this.entityName,
+    this.fundCluster,
+    this.supplierName,
+    this.inspectionAndAcceptanceReportId,
+    this.contractNumber,
+    this.purchaseOrderNumber,
+    this.issuingOfficerOffice,
+    this.issuingOfficerPosition,
+    this.issuingOfficerName,
+  });
+
+  final DateTime? issuedDate;
+  final IcsType? type;
+  final List receivingOfficers;
+  final String? entityName;
+  final FundCluster? fundCluster;
+  final String? supplierName;
+  final String? inspectionAndAcceptanceReportId;
+  final String? contractNumber;
+  final String? purchaseOrderNumber;
+  final String? issuingOfficerOffice;
+  final String? issuingOfficerPosition;
+  final String? issuingOfficerName;
+}
+
 final class CreatePAREvent extends IssuancesEvent {
   const CreatePAREvent({
     this.issuedDate,

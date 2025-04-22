@@ -96,6 +96,76 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   }
 
   @override
+  Future<List<InventoryCustodianSlipModel>> createMultipleICS({
+    DateTime? issuedDate,
+    IcsType? type,
+    required List<dynamic> receivingOfficers,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    DateTime? receivedDate,
+  }) async {
+    try {
+      final Map<String, dynamic> params = {
+        if (issuedDate != null) 'issued_date': issuedDate.toIso8601String(),
+        if (type != null) 'type': type.toString().split('.').last,
+        'receiving_officers': receivingOfficers,
+        if (entityName != null && entityName.isNotEmpty) 'entity': entityName,
+        if (fundCluster != null)
+          'fund_cluster': fundCluster.toString().split('.').last,
+        if (supplierName != null && supplierName.isNotEmpty)
+          'supplier_name': supplierName,
+        if (inspectionAndAcceptanceReportId != null &&
+            inspectionAndAcceptanceReportId.isNotEmpty)
+          'inspection_and_acceptance_report_id':
+              inspectionAndAcceptanceReportId,
+        if (contractNumber != null && contractNumber.isNotEmpty)
+          'contract_number': contractNumber,
+        if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
+          'purchase_order_number': purchaseOrderNumber,
+        if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
+          'issuing_officer_office': issuingOfficerOffice,
+        if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)
+          'issuing_officer_position': issuingOfficerPosition,
+        if (issuingOfficerName != null && issuingOfficerName.isNotEmpty)
+          'issuing_officer_name': issuingOfficerName,
+        if (receivedDate != null)
+          'received_date': receivedDate.toIso8601String(),
+      };
+
+      final response = await httpService.post(
+        endpoint: multiICSEP,
+        params: params,
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the list of ICS models from the response
+        final icsItems = response.data['ics_items'] as List<dynamic>;
+        return icsItems
+            .map((item) => InventoryCustodianSlipModel.fromJson(item))
+            .toList();
+      } else {
+        // Try to extract informative error message from backend
+        final message = response.data?['message'] ?? 'ICS registration failed.';
+        throw ServerException(message);
+      }
+    } catch (e) {
+      // If the error is a DioError with a response, extract the backend message
+      if (e is DioException && e.response != null) {
+        final message = e.response?.data?['message'] ?? e.toString();
+        throw ServerException(message);
+      }
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
   Future<PropertyAcknowledgementReceiptModel> createPAR({
     DateTime? issuedDate,
     required List<dynamic> issuanceItems,

@@ -6,6 +6,7 @@ class AccountableOfficerCard extends StatelessWidget {
   final bool isDragging;
   final VoidCallback? onRemove;
   final VoidCallback? onAddItem;
+  final void Function(int itemIndex)? onRemoveItem; // <-- add this
 
   const AccountableOfficerCard({
     super.key,
@@ -13,6 +14,7 @@ class AccountableOfficerCard extends StatelessWidget {
     this.isDragging = false,
     this.onRemove,
     this.onAddItem,
+    this.onRemoveItem, // <-- add this
   });
 
   @override
@@ -87,7 +89,7 @@ class AccountableOfficerCard extends StatelessWidget {
                 ),
               ],
             ),
-            for (final item in items)
+            for (int i = 0; i < items.length; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Row(
@@ -97,22 +99,9 @@ class AccountableOfficerCard extends StatelessWidget {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 3.0,
                         children: [
-                          // Text(
-                          //   item['shareable_item_information']
-                          //           ['base_item_id'] ??
-                          //       '',
-                          //   style: Theme.of(context)
-                          //       .textTheme
-                          //       .bodyMedium
-                          //       ?.copyWith(
-                          //         fontSize: 14.0,
-                          //         fontWeight: FontWeight.w700,
-                          //       ),
-                          // ),
                           Text(
-                            item['product_stock']['product_name']
+                            items[i]['product_stock']['product_name']
                                     ['product_name'] ??
                                 '',
                             style: Theme.of(context)
@@ -124,7 +113,7 @@ class AccountableOfficerCard extends StatelessWidget {
                                 ),
                           ),
                           Text(
-                            item['product_stock']['product_description']
+                            items[i]['product_stock']['product_description']
                                     ['product_description'] ??
                                 '',
                             style:
@@ -133,39 +122,45 @@ class AccountableOfficerCard extends StatelessWidget {
                                       fontWeight: FontWeight.w500,
                                     ),
                           ),
-                          if (item['shareable_item_information']
+                          if (items[i]['shareable_item_information']
                                   ['specification'] !=
                               null)
                             Text(
-                              'Specifications: ${item['shareable_item_information']['specification']}',
+                              'Specifications: ${items[i]['shareable_item_information']['specification']}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          if (item['manufacturer_brand']?['manufacturer']
+                          if (items[i]['manufacturer_brand']?['manufacturer']
                                   ['manufacturer_name'] !=
                               null)
                             Text(
-                              'Manufacturer: ${item['manufacturer_brand']['manufacturer']['manufacturer_name']}',
+                              'Manufacturer: ${items[i]['manufacturer_brand']['manufacturer']['manufacturer_name']}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          if (item['manufacturer_brand']?['brand']
+                          if (items[i]['manufacturer_brand']?['brand']
                                   ['brand_name'] !=
                               null)
                             Text(
-                              'Brand: ${item['manufacturer_brand']['brand']['brand_name']}',
+                              'Brand: ${items[i]['manufacturer_brand']['brand']['brand_name']}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          if (item['model']?['model_name'] != null)
+                          if (items[i]['model']?['model_name'] != null)
                             Text(
-                              'Model: ${item['model']['model_name']}',
+                              'Model: ${items[i]['model']['model_name']}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           Text(
-                            'Quantity: ${item['shareable_item_information']['quantity']}',
+                            'Quantity: ${items[i]['shareable_item_information']['quantity']}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
                     ),
+                    if (onRemoveItem != null)
+                      IconButton(
+                        icon: const Icon(HugeIcons.strokeRoundedDelete02),
+                        tooltip: 'Remove item',
+                        onPressed: () => onRemoveItem!(i),
+                      ),
                   ],
                 ),
               ),

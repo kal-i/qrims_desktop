@@ -447,7 +447,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           onTap: () => context.go(
             RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
             extra: {
-              'type': IssuanceType.par,
+              'type': IssuanceType.ics,
             },
           ),
         ),
@@ -456,7 +456,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           onTap: () => context.go(
             RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
             extra: {
-              'type': IssuanceType.ics,
+              'type': IssuanceType.par,
             },
           ),
         ),
@@ -522,6 +522,7 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         }
 
         if (state is ICSRegistered ||
+            state is MultipleICSRegistered ||
             state is PARRegistered ||
             state is RISRegistered ||
             state is FetchedInventoryReport ||

@@ -69,6 +69,46 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
   }
 
   @override
+  Future<Either<Failure, List<InventoryCustodianSlipEntity>>>
+      createMultipleICS({
+    DateTime? issuedDate,
+    IcsType? type,
+    required List<dynamic> receivingOfficers,
+    String? entityName,
+    FundCluster? fundCluster,
+    String? supplierName,
+    String? inspectionAndAcceptanceReportId,
+    String? contractNumber,
+    String? purchaseOrderNumber,
+    String? issuingOfficerOffice,
+    String? issuingOfficerPosition,
+    String? issuingOfficerName,
+    DateTime? receivedDate,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.createMultipleICS(
+        issuedDate: issuedDate,
+        type: type,
+        receivingOfficers: receivingOfficers,
+        entityName: entityName,
+        fundCluster: fundCluster,
+        supplierName: supplierName,
+        inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
+        contractNumber: contractNumber,
+        purchaseOrderNumber: purchaseOrderNumber,
+        issuingOfficerOffice: issuingOfficerOffice,
+        issuingOfficerPosition: issuingOfficerPosition,
+        issuingOfficerName: issuingOfficerName,
+        receivedDate: receivedDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, PropertyAcknowledgementReceiptEntity>> createPAR({
     DateTime? issuedDate,
     required List<dynamic> issuanceItems,

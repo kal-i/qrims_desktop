@@ -69,6 +69,14 @@ final class ICSRegistered extends IssuancesState {
   final InventoryCustodianSlipEntity ics;
 }
 
+final class MultipleICSRegistered extends IssuancesState {
+  const MultipleICSRegistered({
+    required this.icsItems,
+  });
+
+  final List<InventoryCustodianSlipEntity> icsItems;
+}
+
 final class PARRegistered extends IssuancesState {
   const PARRegistered({
     required this.par,
