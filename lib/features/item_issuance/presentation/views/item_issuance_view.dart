@@ -770,7 +770,12 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           if (action.contains('Generate Issuance Document')) {
                             _generateAndSaveExcel(
                               issuanceObj,
-                              DocumentType.ics,
+                              issuanceObj is InventoryCustodianSlipEntity
+                                  ? DocumentType.ics
+                                  : issuanceObj
+                                          is PropertyAcknowledgementReceiptEntity
+                                      ? DocumentType.par
+                                      : DocumentType.ris,
                             );
 
                             showCustomDocumentPreview(

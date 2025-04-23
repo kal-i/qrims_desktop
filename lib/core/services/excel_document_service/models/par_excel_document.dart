@@ -1,7 +1,7 @@
 import 'package:excel/excel.dart';
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
-import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
+import '../../../../features/item_issuance/domain/entities/property_acknowledgement_receipt.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
@@ -12,16 +12,16 @@ import '../../../utils/readable_enum_converter.dart';
 import 'cell_info.dart';
 import 'header_info.dart';
 
-class ICSExcelDocument {
+class PARExcelDocument {
   static void modifyAndMapData(Sheet sheet, dynamic data) {
-    final ics = data as InventoryCustodianSlipEntity;
+    final par = data as PropertyAcknowledgementReceiptEntity;
     final issuingOfficerPositionHistory =
-        ics.issuingOfficerEntity?.getPositionAt(
-      ics.issuedDate,
+        par.issuingOfficerEntity?.getPositionAt(
+      par.issuedDate,
     );
     final receivingOfficerPositonHistory =
-        ics.receivingOfficerEntity?.getPositionAt(
-      ics.issuedDate,
+        par.receivingOfficerEntity?.getPositionAt(
+      par.issuedDate,
     );
 
     final generalCellStyle = sheet
@@ -42,11 +42,17 @@ class ICSExcelDocument {
         )
         .cellStyle = generalCellStyle;
 
+    final parNoTitleCell = sheet
+        .cell(
+          CellIndex.indexByString('E14'),
+        )
+        .cellStyle = generalCellStyle;
+
     final entityCell = sheet.cell(
       CellIndex.indexByString('B13'),
     );
     entityCell.value = TextCellValue(
-      capitalizeWord(ics.entity?.name ?? ''),
+      capitalizeWord(par.entity?.name ?? ''),
     );
     entityCell.cellStyle = generalCellStyle;
 
@@ -55,17 +61,17 @@ class ICSExcelDocument {
     );
 
     fundClusterCell.value = TextCellValue(
-      capitalizeWord(ics.fundCluster?.toReadableString() ?? ''),
+      capitalizeWord(par.fundCluster?.toReadableString() ?? ''),
     );
     fundClusterCell.cellStyle = generalCellStyle;
 
-    final icsNoCell = sheet.cell(
+    final parNoCell = sheet.cell(
       CellIndex.indexByString('F14'),
     );
-    icsNoCell.value = TextCellValue(
-      'ICS No.: ${ics.icsId}',
+    parNoCell.value = TextCellValue(
+      par.parId,
     );
-    icsNoCell.cellStyle = generalCellStyle;
+    parNoCell.cellStyle = generalCellStyle;
 
     // Define the border style
     final borderStyle = Border(borderStyle: BorderStyle.Medium);
@@ -75,36 +81,37 @@ class ICSExcelDocument {
 
     int totalRowsInserted = _mapDataToCells(
       sheet,
-      ics,
+      par,
       generalCellStyle,
     );
 
     _addFooter(
       sheet,
-      17 + totalRowsInserted + 1,
-      ics.issuingOfficerEntity?.name ?? '',
+      17 + totalRowsInserted, // 17 + totalRowsInserted + 1,
+      par.issuingOfficerEntity?.name ?? '',
       issuingOfficerPositionHistory?.positionName ?? '',
       issuingOfficerPositionHistory?.officeName ?? '',
-      ics.issuedDate,
-      ics.receivingOfficerEntity?.name ?? '',
+      par.issuedDate,
+      par.receivingOfficerEntity?.name ?? '',
       receivingOfficerPositonHistory?.positionName ?? '',
       receivingOfficerPositonHistory?.officeName ?? '',
-      ics.receivedDate,
+      par.receivedDate,
       generalCellStyle,
     );
   }
 
   static void _applyHeadersAndStyles(
-      Sheet sheet, Border borderStyle, CellStyle? cellStyle) {
+    Sheet sheet,
+    Border borderStyle,
+    CellStyle? cellStyle,
+  ) {
     final headers = [
-      const HeaderInfo('A16', 'A18', 'Quantity'),
-      const HeaderInfo('B16', 'B18', 'Unit'),
-      const HeaderInfo('C16', 'D16', 'Quantity'),
-      const HeaderInfo('C17', 'C18', 'Unit Cost'),
-      const HeaderInfo('D17', 'D18', 'Total Cost'),
-      const HeaderInfo('E16', 'E18', 'Description'),
-      const HeaderInfo('F16', 'F18', 'Inventory Item No.'),
-      const HeaderInfo('G16', 'G18', 'Estimated Useful Life'),
+      const HeaderInfo('A16', 'A17', 'Quantity'),
+      const HeaderInfo('B16', 'B17', 'Unit'),
+      const HeaderInfo('C16', 'C17', 'Description'),
+      const HeaderInfo('D16', 'D17', 'Property Number'),
+      const HeaderInfo('E16', 'E17', 'Date Acquired'),
+      const HeaderInfo('F16', 'F17', 'Amount'),
     ];
 
     for (var header in headers) {
@@ -144,11 +151,11 @@ class ICSExcelDocument {
 
   static int _mapDataToCells(
     Sheet sheet,
-    InventoryCustodianSlipEntity ics,
+    PropertyAcknowledgementReceiptEntity par,
     CellStyle? cellStyle,
   ) {
-    final items = ics.items;
-    int startRow = 18;
+    final items = par.items;
+    int startRow = 17;
     int totalRowsInserted = 0;
     int currentRow = startRow;
 
@@ -215,9 +222,7 @@ class ICSExcelDocument {
       final quantity = issuance.quantity;
       final unit = shareableItemInformationEntity.unit;
       final unitCost = shareableItemInformationEntity.unitCost;
-      final totalCost = unitCost * quantity;
-      final estimatedUsefulLife =
-          (itemEntity as InventoryItemEntity).estimatedUsefulLife;
+      final dateAcquired = shareableItemInformationEntity.acquiredDate;
 
       for (int j = 0; j < descriptionColumn.length; j++) {
         // For every row after the first, insert a new row
@@ -230,25 +235,24 @@ class ICSExcelDocument {
           currentRow,
           j == 0 ? quantity.toString() : '',
           j == 0 ? readableEnumConverter(unit) : '',
-          j == 0 ? formatCurrency(unitCost) : '',
-          j == 0 ? formatCurrency(totalCost) : '',
           descriptionColumn[j] ?? '',
           j == 0 ? baseItemId : '',
-          j == 0 ? estimatedUsefulLife : null,
+          j == 0 ? documentDateFormatter(dateAcquired!) : '',
+          j == 0 ? formatCurrency(unitCost) : '',
           dataCellStyle,
         );
         currentRow++;
       }
 
-      final purchaseRequestEntity = ics.purchaseRequestEntity;
-      final supplierEntity = ics.supplierEntity;
+      final purchaseRequestEntity = par.purchaseRequestEntity;
+      final supplierEntity = par.supplierEntity;
 
       if (i == items.length - 1) {
         if (purchaseRequestEntity != null ||
             supplierEntity != null ||
-            ics.inspectionAndAcceptanceReportId != null ||
-            ics.contractNumber != null ||
-            ics.purchaseOrderNumber != null) {
+            par.inspectionAndAcceptanceReportId != null ||
+            par.contractNumber != null ||
+            par.purchaseOrderNumber != null) {
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
@@ -283,36 +287,36 @@ class ICSExcelDocument {
           currentRow++;
         }
 
-        if (ics.inspectionAndAcceptanceReportId != null) {
+        if (par.inspectionAndAcceptanceReportId != null) {
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
             index: currentRow,
-            data: 'IAR: ${ics.inspectionAndAcceptanceReportId}',
+            data: 'IAR: ${par.inspectionAndAcceptanceReportId}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
           currentRow++;
         }
 
-        if (ics.contractNumber != null) {
+        if (par.contractNumber != null) {
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
             index: currentRow,
-            data: 'CN: ${ics.contractNumber}',
+            data: 'CN: ${par.contractNumber}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
           currentRow++;
         }
 
-        if (ics.purchaseOrderNumber != null) {
+        if (par.purchaseOrderNumber != null) {
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
             index: currentRow,
-            data: 'PO: ${ics.purchaseOrderNumber}',
+            data: 'PO: ${par.purchaseOrderNumber}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
@@ -328,11 +332,10 @@ class ICSExcelDocument {
     int rowIndex,
     String quantity,
     String unit,
-    String unitCost,
-    String totalCost,
     String description,
-    String inventoryItemNo,
-    int? estimatedUsefulLife,
+    String propertyNo,
+    String dateAcquired,
+    String amount,
     CellStyle? cellStyle,
   ) {
     final cells = [
@@ -346,27 +349,19 @@ class ICSExcelDocument {
       ),
       CellInfo(
         2,
-        unitCost,
-      ),
-      CellInfo(
-        3,
-        totalCost,
-      ),
-      CellInfo(
-        4,
         description,
       ),
       CellInfo(
-        5,
-        inventoryItemNo,
+        3,
+        propertyNo,
       ),
       CellInfo(
-        6,
-        estimatedUsefulLife != null
-            ? estimatedUsefulLife > 1
-                ? '$estimatedUsefulLife years'
-                : '$estimatedUsefulLife year'
-            : '',
+        4,
+        dateAcquired,
+      ),
+      CellInfo(
+        5,
+        amount,
       ),
     ];
 
@@ -413,12 +408,12 @@ class ICSExcelDocument {
       rowIndex: footerStartRow + 1,
     );
     final endFooterCell = CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 5,
       rowIndex: footerStartRow + 1,
     );
 
     for (int col = startFooterCell.columnIndex;
-        col < endFooterCell.columnIndex;
+        col <= endFooterCell.columnIndex;
         col++) {
       final cell = sheet.cell(
         CellIndex.indexByColumnRow(
@@ -436,215 +431,17 @@ class ICSExcelDocument {
     }
 
     /**
-     * Mapped data and set a style for Received From cell
-     */
-    final startReceivedFromCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: footerStartRow + 1,
-    );
-    final receivedFromCell = sheet.cell(
-      startReceivedFromCell,
-    );
-    receivedFromCell.value = TextCellValue(
-      'Received From:',
-    );
-    receivedFromCell.cellStyle = cellStyle?.copyWith(
-      topBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issuing Officer Name cells, mapped data and set a style
-     */
-    final startIssuingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow,
-    );
-    final endIssuingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow,
-    );
-    sheet.merge(
-      startIssuingOfficerNameCell,
-      endIssuingOfficerNameCell,
-    );
-    final issuingOfficerNameCell = sheet.cell(
-      startIssuingOfficerNameCell,
-    );
-    issuingOfficerNameCell.value = TextCellValue(
-      capitalizeWord(issuingOfficerName),
-    );
-    issuingOfficerNameCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issuing Officer Name Description cells, mapped data and set a style
-     */
-    final startingIssuingOfficerNameDescriptionCell =
-        CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow + 1,
-    );
-    final endingIssuingOfficerNameDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow + 1,
-    );
-    sheet.merge(
-      startingIssuingOfficerNameDescriptionCell,
-      endingIssuingOfficerNameDescriptionCell,
-    );
-    final issuingOfficerPositionCell = sheet.cell(
-      startingIssuingOfficerNameDescriptionCell,
-    );
-    issuingOfficerPositionCell.value = TextCellValue(
-      'Signarature over Printed Name',
-    );
-    issuingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issuing Officer Position Name Description cells, mapped data and set a style
-     */
-    final startIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow + 2,
-    );
-    final endIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow + 2,
-    );
-    sheet.merge(
-      startIssuingOfficerPositionNameCell,
-      endIssuingOfficerPositionNameCell,
-    );
-    final issuingOfficerPositionNameCell = sheet.cell(
-      startIssuingOfficerPositionNameCell,
-    );
-    issuingOfficerPositionNameCell.value = TextCellValue(
-      '${issuingOfficerPosition.toUpperCase()} - ${issuingOfficerOffice.toUpperCase()}',
-    );
-    issuingOfficerPositionNameCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issuing Officer Position Description cells, mapped data and set a style
-     */
-    final startIssuingOfficerPositionDescriptionCell =
-        CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow + 3,
-    );
-    final endIssuingOfficerPositionDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow + 3,
-    );
-    sheet.merge(
-      startIssuingOfficerPositionDescriptionCell,
-      endIssuingOfficerPositionDescriptionCell,
-    );
-    final issuingOfficerPositionDescriptionCell = sheet.cell(
-      startIssuingOfficerPositionDescriptionCell,
-    );
-    issuingOfficerPositionDescriptionCell.value = TextCellValue(
-      'Position/Office',
-    );
-    issuingOfficerPositionDescriptionCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issued Date cells, mapped data and set a style
-     */
-    final startIssuedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow + 4,
-    );
-    final endIssuedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow + 4,
-    );
-    sheet.merge(
-      startIssuedDateCell,
-      endIssuedDateCell,
-    );
-    final issuedDateCell = sheet.cell(
-      startIssuedDateCell,
-    );
-    issuedDateCell.value = TextCellValue(
-      documentDateFormatter(issuedDate),
-    );
-    issuedDateCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
-     * Merged Issued Date Description cells, mapped data and set a style
-     */
-    final startIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
-      rowIndex: startingRow + 5,
-    );
-    final endIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
-      rowIndex: startingRow + 5,
-    );
-    sheet.merge(
-      startIssuedDateDescriptionCell,
-      endIssuedDateDescriptionCell,
-    );
-    final issuedDateDescriptionCell = sheet.cell(
-      startIssuedDateDescriptionCell,
-    );
-    issuedDateDescriptionCell.value = TextCellValue(
-      'Date',
-    );
-    issuedDateDescriptionCell.cellStyle = cellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      leftBorderVal: Border(
-        borderStyle: BorderStyle.Medium,
-      ),
-    );
-
-    /**
      * Mapped data and set a style for Received By cell
      */
     final startReceivedByCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: footerStartRow + 1,
     );
     final receivedByCell = sheet.cell(
       startReceivedByCell,
     );
     receivedByCell.value = TextCellValue(
-      'Received by:',
+      'Received By:',
     );
     receivedByCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(
@@ -659,11 +456,11 @@ class ICSExcelDocument {
      * Merged Receiving Officer Name cells, mapped data and set a style
      */
     final startReceivingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow,
     );
     final endReceivingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow,
     );
     sheet.merge(
@@ -689,12 +486,12 @@ class ICSExcelDocument {
      */
     final startingReceivingOfficerNameDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow + 1,
     );
     final endingReceivingOfficerNameDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow + 1,
     );
     sheet.merge(
@@ -705,7 +502,7 @@ class ICSExcelDocument {
       startingReceivingOfficerNameDescriptionCell,
     );
     receivingOfficerPositionCell.value = TextCellValue(
-      'Signarature over Printed Name',
+      'Signarature over Printed Name of End User',
     );
     receivingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
       horizontalAlignVal: HorizontalAlign.Center,
@@ -719,11 +516,11 @@ class ICSExcelDocument {
      * Merged Receiving Officer Position Name Description cells, mapped data and set a style
      */
     final startReceivingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow + 2,
     );
     final endReceivingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow + 2,
     );
     sheet.merge(
@@ -749,12 +546,12 @@ class ICSExcelDocument {
      */
     final startReceivingOfficerPositionDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow + 3,
     );
     final endReceivingOfficerPositionDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow + 3,
     );
     sheet.merge(
@@ -779,11 +576,11 @@ class ICSExcelDocument {
      * Merged Received Date cells, mapped data and set a style
      */
     final startReceivedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow + 4,
     );
     final endReceivedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow + 4,
     );
     sheet.merge(
@@ -794,7 +591,7 @@ class ICSExcelDocument {
       startReceivedDateCell,
     );
     receivedDateCell.value = TextCellValue(
-      receivedDate != null ? documentDateFormatter(receivedDate) : '',
+      receivedDate != null ? documentDateFormatter(receivedDate) : ' ',
     );
     receivedDateCell.cellStyle = cellStyle?.copyWith(
       horizontalAlignVal: HorizontalAlign.Center,
@@ -808,11 +605,11 @@ class ICSExcelDocument {
      * Merged Received Date Description cells, mapped data and set a style
      */
     final startReceivedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 0,
       rowIndex: startingRow + 5,
     );
     final endReceivedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 2,
       rowIndex: startingRow + 5,
     );
     sheet.merge(
@@ -832,6 +629,226 @@ class ICSExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+
+    /**
+     * Mapped data and set a style for Received From cell
+     */
+    final startReceivedFromCell = CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: footerStartRow + 1,
+    );
+    final receivedFromCell = sheet.cell(
+      startReceivedFromCell,
+    );
+    receivedFromCell.value = TextCellValue(
+      'Received from:',
+    );
+    receivedFromCell.cellStyle = cellStyle?.copyWith(
+      topBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issuing Officer Name cells, mapped data and set a style
+     */
+    final startIssuingOfficerNameCell = CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow,
+    );
+    final endIssuingOfficerNameCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow,
+    );
+    sheet.merge(
+      startIssuingOfficerNameCell,
+      endIssuingOfficerNameCell,
+    );
+    final issuingOfficerNameCell = sheet.cell(
+      startIssuingOfficerNameCell,
+    );
+    issuingOfficerNameCell.value = TextCellValue(
+      capitalizeWord(issuingOfficerName),
+    );
+    issuingOfficerNameCell.cellStyle = cellStyle?.copyWith(
+      horizontalAlignVal: HorizontalAlign.Center,
+      verticalAlignVal: VerticalAlign.Center,
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issuing Officer Name Description cells, mapped data and set a style
+     */
+    final startingIssuingOfficerNameDescriptionCell =
+        CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow + 1,
+    );
+    final endingIssuingOfficerNameDescriptionCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow + 1,
+    );
+    sheet.merge(
+      startingIssuingOfficerNameDescriptionCell,
+      endingIssuingOfficerNameDescriptionCell,
+    );
+    final issuingOfficerPositionCell = sheet.cell(
+      startingIssuingOfficerNameDescriptionCell,
+    );
+    issuingOfficerPositionCell.value = TextCellValue(
+      'Signarature over Printed Name',
+    );
+    issuingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
+      horizontalAlignVal: HorizontalAlign.Center,
+      verticalAlignVal: VerticalAlign.Center,
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issuing Officer Position Name Description cells, mapped data and set a style
+     */
+    final startIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow + 2,
+    );
+    final endIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow + 2,
+    );
+    sheet.merge(
+      startIssuingOfficerPositionNameCell,
+      endIssuingOfficerPositionNameCell,
+    );
+    final issuingOfficerPositionNameCell = sheet.cell(
+      startIssuingOfficerPositionNameCell,
+    );
+    issuingOfficerPositionNameCell.value = TextCellValue(
+      '${issuingOfficerPosition.toUpperCase()} - ${issuingOfficerOffice.toUpperCase()}',
+    );
+    issuingOfficerPositionNameCell.cellStyle = cellStyle?.copyWith(
+      horizontalAlignVal: HorizontalAlign.Center,
+      verticalAlignVal: VerticalAlign.Center,
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issuing Officer Position Description cells, mapped data and set a style
+     */
+    final startIssuingOfficerPositionDescriptionCell =
+        CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow + 3,
+    );
+    final endIssuingOfficerPositionDescriptionCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow + 3,
+    );
+    sheet.merge(
+      startIssuingOfficerPositionDescriptionCell,
+      endIssuingOfficerPositionDescriptionCell,
+    );
+    final issuingOfficerPositionDescriptionCell = sheet.cell(
+      startIssuingOfficerPositionDescriptionCell,
+    );
+    issuingOfficerPositionDescriptionCell.value = TextCellValue(
+      'Position/Office',
+    );
+    issuingOfficerPositionDescriptionCell.cellStyle = cellStyle?.copyWith(
+      horizontalAlignVal: HorizontalAlign.Center,
+      verticalAlignVal: VerticalAlign.Center,
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issued Date cells, mapped data and set a style
+     */
+    final startIssuedDateCell = CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow + 4,
+    );
+    final endIssuedDateCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow + 4,
+    );
+    sheet.merge(
+      startIssuedDateCell,
+      endIssuedDateCell,
+    );
+    final issuedDateCell = sheet.cell(
+      startIssuedDateCell,
+    );
+    issuedDateCell.value = TextCellValue(
+      documentDateFormatter(issuedDate),
+    );
+    issuedDateCell.cellStyle = cellStyle?.copyWith(
+      horizontalAlignVal: HorizontalAlign.Center,
+      verticalAlignVal: VerticalAlign.Center,
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    /**
+     * Merged Issued Date Description cells, mapped data and set a style
+     */
+    final startIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
+      columnIndex: 3,
+      rowIndex: startingRow + 5,
+    );
+    final endIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
+      columnIndex: 5,
+      rowIndex: startingRow + 5,
+    );
+    sheet.merge(
+      startIssuedDateDescriptionCell,
+      endIssuedDateDescriptionCell,
+    );
+    final issuedDateDescriptionCell = sheet.cell(
+      startIssuedDateDescriptionCell,
+    );
+    issuedDateDescriptionCell.value = TextCellValue(
+      'Date',
+    );
+    issuedDateDescriptionCell.cellStyle = cellStyle?.copyWith(
+      leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    for (int col = startReceivedDateDescriptionCell.columnIndex;
+        col <= endIssuedDateDescriptionCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow + 5,
+        ),
+      );
+      cell.cellStyle = cellStyle?.copyWith(
+        horizontalAlignVal: HorizontalAlign.Center,
+        verticalAlignVal: VerticalAlign.Center,
+        rightBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+        bottomBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+        leftBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+    }
   }
 
   static void _updateRowFooter({
@@ -845,11 +862,10 @@ class ICSExcelDocument {
       index,
       ' ',
       ' ',
-      ' ',
-      ' ',
       data ?? ' ',
       ' ',
-      null,
+      ' ',
+      ' ',
       dataCellStyle,
     );
   }
