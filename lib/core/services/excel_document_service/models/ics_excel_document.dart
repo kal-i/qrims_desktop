@@ -2,22 +2,19 @@ import 'package:excel/excel.dart';
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
-import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
+import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
-import '../../../utils/standardize_position_name.dart';
 import 'cell_info.dart';
 import 'header_info.dart';
 
 class IcsExcelDocument {
   static void modifyAndMapData(Sheet sheet, dynamic data) {
     final ics = data as InventoryCustodianSlipEntity;
-    final purchaseRequestEntity = data.purchaseRequestEntity;
-    final supplierEntity = data.supplierEntity;
     final issuingOfficerPositionHistory =
         ics.issuingOfficerEntity?.getPositionAt(
       ics.issuedDate,
@@ -27,7 +24,7 @@ class IcsExcelDocument {
       ics.issuedDate,
     );
 
-    final titleCellStyle = sheet
+    final generalCellStyle = sheet
         .cell(
           CellIndex.indexByString('C13'),
         )
@@ -37,13 +34,13 @@ class IcsExcelDocument {
         .cell(
           CellIndex.indexByString('A13'),
         )
-        .cellStyle = titleCellStyle;
+        .cellStyle = generalCellStyle;
 
     final fundClusterTitleCell = sheet
         .cell(
           CellIndex.indexByString('A14'),
         )
-        .cellStyle = titleCellStyle;
+        .cellStyle = generalCellStyle;
 
     final entityCell = sheet.cell(
       CellIndex.indexByString('B13'),
@@ -51,7 +48,7 @@ class IcsExcelDocument {
     entityCell.value = TextCellValue(
       capitalizeWord(ics.entity?.name ?? ''),
     );
-    entityCell.cellStyle = titleCellStyle;
+    entityCell.cellStyle = generalCellStyle;
 
     final fundClusterCell = sheet.cell(
       CellIndex.indexByString('B14'),
@@ -60,7 +57,7 @@ class IcsExcelDocument {
     fundClusterCell.value = TextCellValue(
       capitalizeWord(ics.fundCluster?.toReadableString() ?? ''),
     );
-    fundClusterCell.cellStyle = titleCellStyle;
+    fundClusterCell.cellStyle = generalCellStyle;
 
     final icsNoCell = sheet.cell(
       CellIndex.indexByString('F14'),
@@ -68,18 +65,18 @@ class IcsExcelDocument {
     icsNoCell.value = TextCellValue(
       'ICS No.: ${ics.icsId}',
     );
-    icsNoCell.cellStyle = titleCellStyle;
+    icsNoCell.cellStyle = generalCellStyle;
 
     // Define the border style
     final borderStyle = Border(borderStyle: BorderStyle.Medium);
 
     // Apply headers and styles
-    _applyHeadersAndStyles(sheet, borderStyle);
+    _applyHeadersAndStyles(sheet, borderStyle, generalCellStyle);
 
     int totalRowsInserted = _mapDataToCells(
       sheet,
-      ics.items,
-      titleCellStyle,
+      ics,
+      generalCellStyle,
     );
 
     _addFooter(
@@ -93,11 +90,12 @@ class IcsExcelDocument {
       receivingOfficerPositonHistory?.positionName ?? '',
       receivingOfficerPositonHistory?.officeName ?? '',
       ics.receivedDate,
-      titleCellStyle,
+      generalCellStyle,
     );
   }
 
-  static void _applyHeadersAndStyles(Sheet sheet, Border borderStyle) {
+  static void _applyHeadersAndStyles(
+      Sheet sheet, Border borderStyle, CellStyle? cellStyle) {
     final headers = [
       const HeaderInfo('A16', 'A18', 'Quantity'),
       const HeaderInfo('B16', 'B18', 'Unit'),
@@ -109,25 +107,13 @@ class IcsExcelDocument {
       const HeaderInfo('G16', 'G18', 'Estimated Useful Life'),
     ];
 
-    //final cellStyle = sheet.cell(CellIndex.indexByString('C13')).cellStyle;
-
     for (var header in headers) {
       final startCellIndex = CellIndex.indexByString(header.startCell);
       final endCellIndex = CellIndex.indexByString(header.endCell);
 
       final startCell = sheet.cell(startCellIndex);
       startCell.value = TextCellValue(header.title);
-      startCell.cellStyle = CellStyle(
-        bold: false,
-        fontFamily: getFontFamily(FontFamily.Arial),
-        fontSize: 10,
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        topBorder: borderStyle,
-        bottomBorder: borderStyle,
-        leftBorder: borderStyle,
-        rightBorder: borderStyle,
-      );
+      startCell.cellStyle = cellStyle;
 
       if (header.startCell != header.endCell) {
         sheet.merge(startCellIndex, endCellIndex);
@@ -143,15 +129,12 @@ class IcsExcelDocument {
           for (var col = startColumn; col <= endColumn; col++) {
             final cell = sheet.cell(
                 CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
-            cell.cellStyle = CellStyle(
-              bold: false,
-              fontFamily: getFontFamily(FontFamily.Arial),
-              fontSize: 10,
-              horizontalAlign: HorizontalAlign.Center,
-              verticalAlign: VerticalAlign.Center,
-              topBorder: borderStyle, // Ensure top border
-              rightBorder: borderStyle, // Ensure right border
-              leftBorder: borderStyle, // Ensure left border
+            cell.cellStyle = cellStyle?.copyWith(
+              horizontalAlignVal: HorizontalAlign.Center,
+              verticalAlignVal: VerticalAlign.Center,
+              topBorderVal: borderStyle,
+              rightBorderVal: borderStyle,
+              leftBorderVal: borderStyle,
             );
           }
         }
@@ -161,28 +144,21 @@ class IcsExcelDocument {
 
   static int _mapDataToCells(
     Sheet sheet,
-    List<IssuanceItemEntity> items,
+    InventoryCustodianSlipEntity ics,
     CellStyle? cellStyle,
   ) {
+    final items = ics.items;
     int startRow = 18;
     int totalRowsInserted = 0;
+    int currentRow = startRow;
 
     for (int i = 0; i < items.length; i++) {
       final issuance = items[i];
       final itemEntity = issuance.itemEntity;
-      final shareableItemInformation =
+      final shareableItemInformationEntity =
           itemEntity.shareableItemInformationEntity;
-      final quantity = issuance.quantity;
-      final unit = readableEnumConverter(
-        shareableItemInformation.unit,
-      );
-      final unitCost = shareableItemInformation.unitCost;
-      final totalCost = unitCost * quantity;
-      final description =
-          itemEntity.productStockEntity.productDescription?.description ?? '';
-      final inventoryItemNo = shareableItemInformation.id;
-      final estimatedUsefulLife =
-          (itemEntity as InventoryItemEntity).estimatedUsefulLife ?? 0;
+      final productDescriptionEntity =
+          itemEntity.productStockEntity.productDescription;
 
       final dataCellStyle = cellStyle?.copyWith(
         horizontalAlignVal: HorizontalAlign.Center,
@@ -197,36 +173,151 @@ class IcsExcelDocument {
         leftBorderVal: Border(borderStyle: BorderStyle.Medium),
       );
 
-      if (i > 0) {
-        final rowIndex = startRow + i - 1;
-        sheet.insertRow(rowIndex);
-        _updateRow(
-          sheet,
-          rowIndex,
-          quantity,
-          unit,
-          unitCost,
-          totalCost,
-          description,
-          inventoryItemNo,
-          estimatedUsefulLife,
-          dataCellStyle,
-        );
+      final descriptionColumn = [
+        productDescriptionEntity?.description,
+      ];
 
-        totalRowsInserted++;
-      } else {
+      final specification = shareableItemInformationEntity.specification;
+      if (specification != null) {
+        descriptionColumn.addAll([
+          'Specifications',
+          ...extractSpecification(specification, ','),
+        ]);
+      }
+
+      if (itemEntity is InventoryItemEntity) {
+        final inventoryItem = itemEntity;
+        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+        final brandEntity = manufacturerBrandEntity?.brand;
+        final modelEntity = inventoryItem.modelEntity;
+        final serialNo = inventoryItem.serialNo;
+
+        if (brandEntity != null) {
+          descriptionColumn.add(
+            'Brand: ${brandEntity.name}',
+          );
+        }
+
+        if (modelEntity != null) {
+          descriptionColumn.add(
+            'Model: ${modelEntity.modelName}',
+          );
+        }
+
+        if (serialNo != null && serialNo.isNotEmpty) {
+          descriptionColumn.add(
+            'SN: $serialNo',
+          );
+        }
+      }
+
+      final baseItemId = shareableItemInformationEntity.id;
+      final quantity = issuance.quantity;
+      final unit = shareableItemInformationEntity.unit;
+      final unitCost = shareableItemInformationEntity.unitCost;
+      final totalCost = unitCost * quantity;
+      final estimatedUsefulLife =
+          (itemEntity as InventoryItemEntity).estimatedUsefulLife;
+
+      for (int j = 0; j < descriptionColumn.length; j++) {
+        // For every row after the first, insert a new row
+        if (!(i == 0 && j == 0)) {
+          sheet.insertRow(currentRow);
+          totalRowsInserted++;
+        }
         _updateRow(
           sheet,
-          startRow + i,
-          quantity,
-          unit,
-          unitCost,
-          totalCost,
-          description,
-          inventoryItemNo,
-          estimatedUsefulLife,
+          currentRow,
+          j == 0 ? quantity.toString() : '',
+          j == 0 ? readableEnumConverter(unit) : '',
+          j == 0 ? formatCurrency(unitCost) : '',
+          j == 0 ? formatCurrency(totalCost) : '',
+          descriptionColumn[j] ?? '',
+          j == 0 ? baseItemId : '',
+          j == 0 ? estimatedUsefulLife : null,
           dataCellStyle,
         );
+        currentRow++;
+      }
+
+      final purchaseRequestEntity = ics.purchaseRequestEntity;
+      final supplierEntity = ics.supplierEntity;
+
+      if (i == items.length - 1) {
+        if (purchaseRequestEntity != null ||
+            supplierEntity != null ||
+            ics.inspectionAndAcceptanceReportId != null ||
+            ics.contractNumber != null ||
+            ics.purchaseOrderNumber != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (purchaseRequestEntity != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'PR: ${purchaseRequestEntity.id}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (supplierEntity != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'Supplier: ${supplierEntity.name}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.inspectionAndAcceptanceReportId != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'IAR: ${ics.inspectionAndAcceptanceReportId}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.contractNumber != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'CN: ${ics.contractNumber}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.purchaseOrderNumber != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'PO: ${ics.purchaseOrderNumber}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
       }
     }
     return totalRowsInserted;
@@ -235,19 +326,19 @@ class IcsExcelDocument {
   static void _updateRow(
     Sheet sheet,
     int rowIndex,
-    int quantity,
+    String quantity,
     String unit,
-    double unitCost,
-    double totalCost,
+    String unitCost,
+    String totalCost,
     String description,
     String inventoryItemNo,
-    int estimatedUsefulLife,
+    int? estimatedUsefulLife,
     CellStyle? cellStyle,
   ) {
     final cells = [
       CellInfo(
         0,
-        quantity.toString(),
+        quantity,
       ),
       CellInfo(
         1,
@@ -255,11 +346,11 @@ class IcsExcelDocument {
       ),
       CellInfo(
         2,
-        formatCurrency(unitCost),
+        unitCost,
       ),
       CellInfo(
         3,
-        formatCurrency(totalCost),
+        totalCost,
       ),
       CellInfo(
         4,
@@ -271,9 +362,11 @@ class IcsExcelDocument {
       ),
       CellInfo(
         6,
-        estimatedUsefulLife > 1
-            ? '$estimatedUsefulLife years'
-            : '$estimatedUsefulLife year',
+        estimatedUsefulLife != null
+            ? estimatedUsefulLife > 1
+                ? '$estimatedUsefulLife years'
+                : '$estimatedUsefulLife year'
+            : '',
       ),
     ];
 
@@ -738,6 +831,26 @@ class IcsExcelDocument {
       leftBorderVal: Border(
         borderStyle: BorderStyle.Medium,
       ),
+    );
+  }
+
+  static void _updateRowFooter({
+    required Sheet sheet,
+    required int index,
+    String? data,
+    CellStyle? dataCellStyle,
+  }) {
+    _updateRow(
+      sheet,
+      index,
+      ' ',
+      ' ',
+      ' ',
+      ' ',
+      data ?? ' ',
+      ' ',
+      null,
+      dataCellStyle,
     );
   }
 }
