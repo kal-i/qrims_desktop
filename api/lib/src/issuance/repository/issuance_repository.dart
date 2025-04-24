@@ -2742,7 +2742,7 @@ class IssuanceRepository {
   }
 
   Future<List<Map<String, dynamic>>> getOfficerAccountability({
-    required String name,
+    required String officerId,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
@@ -2750,10 +2750,10 @@ class IssuanceRepository {
 
     // We'll build the WHERE clause dynamically
     final whereClauses = <String>[
-      'roff.name ILIKE @name',
+      'roff.id = @officer_id',
     ];
     final parameters = <String, dynamic>{
-      'name': name,
+      'officer_id': officerId,
     };
 
     // If startDate is provided, add date filtering
@@ -2765,6 +2765,8 @@ class IssuanceRepository {
 
     final whereClause = whereClauses.join(' AND ');
 
+    print('query to execute: $whereClause');
+
     final result = await _conn.execute(
       Sql.named('''
       SELECT 
@@ -2772,6 +2774,14 @@ class IssuanceRepository {
         issi.item_id AS base_item_id,
         pn.name AS product_name,
         pd.description AS product_description,
+        i.quantity,
+        i.unit,
+        i.unit_cost,
+        i.fund_cluster,
+        mnf.name,
+        brnd.name,
+        m.model_name,
+        inv.serial_no,
         issi.issued_quantity,
         issi.status,
         issi.remarks,
@@ -2793,6 +2803,12 @@ class IssuanceRepository {
       LEFT JOIN
         productdescriptions pd ON i.product_description_id = pd.id
       LEFT JOIN
+        manufacturers mnf ON inv.manufacturer_id = mnf.id
+      LEFT JOIN
+        brands brnd ON inv.brand_id = brnd.id
+      LEFT JOIN
+        models m ON inv.model_id = m.id
+      LEFT JOIN
         issuances iss ON issi.issuance_id = iss.id
       LEFT JOIN
         officers roff ON iss.receiving_officer_id = roff.id
@@ -2810,12 +2826,13 @@ class IssuanceRepository {
       return [];
     }
 
-    // Since we're fetching by name, assume one officer match (for now)
+    print('result not empty');
+
     final response = {
       'accountable_officer': {
-        'name': result.first[11],
-        'position': result.first[12],
-        'office': result.first[13],
+        'name': result.first[19],
+        'position': result.first[20],
+        'office': result.first[21],
       },
       'accountabilities': result
           .map((row) => {
@@ -2823,13 +2840,21 @@ class IssuanceRepository {
                 'base_item_id': row[1],
                 'product_name': row[2],
                 'product_description': row[3],
-                'issued_quantity': row[4],
-                'status': row[5],
-                'remarks': row[6],
-                'issued_date': (row[7] as DateTime).toIso8601String(),
-                'received_date': (row[8] as DateTime?)?.toIso8601String(),
-                'returned_date': (row[9] as DateTime?)?.toIso8601String(),
-                'lost_date': (row[10] as DateTime?)?.toIso8601String(),
+                'quantity': row[4],
+                'unit': row[5],
+                'unit_cost': row[6],
+                'fund_cluster': row[7],
+                'manufacturer': row[8],
+                'brand': row[9],
+                'model': row[10],
+                'serial_no': row[11],
+                'issued_quantity': row[12],
+                'status': row[13],
+                'remarks': row[14],
+                'issued_date': (row[15] as DateTime).toIso8601String(),
+                'received_date': (row[16] as DateTime?)?.toIso8601String(),
+                'returned_date': (row[17] as DateTime?)?.toIso8601String(),
+                'lost_date': (row[18] as DateTime?)?.toIso8601String(),
               })
           .toList(),
     };
