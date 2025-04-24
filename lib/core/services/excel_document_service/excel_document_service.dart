@@ -10,6 +10,7 @@ import 'models/excel_rpppe.dart';
 import 'models/excel_rpsep.dart';
 import 'models/ics_excel_document.dart';
 import 'models/par_excel_document.dart';
+import 'models/ris_excel_document.dart';
 import 'models/rpci_excel.dart';
 import 'models/rpppe_excel.dart';
 import 'models/rpsep_excel.dart';
@@ -76,6 +77,8 @@ class ExcelDocumentService {
         return TemplatePath.ics;
       case DocumentType.par:
         return TemplatePath.par;
+      case DocumentType.ris:
+        return TemplatePath.ris;
       case DocumentType.rpci:
         return TemplatePath.rpci;
       case DocumentType.annexA8:
@@ -203,6 +206,12 @@ class ExcelDocumentService {
         break;
       case DocumentType.par:
         PARExcelDocument.modifyAndMapData(
+          sheet,
+          data,
+        );
+        break;
+      case DocumentType.ris:
+        RISExcelDocument.modifyAndMapData(
           sheet,
           data,
         );

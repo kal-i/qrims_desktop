@@ -52,7 +52,9 @@ class PARExcelDocument {
       CellIndex.indexByString('B13'),
     );
     entityCell.value = TextCellValue(
-      capitalizeWord(par.entity?.name ?? ''),
+      par.purchaseRequestEntity != null
+          ? capitalizeWord(par.purchaseRequestEntity!.entity.name)
+          : capitalizeWord(par.entity?.name ?? ''),
     );
     entityCell.cellStyle = generalCellStyle;
 
@@ -61,7 +63,10 @@ class PARExcelDocument {
     );
 
     fundClusterCell.value = TextCellValue(
-      capitalizeWord(par.fundCluster?.toReadableString() ?? ''),
+      par.purchaseRequestEntity != null
+          ? capitalizeWord(
+              par.purchaseRequestEntity!.fundCluster.toReadableString())
+          : capitalizeWord(par.fundCluster?.toReadableString() ?? ''),
     );
     fundClusterCell.cellStyle = generalCellStyle;
 

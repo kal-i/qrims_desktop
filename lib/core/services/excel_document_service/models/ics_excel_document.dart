@@ -46,7 +46,9 @@ class ICSExcelDocument {
       CellIndex.indexByString('B13'),
     );
     entityCell.value = TextCellValue(
-      capitalizeWord(ics.entity?.name ?? ''),
+      ics.purchaseRequestEntity != null
+          ? capitalizeWord(ics.purchaseRequestEntity!.entity.name)
+          : capitalizeWord(ics.entity?.name ?? ''),
     );
     entityCell.cellStyle = generalCellStyle;
 
@@ -55,7 +57,10 @@ class ICSExcelDocument {
     );
 
     fundClusterCell.value = TextCellValue(
-      capitalizeWord(ics.fundCluster?.toReadableString() ?? ''),
+      ics.purchaseRequestEntity != null
+          ? capitalizeWord(
+              ics.purchaseRequestEntity!.fundCluster.toReadableString())
+          : capitalizeWord(ics.fundCluster?.toReadableString() ?? ''),
     );
     fundClusterCell.cellStyle = generalCellStyle;
 
