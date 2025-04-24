@@ -5,15 +5,18 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:intl/intl.dart';
 
 import '../../../../core/common/components/base_modal.dart';
-import '../../../../core/common/components/custom_dropdown_button.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/enums/document_type.dart';
 import '../../../../core/services/pdf_document_service/document_service.dart';
+import '../../../../core/services/excel_document_service/excel_document_service.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../init_dependencies.dart';
 
@@ -22,10 +25,12 @@ class CustomDocumentPreview<T> extends StatefulWidget {
     super.key,
     required this.documentObject,
     required this.docType,
+    this.canGenerateExcel = false, // <-- Add flag with default
   });
 
   final T documentObject;
   final DocumentType docType;
+  final bool canGenerateExcel; // <-- Add flag
 
   @override
   _CustomDocumentPreview createState() => _CustomDocumentPreview();
@@ -33,6 +38,7 @@ class CustomDocumentPreview<T> extends StatefulWidget {
 
 class _CustomDocumentPreview extends State<CustomDocumentPreview> {
   late DocumentService _documentService;
+  late ExcelDocumentService _excelDocumentService;
   late List<Printer?> _printers = [];
   final ValueNotifier<Printer?> _selectedPrinter = ValueNotifier(null);
   final ValueNotifier<PdfPageFormat> _selectedPageFormat =
@@ -48,6 +54,7 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
   void initState() {
     super.initState();
     _documentService = serviceLocator<DocumentService>();
+    _excelDocumentService = serviceLocator<ExcelDocumentService>();
     _init().then((_) {
       _isInitialized.value = true; // Mark initialization as complete
     });
@@ -341,14 +348,66 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
           width: 180.0,
         ),
         const SizedBox(width: 10.0),
+        if (widget.canGenerateExcel) // <-- Conditionally show button
+          CustomFilledButton(
+            onTap: _onSaveAsExcel,
+            text: 'Save as Excel',
+            width: 180.0,
+            height: 40.0,
+          ),
+        if (widget.canGenerateExcel) const SizedBox(width: 10.0),
         CustomFilledButton(
           onTap: _onPrint,
-          text: 'Print',
+          text: 'Print Document',
           width: 180.0,
           height: 40.0,
         ),
       ],
     );
+  }
+
+  Future<void> _onSaveAsExcel() async {
+    try {
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      if (selectedDirectory == null) return;
+
+      String baseFileName =
+          '${widget.docType.toString().split('.').last}-${DateFormat('yyyy-MM').format(DateTime.now())}';
+      String outputFilePath =
+          _getNextAvailableFileName(selectedDirectory, baseFileName);
+
+      await _excelDocumentService.generateAndSaveExcel(
+        data: widget.documentObject,
+        docType: widget.docType,
+        outputPath: outputFilePath,
+      );
+
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: HugeIcons.strokeRoundedXsl02,
+        title: 'File Saved',
+        subtitle: 'Document saved successfully at $outputFilePath',
+      );
+    } catch (e) {
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: HugeIcons.strokeRoundedFileNotFound,
+        title: 'File Unsaved',
+        subtitle: 'Failed to save document: $e',
+      );
+    }
+  }
+
+  String _getNextAvailableFileName(String directory, String baseFileName) {
+    int n = 1;
+    String fileName = '$baseFileName-$n.xlsx';
+    String filePath = '$directory/$fileName';
+    while (File(filePath).existsSync()) {
+      n++;
+      fileName = '$baseFileName-$n.xlsx';
+      filePath = '$directory/$fileName';
+    }
+    return filePath;
   }
 
   Future<void> _onPrint() async {
@@ -402,6 +461,7 @@ void showCustomDocumentPreview<T>({
   required BuildContext context,
   required T documentObject,
   required DocumentType docType,
+  bool canGenerateExcel = false, // <-- Add flag to function
 }) {
   showDialog(
     context: context,
@@ -409,6 +469,7 @@ void showCustomDocumentPreview<T>({
       return CustomDocumentPreview(
         documentObject: documentObject,
         docType: docType,
+        canGenerateExcel: canGenerateExcel, // <-- Pass flag
       );
     },
   );

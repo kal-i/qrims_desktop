@@ -19,7 +19,6 @@ class AccountableOfficerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('raw data received by accountable officer card: $officer');
     final officerInfo = officer['officer'] as Map<String, dynamic>;
     final items = (officer['items'] as List).cast<Map<String, dynamic>>();
 

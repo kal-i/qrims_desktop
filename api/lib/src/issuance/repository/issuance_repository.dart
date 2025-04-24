@@ -2845,17 +2845,16 @@ class IssuanceRepository {
     required DateTime receivedDate,
   }) async {
     final setClauses = <String>[
+      'receiving_officer_id = @receiving_officer_id',
       'received_date = @received_date',
+      'status = @status',
     ];
     final params = {
       'id': baseIssuanceEntityId,
+      'receiving_officer_id': receivingOfficerId,
       'received_date': receivedDate.toIso8601String(),
+      'status': IssuanceStatus.received.toString().split('.').last,
     };
-
-    if (receivingOfficerId.isNotEmpty) {
-      setClauses.add('receiving_officer_id = @receiving_officer_id');
-      params['receiving_officer_id'] = receivingOfficerId;
-    }
 
     if (setClauses.isEmpty) return false;
 
@@ -3033,5 +3032,77 @@ class IssuanceRepository {
     if (isPAR.isNotEmpty) return 'PAR';
 
     return null;
+  }
+
+  Future<bool> updateIssuanceItemEntityStatus({
+    required String baseItemId,
+    required IssuanceItemStatus status,
+    required DateTime date,
+    String? remarks,
+  }) async {
+    try {
+      final success = await _conn.runTx((ctx) async {
+        final result = await ctx.execute(
+          Sql.named('''
+          UPDATE IssuanceItems
+          SET status = @status,
+              ${status == IssuanceItemStatus.returned ? 'returned_date = @date,' : ''}
+              ${status == IssuanceItemStatus.lost ? 'lost_date = @date,' : ''}
+              remarks = @remarks
+          WHERE item_id = @item_id;
+          '''),
+          parameters: {
+            'item_id': baseItemId,
+            'status': status.toString().split('.').last,
+            'date': date.toIso8601String(),
+            'remarks': remarks,
+          },
+        );
+
+        if (result.affectedRows == 0) {
+          throw Exception('No rows were updated');
+        }
+
+        if (status == IssuanceItemStatus.returned) {
+          final issuedQtyResult = await ctx.execute(
+            Sql.named('''
+            SELECT issued_quantity FROM IssuanceItems
+            WHERE item_id = @item_id
+            ORDER BY returned_date DESC NULLS LAST
+            LIMIT 1;
+          '''),
+            parameters: {
+              'item_id': baseItemId,
+            },
+          );
+
+          final issuedQuantity =
+              issuedQtyResult.isNotEmpty ? issuedQtyResult.first[0] as int : 0;
+
+          final updateItemResult = await ctx.execute(
+            Sql.named('''
+            UPDATE Items
+            SET quantity = quantity + @issued_quantity
+            WHERE id = @id;
+          '''),
+            parameters: {
+              'id': baseItemId,
+              'issued_quantity': issuedQuantity,
+            },
+          );
+
+          if (updateItemResult.affectedRows == 0) {
+            throw Exception('Failed to update item quantity');
+          }
+        }
+
+        return true;
+      });
+
+      return success;
+    } catch (e) {
+      print('Transaction failed: $e');
+      return false;
+    }
   }
 }

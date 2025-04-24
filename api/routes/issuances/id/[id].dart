@@ -29,17 +29,17 @@ Future<Response> onRequest(
 
   return switch (context.request.method) {
     HttpMethod.get => _getIssuanceById(context, issuanceRepository, id),
-    HttpMethod.patch => _receiveIssuance(
-        context,
-        notifRepository,
-        issuanceRepository,
-        officerRepository,
-        prRepository,
-        userRepository,
-        sessionRepository,
-        id,
-      ),
-    HttpMethod.put => _updateIssuance(
+    // HttpMethod.patch => _receiveIssuance(
+    //     context,
+    //     notifRepository,
+    //     issuanceRepository,
+    //     officerRepository,
+    //     prRepository,
+    //     userRepository,
+    //     sessionRepository,
+    //     id,
+    //   ),
+    HttpMethod.patch => _updateIssuance(
         context,
         connection,
         officeRepository,
@@ -253,16 +253,12 @@ Future<Response> _updateIssuance(
       ? DateTime.parse(json['received_date'] as String)
       : json['received_date'] as DateTime;
 
-  final issuanceEntity = await issuanceRepository.getIssuanceById(
-    id: id,
-  );
+  final issuanceEntity = await issuanceRepository.getIssuanceById(id: id);
 
   if (issuanceEntity == null) {
     return Response.json(
       statusCode: HttpStatus.notFound,
-      body: {
-        'message': 'Base issuance entity not found.',
-      },
+      body: {'message': 'Base issuance entity not found.'},
     );
   }
 
@@ -285,29 +281,26 @@ Future<Response> _updateIssuance(
         positionId: receivingOfficerPositionId,
       );
 
-  await connection.runTx((ctx) async {
-    final updatedBaseIssuanceEntity =
-        await issuanceRepository.receiveIssuanceEntity(
+  final success = await connection.runTx((ctx) async {
+    final updated = await issuanceRepository.receiveIssuanceEntity(
       ctx: ctx,
       baseIssuanceEntityId: issuanceEntity.id,
       receivingOfficerId: receivingOfficerId,
       receivedDate: receivedDate,
     );
 
-    if (updatedBaseIssuanceEntity) {
-      return Response.json(
-        statusCode: 200,
-        body: {
-          'message': 'Base issuance entity updated: $id',
-        },
-      );
-    }
+    return updated;
   });
+
+  if (success) {
+    return Response.json(
+      statusCode: HttpStatus.ok,
+      body: {'message': 'Base issuance entity updated: $id'},
+    );
+  }
 
   return Response.json(
     statusCode: HttpStatus.internalServerError,
-    body: {
-      'message': 'Failed to update issuance.',
-    },
+    body: {'message': 'Failed to update issuance.'},
   );
 }
