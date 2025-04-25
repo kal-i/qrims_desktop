@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/ics_type.dart';
+import '../../../../core/enums/issuance_item_status.dart';
 import '../../../../core/error/failure.dart';
 import '../entities/inventory_custodian_slip.dart';
 import '../entities/issuance.dart';
@@ -160,5 +161,26 @@ abstract interface class IssuanceRepository {
       generateSemiExpendablePropertyCardData({
     required String icsId,
     required FundCluster fundCluster,
+  });
+
+  Future<Either<Failure, bool>> receiveIssuance({
+    required String baseIssuanceId,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required DateTime receivedDate,
+  });
+
+  Future<Either<Failure, List<Map<String, dynamic>>>> getOfficerAccountability({
+    required String officerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  Future<Either<Failure, bool>> resolveIssuanceItem({
+    required String baseItemId,
+    required IssuanceItemStatus status,
+    required DateTime date,
+    String? remarks,
   });
 }

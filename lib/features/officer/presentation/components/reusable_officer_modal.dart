@@ -94,9 +94,10 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 900.0,
-      height: 500.0,
+      width: 600.0,
+      height: 550.0,
       headerTitle: 'Add Officer',
+      subtitle: '',
       content: _buildContent(),
       footer: _buildActionsRow(),
     );
@@ -106,19 +107,14 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
     return Form(
       key: _formKey,
       child: Column(
+        spacing: 20.0,
         children: [
           CustomFormTextField(
             controller: _nameController,
             label: 'Name',
             placeholderText: 'Enter officer\'s name',
           ),
-          const SizedBox(
-            height: 20.0,
-          ),
           _buildOfficeNameSearchBox(),
-          const SizedBox(
-            height: 20.0,
-          ),
           _buildPositionSearchBox(),
         ],
       ),

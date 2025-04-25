@@ -124,3 +124,27 @@ final class GeneratedSemiExpendablePropertyCardData extends IssuancesState {
 
   final List<Map<String, dynamic>> semiExpendablePropertyCardData;
 }
+
+final class ReceivedIssuance extends IssuancesState {
+  const ReceivedIssuance({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+}
+
+final class FetchedOfficerAccountability extends IssuancesState {
+  const FetchedOfficerAccountability({
+    required this.officerAccountability,
+  });
+
+  final List<Map<String, dynamic>> officerAccountability;
+}
+
+final class ResolvedIssuanceItem extends IssuancesState {
+  const ResolvedIssuanceItem({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+}

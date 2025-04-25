@@ -283,3 +283,45 @@ final class GenerateSemiExpendablePropertyCardDataEvent extends IssuancesEvent {
   final String icsId;
   final FundCluster fundCluster;
 }
+
+final class ReceiveIssuanceEvent extends IssuancesEvent {
+  const ReceiveIssuanceEvent({
+    required this.baseIssuanceId,
+    required this.receivingOfficerOffice,
+    required this.receivingOfficerPosition,
+    required this.receivingOfficerName,
+    required this.receivedDate,
+  });
+
+  final String baseIssuanceId;
+  final String receivingOfficerOffice;
+  final String receivingOfficerPosition;
+  final String receivingOfficerName;
+  final DateTime receivedDate;
+}
+
+final class GetOfficerAccountabilityEvent extends IssuancesEvent {
+  const GetOfficerAccountabilityEvent({
+    required this.officerId,
+    this.startDate,
+    this.endDate,
+  });
+
+  final String officerId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+}
+
+final class ResolveIssuanceItemEvent extends IssuancesEvent {
+  const ResolveIssuanceItemEvent({
+    required this.baseItemId,
+    required this.status,
+    required this.date,
+    this.remarks,
+  });
+
+  final String baseItemId;
+  final IssuanceItemStatus status;
+  final DateTime date;
+  final String? remarks;
+}

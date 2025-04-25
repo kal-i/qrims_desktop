@@ -66,5 +66,8 @@ const inventorySemiExpendablePropertyReportEP =
 const inventoryPropertyReportEP = '$issuancesEP/inventory_property_report';
 const semiExpendablePropertyCardDataEP =
     '$issuancesEP/generate_semi_expendable_property_card_data';
+const accountabilityEP = '$issuancesEP/accountability';
+const officerAccountabilityEP = '$accountabilityEP/officer';
+const resolveIssuanceItemEP = '$accountabilityEP/resolve';
 
 const notificationsEP = '/notifications';

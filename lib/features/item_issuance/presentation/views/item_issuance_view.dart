@@ -36,6 +36,7 @@ import '../../../../init_dependencies.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
+import '../../domain/entities/issuance.dart';
 import '../../domain/entities/property_acknowledgement_receipt.dart';
 import '../../domain/entities/requisition_and_issue_slip.dart';
 import '../bloc/issuances_bloc.dart';
@@ -46,6 +47,7 @@ import '../components/custom_interactable_card.dart';
 import '../components/document_card.dart';
 import '../components/generate_inventory_report_modal.dart';
 import '../components/generate_semi_expendable_property_card_modal.dart.dart';
+import '../components/receive_issuance_modal.dart';
 
 class ItemIssuanceView extends StatefulWidget {
   const ItemIssuanceView({super.key});
@@ -677,10 +679,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                 ),
               ],
               menuItems: [
-                {
-                  'text': 'View',
-                  'icon': FluentIcons.eye_12_regular,
-                },
+                // {
+                //   'text': 'View',
+                //   'icon': FluentIcons.eye_12_regular,
+                // },
                 // {
                 //   'text': 'Manual Receive',
                 //   'icon': HugeIcons.strokeRoundedPackageReceive,
@@ -710,11 +712,11 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                     'text': 'Generate RIS Document',
                     'icon': HugeIcons.strokeRoundedDocumentAttachment,
                   },
-                // if (issuance is InventoryCustodianSlipEntity)
-                //   {
-                //     'text': 'Generate Semi-expendable Property Card',
-                //     'icon': HugeIcons.strokeRoundedFile01,
-                //   },
+                if (!isAdmin)
+                  {
+                    'text': 'Receive Issuance',
+                    'icon': HugeIcons.strokeRoundedDownload04,
+                  },
               ],
               object: issuance,
             );
@@ -827,6 +829,27 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                               context: context,
                               documentObject: issuanceObj,
                               docType: DocumentType.sticker,
+                            );
+                          }
+
+                          if (action.contains('Receive Issuance')) {
+                            final issuanceEntity =
+                                issuanceObj as IssuanceEntity;
+                            final receivingOfficerEntity =
+                                issuanceEntity.receivingOfficerEntity;
+
+                            showDialog(
+                              context: context,
+                              builder: (context) => ReceiveIssuanceModal(
+                                baseIssuanceId: issuanceEntity.id,
+                                receivingOfficerOffice:
+                                    receivingOfficerEntity?.officeName,
+                                receivingOfficerPosition:
+                                    receivingOfficerEntity?.positionName,
+                                receivingOfficerName:
+                                    receivingOfficerEntity?.name,
+                                receivedDate: issuanceEntity.receivedDate,
+                              ),
                             );
                           }
 

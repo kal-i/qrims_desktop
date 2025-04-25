@@ -24,46 +24,12 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   final _nameController = TextEditingController();
 
   final ValueNotifier<String?> _selectedOfficeName = ValueNotifier(null);
+  final ValueNotifier<String?> _selectedPositionName = ValueNotifier(null);
 
   @override
   void initState() {
     super.initState();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
-  }
-
-  Future<List<String>?> _nameSuggestionCallback(String? name) async {
-    final names = await _officerSuggestionsService.fetchOfficers(
-      officerName: name,
-    );
-
-    if (names == null) {
-      _nameController.clear();
-    }
-
-    return names;
-  }
-
-  Future<List<String>?> _officeSuggestionCallback(String? officeName) async {
-    final offices = await _officerSuggestionsService.fetchOffices(
-      officeName: officeName,
-    );
-
-    if (offices == null) {
-      _positionNameController.clear();
-      _selectedOfficeName.value = null;
-    }
-
-    return offices;
-  }
-
-  void _onOfficeSelected(String value) {
-    _officeNameController.text = value;
-    _positionNameController.clear();
-    _selectedOfficeName.value = value;
-  }
-
-  void _onPositionSelected(String value) {
-    _positionNameController.text = value;
   }
 
   @override
@@ -81,6 +47,8 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
       width: 600.0,
       height: 450.0,
       headerTitle: "Add Receiving Officer",
+      subtitle:
+          'Designated accountable officer or recipeint of this issuance document.',
       content: _buildContent(),
       footer: _buildActionsRow(),
     );
@@ -90,32 +58,40 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
     return Column(
       spacing: 20.0,
       children: [
-        _buildOfficerNameSearchBox(),
         _buildOfficeNameSearchBox(),
         _buildPositionSearchBox(),
+        _buildOfficerNameSearchBox(),
       ],
-    );
-  }
-
-  Widget _buildOfficerNameSearchBox() {
-    return CustomSearchField(
-      suggestionsCallback: _nameSuggestionCallback,
-      onSelected: (value) {
-        _nameController.text = value;
-        // Optionally, you can set _showAdditionalFields.value = false here if needed
-      },
-      controller: _nameController,
-      label: 'Officer Name',
-      placeHolderText: 'Enter officer\'s name',
     );
   }
 
   Widget _buildOfficeNameSearchBox() {
     return CustomSearchField(
-      suggestionsCallback: _officeSuggestionCallback,
-      onSelected: _onOfficeSelected,
+      suggestionsCallback: (officeName) async {
+        final offices = await _officerSuggestionsService.fetchOffices(
+          officeName: officeName,
+        );
+
+        if (offices == null) {
+          _positionNameController.clear();
+          _nameController.clear();
+
+          _selectedOfficeName.value = null;
+          _selectedPositionName.value = null;
+        }
+
+        return offices;
+      },
+      onSelected: (value) {
+        _officeNameController.text = value;
+        _positionNameController.clear();
+        _nameController.clear();
+
+        _selectedOfficeName.value = value;
+        _selectedPositionName.value = null;
+      },
       controller: _officeNameController,
-      label: 'Office Name',
+      label: 'Office',
       placeHolderText: 'Enter officer\'s office',
     );
   }
@@ -125,23 +101,70 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
       valueListenable: _selectedOfficeName,
       builder: (context, selectedOfficeName, child) {
         return CustomSearchField(
+          key: ValueKey(selectedOfficeName),
           suggestionsCallback: (String? positionName) async {
             if (selectedOfficeName != null && selectedOfficeName.isNotEmpty) {
-              final positionNames =
+              final positions =
                   await _officerSuggestionsService.fetchOfficePositions(
                 officeName: selectedOfficeName,
                 positionName: positionName,
               );
 
-              return positionNames;
+              if (positions == null) {
+                _nameController.clear();
+                _selectedPositionName.value = null;
+              }
+
+              return positions;
             }
             return null;
           },
-          onSelected: _onPositionSelected,
+          onSelected: (value) {
+            _positionNameController.text = value;
+            _nameController.clear();
+            _selectedPositionName.value = value;
+          },
           controller: _positionNameController,
-          label: 'Position Name',
+          label: 'Position',
           placeHolderText: 'Enter officer\'s position',
         );
+      },
+    );
+  }
+
+  Widget _buildOfficerNameSearchBox() {
+    return ValueListenableBuilder(
+      valueListenable: _selectedOfficeName,
+      builder: (context, selectedOfficeName, child) {
+        return ValueListenableBuilder(
+            valueListenable: _selectedPositionName,
+            builder: (context, selectedPositionName, child) {
+              return CustomSearchField(
+                key: ValueKey('$selectedOfficeName-$selectedPositionName'),
+                suggestionsCallback: (String? officerName) async {
+                  if ((selectedOfficeName != null &&
+                          selectedOfficeName.isNotEmpty) &&
+                      (selectedPositionName != null &&
+                          selectedPositionName.isNotEmpty)) {
+                    final officers =
+                        await _officerSuggestionsService.fetchOfficers(
+                      officeName: selectedOfficeName,
+                      positionName: selectedPositionName,
+                      officerName: officerName,
+                    );
+
+                    return officers;
+                  }
+                  return null;
+                },
+                onSelected: (value) {
+                  _nameController.text = value;
+                },
+                controller: _nameController,
+                label: 'Name',
+                placeHolderText: 'Enter officer\'s name',
+              );
+            });
       },
     );
   }
@@ -171,7 +194,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
             };
             context.pop(officerData);
           },
-          text: 'Create',
+          text: 'Add',
           width: 180.0,
           height: 40.0,
         ),

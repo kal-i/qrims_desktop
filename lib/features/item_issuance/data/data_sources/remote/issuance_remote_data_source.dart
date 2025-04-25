@@ -1,6 +1,7 @@
 import '../../../../../core/enums/asset_sub_class.dart';
 import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/ics_type.dart';
+import '../../../../../core/enums/issuance_item_status.dart';
 import '../../models/inventory_custodian_slip.dart';
 import '../../models/issuance.dart';
 import '../../models/matched_item_with_pr.dart';
@@ -152,5 +153,26 @@ abstract interface class IssuanceRemoteDataSource {
   Future<List<Map<String, dynamic>>> generateSemiExpendablePropertyCardData({
     required String icsId,
     required FundCluster fundCluster,
+  });
+
+  Future<bool> receiveIssuance({
+    required String baseIssuanceId,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required DateTime receivedDate,
+  });
+
+  Future<List<Map<String, dynamic>>> getOfficerAccountability({
+    required String officerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  Future<bool> resolveIssuanceItem({
+    required String baseItemId,
+    required IssuanceItemStatus status,
+    required DateTime date,
+    String? remarks,
   });
 }

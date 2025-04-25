@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/ics_type.dart';
+import '../../../../core/enums/issuance_item_status.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
@@ -408,6 +409,69 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
           await issuanceRemoteDataSource.generateSemiExpendablePropertyCardData(
         icsId: icsId,
         fundCluster: fundCluster,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> receiveIssuance({
+    required String baseIssuanceId,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required DateTime receivedDate,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.receiveIssuance(
+        baseIssuanceId: baseIssuanceId,
+        receivingOfficerOffice: receivingOfficerOffice,
+        receivingOfficerPosition: receivingOfficerPosition,
+        receivingOfficerName: receivingOfficerName,
+        receivedDate: receivedDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getOfficerAccountability({
+    required String officerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.getOfficerAccountability(
+        officerId: officerId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> resolveIssuanceItem({
+    required String baseItemId,
+    required IssuanceItemStatus status,
+    required DateTime date,
+    String? remarks,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.resolveIssuanceItem(
+        baseItemId: baseItemId,
+        status: status,
+        date: date,
+        remarks: remarks,
       );
 
       return right(response);

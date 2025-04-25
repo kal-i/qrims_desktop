@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/ics_type.dart';
+import '../../../../core/enums/issuance_item_status.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
 import '../../domain/entities/issuance.dart';
 import '../../domain/entities/matched_item_with_pr.dart';
@@ -19,8 +20,11 @@ import '../../domain/usecases/get_inventory_property_report.dart';
 import '../../domain/usecases/get_inventory_semi_expendable_report.dart';
 import '../../domain/usecases/get_inventory_supply_report.dart';
 import '../../domain/usecases/get_issuance_by_id.dart';
+import '../../domain/usecases/get_officer_accountability.dart';
 import '../../domain/usecases/get_paginated_issuances.dart';
 import '../../domain/usecases/match_item_with_pr.dart';
+import '../../domain/usecases/receive_issuance.dart';
+import '../../domain/usecases/resolve_issuance_item.dart';
 import '../../domain/usecases/update_issuance_archive_status.dart';
 
 part 'issuance_events.dart';
@@ -43,6 +47,9 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required GetInventoryPropertyReport getInventoryPropertyReport,
     required GenerateSemiExpendablePropertyCardData
         generateSemiExpendablePropertyCardData,
+    required ReceiveIssuance receiveIssuance,
+    required GetOfficerAccountability getOfficerAccountability,
+    required ResolveIssuanceItem resolveIssuanceItem,
   })  : _getIssuanceById = getIssuanceById,
         _getPaginatedIssuances = getPaginatedIssuances,
         _matchItemWithPr = matchItemWithPr,
@@ -58,6 +65,9 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _getInventoryPropertyReport = getInventoryPropertyReport,
         _generateSemiExpendablePropertyCardData =
             generateSemiExpendablePropertyCardData,
+        _receiveIssuance = receiveIssuance,
+        _getOfficerAccountability = getOfficerAccountability,
+        _resolveIssuanceItem = resolveIssuanceItem,
         super(IssuancesInitial()) {
     on<GetIssuanceByIdEvent>(_onGetIssuanceByIdEvent);
     on<GetPaginatedIssuancesEvent>(_onGetPaginatedIssuancesEvent);
@@ -74,6 +84,9 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<GetInventoryPropertyReportEvent>(_onGetInventoryPropertyReport);
     on<GenerateSemiExpendablePropertyCardDataEvent>(
         _onGenerateSemiExpendablePropertyCardData);
+    on<ReceiveIssuanceEvent>(_onReceiveIssuance);
+    on<GetOfficerAccountabilityEvent>(_onGetOfficerAccountability);
+    on<ResolveIssuanceItemEvent>(_onResolveIssuanceItem);
   }
 
   final GetIssuanceById _getIssuanceById;
@@ -91,6 +104,9 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final GetInventoryPropertyReport _getInventoryPropertyReport;
   final GenerateSemiExpendablePropertyCardData
       _generateSemiExpendablePropertyCardData;
+  final ReceiveIssuance _receiveIssuance;
+  final GetOfficerAccountability _getOfficerAccountability;
+  final ResolveIssuanceItem _resolveIssuanceItem;
 
   void _onGetIssuanceByIdEvent(
     GetIssuanceByIdEvent event,
@@ -479,6 +495,81 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         GeneratedSemiExpendablePropertyCardData(
           semiExpendablePropertyCardData: r,
+        ),
+      ),
+    );
+  }
+
+  void _onReceiveIssuance(
+    ReceiveIssuanceEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _receiveIssuance(
+      ReceiveIssuanceParams(
+        baseIssuanceId: event.baseIssuanceId,
+        receivingOfficerOffice: event.receivingOfficerOffice,
+        receivingOfficerPosition: event.receivingOfficerPosition,
+        receivingOfficerName: event.receivingOfficerName,
+        receivedDate: event.receivedDate,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        ReceivedIssuance(
+          isSuccessful: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGetOfficerAccountability(
+    GetOfficerAccountabilityEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getOfficerAccountability(
+      GetOfficerAccountabilityParams(
+        officerId: event.officerId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        FetchedOfficerAccountability(
+          officerAccountability: r,
+        ),
+      ),
+    );
+  }
+
+  void _onResolveIssuanceItem(
+    ResolveIssuanceItemEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _resolveIssuanceItem(
+      ResolveIssuanceItemParams(
+        baseItemId: event.baseItemId,
+        status: event.status,
+        date: event.date,
+        remarks: event.remarks,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(IssuancesError(message: l.message)),
+      (r) => emit(
+        ResolvedIssuanceItem(
+          isSuccessful: r,
         ),
       ),
     );

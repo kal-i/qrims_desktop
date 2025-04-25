@@ -6,6 +6,7 @@ import '../../../../../core/constants/endpoints.dart';
 import '../../../../../core/enums/asset_sub_class.dart';
 import '../../../../../core/enums/fund_cluster.dart';
 import '../../../../../core/enums/ics_type.dart';
+import '../../../../../core/enums/issuance_item_status.dart';
 import '../../../../../core/error/dio_exception_formatter.dart';
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/services/http_service.dart';
@@ -629,6 +630,96 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
             response.data['semi_expendable_property_card_data']);
       } else {
         throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> receiveIssuance({
+    required String baseIssuanceId,
+    required String receivingOfficerOffice,
+    required String receivingOfficerPosition,
+    required String receivingOfficerName,
+    required DateTime receivedDate,
+  }) async {
+    try {
+      final Map<String, dynamic> params = {
+        'receiving_officer_office': receivingOfficerOffice,
+        'receiving_officer_position': receivingOfficerPosition,
+        'receiving_officer_name': receivingOfficerName,
+        'received_date': receivedDate.toIso8601String(),
+      };
+
+      final response = await httpService.patch(
+        endpoint: '$issuancesIdEP/$baseIssuanceId',
+        params: params,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw const ServerException('Failed to receive issuance.');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getOfficerAccountability({
+    required String officerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'officer_id': officerId,
+        if (startDate != null) 'start_date': startDate.toIso8601String(),
+        if (endDate != null) 'end_date': endDate.toIso8601String(),
+      };
+
+      final response = await httpService.get(
+        endpoint: '$officerAccountabilityEP/$officerId',
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(
+          response.data,
+        );
+      } else {
+        throw ServerException('Failed to fetch data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> resolveIssuanceItem({
+    required String baseItemId,
+    required IssuanceItemStatus status,
+    required DateTime date,
+    String? remarks,
+  }) async {
+    try {
+      final Map<String, dynamic> params = {
+        'status': status.toString().split('.').last,
+        'date': date.toIso8601String(),
+        if (remarks != null && remarks.isNotEmpty) 'remarks': remarks,
+      };
+
+      final response = await httpService.patch(
+        endpoint: '$resolveIssuanceItemEP/$baseItemId',
+        params: params,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw const ServerException('Failed to resolve issuance item.');
       }
     } catch (e) {
       throw ServerException(e.toString());

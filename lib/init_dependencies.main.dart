@@ -404,6 +404,21 @@ void _registerItemIssuanceDependencies() {
         issuanceRepository: serviceLocator(),
       ),
     )
+    ..registerFactory(
+      () => ReceiveIssuance(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+      () => GetOfficerAccountability(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+      () => ResolveIssuanceItem(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
     ..registerFactory<IssuancesBloc>(
       () => IssuancesBloc(
         getIssuanceById: serviceLocator(),
@@ -419,6 +434,9 @@ void _registerItemIssuanceDependencies() {
         getInventorySemiExpendablePropertyReport: serviceLocator(),
         getInventoryPropertyReport: serviceLocator(),
         generateSemiExpendablePropertyCardData: serviceLocator(),
+        receiveIssuance: serviceLocator(),
+        getOfficerAccountability: serviceLocator(),
+        resolveIssuanceItem: serviceLocator(),
       ),
     );
 }

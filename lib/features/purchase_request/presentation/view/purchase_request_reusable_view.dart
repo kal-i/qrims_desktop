@@ -796,38 +796,6 @@ class _PurchaseRequestReusableViewState
     );
   }
 
-  // final _officeScrollController = ScrollController();
-  // final ValueNotifier<int> _currentOfficePage = ValueNotifier(1);
-  //
-  // Future<void> _loadMoreOffices() async {
-  //   if (_officeScrollController.position.pixels == _officeScrollController.position.maxScrollExtent) {
-  //     print('triggered!');
-  //     _currentOfficePage.value++;
-  //   }
-  // }
-
-  // Widget _buildOfficeSuggestionField() {
-  //   return ValueListenableBuilder(
-  //     valueListenable: _currentOfficePage,
-  //     builder: (context, currentPage, child) {
-  //       return CustomSearchField(
-  //         suggestionsCallback: (officeName) async {
-  //           return await _officerSuggestionsService.fetchOffices(
-  //             page: currentPage,
-  //             officeName: officeName,
-  //           );
-  //         },
-  //         onSelected: (value) {
-  //           _officeController.text = value;
-  //         },
-  //         controller: _officeController,
-  //         label: 'Office',
-  //         scrollController: _officeScrollController,
-  //       );
-  //     }
-  //   );
-  // }
-
   Widget _buildOfficeSuggestionField() {
     return CustomSearchField(
       suggestionsCallback: (officeName) async {

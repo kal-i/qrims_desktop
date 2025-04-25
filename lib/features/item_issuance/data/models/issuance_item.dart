@@ -41,7 +41,7 @@ class IssuanceItemModel extends IssuanceItemEntity {
           : null,
       returnedDate: json['returned_date'] != null
           ? json['returned_date'] is String
-              ? DateTime.parse(json['retuned_date'] as String)
+              ? DateTime.parse(json['returned_date'] as String)
               : json['returned_date'] as DateTime
           : null,
       lostDate: json['lost_date'] != null

@@ -8,8 +8,8 @@ class HttpService {
   String? bearerToken;
 
   HttpService(this.dio) {
-    dio.options.baseUrl =
-        'http://localhost:8080'; // dotenv.env['API_BASE_URL']!;
+    dio.options.baseUrl = dotenv.env['API_BASE_URL']!;
+    // 'http://localhost:8080';
     dio.options.headers['Content-Type'] = 'application/json';
 
     dio.interceptors.add(

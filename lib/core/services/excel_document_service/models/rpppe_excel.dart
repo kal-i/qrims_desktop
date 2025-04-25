@@ -297,15 +297,17 @@ class RPPPEExcelDocument {
           double.parse(inventoryProperty['unit_value'].toString());
 
       // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
-      final totalQuantity =
-          inventoryProperty['balance_from_previous_row_after_issuance'] == 0
-              ? inventoryProperty['total_quantity_available_and_issued'] != null
-                  ? int.tryParse(
+      final totalQuantity = inventoryProperty[
+                  'balance_from_previous_row_after_issuance'] ==
+              0
+          ? inventoryProperty['total_quantity_available_and_issued'] != null
+              ? int.tryParse(
                       inventoryProperty['total_quantity_available_and_issued']
                               ?.toString() ??
-                          '0')
-                  : inventoryProperty['current_quantity_in_stock']
-              : inventoryProperty['balance_from_previous_row_after_issuance'];
+                          '0') ??
+                  0
+              : inventoryProperty['current_quantity_in_stock'] ?? 0
+          : inventoryProperty['balance_from_previous_row_after_issuance'] ?? 0;
 
       final balanceAfterIssue = int.tryParse(
               inventoryProperty['balance_per_row_after_issuance']?.toString() ??
@@ -387,6 +389,8 @@ class RPPPEExcelDocument {
 
       final cellStyle = sheet.cell(CellIndex.indexByString('C14')).cellStyle;
 
+      print('reached here!');
+
       if (i > 0) {
         final rowIndex = startRow + i - 1;
         sheet.insertRow(rowIndex);
@@ -457,7 +461,7 @@ class RPPPEExcelDocument {
     String propertyNo,
     String unit,
     double unitValue,
-    dynamic totalQuantity,
+    int totalQuantity,
     int balanceAfterIssue,
     String remarks,
     String dateAcquired,
@@ -503,7 +507,7 @@ class RPPPEExcelDocument {
       CellInfo(7, propertyNo),
       CellInfo(8, unit),
       CellInfo(9, unitValue.toString()),
-      CellInfo(10, totalQuantity.toString()),
+      CellInfo(10, totalQuantity?.toString() ?? '0'), // Fix here
       CellInfo(11, balanceAfterIssue.toString()),
       const CellInfo(12, '0'),
       const CellInfo(13, '0'),
