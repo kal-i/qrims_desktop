@@ -678,7 +678,7 @@ class InventoryItem extends BaseItemModel {
           })
         : null;
 
-    print('almost done processing the equipment model...');
+    print('almost done processing the inventory model...');
 
     return InventoryItem(
       id: json['inventory_id'] as int,

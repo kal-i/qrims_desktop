@@ -246,9 +246,9 @@ Future<Response> _updateIssuance(
   String id,
 ) async {
   final json = await context.request.json();
-  final receivingOfficerName = json['receiving_officer_name'] as String;
-  final receivingOfficerPosition = json['receiving_officer_position'] as String;
   final receivingOfficerOffice = json['receiving_officer_office'] as String;
+  final receivingOfficerPosition = json['receiving_officer_position'] as String;
+  final receivingOfficerName = json['receiving_officer_name'] as String;
   final receivedDate = json['received_date'] is String
       ? DateTime.parse(json['received_date'] as String)
       : json['received_date'] as DateTime;

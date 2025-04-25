@@ -184,6 +184,7 @@ class IssuanceItem {
       final status = IssuanceItemStatus.values.firstWhere(
         (e) => e.toString().split('.').last == json['status'],
       );
+      print('status: $status');
 
       return IssuanceItem(
         issuanceId: json['issuance_id'] as String,
@@ -200,7 +201,7 @@ class IssuanceItem {
             : null,
         returnedDate: json['returned_date'] != null
             ? json['returned_date'] is String
-                ? DateTime.parse(json['retuned_date'] as String)
+                ? DateTime.parse(json['returned_date'] as String)
                 : json['returned_date'] as DateTime
             : null,
         lostDate: json['lost_date'] != null
