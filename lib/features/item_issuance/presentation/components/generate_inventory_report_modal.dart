@@ -1,15 +1,7 @@
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
-import 'package:intl/intl.dart';
 
-import '../../../../config/themes/app_color.dart';
-import '../../../../config/themes/app_theme.dart';
-import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/base_modal.dart';
 import '../../../../core/common/components/custom_date_picker.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
@@ -20,13 +12,10 @@ import '../../../../core/enums/asset_sub_class.dart';
 import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/generate_inventory_report.dart';
-import '../../../../core/services/excel_document_service/excel_document_service.dart';
 import '../../../../core/utils/custom_date_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../init_dependencies.dart';
 import '../bloc/issuances_bloc.dart';
 import 'custom_document_preview.dart';
 
@@ -48,7 +37,6 @@ class GenerateInventoryReportModal extends StatefulWidget {
 class _GenerateInventoryReportModalState
     extends State<GenerateInventoryReportModal> {
   late IssuancesBloc _issuancesBloc;
-  late ExcelDocumentService _excelDocumentService;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -75,7 +63,6 @@ class _GenerateInventoryReportModalState
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
-    _excelDocumentService = serviceLocator<ExcelDocumentService>();
   }
 
   void _addOfficerField() {
@@ -100,64 +87,6 @@ class _GenerateInventoryReportModalState
       // Assign the updated list back to the ValueNotifier
       _officers.value = updatedList;
     }
-  }
-
-  Future<void> _generateAndSaveExcel(
-    dynamic dataObject,
-    DocumentType docType,
-  ) async {
-    try {
-      // Allow the user to pick a directory
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-
-      if (selectedDirectory == null) {
-        // User canceled the picker
-        return;
-      }
-
-      // Generate the base file name (FileName-YYYY-MM)
-      String baseFileName =
-          '${docType.toString().split('.').last}-${DateFormat('yyyy-MM').format(DateTime.now())}';
-
-      // Find the next available file name
-      String outputFilePath =
-          _getNextAvailableFileName(selectedDirectory, baseFileName);
-
-      await _excelDocumentService.generateAndSaveExcel(
-        data: dataObject,
-        docType: docType,
-        outputPath: outputFilePath,
-      );
-
-      DelightfulToastUtils.showDelightfulToast(
-        context: context,
-        icon: HugeIcons.strokeRoundedXsl02,
-        title: 'File Saved',
-        subtitle: 'Document saved successfully at $outputFilePath',
-      );
-    } catch (e) {
-      DelightfulToastUtils.showDelightfulToast(
-        context: context,
-        icon: HugeIcons.strokeRoundedFileNotFound,
-        title: 'File Unsaved',
-        subtitle: 'Failed to save document: $e',
-      );
-    }
-  }
-
-  String _getNextAvailableFileName(String directory, String baseFileName) {
-    int n = 1; // Start with N = 1
-    String fileName = '$baseFileName-$n.xlsx'; // Initial file name
-    String filePath = '$directory/$fileName';
-
-    // Check if the file already exists
-    while (File(filePath).existsSync()) {
-      n++; // Increment N
-      fileName = '$baseFileName-$n.xlsx'; // Update file name
-      filePath = '$directory/$fileName';
-    }
-
-    return filePath;
   }
 
   void _onGenerateReport() {
@@ -608,9 +537,6 @@ class _GenerateInventoryReportModalState
           },
           label: 'Start Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -632,9 +558,6 @@ class _GenerateInventoryReportModalState
           },
           label: 'End Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -656,9 +579,6 @@ class _GenerateInventoryReportModalState
           },
           label: 'As At Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -680,9 +600,6 @@ class _GenerateInventoryReportModalState
           },
           label: 'Accountable Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -712,9 +629,6 @@ class _GenerateInventoryReportModalState
               ),
             ),
           ],
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
           label: 'Asset Sub Class',
           hasValidation: false,
         );
@@ -746,9 +660,6 @@ class _GenerateInventoryReportModalState
               ),
             ),
           ],
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
           hasValidation: false,
         );
@@ -760,8 +671,6 @@ class _GenerateInventoryReportModalState
     return BlocListener<IssuancesBloc, IssuancesState>(
       listener: (context, state) {
         if (state is FetchedInventoryReport) {
-          //context.pop();
-
           List<Map<String, String>> certifyingOffcers =
               _officers.value.map((officer) {
             return {
@@ -769,8 +678,6 @@ class _GenerateInventoryReportModalState
               'position': officer['position']!.text,
             };
           }).toList();
-
-          print('officers data: $certifyingOffcers');
 
           final dataObject = {
             if (widget.generateInventoryReportType !=
@@ -795,30 +702,23 @@ class _GenerateInventoryReportModalState
             'certifying_officers': certifyingOffcers,
           };
 
-          switch (widget.generateInventoryReportType) {
-            case GenerateInventoryReportType.rcpi:
-              _generateAndSaveExcel(dataObject, DocumentType.rpci);
-              showCustomDocumentPreview(
-                context: context,
-                documentObject: dataObject,
-                docType: DocumentType.rpci,
-              );
-
-            case GenerateInventoryReportType.rcsep:
-              _generateAndSaveExcel(dataObject, DocumentType.annexA8);
-              showCustomDocumentPreview(
-                context: context,
-                documentObject: dataObject,
-                docType: DocumentType.annexA8,
-              );
-            case GenerateInventoryReportType.rcppe:
-              _generateAndSaveExcel(dataObject, DocumentType.a73);
-              showCustomDocumentPreview(
-                context: context,
-                documentObject: dataObject,
-                docType: DocumentType.a73,
-              );
-          }
+          showCustomDocumentPreview(
+            context: context,
+            documentObject: dataObject,
+            docType: widget.generateInventoryReportType ==
+                    GenerateInventoryReportType.rcpi
+                ? DocumentType.rpci
+                : widget.generateInventoryReportType ==
+                        GenerateInventoryReportType.rcsep
+                    ? DocumentType.annexA8
+                    : DocumentType.a73,
+            canGenerateExcel: widget.generateInventoryReportType ==
+                    GenerateInventoryReportType.rcpi ||
+                widget.generateInventoryReportType ==
+                    GenerateInventoryReportType.rcsep ||
+                widget.generateInventoryReportType ==
+                    GenerateInventoryReportType.rcppe,
+          );
         }
       },
       child: Row(

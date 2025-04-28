@@ -28,6 +28,7 @@ import '../../../../core/utils/show_confirmation_dialog.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/issuances_bloc.dart';
+import '../components/item_card.dart';
 import '../components/item_selection_modal.dart';
 
 /// todo: add a manual search option if no items found
@@ -107,6 +108,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       ValueNotifier(null);
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
 
+  final ValueNotifier<List<Map<String, dynamic>>> _items = ValueNotifier([]);
+
   late TableConfig _prTableConfig;
   late TableConfig _issuedTableConfig;
 
@@ -171,8 +174,85 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     );
   }
 
+  void _removeItem(int index) {
+    final updated = List<Map<String, dynamic>>.from(_items.value);
+    updated.removeAt(index);
+    _items.value = updated;
+  }
+
+  void _editItemQuantity(int index) async {
+    final currentItem = _items.value[index];
+    final currentQuantity = currentItem['issued_quantity'] ?? 1;
+    final maxQuantity = currentItem['shareable_item_information']['quantity'];
+
+    final controller = TextEditingController(text: currentQuantity.toString());
+    String? errorText; // <-- For showing the live error message
+
+    final newQuantity = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Quantity'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: 'Enter quantity (1 to $maxQuantity)',
+                      errorText: errorText, // <-- Show the error here
+                    ),
+                    onChanged: (text) {
+                      final value = int.tryParse(text);
+                      setState(() {
+                        if (value == null || value < 1) {
+                          errorText = 'Minimum quantity is 1.';
+                        } else if (value > maxQuantity) {
+                          errorText = 'Cannot exceed $maxQuantity.';
+                        } else {
+                          errorText = null; // valid input
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final value = int.tryParse(controller.text);
+                    if (value != null && value >= 1 && value <= maxQuantity) {
+                      Navigator.pop(context, value);
+                    } else {
+                      // do nothing, because the error message is already shown
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (newQuantity != null) {
+      final updated = List<Map<String, dynamic>>.from(_items.value);
+      updated[index]['issued_quantity'] = newQuantity;
+      _items.value = updated;
+    }
+  }
+
   void _saveIssuance() async {
-    if (_issuedTableRows.value.isEmpty) {
+    print('items: ${_items.value}');
+    if (_items.value.isEmpty) {
       DelightfulToastUtils.showDelightfulToast(
         context: context,
         icon: Icons.error_outline,
@@ -195,10 +275,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             CreateICSEvent(
               issuedDate: _pickedDate.value,
               type: _selectedIcsType.value,
-              issuanceItems: (_issuedTableRows.value)
-                  .map((issuedTableRow) =>
-                      issuedTableRow.object as Map<String, dynamic>)
-                  .toList(),
+              issuanceItems: _items.value,
               prId: _prIdController.text,
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value,
@@ -224,10 +301,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           _issuancesBloc.add(
             CreatePAREvent(
               issuedDate: _pickedDate.value,
-              issuanceItems: (_issuedTableRows.value)
-                  .map((issuedTableRow) =>
-                      issuedTableRow.object as Map<String, dynamic>)
-                  .toList(),
+              issuanceItems: _items.value,
               prId: _prIdController.text,
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value,
@@ -255,10 +329,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           _issuancesBloc.add(
             CreateRISEvent(
               issuedDate: _pickedDate.value,
-              issuanceItems: (_issuedTableRows.value)
-                  .map((issuedTableRow) =>
-                      issuedTableRow.object as Map<String, dynamic>)
-                  .toList(),
+              issuanceItems: _items.value,
               prId: _prIdController.text,
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value,
@@ -773,27 +844,29 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '**📦 Item(s) Information**',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(
-                  height: 5.0,
-                ),
-                Text(
-                  'Item(s) to be issued.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w400,
-                      ),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '**📦 Item(s) Information**',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(
+                    height: 5.0,
+                  ),
+                  Text(
+                    'Item(s) to be issued. If no quantity is defined, the available quantity will be issued by default. To edit the quantity to be issued, click the edit (✏️) icon.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
+                ],
+              ),
             ),
             CustomFilledButton(
               width: 160.0,
@@ -809,12 +882,19 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                     if (selectedItems == null || selectedItems.isEmpty) return;
 
                     // Ensure _issuedTableRows is not null
-                    final existingRows = _issuedTableRows.value ?? [];
+                    // final existingRows = _issuedTableRows.value ?? [];
+                    final existingRows = _items.value;
 
                     // Create a set to keep unique items based on a unique property (e.g., baseItemId)
+                    // final existingItemIds = existingRows
+                    //     .map((row) => row.object['shareable_item_information']
+                    //         ['base_item_id'])
+                    //     .toSet();
                     final existingItemIds = existingRows
-                        .map((row) => row.object['shareable_item_information']
-                            ['base_item_id'])
+                        .map(
+                          (item) => item['shareable_item_information']
+                              ['base_item_id'],
+                        )
                         .toSet();
 
                     final newRows = selectedItems.where((selectedItem) {
@@ -835,57 +915,64 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                           0;
 
                       // Create new notifiers and controllers for each unique item
-                      _quantityNotifiers[baseItemId] =
-                          ValueNotifier<int>(quantity);
-                      _quantityControllers[baseItemId] =
-                          TextEditingController(text: quantity.toString());
+                      // _quantityNotifiers[baseItemId] =
+                      //     ValueNotifier<int>(quantity);
+                      // _quantityControllers[baseItemId] =
+                      //     TextEditingController(text: quantity.toString());
 
                       // add the issued quantity field to selectedItem
-                      selectedItem['issued_quantity'] =
-                          _quantityControllers[baseItemId]!.text;
+                      // selectedItem['issued_quantity'] =
+                      //     _quantityControllers[baseItemId]!.text;
 
                       print('updated selected item map: $selectedItem');
 
-                      return TableData(
-                        id: '',
-                        object: selectedItem, // Assign selectedItem to object
-                        columns: [
-                          Text(
-                            baseItemId,
-                            style:
-                                Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                          ),
-                          Text(
-                            quantity.toString(),
-                            style:
-                                Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                          ),
-                          _buildQuantityCounterField(
-                            baseItemId, // Pass unique ID to fetch the right notifier/controller
-                          ),
-                        ],
-                        menuItems: [
-                          {
-                            'text': 'Remove',
-                            'icon': HugeIcons.strokeRoundedDelete02,
-                          },
-                        ],
-                      );
+                      // return TableData(
+                      //   id: '',
+                      //   object: selectedItem, // Assign selectedItem to object
+                      //   columns: [
+                      //     Text(
+                      //       baseItemId,
+                      //       style:
+                      //           Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      //                 fontSize: 14.0,
+                      //                 fontWeight: FontWeight.w500,
+                      //               ),
+                      //     ),
+                      //     Text(
+                      //       quantity.toString(),
+                      //       style:
+                      //           Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      //                 fontSize: 14.0,
+                      //                 fontWeight: FontWeight.w500,
+                      //               ),
+                      //     ),
+                      //     _buildQuantityCounterField(
+                      //       baseItemId, // Pass unique ID to fetch the right notifier/controller
+                      //     ),
+                      //   ],
+                      //   menuItems: [
+                      //     {
+                      //       'text': 'Remove',
+                      //       'icon': HugeIcons.strokeRoundedDelete02,
+                      //     },
+                      //   ],
+                      // );
+                      return selectedItem;
                     }).toList();
 
                     // Update _issuedTableRows without duplicates
-                    _issuedTableRows.value = [...existingRows, ...newRows];
+                    // _issuedTableRows.value = [...existingRows, ...newRows];
+                    _items.value = [...existingRows, ...newRows];
                   },
-                  preselectedItems: (_issuedTableRows.value ?? [])
-                      .map((issuedTableRow) =>
-                          issuedTableRow.object as Map<String, dynamic>)
-                      .toList(),
+                  excludeItemIds: _items.value
+                      .map((item) =>
+                          item['shareable_item_information']['base_item_id'])
+                      .toSet(),
+
+                  // preselectedItems: (_issuedTableRows.value ?? [])
+                  //     .map((issuedTableRow) =>
+                  //         issuedTableRow.object as Map<String, dynamic>)
+                  //     .toList(),
                 ),
               ),
               prefixWidget: const Icon(
@@ -900,34 +987,78 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         const SizedBox(
           height: 20.0,
         ),
-        SizedBox(
-          height: 250.0,
-          child: ValueListenableBuilder(
-            valueListenable: _issuedTableRows,
-            builder: (context, issuedTableRows, child) {
-              return CustomDataTable(
-                config: _issuedTableConfig.copyWith(
-                  rows: issuedTableRows,
-                ),
-                onActionSelected: (index, action) {
-                  if (action.contains('Remove')) {
-                    final removedItemId = _issuedTableRows.value[index]
-                        .object['shareable_item_information']['base_item_id'];
-
-                    // Remove the associated notifier and controller
-                    _quantityNotifiers.remove(removedItemId);
-                    _quantityControllers.remove(removedItemId);
-
-                    final updatedRows =
-                        List<TableData>.from(_issuedTableRows.value);
-                    updatedRows.removeAt(index);
-                    _issuedTableRows.value = updatedRows;
-                  }
-                },
-              );
-            },
-          ),
+        ValueListenableBuilder<List<Map<String, dynamic>>>(
+          valueListenable: _items,
+          builder: (context, value, child) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(value.length, (index) {
+                  return DragTarget(
+                    builder: (context, candidatedDate, rejectedDate) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Draggable<int>(
+                          data: index,
+                          feedback: SizedBox(
+                            width: 250.0,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: ItemCard(
+                                data: value[index],
+                                isDragging: true,
+                              ),
+                            ),
+                          ),
+                          childWhenDragging: const SizedBox(
+                            width: 250.0,
+                          ),
+                          child: SizedBox(
+                            width: 250,
+                            child: ItemCard(
+                              data: value[index],
+                              onRemove: () => _removeItem(index),
+                              onEditQuantity: () => _editItemQuantity(index),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+            );
+          },
         ),
+        // SizedBox(
+        //   height: 250.0,
+        //   child: ValueListenableBuilder(
+        //     valueListenable: _issuedTableRows,
+        //     builder: (context, issuedTableRows, child) {
+        //       return CustomDataTable(
+        //         config: _issuedTableConfig.copyWith(
+        //           rows: issuedTableRows,
+        //         ),
+        //         onActionSelected: (index, action) {
+        //           if (action.contains('Remove')) {
+        //             final removedItemId = _issuedTableRows.value[index]
+        //                 .object['shareable_item_information']['base_item_id'];
+
+        //             // Remove the associated notifier and controller
+        //             _quantityNotifiers.remove(removedItemId);
+        //             _quantityControllers.remove(removedItemId);
+
+        //             final updatedRows =
+        //                 List<TableData>.from(_issuedTableRows.value);
+        //             updatedRows.removeAt(index);
+        //             _issuedTableRows.value = updatedRows;
+        //           }
+        //         },
+        //       );
+        //     },
+        //   ),
+        // ),
       ],
     );
   }

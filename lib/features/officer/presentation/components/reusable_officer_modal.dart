@@ -95,9 +95,10 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 600.0,
-      height: 550.0,
+      height: 480.0,
       headerTitle: 'Add Officer',
-      subtitle: '',
+      subtitle:
+          'Officer to be involved with either the issuance or document report process.',
       content: _buildContent(),
       footer: _buildActionsRow(),
     );
@@ -111,7 +112,7 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
         children: [
           CustomFormTextField(
             controller: _nameController,
-            label: 'Name',
+            label: '* Name',
             placeholderText: 'Enter officer\'s name',
           ),
           _buildOfficeNameSearchBox(),
@@ -126,7 +127,7 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
       suggestionsCallback: _officeSuggestionCallback,
       onSelected: _onOfficeSelected,
       controller: _officeNameController,
-      label: 'Office Name',
+      label: '* Office',
       placeHolderText: 'Enter officer\'s office',
     );
   }
@@ -150,7 +151,7 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
           },
           onSelected: _onPositionSelected,
           controller: _positionNameController,
-          label: 'Position Name',
+          label: '* Position',
           placeHolderText: 'Enter officer\'s position',
         );
       },

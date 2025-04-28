@@ -5,9 +5,6 @@ import 'package:spreadsheet_decoder/spreadsheet_decoder.dart';
 import '../../constants/assets_path.dart';
 import '../../enums/document_type.dart';
 import 'excel_document_factory.dart';
-import 'models/excel_rpci.dart';
-import 'models/excel_rpppe.dart';
-import 'models/excel_rpsep.dart';
 import 'models/ics_excel_document.dart';
 import 'models/par_excel_document.dart';
 import 'models/ris_excel_document.dart';
@@ -98,27 +95,6 @@ class ExcelDocumentService {
     DocumentType docType,
   ) {
     switch (docType) {
-      case DocumentType.rpci:
-        ExcelRPCI.mapData(
-          decoder,
-          sheetName,
-          data,
-        );
-        break;
-      case DocumentType.annexA8:
-        ExcelRPSEP.mapData(
-          decoder,
-          sheetName,
-          data,
-        );
-        break;
-      case DocumentType.a73:
-        ExcelRPPPE.mapData(
-          decoder,
-          sheetName,
-          data,
-        );
-        break;
       default:
         throw ArgumentError('Unsupported document type: $docType');
     }

@@ -338,8 +338,12 @@ class RPPPEExcelDocument {
       }
       final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
-      final estimatedUsefulLife =
-          inventoryProperty['estimated_useful_life'] ?? '\n';
+      final estimatedUsefulLife = inventoryProperty['estimated_useful_life'];
+      final formattedEstimatedUsefulLife = estimatedUsefulLife != null
+          ? estimatedUsefulLife > 1
+              ? '$estimatedUsefulLife years'
+              : '$estimatedUsefulLife year'
+          : '\n';
 
       AssetClassification? matchedAssetClassification;
       if (inventoryProperty['asset_classification'] != null) {
@@ -409,7 +413,7 @@ class RPPPEExcelDocument {
           accountableOfficer,
           location,
           fundCluster,
-          estimatedUsefulLife,
+          formattedEstimatedUsefulLife,
           assetClassification,
           assetSubClass,
           specs,
@@ -437,7 +441,7 @@ class RPPPEExcelDocument {
           accountableOfficer,
           location,
           fundCluster,
-          estimatedUsefulLife,
+          formattedEstimatedUsefulLife,
           assetClassification,
           assetSubClass,
           specs,
@@ -507,7 +511,7 @@ class RPPPEExcelDocument {
       CellInfo(7, propertyNo),
       CellInfo(8, unit),
       CellInfo(9, unitValue.toString()),
-      CellInfo(10, totalQuantity?.toString() ?? '0'), // Fix here
+      CellInfo(10, totalQuantity.toString()),
       CellInfo(11, balanceAfterIssue.toString()),
       const CellInfo(12, '0'),
       const CellInfo(13, '0'),

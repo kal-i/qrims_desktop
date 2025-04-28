@@ -71,24 +71,7 @@ class _RegisterMultipleIssuanceViewState
 
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
 
-  final ValueNotifier<List<Map<String, dynamic>>> _officers = ValueNotifier([
-    {
-      'officer': {
-        'name': 'Liza Sovereign',
-        'position': 'Accountant III',
-        'office': 'Accounting',
-      },
-      'items': [], // Start with empty items list
-    },
-    {
-      'officer': {
-        'name': 'Kaii Lee',
-        'position': 'Superintendent',
-        'office': 'OSDS',
-      },
-      'items': [], // Start with empty items list
-    },
-  ]);
+  final ValueNotifier<List<Map<String, dynamic>>> _officers = ValueNotifier([]);
 
   // Track global selected items
   final ValueNotifier<List<Map<String, dynamic>>> _globalSelectedItems =
@@ -185,43 +168,45 @@ class _RegisterMultipleIssuanceViewState
       return;
     }
 
-    if (widget.issuanceType == IssuanceType.ics) {
-      _issuancesBloc.add(
-        CreateMultipleICSEvent(
-          issuedDate: _pickedDate.value,
-          type: _selectedIcsType.value,
-          receivingOfficers: _officers.value,
-          entityName: _entityNameController.text,
-          fundCluster: _selectedFundCluster.value,
-          supplierName: _supplierNameController.text,
-          inspectionAndAcceptanceReportId:
-              _inspectionAndAcceptanceReportIdController.text,
-          contractNumber: _contractNumberController.text,
-          purchaseOrderNumber: _purchaseOrderNumberController.text,
-          issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-          issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-          issuingOfficerName: _issuingOfficerNameController.text,
-        ),
-      );
-    }
+    if (_formKey.currentState!.validate()) {
+      if (widget.issuanceType == IssuanceType.ics) {
+        _issuancesBloc.add(
+          CreateMultipleICSEvent(
+            issuedDate: _pickedDate.value,
+            type: _selectedIcsType.value,
+            receivingOfficers: _officers.value,
+            entityName: _entityNameController.text,
+            fundCluster: _selectedFundCluster.value,
+            supplierName: _supplierNameController.text,
+            inspectionAndAcceptanceReportId:
+                _inspectionAndAcceptanceReportIdController.text,
+            contractNumber: _contractNumberController.text,
+            purchaseOrderNumber: _purchaseOrderNumberController.text,
+            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+            issuingOfficerName: _issuingOfficerNameController.text,
+          ),
+        );
+      }
 
-    if (widget.issuanceType == IssuanceType.par) {
-      _issuancesBloc.add(
-        CreateMultiplePAREvent(
-          issuedDate: _pickedDate.value,
-          receivingOfficers: _officers.value,
-          entityName: _entityNameController.text,
-          fundCluster: _selectedFundCluster.value,
-          supplierName: _supplierNameController.text,
-          inspectionAndAcceptanceReportId:
-              _inspectionAndAcceptanceReportIdController.text,
-          contractNumber: _contractNumberController.text,
-          purchaseOrderNumber: _purchaseOrderNumberController.text,
-          issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-          issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-          issuingOfficerName: _issuingOfficerNameController.text,
-        ),
-      );
+      if (widget.issuanceType == IssuanceType.par) {
+        _issuancesBloc.add(
+          CreateMultiplePAREvent(
+            issuedDate: _pickedDate.value,
+            receivingOfficers: _officers.value,
+            entityName: _entityNameController.text,
+            fundCluster: _selectedFundCluster.value,
+            supplierName: _supplierNameController.text,
+            inspectionAndAcceptanceReportId:
+                _inspectionAndAcceptanceReportIdController.text,
+            contractNumber: _contractNumberController.text,
+            purchaseOrderNumber: _purchaseOrderNumberController.text,
+            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
+            issuingOfficerName: _issuingOfficerNameController.text,
+          ),
+        );
+      }
     }
   }
 
@@ -328,6 +313,9 @@ class _RegisterMultipleIssuanceViewState
           ),
           if (widget.issuanceType != IssuanceType.ris)
             _buildAdditionalInformationSection(),
+          const SizedBox(
+            height: 50.0,
+          ),
           _buildReceivingOfficersSection(),
           _buildActionsRow(),
         ],
@@ -574,7 +562,7 @@ class _RegisterMultipleIssuanceViewState
               onTap: () async {
                 final newOfficer = await showDialog<Map<String, dynamic>>(
                   context: context,
-                  builder: (context) => AddReceivingOfficerModal(),
+                  builder: (context) => const AddReceivingOfficerModal(),
                 );
                 if (newOfficer != null) {
                   _officers.value = [..._officers.value, newOfficer];
@@ -604,7 +592,7 @@ class _RegisterMultipleIssuanceViewState
                         child: Draggable<int>(
                           data: index,
                           feedback: SizedBox(
-                            width: 250,
+                            width: 250.0,
                             child: Material(
                               color: Colors.transparent,
                               child: AccountableOfficerCard(
@@ -616,7 +604,7 @@ class _RegisterMultipleIssuanceViewState
                             ),
                           ),
                           childWhenDragging: const SizedBox(
-                            width: 250,
+                            width: 250.0,
                           ),
                           child: SizedBox(
                             width: 250,

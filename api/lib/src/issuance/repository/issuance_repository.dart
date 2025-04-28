@@ -1325,20 +1325,43 @@ class IssuanceRepository {
     List<dynamic> issuanceItems,
     DateTime? receivedDate,
   ) async {
+    print('issuance items: $issuanceItems');
+
     for (final item in issuanceItems) {
-      final Map<String, dynamic> issuanceItem = item as Map<String, dynamic>;
+      print('issuance item: $item');
+
+      if (item is! Map<String, dynamic>) {
+        throw Exception('Invalid issuance item format: $item');
+      }
+
+      // Determine the actual item map
+      final hasNestedItem = item.containsKey('item') && item['item'] != null;
+      final issuanceItem =
+          hasNestedItem ? (item['item'] as Map<String, dynamic>) : item;
+
+      print(
+          'issuance item received by _handleIssuanceWithoutPR: $issuanceItem');
+
       final shareableItemInformation =
           issuanceItem['shareable_item_information'] as Map<String, dynamic>;
       final baseItemId = shareableItemInformation['base_item_id'] as String;
 
-      int issuedQuantity = issuanceItem.containsKey('issued_quantity') &&
-              issuanceItem['issued_quantity'] != null &&
-              issuanceItem['issued_quantity'] is String
-          ? int.tryParse(issuanceItem['issued_quantity'].toString()) ?? 0
-          : int.tryParse(shareableItemInformation['quantity'].toString()) ?? 0;
+      // Determine issued quantity
+      int issuedQuantity;
+      if (hasNestedItem) {
+        issuedQuantity = item['issued_quantity'] as int;
+      } else if (issuanceItem.containsKey('issued_quantity') &&
+          issuanceItem['issued_quantity'] != null) {
+        issuedQuantity =
+            int.tryParse(issuanceItem['issued_quantity'].toString()) ?? 0;
+      } else {
+        issuedQuantity =
+            int.tryParse(shareableItemInformation['quantity'].toString()) ?? 0;
+      }
 
       print('issued quantity: $issuedQuantity');
 
+      // Insert issuance item
       await _insertIssuanceItem(
         ctx,
         issuanceId,
@@ -1346,11 +1369,17 @@ class IssuanceRepository {
         issuedQuantity,
         receivedDate,
       );
-      await _updateItemStock(
-        ctx,
-        baseItemId,
-        issuedQuantity,
-      );
+
+      // if nested, it is probably a creation of ris entity from an existing issuance entity
+      // so we will not trigger the update item stock function
+      if (!hasNestedItem) {
+        // Update stock
+        await _updateItemStock(
+          ctx,
+          baseItemId,
+          issuedQuantity,
+        );
+      }
     }
   }
 
@@ -2770,7 +2799,7 @@ class IssuanceRepository {
     final result = await _conn.execute(
       Sql.named('''
       SELECT 
-        iss.id AS issuance_id,
+        COALESCE(ics.id, par.id) AS issuance_id,
         issi.item_id AS base_item_id,
         pn.name AS product_name,
         pd.description AS product_description,
@@ -2811,12 +2840,19 @@ class IssuanceRepository {
       LEFT JOIN
         issuances iss ON issi.issuance_id = iss.id
       LEFT JOIN
+        inventorycustodianslips ics ON iss.id = ics.issuance_id
+      LEFT JOIN
+        propertyacknowledgementreceipts par ON iss.id = par.issuance_id
+      LEFT JOIN
         officers roff ON iss.receiving_officer_id = roff.id
       LEFT JOIN
         positions rpos ON roff.position_id = rpos.id
       LEFT JOIN
         offices rofc ON rpos.office_id = rofc.id
-      WHERE $whereClause
+      WHERE 
+        $whereClause
+      AND 
+        (ics.id IS NOT NULL OR par.id IS NOT NULL)
     '''),
       parameters: parameters,
     );

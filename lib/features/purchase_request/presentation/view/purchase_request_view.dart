@@ -410,10 +410,10 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                   ),
                 ],
                 menuItems: [
-                  {
-                    'text': 'View',
-                    'icon': FluentIcons.eye_12_regular,
-                  },
+                  // {
+                  //   'text': 'View',
+                  //   'icon': FluentIcons.eye_12_regular,
+                  // },
                   if (!isAdmin)
                     if (purchaseRequest.purchaseRequestStatus ==
                         PurchaseRequestStatus.pending)

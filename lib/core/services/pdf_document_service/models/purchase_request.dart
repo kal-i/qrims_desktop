@@ -82,7 +82,7 @@ class PurchaseRequest implements BaseDocument {
         descriptionColumn.addAll(
           extractSpecification(
             requestedItem.specification!,
-            ' - ',
+            ',',
           ),
         );
       }

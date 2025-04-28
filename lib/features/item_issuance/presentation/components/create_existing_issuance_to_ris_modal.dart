@@ -3,9 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../../../../config/themes/app_color.dart';
-import '../../../../config/themes/app_theme.dart';
-import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/base_modal.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
@@ -252,9 +249,6 @@ class _CreateExistingIssuanceToRISModalState
                   label: 'Division',
                   controller: _divisionController,
                   placeholderText: 'Enter division',
-                  fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                      ? AppColor.lightCustomTextBox
-                      : AppColor.darkCustomTextBox),
                 ),
               ),
               if (_officeEntity == null)
@@ -268,10 +262,6 @@ class _CreateExistingIssuanceToRISModalState
                     label: 'Responsibility Center Code',
                     placeholderText: 'Enter responsibility center code',
                     controller: _responsibilityCenterCodeController,
-                    fillColor:
-                        (context.watch<ThemeBloc>().state == AppTheme.light
-                            ? AppColor.lightCustomTextBox
-                            : AppColor.darkCustomTextBox),
                   ),
                 ),
             ],
@@ -282,9 +272,6 @@ class _CreateExistingIssuanceToRISModalState
               controller: _purposeController,
               maxLines: 4,
               placeholderText: 'Enter purpose',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
             ),
           if (_requestingOfficerEntity == null)
             Column(
@@ -411,9 +398,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _entityNameController,
       label: 'Entity',
       placeHolderText: 'Enter entity',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -442,9 +426,6 @@ class _CreateExistingIssuanceToRISModalState
               ),
             ),
           ],
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
           label: 'Fund Cluster',
         );
       },
@@ -465,9 +446,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _officeController,
       label: 'Office',
       placeHolderText: 'Enter purchase request\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -499,9 +477,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _requestingOfficerOfficeNameController,
       label: 'Requesting Officer Office',
       placeHolderText: 'Enter requesting officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -533,9 +508,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _issuingOfficerOfficeNameController,
       label: 'Issuing Officer Office',
       placeHolderText: 'Enter issuing officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -567,9 +539,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _approvingOfficerOfficeNameController,
       label: 'Approving Officer Office',
       placeHolderText: 'Enter approving officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -601,9 +570,6 @@ class _CreateExistingIssuanceToRISModalState
       controller: _receivingOfficerOfficeNameController,
       label: 'Receiving Officer Office',
       placeHolderText: 'Enter receiving officer\'s office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -638,9 +604,6 @@ class _CreateExistingIssuanceToRISModalState
           controller: _requestingOfficerPositionNameController,
           label: 'Requesting Officer Position',
           placeHolderText: 'Enter requesting officer\'s position',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -677,9 +640,6 @@ class _CreateExistingIssuanceToRISModalState
           controller: _approvingOfficerPositionNameController,
           label: 'Approving Officer Position',
           placeHolderText: 'Enter approving officer\'s position',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -716,9 +676,6 @@ class _CreateExistingIssuanceToRISModalState
           controller: _issuingOfficerPositionNameController,
           label: 'Issuing Officer Position',
           placeHolderText: 'Enter issuing officer\'s position',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -755,9 +712,6 @@ class _CreateExistingIssuanceToRISModalState
           controller: _receivingOfficerPositionNameController,
           label: 'Receiving Officer Position',
           placeHolderText: 'Enter receiving officer\'s position',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -794,9 +748,6 @@ class _CreateExistingIssuanceToRISModalState
               controller: _requestingOfficerNameController,
               label: 'Requesting Officer Name',
               placeHolderText: 'Enter requesting officer\'s name',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
             );
           },
         );
@@ -835,9 +786,6 @@ class _CreateExistingIssuanceToRISModalState
               controller: _approvingOfficerNameController,
               label: 'Approving Officer Name',
               placeHolderText: 'Enter approving officer\'s name',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
             );
           },
         );
@@ -876,9 +824,6 @@ class _CreateExistingIssuanceToRISModalState
               controller: _issuingOfficerNameController,
               label: 'Issuing Officer Name',
               placeHolderText: 'Enter issuing officer\'s name',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
             );
           },
         );
@@ -917,9 +862,6 @@ class _CreateExistingIssuanceToRISModalState
               controller: _receivingOfficerNameController,
               label: 'Receiving Officer Name',
               placeHolderText: 'Enter receiving officer\'s name',
-              fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                  ? AppColor.lightCustomTextBox
-                  : AppColor.darkCustomTextBox),
             );
           },
         );

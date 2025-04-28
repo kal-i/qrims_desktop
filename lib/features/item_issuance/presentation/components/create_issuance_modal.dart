@@ -177,6 +177,21 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
               return;
             }
 
+            if (_selectedType.value == 'w/o PR' &&
+                widget.issuanceType != IssuanceType.ris) {
+              context.pop();
+              context.go(
+                RoutingConstants
+                    .nestedRegisterMultipleItemIssuanceViewRoutePath,
+                extra: {
+                  'type': widget.issuanceType == IssuanceType.ics
+                      ? IssuanceType.ics
+                      : IssuanceType.par,
+                },
+              );
+              return;
+            }
+
             context.pop();
             context.go(
               RoutingConstants.nestedRegisterItemIssuanceViewRoutePath,

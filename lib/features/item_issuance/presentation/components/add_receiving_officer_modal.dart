@@ -19,6 +19,8 @@ class AddReceivingOfficerModal extends StatefulWidget {
 class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   late OfficerSuggestionsService _officerSuggestionsService;
 
+  final _formKey = GlobalKey<FormState>();
+
   final _officeNameController = TextEditingController();
   final _positionNameController = TextEditingController();
   final _nameController = TextEditingController();
@@ -30,6 +32,20 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   void initState() {
     super.initState();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
+  }
+
+  void _onAddReceivingOfficer() {
+    // if (_formKey.currentState!.validate()) {
+    final officerData = {
+      'officer': {
+        'name': _nameController.text,
+        'position': _positionNameController.text,
+        'office': _officeNameController.text,
+      },
+      'items': [],
+    };
+    context.pop(officerData);
+    //  }
   }
 
   @override
@@ -45,7 +61,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 600.0,
-      height: 450.0,
+      height: 480.0,
       headerTitle: "Add Receiving Officer",
       subtitle:
           'Designated accountable officer or recipeint of this issuance document.',
@@ -55,13 +71,16 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   }
 
   Widget _buildContent() {
-    return Column(
-      spacing: 20.0,
-      children: [
-        _buildOfficeNameSearchBox(),
-        _buildPositionSearchBox(),
-        _buildOfficerNameSearchBox(),
-      ],
+    return Form(
+      key: _formKey,
+      child: Column(
+        spacing: 20.0,
+        children: [
+          _buildOfficeNameSearchBox(),
+          _buildPositionSearchBox(),
+          _buildOfficerNameSearchBox(),
+        ],
+      ),
     );
   }
 
@@ -91,7 +110,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
         _selectedPositionName.value = null;
       },
       controller: _officeNameController,
-      label: 'Office',
+      label: '* Office',
       placeHolderText: 'Enter officer\'s office',
     );
   }
@@ -125,7 +144,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
             _selectedPositionName.value = value;
           },
           controller: _positionNameController,
-          label: 'Position',
+          label: '* Position',
           placeHolderText: 'Enter officer\'s position',
         );
       },
@@ -161,7 +180,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
                   _nameController.text = value;
                 },
                 controller: _nameController,
-                label: 'Name',
+                label: '* Name',
                 placeHolderText: 'Enter officer\'s name',
               );
             });
@@ -182,18 +201,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
           width: 10.0,
         ),
         CustomFilledButton(
-          onTap: () {
-            // Gather officer data
-            final officerData = {
-              'officer': {
-                'name': _nameController.text,
-                'position': _positionNameController.text,
-                'office': _officeNameController.text,
-              },
-              'items': [],
-            };
-            context.pop(officerData);
-          },
+          onTap: _onAddReceivingOfficer,
           text: 'Add',
           width: 180.0,
           height: 40.0,

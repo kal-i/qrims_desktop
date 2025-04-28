@@ -141,64 +141,6 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
     });
   }
 
-  Future<void> _generateAndSaveExcel(
-    dynamic dataObject,
-    DocumentType docType,
-  ) async {
-    try {
-      // Allow the user to pick a directory
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-
-      if (selectedDirectory == null) {
-        // User canceled the picker
-        return;
-      }
-
-      // Generate the base file name (FileName-YYYY-MM)
-      String baseFileName =
-          '${docType.toString().split('.').last}-${DateFormat('yyyy-MM').format(DateTime.now())}';
-
-      // Find the next available file name
-      String outputFilePath =
-          _getNextAvailableFileName(selectedDirectory, baseFileName);
-
-      await _excelDocumentService.generateAndSaveExcel(
-        data: dataObject,
-        docType: docType,
-        outputPath: outputFilePath,
-      );
-
-      DelightfulToastUtils.showDelightfulToast(
-        context: context,
-        icon: HugeIcons.strokeRoundedXsl02,
-        title: 'File Saved',
-        subtitle: 'Document saved successfully at $outputFilePath',
-      );
-    } catch (e) {
-      DelightfulToastUtils.showDelightfulToast(
-        context: context,
-        icon: HugeIcons.strokeRoundedFileNotFound,
-        title: 'File Unsaved',
-        subtitle: 'Failed to save document: $e',
-      );
-    }
-  }
-
-  String _getNextAvailableFileName(String directory, String baseFileName) {
-    int n = 1; // Start with N = 1
-    String fileName = '$baseFileName-$n.xlsx'; // Initial file name
-    String filePath = '$directory/$fileName';
-
-    // Check if the file already exists
-    while (File(filePath).existsSync()) {
-      n++; // Increment N
-      fileName = '$baseFileName-$n.xlsx'; // Update file name
-      filePath = '$directory/$fileName';
-    }
-
-    return filePath;
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -511,21 +453,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         _buildRefreshButton(),
         _buildFilterButton(),
         CustomFilledButton(
-          text: 'Multi issuance',
-          onTap: () => context.go(
-            RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
-            extra: {
-              'type': IssuanceType.ics,
-            },
-          ),
-        ),
-        CustomFilledButton(
           text: 'Find Officer Accountability',
           onTap: () => context.go(
-            RoutingConstants.nestedRegisterMultipleItemIssuanceViewRoutePath,
-            extra: {
-              'type': IssuanceType.par,
-            },
+            RoutingConstants.nestedViewOfficerAccountabilityRoutePath,
           ),
         ),
       ],
@@ -595,7 +525,8 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
             state is MultiplePARRegistered ||
             state is RISRegistered ||
             state is FetchedInventoryReport ||
-            state is GeneratedSemiExpendablePropertyCardData) {
+            state is GeneratedSemiExpendablePropertyCardData ||
+            state is ReceivedIssuance) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();

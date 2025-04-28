@@ -440,12 +440,8 @@ class RISExcelDocument {
     String purpose,
   ) {
     // Split purpose into chunks of 100 characters
-    List<String> purposeChunks = [
-      'hhshshhshs',
-      'sjhshhhhggsgs',
-      'sjsjsjjsjsjs',
-    ];
-    int maxLen = 100;
+    List<String> purposeChunks = [];
+    int maxLen = 175;
     for (int i = 0; i < purpose.length; i += maxLen) {
       int end = (i + maxLen < purpose.length) ? i + maxLen : purpose.length;
       purposeChunks.add(purpose.substring(i, end));

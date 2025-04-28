@@ -18,6 +18,7 @@ import '../../features/item_inventory/presentation/views/item_inventory_view.dar
 import '../../features/item_inventory/presentation/views/reusable_inventory_item_view.dart';
 import '../../features/item_inventory/presentation/views/reusable_supply_item_view.dart';
 import '../../features/item_issuance/presentation/views/item_issuance_view.dart';
+import '../../features/item_issuance/presentation/views/officer_accountability_view.dart';
 import '../../features/item_issuance/presentation/views/register_multiple_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/reusable_item_issuance_view.dart';
 import '../../features/item_issuance/presentation/views/view_issuance_information.dart';
@@ -350,6 +351,15 @@ class AppRoutingConfig {
                     child: ViewIssuanceInformation(
                       issuanceId: issuanceId,
                     ),
+                  );
+                },
+              ),
+              GoRoute(
+                name: RoutingConstants.viewOfficerAccountabilityRouteName,
+                path: RoutingConstants.viewOfficerAccountabilityRoutePath,
+                pageBuilder: (context, state) {
+                  return const MaterialPage(
+                    child: OfficerAccountabilityView(),
                   );
                 },
               ),

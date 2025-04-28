@@ -33,7 +33,7 @@ class ItemSelectionModal extends StatefulWidget {
 
   final Function(List<Map<String, dynamic>> selectedItems) onSelectedItems;
   final List<Map<String, dynamic>>? preselectedItems;
-  final Set<dynamic>? excludeItemIds; // Add this line
+  final Set<dynamic>? excludeItemIds;
 
   @override
   State<ItemSelectionModal> createState() => _ItemSelectionModalState();
@@ -60,8 +60,6 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   final List<String> _tableHeaders = [
     'Item Name',
     'Description',
-    //'Brand',
-    //'Model',
     'Quantity',
     'Unit Cost',
   ];
@@ -99,7 +97,12 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     _tableConfig = TableConfig(
       headers: _tableHeaders,
       rows: _tableRows,
-      columnFlex: [2, 3, 2, 2, 2, 2, 2],
+      columnFlex: [
+        2,
+        3,
+        1,
+        1,
+      ],
     );
   }
 
@@ -188,7 +191,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     final Map<String, String> filterMapping = {
       //'View All': '',
       'Supply': 'supply',
-      'Equipment': 'equipment',
+      'Inventory': 'inventory',
     };
     return FilterTableRow(
       selectedFilterNotifier: _selectedFilterNotifier,
@@ -425,19 +428,19 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         // Add Clear Selection button
-        CustomOutlineButton(
-          onTap: () {
-            setState(() {
-              _selectedItemIds.clear();
-              _preselectedItems.clear();
-            });
-          },
-          text: 'Clear Selection',
-          width: 150.0,
-        ),
-        const SizedBox(
-          width: 10.0,
-        ),
+        // CustomOutlineButton(
+        //   onTap: () {
+        //     setState(() {
+        //       _selectedItemIds.clear();
+        //       _preselectedItems.clear();
+        //     });
+        //   },
+        //   text: 'Clear Selection',
+        //   width: 150.0,
+        // ),
+        // const SizedBox(
+        //   width: 10.0,
+        // ),
         CustomOutlineButton(
           onTap: () => context.pop(),
           text: 'Cancel',

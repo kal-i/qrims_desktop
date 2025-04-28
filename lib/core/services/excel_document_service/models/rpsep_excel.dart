@@ -7,7 +7,6 @@ import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/readable_enum_converter.dart';
-import '../../../utils/standardize_position_name.dart';
 import 'header_info.dart';
 import 'cell_info.dart';
 
@@ -206,10 +205,6 @@ class RPSEPExcelDocument {
       final startCell = sheet.cell(startCellIndex);
       startCell.value = TextCellValue(header.title);
       startCell.cellStyle = CellStyle(
-        //   // bold: false,
-        //   // underline: Underline.None,
-        //   // italic: false,
-        //   fontSize: 9,
         underline: Underline.None,
         horizontalAlign: HorizontalAlign.Center,
         verticalAlign: VerticalAlign.Center,
@@ -235,10 +230,6 @@ class RPSEPExcelDocument {
             final cell = sheet.cell(
                 CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
             cell.cellStyle = CellStyle(
-              // bold: false,
-              // underline: Underline.None,
-              //   // italic: false,
-              //   fontSize: 9,
               horizontalAlign: HorizontalAlign.Center,
               verticalAlign: VerticalAlign.Center,
               leftBorder: borderStyle, // Ensure left border
@@ -340,7 +331,12 @@ class RPSEPExcelDocument {
       final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
       final estimatedUsefulLife =
-          inventorySemiExpendableProperty['estimated_useful_life'] ?? '\n';
+          inventorySemiExpendableProperty['estimated_useful_life'];
+      final formattedEstimatedUsefulLife = estimatedUsefulLife != null
+          ? estimatedUsefulLife > 1
+              ? '$estimatedUsefulLife years'
+              : '$estimatedUsefulLife year'
+          : '\n';
 
       AssetClassification? matchedAssetClassification;
       if (inventorySemiExpendableProperty['asset_classification'] != null) {
@@ -406,7 +402,7 @@ class RPSEPExcelDocument {
           accountableOfficer,
           location,
           fundCluster,
-          estimatedUsefulLife,
+          formattedEstimatedUsefulLife,
           assetClassification,
           assetSubClass,
           specs,
@@ -434,7 +430,7 @@ class RPSEPExcelDocument {
           accountableOfficer,
           location,
           fundCluster,
-          estimatedUsefulLife,
+          formattedEstimatedUsefulLife,
           assetClassification,
           assetSubClass,
           specs,
@@ -513,7 +509,7 @@ class RPSEPExcelDocument {
       CellInfo(14, accountableOfficer.toString()),
       CellInfo(15, location.toString()),
       CellInfo(16, fundCluster.toString()),
-      CellInfo(17, estimatedUsefulLife.toString()),
+      CellInfo(17, estimatedUsefulLife),
       const CellInfo(18, ''),
       CellInfo(19, assetClassification.toString()),
       CellInfo(20, assetSubClass.toString()),
@@ -572,23 +568,6 @@ class RPSEPExcelDocument {
             rowIndex: currentRow,
           ),
         );
-        // startingCertifyingOfficerNameCell.cellStyle = CellStyle(
-        //   leftBorder: Border(
-        //     borderStyle: BorderStyle.Medium,
-        //   ),
-        // );
-
-        // final endingCertifyingOfficerNameCell = sheet.cell(
-        //   CellIndex.indexByColumnRow(
-        //     columnIndex: 12,
-        //     rowIndex: currentRow,
-        //   ),
-        // );
-        // endingCertifyingOfficerNameCell.cellStyle = CellStyle(
-        //   rightBorder: Border(
-        //     borderStyle: BorderStyle.Medium,
-        //   ),
-        // );
 
         /// Certifying Officer Name
         /// Merge cells
@@ -610,14 +589,6 @@ class RPSEPExcelDocument {
           final cell = sheet.cell(
             CellIndex.indexByColumnRow(columnIndex: col, rowIndex: currentRow),
           );
-
-          // cell.cellStyle = CellStyle(
-          //   bottomBorder: Border(
-          //     borderStyle: BorderStyle.Thin,
-          //   ),
-          //   horizontalAlign: HorizontalAlign.Center,
-          //   verticalAlign: VerticalAlign.Center,
-          //);
         }
 
         /// Add value and style to Certifying Officer Name Cell
@@ -826,17 +797,6 @@ class RPSEPExcelDocument {
         ),
       );
       cell.cellStyle = footerCellStyle;
-      // CellStyle(
-      //   horizontalAlign: HorizontalAlign.Center,
-      //   verticalAlign: VerticalAlign.Center,
-      //   topBorder: Border(
-      //     borderStyle: BorderStyle.Thin,
-      //   ),
-      //   bottomBorder: Border(
-      //     borderColorHex: ExcelColor.grey,
-      //     borderStyle: BorderStyle.Thin,
-      //   ),
-      // );
     }
 
     sheet.merge(
@@ -867,50 +827,5 @@ class RPSEPExcelDocument {
       ),
     );
     coaRepresentativeTitleCell.cellStyle = footerCellStyle;
-
-    /// Manipulate the right borders of some Cells
-    // sheet
-    //     .cell(
-    //       CellIndex.indexByColumnRow(
-    //         columnIndex: 12,
-    //         rowIndex: startingRow,
-    //       ),
-    //     )
-    //     .cellStyle = CellStyle(
-    //   rightBorder: Border(
-    //     borderColorHex: ExcelColor.black,
-    //     borderStyle: BorderStyle.Medium,
-    //   ),
-    // );
-
-    /// Add bottom border to the last row
-    // final startingCell = CellIndex.indexByColumnRow(
-    //   columnIndex: 0,
-    //   rowIndex: startingRow + 2,
-    // );
-    // final endingCell = CellIndex.indexByColumnRow(
-    //   columnIndex: 12,
-    //   rowIndex: startingRow + 2,
-    // );
-
-    // for (int col = 0; col <= 12; col++) {
-    //   final cell = sheet.cell(
-    //     CellIndex.indexByColumnRow(
-    //       columnIndex: col,
-    //       rowIndex: startingRow + 2,
-    //     ),
-    //   );
-    //   cell.cellStyle = CellStyle(
-    //     bottomBorder: Border(
-    //       borderColorHex: ExcelColor.grey,
-    //       borderStyle: BorderStyle.Thin,
-    //     ),
-    //   );
-    // }
-
-    // sheet.merge(
-    //   startingCell,
-    //   endingCell,
-    // );
   }
 }

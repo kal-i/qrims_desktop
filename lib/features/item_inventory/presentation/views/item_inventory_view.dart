@@ -105,7 +105,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       headers: _tableHeaders,
       rows: _tableRows,
       columnFlex: [
-        2,
+        1,
         3,
         1,
         1,
