@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:api/src/organization_management/models/officer.dart';
+import 'package:api/src/organization_management/repositories/office_repository.dart';
 import 'package:api/src/organization_management/repositories/officer_repository.dart';
+import 'package:api/src/organization_management/repositories/position_repository.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:postgres/postgres.dart';
 
@@ -9,11 +12,23 @@ Future<Response> onRequest(
   String id,
 ) async {
   final connection = context.read<Connection>();
-  final repository = OfficerRepository(connection);
+  final officeRepository = OfficeRepository(connection);
+  final positionRepository = PositionRepository(connection);
+  final officerRepository = OfficerRepository(connection);
 
   return switch (context.request.method) {
-    HttpMethod.get => _getPositionInformation(context, repository, id),
-    HttpMethod.patch => _updatePositionInformation(context, repository, id),
+    HttpMethod.get => _getPositionInformation(
+        context,
+        officerRepository,
+        id,
+      ),
+    HttpMethod.patch => _updatePositionInformation(
+        context,
+        officeRepository,
+        positionRepository,
+        officerRepository,
+        id,
+      ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
   };
 }
@@ -56,7 +71,9 @@ Future<Response> _getPositionInformation(
 
 Future<Response> _updatePositionInformation(
   RequestContext context,
-  OfficerRepository repository,
+  OfficeRepository officeRepository,
+  PositionRepository positionRepository,
+  OfficerRepository officerRepository,
   String id,
 ) async {
   try {
@@ -67,14 +84,41 @@ Future<Response> _updatePositionInformation(
       );
     }
 
-    final params = await context.request.json();
-    final name = params['name'] as String?;
-    final positionId = params['position_id'] as String?;
+    final json = await context.request.json();
+    final office = json['office'] as String?;
+    final position = json['position'] as String?;
+    final name = json['name'] as String?;
 
-    final result = await repository.updateOfficerInformation(
+    String? officeId;
+    if (office != null && office.isNotEmpty) {
+      officeId = await officeRepository.checkOfficeIfExist(
+        officeName: office,
+      );
+    }
+
+    String? positionId;
+    if (officeId != null &&
+        officeId.isNotEmpty &&
+        position != null &&
+        position.isNotEmpty) {
+      positionId = await positionRepository.checkIfPositionExist(
+        officeId: officeId,
+        positionName: position,
+      );
+    }
+
+    final result = await officerRepository.updateOfficerInformation(
       id: id,
       name: name,
       newPositionId: positionId,
+      status: json['status'] != null
+          ? OfficerStatus.values.firstWhere(
+              (e) => e.toString().split('.').last == json['status'],
+              orElse: () {
+                throw Exception('Invalid status value: ${json['status']}');
+              },
+            )
+          : null,
     );
 
     if (result == true) {

@@ -235,7 +235,7 @@ class OfficerRepository {
 
           String? latestPositionId;
           if (latestPositionResult.isNotEmpty) {
-            latestPositionId = latestPositionResult.first as String?;
+            latestPositionId = latestPositionResult.first[0] as String?;
           }
 
           if (latestPositionId != newPositionId) {
@@ -259,21 +259,23 @@ class OfficerRepository {
         }
 
         if (status != null) {
-          setClauses.add('status = @status');
+          setClauses.add('officer_status = @status');
           parameters['status'] = status.toString().split('.').last;
         }
 
         // Update the Officers table
-        await ctx.execute(
-          Sql.named(
-            '''
-        UPDATE Officers
-        SET ${setClauses.join(', ')}
-        WHERE id = @id;
-        ''',
-          ),
-          parameters: parameters,
-        );
+        if (setClauses.isNotEmpty) {
+          await ctx.execute(
+            Sql.named(
+              '''
+              UPDATE Officers
+              SET ${setClauses.join(', ')}
+              WHERE id = @id;
+              ''',
+            ),
+            parameters: parameters,
+          );
+        }
 
         // If the officer is associated with a user, update the Users table
         if (parameters.containsKey('user_id')) {
