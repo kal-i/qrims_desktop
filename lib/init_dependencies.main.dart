@@ -463,6 +463,11 @@ void _registerOfficersManagementDependencies() {
         officerRepository: serviceLocator(),
       ),
     )
+    ..registerFactory(
+      () => UpdateOfficer(
+        officerRepository: serviceLocator(),
+      ),
+    )
     ..registerFactory<UpdateOfficerArchiveStatus>(
       () => UpdateOfficerArchiveStatus(
         officerRepository: serviceLocator(),
@@ -472,6 +477,7 @@ void _registerOfficersManagementDependencies() {
       () => OfficersBloc(
         getPaginatedOfficers: serviceLocator(),
         registerOfficer: serviceLocator(),
+        updateOfficer: serviceLocator(),
         updateOfficerArchiveStatus: serviceLocator(),
       ),
     );

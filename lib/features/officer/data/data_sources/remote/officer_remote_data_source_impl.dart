@@ -87,6 +87,36 @@ class OfficerRemoteDataSourceImpl implements OfficerRemoteDataSource {
   }
 
   @override
+  Future<bool> updateOfficer({
+    required String id,
+    String? office,
+    String? position,
+    String? name,
+    OfficerStatus? status,
+  }) async {
+    try {
+      final Map<String, dynamic> param = {
+        if (office != null && office.isNotEmpty) 'office': office,
+        if (position != null && position.isNotEmpty) 'position': position,
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (status != null) 'status': status.toString().split('.').last,
+      };
+
+      final response = await httpService.patch(
+        endpoint: '$officerIdEP/$id',
+        params: param,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
   Future<bool> updateOfficerArchiveStatus({
     required String id,
     required bool isArchived,

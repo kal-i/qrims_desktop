@@ -58,6 +58,22 @@ final class RegisterOfficerEvent extends OfficersEvent {
       ];
 }
 
+final class UpdateOfficerEvent extends OfficersEvent {
+  const UpdateOfficerEvent({
+    required this.id,
+    this.office,
+    this.position,
+    this.name,
+    this.status,
+  });
+
+  final String id;
+  final String? office;
+  final String? position;
+  final String? name;
+  final OfficerStatus? status;
+}
+
 final class UpdateOfficerArchiveStatusEvent extends OfficersEvent {
   const UpdateOfficerArchiveStatusEvent({
     required this.id,

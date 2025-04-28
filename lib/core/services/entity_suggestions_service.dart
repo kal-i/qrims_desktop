@@ -1,4 +1,5 @@
 import '../constants/endpoints.dart';
+import '../utils/capitalizer.dart';
 import 'http_service.dart';
 
 class EntitySuggestionService {
@@ -22,7 +23,7 @@ class EntitySuggestionService {
     );
 
     final entityNames = (response.data['entities'] as List<dynamic>?)
-        ?.map((entityName) => entityName.toString().toLowerCase())
+        ?.map((entityName) => capitalizeWord(entityName))
         .toList();
 
     return entityNames;

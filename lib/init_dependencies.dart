@@ -98,6 +98,7 @@ import 'features/officer/data/repository/officer_repository_impl.dart';
 import 'features/officer/domain/repository/officer_repository.dart';
 import 'features/officer/domain/usecases/get_paginated_officers.dart';
 import 'features/officer/domain/usecases/register_officer.dart';
+import 'features/officer/domain/usecases/update_officer.dart';
 import 'features/officer/domain/usecases/update_officer_archive_status.dart';
 import 'features/officer/presentation/bloc/officers_bloc.dart';
 

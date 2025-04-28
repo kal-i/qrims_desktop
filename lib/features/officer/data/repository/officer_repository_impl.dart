@@ -66,6 +66,29 @@ class OfficerRepositoryImpl implements OfficerRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> updateOfficer({
+    required String id,
+    String? office,
+    String? position,
+    String? name,
+    OfficerStatus? status,
+  }) async {
+    try {
+      final response = await officerRemoteDataSource.updateOfficer(
+        id: id,
+        office: office,
+        position: position,
+        name: name,
+        status: status,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return Left(Failure(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> updateOfficerArchiveStatus({
     required String id,
     required bool isArchived,

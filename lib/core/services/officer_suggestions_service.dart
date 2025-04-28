@@ -1,5 +1,6 @@
 import '../constants/endpoints.dart';
 import '../utils/capitalizer.dart';
+import '../utils/standardize_position_name.dart';
 import 'http_service.dart';
 
 class OfficerSuggestionsService {
@@ -48,7 +49,7 @@ class OfficerSuggestionsService {
     );
 
     final positionNames = (response.data['positions'] as List<dynamic>?)
-        ?.map((position) => capitalizeWord(position))
+        ?.map((position) => standardizePositionName(position))
         .toList();
 
     return positionNames;

@@ -21,6 +21,7 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/standardize_position_name.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../domain/entities/officer.dart';
 import '../bloc/officers_bloc.dart';
 import '../components/filter_officer_modal.dart';
 import '../components/reusable_officer_modal.dart';
@@ -52,7 +53,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   ];
   late List<TableData> _tableRows = [];
 
-  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('active');
+  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('Active');
   final ValueNotifier<int> _totalRecords = ValueNotifier(0);
 
   int _currentPage = 1;
@@ -283,55 +284,6 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     );
   }
 
-  Widget _buildMoreButton() {
-    return PopupMenuButton<String>(
-      padding: EdgeInsets.zero,
-      //elevation: 8.0,
-      icon: const CustomIconButton(
-        tooltip: 'More',
-        icon: HugeIcons.strokeRoundedMoreHorizontal,
-        isOutlined: true,
-      ),
-      onSelected: (action) {
-        if (action != null) {}
-      },
-      itemBuilder: (context) {
-        return [
-          PopupMenuItem(
-            child: ListTile(
-              leading: const Icon(
-                HugeIcons.strokeRoundedOffice,
-                size: 16.0,
-              ),
-              title: Text(
-                'Offices',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-              ),
-            ),
-          ),
-          PopupMenuItem(
-            child: ListTile(
-              leading: const Icon(
-                HugeIcons.strokeRoundedOffice,
-                size: 16.0,
-              ),
-              title: Text(
-                'Positions',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-              ),
-            ),
-          ),
-        ];
-      },
-    );
-  }
-
   Widget _buildDataTable(bool isAdmin) {
     return BlocConsumer<OfficersBloc, OfficersState>(
       listener: (context, state) {
@@ -349,13 +301,6 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
               id: officer.id,
               object: officer,
               columns: [
-                // Text(
-                //   officer.id,
-                //   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                //     fontSize: 14.0,
-                //     fontWeight: FontWeight.w500,
-                //   ),
-                // ),
                 Text(
                   capitalizeWord(officer.name),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -410,6 +355,25 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
           _refreshOfficerList();
         }
 
+        if (state is UpdatedOfficer) {
+          if (state.isSuccessful == true) {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.check_circle_outline,
+              title: 'Success',
+              subtitle: 'Officer updated successfully.',
+            );
+            _refreshOfficerList();
+          } else {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.error_outline,
+              title: 'Failed',
+              subtitle: 'Failed to update officer.',
+            );
+          }
+        }
+
         if (state is OfficersArchiveStatusUpdated) {
           if (state.isSuccessful == true) {
             DelightfulToastUtils.showDelightfulToast(
@@ -444,6 +408,8 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                       ),
                       onActionSelected: (index, action) {
                         final officerId = _tableRows[index].id;
+                        final officerObj =
+                            _tableRows[index].object as OfficerEntity;
 
                         if (action.isNotEmpty) {
                           if (action.contains('Archive')) {
@@ -460,6 +426,15 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                               context: context,
                               builder: (context) => ViewOfficerModal(
                                 officerEntity: _tableRows[index].object,
+                              ),
+                            );
+                          }
+
+                          if (action.contains('Edit')) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ReusableOfficerModal(
+                                officerEntity: officerObj,
                               ),
                             );
                           }

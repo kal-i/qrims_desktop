@@ -9,12 +9,16 @@ import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
+import '../../domain/entities/officer.dart';
 import '../bloc/officers_bloc.dart';
 
 class ReusableOfficerModal extends StatefulWidget {
   const ReusableOfficerModal({
     super.key,
+    this.officerEntity,
   });
+
+  final OfficerEntity? officerEntity;
 
   @override
   State<ReusableOfficerModal> createState() => _ReusableOfficerModalState();
@@ -31,22 +35,41 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
 
   final ValueNotifier<String?> _selectedOfficeName = ValueNotifier(null);
 
+  bool get isUpdateMode => widget.officerEntity != null;
+
   @override
   void initState() {
     super.initState();
     _officersBloc = context.read<OfficersBloc>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
+
+    if (isUpdateMode) {
+      _officeNameController.text = widget.officerEntity?.officeName ?? '';
+      _positionNameController.text = widget.officerEntity?.positionName ?? '';
+      _nameController.text = widget.officerEntity?.name ?? '';
+    }
   }
 
-  void _addOfficer() {
+  void _submitOfficer() {
     if (_formKey.currentState!.validate()) {
-      _officersBloc.add(
-        RegisterOfficerEvent(
-          name: _nameController.text,
-          officeName: _officeNameController.text,
-          positionName: _positionNameController.text,
-        ),
-      );
+      if (isUpdateMode) {
+        _officersBloc.add(
+          UpdateOfficerEvent(
+            id: widget.officerEntity!.id,
+            office: _officeNameController.text,
+            position: _positionNameController.text,
+            name: _nameController.text,
+          ),
+        );
+      } else {
+        _officersBloc.add(
+          RegisterOfficerEvent(
+            name: _nameController.text,
+            officeName: _officeNameController.text,
+            positionName: _positionNameController.text,
+          ),
+        );
+      }
 
       context.pop();
 
@@ -96,7 +119,7 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
     return BaseModal(
       width: 600.0,
       height: 480.0,
-      headerTitle: 'Add Officer',
+      headerTitle: isUpdateMode ? 'Update Officer' : 'Add Officer',
       subtitle:
           'Officer to be involved with either the issuance or document report process.',
       content: _buildContent(),
@@ -171,8 +194,8 @@ class _ReusableOfficerModalState extends State<ReusableOfficerModal> {
           width: 10.0,
         ),
         CustomFilledButton(
-          onTap: _addOfficer,
-          text: 'Create',
+          onTap: _submitOfficer,
+          text: isUpdateMode ? 'Update' : 'Create',
           width: 180.0,
           height: 40.0,
         ),

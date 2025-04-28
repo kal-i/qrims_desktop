@@ -23,6 +23,14 @@ abstract interface class OfficerRepository {
     required String positionName,
   });
 
+  Future<Either<Failure, bool>> updateOfficer({
+    required String id,
+    String? office,
+    String? position,
+    String? name,
+    OfficerStatus? status,
+  });
+
   Future<Either<Failure, bool>> updateOfficerArchiveStatus({
     required String id,
     required bool isArchived,

@@ -48,6 +48,19 @@ final class OfficersError extends OfficersState {
       ];
 }
 
+final class UpdatedOfficer extends OfficersState {
+  const UpdatedOfficer({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+
+  @override
+  List<Object?> get props => [
+        isSuccessful,
+      ];
+}
+
 final class OfficersArchiveStatusUpdated extends OfficersState {
   const OfficersArchiveStatusUpdated({
     required this.isSuccessful,

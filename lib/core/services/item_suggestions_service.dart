@@ -1,4 +1,5 @@
 import '../constants/endpoints.dart';
+import '../utils/capitalizer.dart';
 import 'http_service.dart';
 
 class ItemSuggestionsService {
@@ -21,7 +22,7 @@ class ItemSuggestionsService {
     );
 
     final itemNames = (response.data['product_names'] as List<dynamic>?)
-        ?.map((itemName) => itemName.toString().toLowerCase())
+        ?.map((itemName) => capitalizeWord(itemName))
         .toList();
 
     return itemNames;
@@ -63,20 +64,17 @@ class ItemSuggestionsService {
     );
 
     final manufacturers = (response.data['manufacturers'] as List<dynamic>?)
-        ?.map((manufacturer) => manufacturer as String)
+        ?.map((manufacturer) => capitalizeWord(manufacturer as String))
         .toList();
 
     return manufacturers;
   }
 
-  Future<List<String>?> fetchBrands({
-    required String manufacturerName,
-    String? brandName
-  }) async {
+  Future<List<String>?> fetchBrands(
+      {required String manufacturerName, String? brandName}) async {
     final Map<String, dynamic> queryParams = {
       'manufacturer_name': manufacturerName,
-      if (brandName != null && brandName.isNotEmpty)
-        'brand_name': brandName
+      if (brandName != null && brandName.isNotEmpty) 'brand_name': brandName
     };
 
     final response = await httpService.get(
@@ -85,7 +83,7 @@ class ItemSuggestionsService {
     );
 
     final brands = (response.data['brands'] as List<dynamic>?)
-        ?.map((manufacturer) => manufacturer as String)
+        ?.map((brand) => capitalizeWord(brand as String))
         .toList();
 
     return brands;
@@ -99,8 +97,7 @@ class ItemSuggestionsService {
     final Map<String, dynamic> queryParams = {
       'product_name': productName,
       'brand_name': brandName,
-      if (modelName != null && modelName.isNotEmpty)
-        'model_name': modelName
+      if (modelName != null && modelName.isNotEmpty) 'model_name': modelName
     };
 
     final response = await httpService.get(
@@ -109,7 +106,7 @@ class ItemSuggestionsService {
     );
 
     final models = (response.data['models'] as List<dynamic>?)
-        ?.map((manufacturer) => manufacturer as String)
+        ?.map((model) => capitalizeWord(model as String))
         .toList();
 
     return models;

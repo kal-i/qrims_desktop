@@ -20,6 +20,14 @@ abstract interface class OfficerRemoteDataSource {
     required String positionName,
   });
 
+  Future<bool> updateOfficer({
+    required String id,
+    String? office,
+    String? position,
+    String? name,
+    OfficerStatus? status,
+  });
+
   Future<bool> updateOfficerArchiveStatus({
     required String id,
     required bool isArchived,
