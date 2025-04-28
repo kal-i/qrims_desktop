@@ -446,13 +446,17 @@ class RequisitionAndIssueSlip implements BaseDocument {
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Designation:',
                 dataRowColumnOne:
-                    requestingOfficerPositionHistory?.positionName ?? '\n',
+                    requestingOfficerPositionHistory?.positionName ??
+                        requestingOfficerEntity?.positionName,
                 dataRowColumnTwo:
-                    approvingOfficerPositionHistory?.positionName ?? '\n',
+                    approvingOfficerPositionHistory?.positionName ??
+                        approvingOfficerEntity?.positionName,
                 dataRowColumnThree:
-                    issuingOfficerPositionHistory?.positionName ?? '\n',
+                    issuingOfficerPositionHistory?.positionName ??
+                        issuingOfficerEntity?.positionName,
                 dataRowColumnFour:
-                    receivingOfficerPositonHistory?.positionName ?? '\n',
+                    receivingOfficerPositonHistory?.positionName ??
+                        receivingOfficerEntity?.positionName,
               ),
               DocumentComponents.buildRISFooterTableRow(
                 title: 'Date:',

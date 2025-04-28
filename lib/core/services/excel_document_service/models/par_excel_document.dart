@@ -94,12 +94,20 @@ class PARExcelDocument {
       sheet,
       17 + totalRowsInserted, // 17 + totalRowsInserted + 1,
       par.issuingOfficerEntity?.name ?? '',
-      issuingOfficerPositionHistory?.positionName ?? '',
-      issuingOfficerPositionHistory?.officeName ?? '',
+      issuingOfficerPositionHistory?.positionName ??
+          par.issuingOfficerEntity?.positionName ??
+          '',
+      issuingOfficerPositionHistory?.officeName ??
+          par.issuingOfficerEntity?.officeName ??
+          '',
       par.issuedDate,
       par.receivingOfficerEntity?.name ?? '',
-      receivingOfficerPositonHistory?.positionName ?? '',
-      receivingOfficerPositonHistory?.officeName ?? '',
+      receivingOfficerPositonHistory?.positionName ??
+          par.receivingOfficerEntity?.positionName ??
+          '',
+      receivingOfficerPositonHistory?.officeName ??
+          par.receivingOfficerEntity?.officeName ??
+          '',
       par.receivedDate,
       generalCellStyle,
     );
@@ -446,7 +454,7 @@ class PARExcelDocument {
       startReceivedByCell,
     );
     receivedByCell.value = TextCellValue(
-      'Received By:',
+      'Received by:',
     );
     receivedByCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(

@@ -326,8 +326,10 @@ class InventoryCustodianSlip implements BaseDocument {
                     title: 'Received from:',
                     officerName: data.issuingOfficerEntity?.name,
                     officerPosition:
-                        issuingOfficerPositionHistory?.positionName,
-                    officerOffice: issuingOfficerPositionHistory?.officeName,
+                        issuingOfficerPositionHistory?.positionName ??
+                            data.issuingOfficerEntity?.positionName,
+                    officerOffice: issuingOfficerPositionHistory?.officeName ??
+                        data.issuingOfficerEntity?.officeName,
                     date: ics.issuedDate,
                     borderRight: false,
                   ),
@@ -335,8 +337,10 @@ class InventoryCustodianSlip implements BaseDocument {
                     title: 'Received by:',
                     officerName: data.receivingOfficerEntity?.name,
                     officerPosition:
-                        receivingOfficerPositonHistory?.positionName,
-                    officerOffice: receivingOfficerPositonHistory?.officeName,
+                        receivingOfficerPositonHistory?.positionName ??
+                            data.receivingOfficerEntity?.positionName,
+                    officerOffice: receivingOfficerPositonHistory?.officeName ??
+                        data.receivingOfficerEntity?.officeName,
                     date: ics.receivedDate,
                   ),
                 ],

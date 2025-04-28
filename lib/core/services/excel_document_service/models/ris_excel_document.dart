@@ -141,16 +141,24 @@ class RISExcelDocument {
       17 + totalRowsInserted + 1 + purposeRows,
       generalCellStyle,
       requestingOfficerEntity?.name ?? '',
-      requestingOfficerPositionHistory?.positionName ?? '',
+      requestingOfficerPositionHistory?.positionName ??
+          ris.requestingOfficerEntity?.positionName ??
+          '',
       ris.requestDate != null ? documentDateFormatter(ris.requestDate!) : '',
       approvingOfficerEntity?.name ?? '',
-      approvingOfficerPositionHistory?.positionName ?? '',
+      approvingOfficerPositionHistory?.positionName ??
+          ris.approvingOfficerEntity?.positionName ??
+          '',
       ris.approvedDate != null ? documentDateFormatter(ris.approvedDate!) : '',
       issuingOfficerEntity?.name ?? '',
-      issuingOfficerPositionHistory?.positionName ?? '',
+      issuingOfficerPositionHistory?.positionName ??
+          ris.issuingOfficerEntity?.positionName ??
+          '',
       documentDateFormatter(ris.issuedDate),
       receivingOfficerEntity?.name ?? '',
-      receivingOfficerPositonHistory?.positionName ?? '',
+      receivingOfficerPositonHistory?.positionName ??
+          ris.receivingOfficerEntity?.positionName ??
+          '',
       ris.receivedDate != null ? documentDateFormatter(ris.receivedDate!) : '',
     );
   }

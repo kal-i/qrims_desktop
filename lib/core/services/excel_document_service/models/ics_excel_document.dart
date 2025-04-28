@@ -88,12 +88,20 @@ class ICSExcelDocument {
       sheet,
       17 + totalRowsInserted + 1,
       ics.issuingOfficerEntity?.name ?? '',
-      issuingOfficerPositionHistory?.positionName ?? '',
-      issuingOfficerPositionHistory?.officeName ?? '',
+      issuingOfficerPositionHistory?.positionName ??
+          ics.issuingOfficerEntity?.positionName ??
+          '',
+      issuingOfficerPositionHistory?.officeName ??
+          ics.issuingOfficerEntity?.officeName ??
+          '',
       ics.issuedDate,
       ics.receivingOfficerEntity?.name ?? '',
-      receivingOfficerPositonHistory?.positionName ?? '',
-      receivingOfficerPositonHistory?.officeName ?? '',
+      receivingOfficerPositonHistory?.positionName ??
+          ics.receivingOfficerEntity?.positionName ??
+          '',
+      receivingOfficerPositonHistory?.officeName ??
+          ics.receivingOfficerEntity?.officeName ??
+          '',
       ics.receivedDate,
       generalCellStyle,
     );
@@ -451,7 +459,7 @@ class ICSExcelDocument {
       startReceivedFromCell,
     );
     receivedFromCell.value = TextCellValue(
-      'Received From:',
+      'Received from:',
     );
     receivedFromCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(

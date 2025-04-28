@@ -310,21 +310,25 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
               pw.TableRow(
                 children: [
                   DocumentComponents.buildReusableIssuanceFooterContainer(
-                    title: 'Received from:',
-                    officerName: data.issuingOfficerEntity?.name,
-                    officerPosition:
-                        issuingOfficerPositionHistory?.positionName,
-                    officerOffice: issuingOfficerPositionHistory?.officeName,
-                    date: par.issuedDate,
-                    borderRight: false,
-                  ),
-                  DocumentComponents.buildReusableIssuanceFooterContainer(
                     title: 'Received by:',
                     officerName: data.receivingOfficerEntity?.name,
                     officerPosition:
-                        receivingOfficerPositonHistory?.positionName,
-                    officerOffice: receivingOfficerPositonHistory?.officeName,
+                        receivingOfficerPositonHistory?.positionName ??
+                            data.receivingOfficerEntity?.positionName,
+                    officerOffice: receivingOfficerPositonHistory?.officeName ??
+                        data.receivingOfficerEntity?.officeName,
                     date: par.receivedDate,
+                    borderRight: false,
+                  ),
+                  DocumentComponents.buildReusableIssuanceFooterContainer(
+                    title: 'Received from:',
+                    officerName: data.issuingOfficerEntity?.name,
+                    officerPosition:
+                        issuingOfficerPositionHistory?.positionName ??
+                            data.issuingOfficerEntity?.positionName,
+                    officerOffice: issuingOfficerPositionHistory?.officeName ??
+                        data.issuingOfficerEntity?.officeName,
+                    date: par.issuedDate,
                   ),
                 ],
               ),

@@ -200,7 +200,7 @@ class OfficerRepository {
   Future<bool?> updateOfficerInformation({
     required String id,
     String? name,
-    String? positionId,
+    String? newPositionId,
     OfficerStatus? status,
   }) async {
     try {
@@ -216,23 +216,46 @@ class OfficerRepository {
           parameters['name'] = name;
         }
 
-        if (positionId != null) {
-          setClauses.add('position_id = @position_id');
-          parameters['position_id'] = positionId;
-
-          await ctx.execute(
+        if (newPositionId != null) {
+          final latestPositionResult = await ctx.execute(
             Sql.named(
               '''
-              INSERT INTO PositionHistory (officer_id, position_id, created_at)
-              VALUES (@officer_id, @position_id, @created_at);
+              SELECT
+                position_id
+              FROM
+                Officers
+              WHERE
+                id = @id;
               ''',
             ),
             parameters: {
-              'officer_id': id,
-              'position_id': positionId,
-              'created_at': DateTime.now().toIso8601String(),
+              'id': id,
             },
           );
+
+          String? latestPositionId;
+          if (latestPositionResult.isNotEmpty) {
+            latestPositionId = latestPositionResult.first as String?;
+          }
+
+          if (latestPositionId != newPositionId) {
+            setClauses.add('position_id = @position_id');
+            parameters['position_id'] = newPositionId;
+
+            await ctx.execute(
+              Sql.named(
+                '''
+              INSERT INTO PositionHistory (officer_id, position_id, created_at)
+              VALUES (@officer_id, @position_id, @created_at);
+              ''',
+              ),
+              parameters: {
+                'officer_id': id,
+                'position_id': newPositionId,
+                'created_at': DateTime.now().toIso8601String(),
+              },
+            );
+          }
         }
 
         if (status != null) {

@@ -74,7 +74,7 @@ Future<Response> _updatePositionInformation(
     final result = await repository.updateOfficerInformation(
       id: id,
       name: name,
-      positionId: positionId,
+      newPositionId: positionId,
     );
 
     if (result == true) {
