@@ -65,8 +65,9 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   @override
   void initState() {
     super.initState();
-
     _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
+
+    _quantityController.text = _quantity.value.toString();
 
     if (widget.isUpdate || widget.itemId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -311,7 +312,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
           height: 5.0,
         ),
         Text(
-          'Items to be stored as consumables.',
+          'Items to be stored as consumables or supplies.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w400,

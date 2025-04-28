@@ -133,6 +133,18 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     });
   }
 
+  void _updateOfficerStatus({
+    required String id,
+    required OfficerStatus officerStatus,
+  }) {
+    _officersBloc.add(
+      UpdateOfficerEvent(
+        id: id,
+        status: officerStatus,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -335,6 +347,26 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                     'text': 'Edit',
                     'icon': FluentIcons.eye_20_regular,
                   },
+                if (officer.status != OfficerStatus.active)
+                  {
+                    'text': 'Set status to active',
+                    'icon': HugeIcons.strokeRoundedToggleOn,
+                  },
+                if (officer.status != OfficerStatus.suspended)
+                  {
+                    'text': 'Set status to suspended',
+                    'icon': HugeIcons.strokeRoundedToggleOff,
+                  },
+                if (officer.status != OfficerStatus.resigned)
+                  {
+                    'text': 'Set status to resigned',
+                    'icon': HugeIcons.strokeRoundedLogout01,
+                  },
+                if (officer.status != OfficerStatus.retired)
+                  {
+                    'text': 'Set status to retired',
+                    'icon': HugeIcons.strokeRoundedUnavailable,
+                  },
                 if (isAdmin)
                   {
                     'text': 'Archive',
@@ -438,6 +470,34 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                               builder: (context) => ReusableOfficerModal(
                                 officerEntity: officerObj,
                               ),
+                            );
+                          }
+
+                          if (action.contains('Set status to active')) {
+                            _updateOfficerStatus(
+                              id: officerId,
+                              officerStatus: OfficerStatus.active,
+                            );
+                          }
+
+                          if (action.contains('Set status to suspended')) {
+                            _updateOfficerStatus(
+                              id: officerId,
+                              officerStatus: OfficerStatus.suspended,
+                            );
+                          }
+
+                          if (action.contains('Set status to resigned')) {
+                            _updateOfficerStatus(
+                              id: officerId,
+                              officerStatus: OfficerStatus.resigned,
+                            );
+                          }
+
+                          if (action.contains('Set status to retired')) {
+                            _updateOfficerStatus(
+                              id: officerId,
+                              officerStatus: OfficerStatus.retired,
                             );
                           }
                         }

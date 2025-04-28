@@ -449,12 +449,12 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         ExpandableSearchButton(controller: _searchController),
         _buildRefreshButton(),
         _buildFilterButton(),
-        CustomFilledButton(
-          text: 'Find Officer Accountability',
-          onTap: () => context.go(
-            RoutingConstants.nestedViewOfficerAccountabilityRoutePath,
-          ),
-        ),
+        // CustomFilledButton(
+        //   text: 'Find Officer Accountability',
+        //   onTap: () => context.go(
+        //     RoutingConstants.nestedViewOfficerAccountabilityRoutePath,
+        //   ),
+        // ),
       ],
     );
   }

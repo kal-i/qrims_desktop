@@ -83,6 +83,8 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
     super.initState();
     _itemSuggestionsService = serviceLocator<ItemSuggestionsService>();
 
+    _quantityController.text = _quantity.value.toString();
+
     if (widget.isUpdate || widget.itemId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) {
@@ -480,7 +482,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
           height: 5.0,
         ),
         Text(
-          'Items to be stored in the inventory. To list multiple items of the same type, use a \' - \' symbol as a separator in the serial numbers. Apply the same approach to specifications to ensure proper formatting in the document.',
+          'Inventory items are stored as individual records in the database for easier tracking and issuance. Each item\'s quantity is always set to 1. If you want to store multiple records at the same time, you can either specify a quantity or list multiple serial numbers, in which case the quantity field will be ignored.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w400,

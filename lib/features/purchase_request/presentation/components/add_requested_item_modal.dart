@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../config/themes/app_color.dart';
-import '../../../../config/themes/app_theme.dart';
-import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/base_modal.dart';
 import '../../../../core/common/components/custom_dropdown_field.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
@@ -159,10 +155,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                         label: '* Unit Cost',
                         controller: _unitCostController,
                         placeholderText: 'Enter item\'s unit cost',
-                        fillColor:
-                            (context.watch<ThemeBloc>().state == AppTheme.light
-                                ? AppColor.lightCustomTextBox
-                                : AppColor.darkCustomTextBox),
                       ),
                     ),
                   ],
@@ -176,9 +168,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                 placeholderText: 'Enter item\'s specification',
                 maxLines: 4,
                 controller: _itemSpecificationController,
-                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightCustomTextBox
-                    : AppColor.darkCustomTextBox),
                 hasValidation: false,
               ),
             ],
@@ -211,9 +200,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
       controller: _itemNameController,
       label: '* Item Name',
       placeHolderText: 'Enter item\'s name',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
     );
   }
 
@@ -241,9 +227,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
           controller: _itemDescriptionController,
           label: '* Description',
           placeHolderText: 'Enter item\'s description',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
           maxLines: 4,
         );
       },
@@ -278,9 +261,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
               .toList(),
           label: 'Unit',
           placeholderText: 'Enter item\'s unit',
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -294,9 +274,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
           label: '* Quantity',
           placeholderText: 'Enter item\'s quantity',
           controller: _quantityController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
           isNumeric: true,
           suffixWidget: Column(
             mainAxisAlignment: MainAxisAlignment.end,
