@@ -53,7 +53,8 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
   ];
   late List<TableData> _tableRows = [];
 
-  final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('Active');
+  final ValueNotifier<String> _selectedFilterNotifier =
+      ValueNotifier(OfficerStatus.active.toString());
   final ValueNotifier<int> _totalRecords = ValueNotifier(0);
 
   int _currentPage = 1;
@@ -114,6 +115,7 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
     _searchController.clear();
     _currentPage = 1;
     _selectedOffice = null;
+    _selectedFilterNotifier.value = OfficerStatus.active.toString();
     _fetchOfficers();
   }
 

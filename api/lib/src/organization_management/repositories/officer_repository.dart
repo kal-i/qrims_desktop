@@ -540,6 +540,9 @@ class OfficerRepository {
       FROM Officers
       ''';
 
+      whereConditions.add('officer_status = @status');
+      params['status'] = OfficerStatus.active.toString().split('.').last;
+
       if (positionId != null && positionId.isNotEmpty) {
         whereConditions.add('position_id = @position_id');
         params['position_id'] = positionId;
@@ -584,6 +587,9 @@ class OfficerRepository {
       String baseQuery = '''
       SELECT name FROM Officers
       ''';
+
+      whereConditions.add('officer_status = @status');
+      params['status'] = OfficerStatus.active.toString().split('.').last;
 
       if (positionId != null && positionId.isNotEmpty) {
         whereConditions.add('position_id = @position_id');
