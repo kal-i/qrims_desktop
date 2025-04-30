@@ -2,6 +2,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
+import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../features/item_issuance/domain/entities/requisition_and_issue_slip.dart';
 import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../../init_dependencies.dart';
@@ -9,6 +10,7 @@ import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
@@ -148,32 +150,38 @@ class RequisitionAndIssueSlip implements BaseDocument {
       ),
     ];
 
-    // Loop through each item to generate rows
-    for (int i = 0; i < ris.items.length; i++) {
-      final issuanceItemEntity = ris.items[i];
-      final itemEntity = issuanceItemEntity.itemEntity;
+    final compressedItems = <String, List<IssuanceItemEntity>>{};
+
+    for (var item in ris.items) {
+      final key = IssuanceItemCompressor.generateKey(item);
+      compressedItems.putIfAbsent(key, () => []).add(item);
+    }
+
+    // Step 2: Generate rows from compressed data
+    final itemGroups = compressedItems.values.toList();
+    for (int i = 0; i < itemGroups.length; i++) {
+      final group = itemGroups[i];
+      final representative = group.first;
+
+      final itemEntity = representative.itemEntity;
       final productStockEntity = itemEntity.productStockEntity;
       final productNameEntity = productStockEntity.productName;
       final productDescriptionEntity = productStockEntity.productDescription;
       final shareableItemInformationEntity =
           itemEntity.shareableItemInformationEntity;
 
-      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
         productDescriptionEntity?.description ?? 'No description defined'
       ];
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll(
-          [
-            'Specifications:',
-            ...extractSpecification(specification, ','),
-          ],
-        );
+        descriptionColumn.addAll([
+          'Specifications:',
+          ...extractSpecification(specification, ','),
+        ]);
       }
 
-      // Add inventory-specific details if the item is EquipmentEntity
       if (itemEntity is InventoryItemEntity) {
         final inventoryItem = itemEntity;
         final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
@@ -182,25 +190,16 @@ class RequisitionAndIssueSlip implements BaseDocument {
         final serialNo = inventoryItem.serialNo;
 
         if (brandEntity != null) {
-          descriptionColumn.add(
-            'Brand: ${brandEntity.name}',
-          );
+          descriptionColumn.add('Brand: ${brandEntity.name}');
         }
-
         if (modelEntity != null) {
-          descriptionColumn.add(
-            'Model: ${modelEntity.modelName}',
-          );
+          descriptionColumn.add('Model: ${modelEntity.modelName}');
         }
-
         if (serialNo != null && serialNo.isNotEmpty) {
-          descriptionColumn.add(
-            'SN: $serialNo',
-          );
+          descriptionColumn.add('SN: $serialNo');
         }
       }
 
-      // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
         return DocumentService.getRowHeight(
           row,
@@ -209,12 +208,23 @@ class RequisitionAndIssueSlip implements BaseDocument {
         );
       }).toList();
 
+      // Sort group by ID
+      group.sort(
+          (a, b) => a.itemEntity.shareableItemInformationEntity.id.compareTo(
+                b.itemEntity.shareableItemInformationEntity.id,
+              ));
+
+      final firstId = group.first.itemEntity.shareableItemInformationEntity.id;
+      final lastId = group.last.itemEntity.shareableItemInformationEntity.id;
+
+      final baseItemId = group.length == 1 ? firstId : '$firstId TO $lastId';
+
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
       final stockNo = '$productNameId$productDescriptionId';
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
-      final issuedQuantity = issuanceItemEntity.quantity;
+      final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
 
       int? requestedQuantity;
       if (purchaseRequestEntity != null) {

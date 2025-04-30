@@ -8,6 +8,7 @@ import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import 'cell_info.dart';
@@ -330,31 +331,38 @@ class RISExcelDocument {
     int totalRowsInserted = 0;
     int currentRow = startRow;
 
-    for (int i = 0; i < items.length; i++) {
-      final issuanceItemEntity = items[i];
-      final itemEntity = issuanceItemEntity.itemEntity;
+    final compressedItems = <String, List<IssuanceItemEntity>>{};
+
+    for (var item in ris.items) {
+      final key = IssuanceItemCompressor.generateKey(item);
+      compressedItems.putIfAbsent(key, () => []).add(item);
+    }
+
+    // Step 2: Generate rows from compressed data
+    final itemGroups = compressedItems.values.toList();
+    for (int i = 0; i < itemGroups.length; i++) {
+      final group = itemGroups[i];
+      final representative = group.first;
+
+      final itemEntity = representative.itemEntity;
       final productStockEntity = itemEntity.productStockEntity;
       final productNameEntity = productStockEntity.productName;
       final productDescriptionEntity = productStockEntity.productDescription;
       final shareableItemInformationEntity =
           itemEntity.shareableItemInformationEntity;
 
-      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
         productDescriptionEntity?.description ?? 'No description defined'
       ];
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll(
-          [
-            'Specifications:',
-            ...extractSpecification(specification, ','),
-          ],
-        );
+        descriptionColumn.addAll([
+          'Specifications:',
+          ...extractSpecification(specification, ','),
+        ]);
       }
 
-      // Add inventory-specific details if the item is EquipmentEntity
       if (itemEntity is InventoryItemEntity) {
         final inventoryItem = itemEntity;
         final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
@@ -363,30 +371,33 @@ class RISExcelDocument {
         final serialNo = inventoryItem.serialNo;
 
         if (brandEntity != null) {
-          descriptionColumn.add(
-            'Brand: ${brandEntity.name}',
-          );
+          descriptionColumn.add('Brand: ${brandEntity.name}');
         }
-
         if (modelEntity != null) {
-          descriptionColumn.add(
-            'Model: ${modelEntity.modelName}',
-          );
+          descriptionColumn.add('Model: ${modelEntity.modelName}');
         }
-
         if (serialNo != null && serialNo.isNotEmpty) {
-          descriptionColumn.add(
-            'SN: $serialNo',
-          );
+          descriptionColumn.add('SN: $serialNo');
         }
       }
+
+      // Sort group by ID
+      group.sort(
+          (a, b) => a.itemEntity.shareableItemInformationEntity.id.compareTo(
+                b.itemEntity.shareableItemInformationEntity.id,
+              ));
+
+      final firstId = group.first.itemEntity.shareableItemInformationEntity.id;
+      final lastId = group.last.itemEntity.shareableItemInformationEntity.id;
+
+      final baseItemId = group.length == 1 ? firstId : '$firstId TO $lastId';
 
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
       final stockNo = '$productNameId$productDescriptionId';
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
-      final issuedQuantity = issuanceItemEntity.quantity;
+      final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
 
       int? requestedQuantity;
       if (purchaseRequestEntity != null) {
@@ -437,6 +448,114 @@ class RISExcelDocument {
         currentRow++;
       }
     }
+
+    // for (int i = 0; i < items.length; i++) {
+    //   final issuanceItemEntity = items[i];
+    //   final itemEntity = issuanceItemEntity.itemEntity;
+    //   final productStockEntity = itemEntity.productStockEntity;
+    //   final productNameEntity = productStockEntity.productName;
+    //   final productDescriptionEntity = productStockEntity.productDescription;
+    //   final shareableItemInformationEntity =
+    //       itemEntity.shareableItemInformationEntity;
+
+    //   // Reinitialize descriptionColumn for each item
+    //   final descriptionColumn = [
+    //     productDescriptionEntity?.description ?? 'No description defined'
+    //   ];
+
+    //   final specification = shareableItemInformationEntity.specification;
+    //   if (specification != null && specification.isNotEmpty) {
+    //     descriptionColumn.addAll(
+    //       [
+    //         'Specifications:',
+    //         ...extractSpecification(specification, ','),
+    //       ],
+    //     );
+    //   }
+
+    //   // Add inventory-specific details if the item is EquipmentEntity
+    //   if (itemEntity is InventoryItemEntity) {
+    //     final inventoryItem = itemEntity;
+    //     final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+    //     final brandEntity = manufacturerBrandEntity?.brand;
+    //     final modelEntity = inventoryItem.modelEntity;
+    //     final serialNo = inventoryItem.serialNo;
+
+    //     if (brandEntity != null) {
+    //       descriptionColumn.add(
+    //         'Brand: ${brandEntity.name}',
+    //       );
+    //     }
+
+    //     if (modelEntity != null) {
+    //       descriptionColumn.add(
+    //         'Model: ${modelEntity.modelName}',
+    //       );
+    //     }
+
+    //     if (serialNo != null && serialNo.isNotEmpty) {
+    //       descriptionColumn.add(
+    //         'SN: $serialNo',
+    //       );
+    //     }
+    //   }
+
+    //   final productNameId = productNameEntity.id;
+    //   final productDescriptionId = productDescriptionEntity?.id;
+    //   final stockNo = '$productNameId$productDescriptionId';
+    //   final unit = shareableItemInformationEntity.unit;
+    //   final stockQuantity = shareableItemInformationEntity.quantity;
+    //   final issuedQuantity = issuanceItemEntity.quantity;
+
+    //   int? requestedQuantity;
+    //   if (purchaseRequestEntity != null) {
+    //     for (final requestedItem
+    //         in purchaseRequestEntity.requestedItemEntities) {
+    //       final requestedProductNameId = requestedItem.productNameEntity.id;
+    //       final requestedProductDescriptionId =
+    //           requestedItem.productDescriptionEntity.id;
+    //       final requestedUnit = requestedItem.unit;
+
+    //       if (productNameId == requestedProductNameId &&
+    //           productDescriptionId == requestedProductDescriptionId &&
+    //           unit == requestedUnit) {
+    //         requestedQuantity = requestedItem.quantity;
+    //       }
+    //     }
+    //   } else {
+    //     requestedQuantity = issuedQuantity;
+    //   }
+
+    //   for (int j = 0; j < descriptionColumn.length; j++) {
+    //     // For every row after the first, insert a new row
+    //     if (!(i == 0 && j == 0)) {
+    //       sheet.insertRow(currentRow);
+    //       totalRowsInserted++;
+    //     }
+    //     _updateRow(
+    //       sheet,
+    //       currentRow,
+    //       j == 0 ? stockNo : '',
+    //       j == 0 ? readableEnumConverter(unit) : '',
+    //       descriptionColumn[j],
+    //       j == 0 ? requestedQuantity.toString() : '\n',
+    //       j == 0
+    //           ? stockQuantity > 0
+    //               ? '/'
+    //               : '\n'
+    //           : '\n',
+    //       j == 0
+    //           ? stockQuantity == 0
+    //               ? '/'
+    //               : '\n'
+    //           : '\n',
+    //       j == 0 ? issuedQuantity.toString() : '\n',
+    //       j == 0 ? '\n' : '\n',
+    //       cellStyle,
+    //     );
+    //     currentRow++;
+    //   }
+    // }
     return totalRowsInserted;
   }
 
@@ -895,6 +1014,7 @@ class RISExcelDocument {
         rightBorderVal: Border(borderStyle: BorderStyle.Medium),
         bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
         leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+        textWrappingVal: TextWrapping.WrapText,
       );
     }
   }
