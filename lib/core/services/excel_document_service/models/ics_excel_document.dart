@@ -168,7 +168,6 @@ class ICSExcelDocument {
 
     final purchaseRequestEntity = ics.purchaseRequestEntity;
     final supplierEntity = ics.supplierEntity;
-
     final compressedItems = <String, List<IssuanceItemEntity>>{};
 
     for (var item in ics.items) {
@@ -263,7 +262,7 @@ class ICSExcelDocument {
           j == 0 ? readableEnumConverter(unit) : '',
           j == 0 ? formatCurrency(unitCost) : '',
           j == 0 ? formatCurrency(totalCost) : '',
-          descriptionColumn[j] ?? '',
+          descriptionColumn[j],
           j == 0 ? baseItemId : '',
           j == 0 ? estimatedUsefulLife : null,
           dataCellStyle,
