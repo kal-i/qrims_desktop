@@ -120,6 +120,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               specification: _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
+              unitCost: double.parse(_unitCostController.text),
             ),
           );
     }

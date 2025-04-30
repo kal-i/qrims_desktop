@@ -3,11 +3,13 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
+import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
@@ -110,31 +112,37 @@ class InventoryCustodianSlip implements BaseDocument {
       ),
     );
 
-    // Loop through each item to generate rows
-    for (int i = 0; i < ics.items.length; i++) {
-      final issuanceItemEntity = ics.items[i];
-      final itemEntity = issuanceItemEntity.itemEntity;
+    final compressedItems = <String, List<IssuanceItemEntity>>{};
+
+    for (var item in ics.items) {
+      final key = IssuanceItemCompressor.generateKey(item);
+      compressedItems.putIfAbsent(key, () => []).add(item);
+    }
+
+    // Step 2: Generate rows from compressed data
+    final itemGroups = compressedItems.values.toList();
+    for (int i = 0; i < itemGroups.length; i++) {
+      final group = itemGroups[i];
+      final representative = group.first;
+
+      final itemEntity = representative.itemEntity;
       final productStockEntity = itemEntity.productStockEntity;
       final productDescriptionEntity = productStockEntity.productDescription;
       final shareableItemInformationEntity =
           itemEntity.shareableItemInformationEntity;
 
-      // Reinitialize descriptionColumn for each item
       final descriptionColumn = [
         productDescriptionEntity?.description ?? 'No description defined'
       ];
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll(
-          [
-            'Specifications:',
-            ...extractSpecification(specification, ','),
-          ],
-        );
+        descriptionColumn.addAll([
+          'Specifications:',
+          ...extractSpecification(specification, ','),
+        ]);
       }
 
-      // Add inventory-specific details if the item is EquipmentEntity
       if (itemEntity is InventoryItemEntity) {
         final inventoryItem = itemEntity;
         final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
@@ -143,25 +151,16 @@ class InventoryCustodianSlip implements BaseDocument {
         final serialNo = inventoryItem.serialNo;
 
         if (brandEntity != null) {
-          descriptionColumn.add(
-            'Brand: ${brandEntity.name}',
-          );
+          descriptionColumn.add('Brand: ${brandEntity.name}');
         }
-
         if (modelEntity != null) {
-          descriptionColumn.add(
-            'Model: ${modelEntity.modelName}',
-          );
+          descriptionColumn.add('Model: ${modelEntity.modelName}');
         }
-
         if (serialNo != null && serialNo.isNotEmpty) {
-          descriptionColumn.add(
-            'SN: $serialNo',
-          );
+          descriptionColumn.add('SN: $serialNo');
         }
       }
 
-      // Calculate row heights for description
       final rowHeights = descriptionColumn.map((row) {
         return DocumentService.getRowHeight(
           row,
@@ -170,18 +169,29 @@ class InventoryCustodianSlip implements BaseDocument {
         );
       }).toList();
 
-      final baseItemId = shareableItemInformationEntity.id;
-      final quantity = issuanceItemEntity.quantity;
+      // Sort group by ID
+      group.sort(
+          (a, b) => a.itemEntity.shareableItemInformationEntity.id.compareTo(
+                b.itemEntity.shareableItemInformationEntity.id,
+              ));
+
+      final firstId = group.first.itemEntity.shareableItemInformationEntity.id;
+      final lastId = group.last.itemEntity.shareableItemInformationEntity.id;
+
+      final baseItemId = group.length == 1 ? firstId : '$firstId TO $lastId';
+
+      final totalQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
       final unit = shareableItemInformationEntity.unit;
       final unitCost = shareableItemInformationEntity.unitCost;
-      final totalCost = unitCost * quantity;
+      final totalCost = unitCost * totalQuantity;
       final estimatedUsefulLife =
-          (itemEntity as InventoryItemEntity).estimatedUsefulLife;
+          (representative.itemEntity as InventoryItemEntity)
+              .estimatedUsefulLife;
 
       for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildIcsTableRow(
-            quantity: j == 0 ? quantity.toString() : '\n',
+            quantity: j == 0 ? totalQuantity.toString() : '\n',
             unit: j == 0 ? readableEnumConverter(unit) : '\n',
             unitCost: j == 0 ? formatCurrency(unitCost) : '\n',
             totalCost: j == 0 ? formatCurrency(totalCost) : '\n',
@@ -196,57 +206,34 @@ class InventoryCustodianSlip implements BaseDocument {
         );
       }
 
-      if (i == ics.items.length - 1) {
+      // Add footer rows on last item group
+      if (i == itemGroups.length - 1) {
         if (purchaseRequestEntity != null ||
             ics.supplierEntity != null ||
             ics.inspectionAndAcceptanceReportId != null ||
             ics.contractNumber != null ||
             ics.purchaseOrderNumber != null) {
-          tableRows.add(
-            _buildIcsTableRowFooter(
-              data: '\n',
-            ),
-          );
+          tableRows.add(_buildIcsTableRowFooter(data: '\n'));
         }
-
         if (purchaseRequestEntity != null) {
           tableRows.add(
-            _buildIcsTableRowFooter(
-              data: 'PR: ${purchaseRequestEntity.id}',
-            ),
-          );
+              _buildIcsTableRowFooter(data: 'PR: ${purchaseRequestEntity.id}'));
         }
-
         if (supplierEntity != null) {
-          tableRows.add(
-            _buildIcsTableRowFooter(
-              data: 'Supplier: ${supplierEntity.name}',
-            ),
-          );
+          tableRows.add(_buildIcsTableRowFooter(
+              data: 'Supplier: ${supplierEntity.name}'));
         }
-
         if (ics.inspectionAndAcceptanceReportId != null) {
-          tableRows.add(
-            _buildIcsTableRowFooter(
-              data: 'IAR: ${ics.inspectionAndAcceptanceReportId}',
-            ),
-          );
+          tableRows.add(_buildIcsTableRowFooter(
+              data: 'IAR: ${ics.inspectionAndAcceptanceReportId}'));
         }
-
         if (ics.contractNumber != null) {
-          tableRows.add(
-            _buildIcsTableRowFooter(
-              data: 'CN: ${ics.contractNumber}',
-            ),
-          );
+          tableRows
+              .add(_buildIcsTableRowFooter(data: 'CN: ${ics.contractNumber}'));
         }
-
         if (ics.purchaseOrderNumber != null) {
           tableRows.add(
-            _buildIcsTableRowFooter(
-              data: 'PO: ${ics.purchaseOrderNumber}',
-            ),
-          );
+              _buildIcsTableRowFooter(data: 'PO: ${ics.purchaseOrderNumber}'));
         }
       }
     }
@@ -379,4 +366,45 @@ class InventoryCustodianSlip implements BaseDocument {
       rowHeight: 13.0,
     );
   }
+}
+
+class CompressedItemKey {
+  final String description;
+  final String specification;
+  final String unit;
+  final double unitCost;
+  final String? brand;
+  final String? model;
+  final int? estimatedUsefulLife;
+
+  CompressedItemKey({
+    required this.description,
+    required this.specification,
+    required this.unit,
+    required this.unitCost,
+    this.brand,
+    this.model,
+    this.estimatedUsefulLife,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is CompressedItemKey &&
+      other.description == description &&
+      other.specification == specification &&
+      other.unit == unit &&
+      other.unitCost == unitCost &&
+      other.brand == brand &&
+      other.model == model &&
+      other.estimatedUsefulLife == estimatedUsefulLife;
+
+  @override
+  int get hashCode =>
+      description.hashCode ^
+      specification.hashCode ^
+      unit.hashCode ^
+      unitCost.hashCode ^
+      (brand?.hashCode ?? 0) ^
+      (model?.hashCode ?? 0) ^
+      (estimatedUsefulLife?.hashCode ?? 0);
 }

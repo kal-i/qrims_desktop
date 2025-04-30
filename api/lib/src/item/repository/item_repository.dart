@@ -1840,6 +1840,7 @@ class ItemRepository {
       }
 
       if (unitCost != null) {
+        print('unit cost: $unitCost');
         baseItemSetClauses.add('unit_cost = @unit_cost');
         baseItemParams['unit_cost'] = unitCost;
       }
@@ -1903,6 +1904,18 @@ class ItemRepository {
       if (serialNo != null && serialNo.isNotEmpty) {
         inventorySetClauses.add('serial_no = @serial_no');
         inventoryParams['serial_no'] = serialNo;
+      }
+
+      if (assetClassification != null) {
+        inventorySetClauses.add('asset_classification = @asset_classification');
+        inventoryParams['asset_classification'] =
+            assetClassification.toString().split('.').last;
+      }
+
+      if (assetSubClass != null) {
+        inventorySetClauses.add('asset_sub_class = @asset_sub_class');
+        inventoryParams['asset_sub_class'] =
+            assetSubClass.toString().split('.').last;
       }
 
       if (estimatedUsefulLife != null) {

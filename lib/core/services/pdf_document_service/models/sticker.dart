@@ -33,7 +33,14 @@ class Sticker implements BaseDocument {
     final itemIdTitle = data is InventoryCustodianSlipEntity
         ? 'SEMI-EXPENDABLE PROPERTY NUMBER'
         : 'PROPERTY NUMBER';
-    final List<IssuanceItemEntity> items = data.items;
+    //final List<IssuanceItemEntity> items = data.items;
+    final List<IssuanceItemEntity> items = List.from(data.items)
+      ..sort((a, b) {
+        final aId = a.itemEntity.shareableItemInformationEntity.id;
+        final bId = b.itemEntity.shareableItemInformationEntity.id;
+        return aId.compareTo(bId);
+      });
+
     final personAccountable = data.receivingOfficerEntity?.name ?? '';
 
     final allStickers = <pw.Widget>[];

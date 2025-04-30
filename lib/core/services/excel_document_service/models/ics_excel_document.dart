@@ -2,11 +2,13 @@ import 'package:excel/excel.dart';
 
 import '../../../../features/item_inventory/domain/entities/inventory_item.dart';
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
+import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
 import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
 import '../../../utils/readable_enum_converter.dart';
 import 'cell_info.dart';
@@ -160,18 +162,80 @@ class ICSExcelDocument {
     InventoryCustodianSlipEntity ics,
     CellStyle? cellStyle,
   ) {
-    final items = ics.items;
     int startRow = 18;
     int totalRowsInserted = 0;
     int currentRow = startRow;
 
-    for (int i = 0; i < items.length; i++) {
-      final issuance = items[i];
-      final itemEntity = issuance.itemEntity;
+    final purchaseRequestEntity = ics.purchaseRequestEntity;
+    final supplierEntity = ics.supplierEntity;
+
+    final compressedItems = <String, List<IssuanceItemEntity>>{};
+
+    for (var item in ics.items) {
+      final key = IssuanceItemCompressor.generateKey(item);
+      compressedItems.putIfAbsent(key, () => []).add(item);
+    }
+
+    // Step 2: Generate rows from compressed data
+    final itemGroups = compressedItems.values.toList();
+    for (int i = 0; i < itemGroups.length; i++) {
+      final group = itemGroups[i];
+      final representative = group.first;
+
+      final itemEntity = representative.itemEntity;
+      final productStockEntity = itemEntity.productStockEntity;
+      final productDescriptionEntity = productStockEntity.productDescription;
       final shareableItemInformationEntity =
           itemEntity.shareableItemInformationEntity;
-      final productDescriptionEntity =
-          itemEntity.productStockEntity.productDescription;
+
+      final descriptionColumn = [
+        productDescriptionEntity?.description ?? 'No description defined'
+      ];
+
+      final specification = shareableItemInformationEntity.specification;
+      if (specification != null && specification.isNotEmpty) {
+        descriptionColumn.addAll([
+          'Specifications:',
+          ...extractSpecification(specification, ','),
+        ]);
+      }
+
+      if (itemEntity is InventoryItemEntity) {
+        final inventoryItem = itemEntity;
+        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
+        final brandEntity = manufacturerBrandEntity?.brand;
+        final modelEntity = inventoryItem.modelEntity;
+        final serialNo = inventoryItem.serialNo;
+
+        if (brandEntity != null) {
+          descriptionColumn.add('Brand: ${brandEntity.name}');
+        }
+        if (modelEntity != null) {
+          descriptionColumn.add('Model: ${modelEntity.modelName}');
+        }
+        if (serialNo != null && serialNo.isNotEmpty) {
+          descriptionColumn.add('SN: $serialNo');
+        }
+      }
+
+      // Sort group by ID
+      group.sort(
+          (a, b) => a.itemEntity.shareableItemInformationEntity.id.compareTo(
+                b.itemEntity.shareableItemInformationEntity.id,
+              ));
+
+      final firstId = group.first.itemEntity.shareableItemInformationEntity.id;
+      final lastId = group.last.itemEntity.shareableItemInformationEntity.id;
+
+      final baseItemId = group.length == 1 ? firstId : '$firstId TO $lastId';
+
+      final totalQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
+      final unit = shareableItemInformationEntity.unit;
+      final unitCost = shareableItemInformationEntity.unitCost;
+      final totalCost = unitCost * totalQuantity;
+      final estimatedUsefulLife =
+          (representative.itemEntity as InventoryItemEntity)
+              .estimatedUsefulLife;
 
       final dataCellStyle = cellStyle?.copyWith(
         horizontalAlignVal: HorizontalAlign.Center,
@@ -186,52 +250,6 @@ class ICSExcelDocument {
         leftBorderVal: Border(borderStyle: BorderStyle.Medium),
       );
 
-      final descriptionColumn = [
-        productDescriptionEntity?.description,
-      ];
-
-      final specification = shareableItemInformationEntity.specification;
-      if (specification != null) {
-        descriptionColumn.addAll([
-          'Specifications',
-          ...extractSpecification(specification, ','),
-        ]);
-      }
-
-      if (itemEntity is InventoryItemEntity) {
-        final inventoryItem = itemEntity;
-        final manufacturerBrandEntity = inventoryItem.manufacturerBrandEntity;
-        final brandEntity = manufacturerBrandEntity?.brand;
-        final modelEntity = inventoryItem.modelEntity;
-        final serialNo = inventoryItem.serialNo;
-
-        if (brandEntity != null) {
-          descriptionColumn.add(
-            'Brand: ${brandEntity.name}',
-          );
-        }
-
-        if (modelEntity != null) {
-          descriptionColumn.add(
-            'Model: ${modelEntity.modelName}',
-          );
-        }
-
-        if (serialNo != null && serialNo.isNotEmpty) {
-          descriptionColumn.add(
-            'SN: $serialNo',
-          );
-        }
-      }
-
-      final baseItemId = shareableItemInformationEntity.id;
-      final quantity = issuance.quantity;
-      final unit = shareableItemInformationEntity.unit;
-      final unitCost = shareableItemInformationEntity.unitCost;
-      final totalCost = unitCost * quantity;
-      final estimatedUsefulLife =
-          (itemEntity as InventoryItemEntity).estimatedUsefulLife;
-
       for (int j = 0; j < descriptionColumn.length; j++) {
         // For every row after the first, insert a new row
         if (!(i == 0 && j == 0)) {
@@ -241,7 +259,7 @@ class ICSExcelDocument {
         _updateRow(
           sheet,
           currentRow,
-          j == 0 ? quantity.toString() : '',
+          j == 0 ? totalQuantity.toString() : '',
           j == 0 ? readableEnumConverter(unit) : '',
           j == 0 ? formatCurrency(unitCost) : '',
           j == 0 ? formatCurrency(totalCost) : '',
@@ -253,10 +271,7 @@ class ICSExcelDocument {
         currentRow++;
       }
 
-      final purchaseRequestEntity = ics.purchaseRequestEntity;
-      final supplierEntity = ics.supplierEntity;
-
-      if (i == items.length - 1) {
+      if (i == itemGroups.length - 1) {
         if (purchaseRequestEntity != null ||
             supplierEntity != null ||
             ics.inspectionAndAcceptanceReportId != null ||
@@ -399,6 +414,7 @@ class ICSExcelDocument {
         rightBorderVal: Border(borderStyle: BorderStyle.Medium),
         bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
         leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+        textWrappingVal: TextWrapping.WrapText,
       );
     }
   }
