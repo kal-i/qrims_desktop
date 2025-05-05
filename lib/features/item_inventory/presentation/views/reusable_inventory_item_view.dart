@@ -300,10 +300,13 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                               'n/a')
                       ? 'No specification defined.'
                       : shareableItemInformationEntity.specification!;
-              _brandController.text = brandEntity?.name ?? 'N/A';
-              _modelController.text = modelEntity?.modelName ?? 'N/A';
-              _serialNoController.text = itemEntity.serialNo ?? 'N/A';
-              _manufacturerController.text = manufacturerEntity?.name ?? 'N/A';
+              _brandController.text =
+                  brandEntity?.name ?? 'No brand specified.';
+              _modelController.text =
+                  modelEntity?.modelName ?? 'No model specified.';
+              _serialNoController.text = itemEntity.serialNo ?? 'No serial no.';
+              _manufacturerController.text =
+                  manufacturerEntity?.name ?? 'No manufacturer specified.';
               _selectedAssetClassification.value =
                   AssetClassification.values.firstWhere(
                 (e) =>
@@ -333,10 +336,22 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               _unitCostController.text =
                   formatCurrency(shareableItemInformationEntity.unitCost);
               _estimatedUsefulLifeController.text =
-                  itemEntity.estimatedUsefulLife.toString();
+                  itemEntity.estimatedUsefulLife != null
+                      ? itemEntity.estimatedUsefulLife.toString()
+                      : 'No estimated useful life specified.';
               _pickedDate.value =
                   initItemData.shareableItemInformationEntity.acquiredDate ??
                       DateTime.now();
+
+              _selectedFundCluster.value = FundCluster.values.firstWhere(
+                (e) =>
+                    e.toString().split('.').last ==
+                    shareableItemInformationEntity.fundCluster
+                        .toString()
+                        .split('.')
+                        .last,
+                orElse: () => FundCluster.unknown,
+              );
             }
           }
 
@@ -469,7 +484,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
         const SizedBox(
           height: 5.0,
         ),
-        if (!_isViewOnlyMode()) _buildInstruction(),
+        _buildInstruction(),
       ],
     );
   }

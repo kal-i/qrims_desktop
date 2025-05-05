@@ -4,6 +4,7 @@ import "package:go_router/go_router.dart";
 import "../../../../core/common/components/base_modal.dart";
 import "../../../../core/common/components/custom_filled_button.dart";
 import "../../../../core/common/components/custom_outline_button.dart";
+import "../../../../core/services/entity_suggestions_service.dart";
 import "../../../../core/services/officer_suggestions_service.dart";
 import "../../../../init_dependencies.dart";
 import "../../../purchase_order/presentation/components/custom_search_field.dart";
@@ -17,10 +18,12 @@ class AddReceivingOfficerModal extends StatefulWidget {
 }
 
 class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
+  late EntitySuggestionService _entitySuggestionService;
   late OfficerSuggestionsService _officerSuggestionsService;
 
   final _formKey = GlobalKey<FormState>();
 
+  final _entityNameController = TextEditingController();
   final _officeNameController = TextEditingController();
   final _positionNameController = TextEditingController();
   final _nameController = TextEditingController();
@@ -31,12 +34,13 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   @override
   void initState() {
     super.initState();
+    _entitySuggestionService = serviceLocator<EntitySuggestionService>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
   }
 
   void _onAddReceivingOfficer() {
-    // if (_formKey.currentState!.validate()) {
     final officerData = {
+      'entity': _entityNameController.text,
       'officer': {
         'name': _nameController.text,
         'position': _positionNameController.text,
@@ -45,15 +49,18 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
       'items': [],
     };
     context.pop(officerData);
-    //  }
   }
 
   @override
   void dispose() {
+    _entityNameController.dispose();
     _officeNameController.dispose();
     _positionNameController.dispose();
     _nameController.dispose();
+
     _selectedOfficeName.dispose();
+    _selectedPositionName.dispose();
+
     super.dispose();
   }
 
@@ -61,7 +68,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
   Widget build(BuildContext context) {
     return BaseModal(
       width: 600.0,
-      height: 480.0,
+      height: 550.0,
       headerTitle: "Add Receiving Officer",
       subtitle:
           'Designated accountable officer or recipeint of this issuance document.',
@@ -76,15 +83,34 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
       child: Column(
         spacing: 20.0,
         children: [
-          _buildOfficeNameSearchBox(),
-          _buildPositionSearchBox(),
-          _buildOfficerNameSearchBox(),
+          _buildEntitySuggestionField(),
+          _buildOfficeNameSuggestionField(),
+          _buildPositionSuggestionField(),
+          _buildOfficerNameSuggestionField(),
         ],
       ),
     );
   }
 
-  Widget _buildOfficeNameSearchBox() {
+  Widget _buildEntitySuggestionField() {
+    return CustomSearchField(
+      suggestionsCallback: (entityName) async {
+        final entityNames = await _entitySuggestionService.fetchEntities(
+          entityName: entityName,
+        );
+
+        return entityNames;
+      },
+      onSelected: (value) {
+        _entityNameController.text = value;
+      },
+      controller: _entityNameController,
+      label: 'Entity',
+      placeHolderText: 'Enter entity',
+    );
+  }
+
+  Widget _buildOfficeNameSuggestionField() {
     return CustomSearchField(
       suggestionsCallback: (officeName) async {
         final offices = await _officerSuggestionsService.fetchOffices(
@@ -110,12 +136,12 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
         _selectedPositionName.value = null;
       },
       controller: _officeNameController,
-      label: '* Office',
+      label: 'Office',
       placeHolderText: 'Enter officer\'s office',
     );
   }
 
-  Widget _buildPositionSearchBox() {
+  Widget _buildPositionSuggestionField() {
     return ValueListenableBuilder(
       valueListenable: _selectedOfficeName,
       builder: (context, selectedOfficeName, child) {
@@ -144,14 +170,14 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
             _selectedPositionName.value = value;
           },
           controller: _positionNameController,
-          label: '* Position',
+          label: 'Position',
           placeHolderText: 'Enter officer\'s position',
         );
       },
     );
   }
 
-  Widget _buildOfficerNameSearchBox() {
+  Widget _buildOfficerNameSuggestionField() {
     return ValueListenableBuilder(
       valueListenable: _selectedOfficeName,
       builder: (context, selectedOfficeName, child) {
@@ -180,7 +206,7 @@ class _AddReceivingOfficerModalState extends State<AddReceivingOfficerModal> {
                   _nameController.text = value;
                 },
                 controller: _nameController,
-                label: '* Name',
+                label: 'Name',
                 placeHolderText: 'Enter officer\'s name',
               );
             });

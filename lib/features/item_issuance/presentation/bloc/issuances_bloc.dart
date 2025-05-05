@@ -16,6 +16,7 @@ import '../../domain/usecases/create_mutiple_par.dart';
 import '../../domain/usecases/create_par.dart';
 import '../../domain/usecases/create_ris.dart';
 import '../../domain/usecases/generate_semi_expendable_property_card_data.dart';
+import '../../domain/usecases/get_accountable_officer_id.dart';
 import '../../domain/usecases/get_inventory_property_report.dart';
 import '../../domain/usecases/get_inventory_semi_expendable_report.dart';
 import '../../domain/usecases/get_inventory_supply_report.dart';
@@ -48,6 +49,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     required GenerateSemiExpendablePropertyCardData
         generateSemiExpendablePropertyCardData,
     required ReceiveIssuance receiveIssuance,
+    required GetAccountableOfficerId getAccountableOfficerId,
     required GetOfficerAccountability getOfficerAccountability,
     required ResolveIssuanceItem resolveIssuanceItem,
   })  : _getIssuanceById = getIssuanceById,
@@ -66,6 +68,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         _generateSemiExpendablePropertyCardData =
             generateSemiExpendablePropertyCardData,
         _receiveIssuance = receiveIssuance,
+        _getAccountableOfficerId = getAccountableOfficerId,
         _getOfficerAccountability = getOfficerAccountability,
         _resolveIssuanceItem = resolveIssuanceItem,
         super(IssuancesInitial()) {
@@ -85,6 +88,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     on<GenerateSemiExpendablePropertyCardDataEvent>(
         _onGenerateSemiExpendablePropertyCardData);
     on<ReceiveIssuanceEvent>(_onReceiveIssuance);
+    on<GetAccountableOfficerIdEvent>(_onGetAccountableOfficerId);
     on<GetOfficerAccountabilityEvent>(_onGetOfficerAccountability);
     on<ResolveIssuanceItemEvent>(_onResolveIssuanceItem);
   }
@@ -105,6 +109,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
   final GenerateSemiExpendablePropertyCardData
       _generateSemiExpendablePropertyCardData;
   final ReceiveIssuance _receiveIssuance;
+  final GetAccountableOfficerId _getAccountableOfficerId;
   final GetOfficerAccountability _getOfficerAccountability;
   final ResolveIssuanceItem _resolveIssuanceItem;
 
@@ -509,6 +514,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
     final response = await _receiveIssuance(
       ReceiveIssuanceParams(
         baseIssuanceId: event.baseIssuanceId,
+        entity: event.entity,
         receivingOfficerOffice: event.receivingOfficerOffice,
         receivingOfficerPosition: event.receivingOfficerPosition,
         receivingOfficerName: event.receivingOfficerName,
@@ -521,6 +527,32 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
       (r) => emit(
         ReceivedIssuance(
           isSuccessful: r,
+        ),
+      ),
+    );
+  }
+
+  void _onGetAccountableOfficerId(
+    GetAccountableOfficerIdEvent event,
+    Emitter<IssuancesState> emit,
+  ) async {
+    emit(IssuancesLoading());
+
+    final response = await _getAccountableOfficerId(
+      GetAccountableOfficerIdParams(
+        office: event.office,
+        position: event.position,
+        name: event.name,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(
+        IssuancesError(message: l.message),
+      ),
+      (r) => emit(
+        FetchedAccountableOfficerId(
+          officerId: r,
         ),
       ),
     );

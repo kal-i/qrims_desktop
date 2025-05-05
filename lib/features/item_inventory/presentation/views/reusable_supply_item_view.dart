@@ -300,7 +300,7 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
                 fontWeight: FontWeight.w700,
               ),
         ),
-        if (!_isViewOnlyMode()) _buildInstruction(),
+        _buildInstruction(),
       ],
     );
   }

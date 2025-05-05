@@ -95,7 +95,6 @@ Future<Response> _createMultipleICS(
           ? DateTime.parse(json['issued_date'] as String)
           : json['issued_date'] as DateTime
       : DateTime.now();
-  final entity = json['entity'] as String?;
   final fundClusterData = json['fund_cluster'] as String?;
   final supplierName = json['supplier_name'] as String?;
   final inspectionAndAcceptanceReportId =
@@ -166,6 +165,7 @@ Future<Response> _createMultipleICS(
   try {
     for (final receivingOfficer in receivingOfficers) {
       final officer = receivingOfficer['officer'] as Map<String, dynamic>;
+      final entity = receivingOfficer['entity'] as String?;
       final officerName = officer['name'] as String?;
       final positionName = officer['position'] as String?;
       final officeName = officer['office'] as String?;

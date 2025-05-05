@@ -49,7 +49,6 @@ class _RegisterMultipleIssuanceViewState
 
   final _formKey = GlobalKey<FormState>();
 
-  final _entityNameController = TextEditingController();
   final _divisionController = TextEditingController();
   final _officeNameController = TextEditingController();
 
@@ -175,7 +174,6 @@ class _RegisterMultipleIssuanceViewState
             issuedDate: _pickedDate.value,
             type: _selectedIcsType.value,
             receivingOfficers: _officers.value,
-            entityName: _entityNameController.text,
             fundCluster: _selectedFundCluster.value,
             supplierName: _supplierNameController.text,
             inspectionAndAcceptanceReportId:
@@ -194,7 +192,6 @@ class _RegisterMultipleIssuanceViewState
           CreateMultiplePAREvent(
             issuedDate: _pickedDate.value,
             receivingOfficers: _officers.value,
-            entityName: _entityNameController.text,
             fundCluster: _selectedFundCluster.value,
             supplierName: _supplierNameController.text,
             inspectionAndAcceptanceReportId:
@@ -213,7 +210,6 @@ class _RegisterMultipleIssuanceViewState
   @override
   dispose() {
     _globalSelectedItems.dispose();
-    _entityNameController.dispose();
     _divisionController.dispose();
     _officeNameController.dispose();
 
@@ -324,70 +320,22 @@ class _RegisterMultipleIssuanceViewState
   }
 
   Widget _buildInitialInformationSection() {
-    return Column(
-      children: [
-        if (widget.issuanceType == IssuanceType.ics)
-          Row(
-            children: [
-              Expanded(
-                child: _buildDateSelection(),
-              ),
-              const SizedBox(
-                width: 20.0,
-              ),
-              Expanded(
-                child: _buildIcsTypeSelection(),
-              ),
-            ],
+    return IntrinsicHeight(
+      child: Row(
+        spacing: 20.0,
+        children: [
+          Expanded(
+            child: _buildDateSelection(),
           ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Row(
-          spacing: 20.0,
-          children: [
+          if (widget.issuanceType == IssuanceType.ics)
             Expanded(
-              child: _buildEntitySuggestionField(),
+              child: _buildIcsTypeSelection(),
             ),
-            Expanded(
-              child: _buildFundClusterSelection(),
-            ),
-            if (widget.issuanceType != IssuanceType.ics)
-              Expanded(
-                child: _buildDateSelection(),
-              ),
-          ],
-        ),
-        if (widget.issuanceType == IssuanceType.ris)
-          Column(
-            children: [
-              const SizedBox(
-                height: 20.0,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomFormTextField(
-                      label: 'Division',
-                      controller: _divisionController,
-                      placeholderText: 'Enter division',
-                      fillColor:
-                          (context.watch<ThemeBloc>().state == AppTheme.light
-                              ? AppColor.lightCustomTextBox
-                              : AppColor.darkCustomTextBox),
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildOfficeSuggestionField(),
-                  ),
-                ],
-              ),
-            ],
+          Expanded(
+            child: _buildFundClusterSelection(),
           ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -415,19 +363,21 @@ class _RegisterMultipleIssuanceViewState
         const SizedBox(
           height: 20.0,
         ),
-        Row(
-          spacing: 20.0,
-          children: [
-            Expanded(
-              child: _buildIssuingOfficerOfficeSuggestionField(),
-            ),
-            Expanded(
-              child: _buildIssuingOfficerPositionSuggestionField(),
-            ),
-            Expanded(
-              child: _buildIssuingOfficerNameSuggestionField(),
-            ),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            spacing: 20.0,
+            children: [
+              Expanded(
+                child: _buildIssuingOfficerOfficeSuggestionField(),
+              ),
+              Expanded(
+                child: _buildIssuingOfficerPositionSuggestionField(),
+              ),
+              Expanded(
+                child: _buildIssuingOfficerNameSuggestionField(),
+              ),
+            ],
+          ),
         ),
         const SizedBox(
           height: 50.0,
@@ -607,7 +557,7 @@ class _RegisterMultipleIssuanceViewState
                             width: 250.0,
                           ),
                           child: SizedBox(
-                            width: 250,
+                            width: 250.0,
                             child: AccountableOfficerCard(
                               officer: value[index],
                               onRemove: () => _removeOfficer(index),
@@ -703,27 +653,6 @@ class _RegisterMultipleIssuanceViewState
       controller: _officeNameController,
       label: 'Office',
       placeHolderText: 'Enter office',
-      fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-          ? AppColor.lightCustomTextBox
-          : AppColor.darkCustomTextBox),
-    );
-  }
-
-  Widget _buildEntitySuggestionField() {
-    return CustomSearchField(
-      suggestionsCallback: (entityName) async {
-        final entityNames = await _entitySuggestionService.fetchEntities(
-          entityName: entityName,
-        );
-
-        return entityNames;
-      },
-      onSelected: (value) {
-        _entityNameController.text = value;
-      },
-      controller: _entityNameController,
-      label: 'Entity',
-      placeHolderText: 'Enter entity',
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),

@@ -17,6 +17,7 @@ class ReceiveIssuance implements UseCase<bool, ReceiveIssuanceParams> {
   ) {
     return issuanceRepository.receiveIssuance(
       baseIssuanceId: params.baseIssuanceId,
+      entity: params.entity,
       receivingOfficerOffice: params.receivingOfficerOffice,
       receivingOfficerPosition: params.receivingOfficerPosition,
       receivingOfficerName: params.receivingOfficerName,
@@ -28,6 +29,7 @@ class ReceiveIssuance implements UseCase<bool, ReceiveIssuanceParams> {
 class ReceiveIssuanceParams {
   const ReceiveIssuanceParams({
     required this.baseIssuanceId,
+    required this.entity,
     required this.receivingOfficerOffice,
     required this.receivingOfficerPosition,
     required this.receivingOfficerName,
@@ -35,6 +37,7 @@ class ReceiveIssuanceParams {
   });
 
   final String baseIssuanceId;
+  final String entity;
   final String receivingOfficerOffice;
   final String receivingOfficerPosition;
   final String receivingOfficerName;

@@ -2,14 +2,14 @@ import 'package:excel/excel.dart';
 
 import '../../enums/document_type.dart';
 import 'models/base_excel_document.dart';
-import 'models/rpci_excel_document.dart';
+import 'models/officer_accountability_document.dart';
 
 class ExcelDocumentFactory {
   final Map<DocumentType, BaseExcelDocument Function()> _excelMap;
 
   ExcelDocumentFactory()
       : _excelMap = {
-          DocumentType.rpci: () => RPCIExcelDocument(),
+          DocumentType.accountability: () => OfficerAccountabilityDocument(),
         };
 
   Future<Excel> createExcelDocument({

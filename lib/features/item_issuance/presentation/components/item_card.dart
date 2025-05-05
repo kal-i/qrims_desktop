@@ -13,6 +13,7 @@ class ItemCard extends StatelessWidget {
     required this.data,
     this.isDragging = false,
     this.onRemove,
+    this.onEdit,
     this.onEditQuantity,
     this.isAccountability = false,
   });
@@ -20,16 +21,16 @@ class ItemCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final bool isDragging;
   final VoidCallback? onRemove;
+  final VoidCallback? onEdit;
   final VoidCallback? onEditQuantity;
   final bool isAccountability;
 
   @override
   Widget build(BuildContext context) {
+    print('data received: $data');
     final concreteIssuanceId = data['issuance_id'];
     final issuedDate = data['issued_date'];
-    final status = data['status'];
-    final returnedDate = data['returned_date'];
-    final lostDate = data['lost_date'];
+    final receivedDate = data['received_date'];
     final baseItemId = isAccountability
         ? data['base_item_id']
         : data['shareable_item_information']['base_item_id'];
@@ -89,9 +90,11 @@ class ItemCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (isAccountability)
                         Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               concreteIssuanceId,
@@ -100,19 +103,42 @@ class ItemCard extends StatelessWidget {
                                   .bodySmall
                                   ?.copyWith(
                                     fontSize: 13.0,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
+                              overflow:
+                                  TextOverflow.visible, // Important so it wraps
+                              softWrap:
+                                  true, // Make sure it wraps to the next line
                             ),
                             Text(
-                              'Issued Date: ${documentDateFormatter(issuedDate)}',
+                              'Issued Date: ${documentDateFormatter(DateTime.parse(issuedDate))}',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
                                   ?.copyWith(
                                     fontSize: 13.0,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
+                              overflow:
+                                  TextOverflow.visible, // Important so it wraps
+                              softWrap:
+                                  true, // Make sure it wraps to the next line
                             ),
+                            if (receivedDate != null)
+                              Text(
+                                'Received Date: ${documentDateFormatter(DateTime.parse(receivedDate))}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontSize: 13.0,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                overflow: TextOverflow
+                                    .visible, // Important so it wraps
+                                softWrap:
+                                    true, // Make sure it wraps to the next line
+                              ),
                           ],
                         ),
                       Text(
@@ -127,12 +153,20 @@ class ItemCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: onRemove,
-                  icon: const Icon(
-                    HugeIcons.strokeRoundedDashboardSquareRemove,
+                if (onRemove != null)
+                  IconButton(
+                    onPressed: onRemove,
+                    icon: const Icon(
+                      HugeIcons.strokeRoundedDashboardSquareRemove,
+                    ),
                   ),
-                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: const Icon(
+                      HugeIcons.strokeRoundedMenuCircle,
+                    ),
+                  ),
               ],
             ),
             const Divider(),
@@ -190,30 +224,41 @@ class ItemCard extends StatelessWidget {
                           title: 'Unit',
                           value: unit,
                         ),
-                        ReusableRichText(
-                          title: 'Available Quantity',
-                          value: quantity.toString(),
-                        ),
+                        if (!isAccountability)
+                          ReusableRichText(
+                            title: 'Available Quantity',
+                            value: quantity.toString(),
+                          ),
                         ReusableRichText(
                           title: 'Unit Cost',
-                          value: formatCurrency(unitCost),
+                          value: unitCost is String
+                              ? unitCost
+                              : formatCurrency(unitCost),
                         ),
                         if (fundCluster != null)
                           ReusableRichText(
                             title: 'FC',
                             value: FundCluster.values
-                                .firstWhere((e) =>
-                                    e.toString().split('.').last == fundCluster)
+                                .firstWhere(
+                                  (e) =>
+                                      e.toString().split('.').last ==
+                                      fundCluster,
+                                  orElse: () => FundCluster
+                                      .unknown, // or skip this entirely
+                                )
                                 .toReadableString(),
                           ),
-                        ReusableRichText(
-                          title: 'Date Acquired',
-                          value: documentDateFormatter(
-                              DateTime.parse(dateAcquired)),
-                        ),
+                        if (!isAccountability)
+                          ReusableRichText(
+                            title: 'Date Acquired',
+                            value: documentDateFormatter(
+                                DateTime.parse(dateAcquired)),
+                          ),
                         if (issuedQuantity != null)
                           ReusableRichText(
-                            title: 'Quantity to Issue',
+                            title: isAccountability
+                                ? 'Issued Quantity'
+                                : 'Quantity to Issue',
                             value: issuedQuantity.toString(),
                           ),
                       ],

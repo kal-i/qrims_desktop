@@ -13,4 +13,5 @@ enum DocumentType {
   rspi,
   stockCard,
   rsmi,
+  accountability,
 }

@@ -157,10 +157,17 @@ abstract interface class IssuanceRemoteDataSource {
 
   Future<bool> receiveIssuance({
     required String baseIssuanceId,
+    required String entity,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
     required String receivingOfficerName,
     required DateTime receivedDate,
+  });
+
+  Future<String?> getAccountableOfficerId({
+    required String office,
+    required String position,
+    required String name,
   });
 
   Future<List<Map<String, dynamic>>> getOfficerAccountability({

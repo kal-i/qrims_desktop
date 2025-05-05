@@ -43,6 +43,7 @@ const positionsEP = '/positions';
 const officersEP = '/officers';
 const officerNamesEP = '$officersEP/names';
 const officerIdEP = '$officersEP/id';
+const officerLookUpEP = '$officersEP/lookup';
 const updateOfficerArchiveStatusEP = '$officersEP/update_archive_status';
 
 const entitiesEP = '/entities';

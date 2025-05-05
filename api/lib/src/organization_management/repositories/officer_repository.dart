@@ -671,4 +671,31 @@ class OfficerRepository {
 
     return result.isNotEmpty;
   }
+
+  Future<String?> getOfficerId({
+    required String positionId,
+    required String name,
+  }) async {
+    final result = await _conn.execute(
+      Sql.named(
+        '''
+        SELECT id FROM Officers
+        WHERE 
+          position_id = @position_id
+        AND
+          name ILIKE @name;
+        ''',
+      ),
+      parameters: {
+        'position_id': positionId,
+        'name': name,
+      },
+    );
+
+    if (result.isNotEmpty) {
+      return result.first[0] as String;
+    }
+
+    return null;
+  }
 }

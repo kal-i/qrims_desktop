@@ -1437,90 +1437,169 @@ class IssuanceRepository {
   ) async {
     int totalRemainingQuantities = 0;
 
-    // Preprocess issuanceItems into a map for faster lookup
-    final Map<String, dynamic> issuanceItemsMap = {};
-    for (final issuanceItem in issuanceItems) {
-      final key =
-          '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
-          '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
-          '${issuanceItem['shareable_item_information']['unit']}';
-      issuanceItemsMap[key] = issuanceItem;
-    }
-
-    // Iterate through each requested item in the purchase request
     for (final requestedItem in purchaseRequest.requestedItems) {
+      int remainingToFulfill =
+          requestedItem.remainingQuantity ?? requestedItem.quantity;
       final requestedProductNameId = requestedItem.productName.id;
       final requestedProductDescriptionId = requestedItem.productDescription.id;
       final requestedUnit = requestedItem.unit.toString().split('.').last;
 
-      // Construct a key for the requested item
-      final key =
-          '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
+      for (final issuanceItem in issuanceItems) {
+        if (remainingToFulfill <= 0) break;
 
-      // Check if the issuanceItems map contains the requested item
-      if (issuanceItemsMap.containsKey(key)) {
-        final issuanceItem = issuanceItemsMap[key];
-        final issuanceBaseItemId = issuanceItem['shareable_item_information']
-            ['base_item_id'] as String;
-        final issuanceQuantity =
-            int.parse(issuanceItem['issued_quantity'] as String);
+        final stock = issuanceItem['product_stock'];
+        final shareable = issuanceItem['shareable_item_information'];
 
-        final remainingToFulfill = requestedItem.quantity;
-        // requestedItem.remainingQuantity ?? requestedItem.quantity;
+        final productNameId = stock['product_name']['product_name_id'];
+        final productDescriptionId =
+            stock['product_description']['product_description_id'];
+        final unit = shareable['unit'];
+        final baseItemId = shareable['base_item_id'] as String;
 
-        // Calculate the quantity to issue
-        // Why do I feel like the problem is here
-        final issuedQuantity = min(remainingToFulfill, issuanceQuantity);
+        if (productNameId == requestedProductNameId &&
+            productDescriptionId == requestedProductDescriptionId &&
+            unit == requestedUnit) {
+          final issuanceQuantity =
+              int.tryParse(issuanceItem['issued_quantity'] as String? ?? '0') ??
+                  0;
 
-        if (issuedQuantity > 0) {
-          // Step 3: Insert into IssuanceItems table
+          final quantityToIssue = min(remainingToFulfill, issuanceQuantity);
+          if (quantityToIssue <= 0) continue;
+
+          // Insert into IssuanceItems table
           await _insertIssuanceItem(
-            ctx,
-            issuanceId,
-            issuanceBaseItemId,
-            issuedQuantity,
-            receivedDate,
-          );
+              ctx, issuanceId, baseItemId, quantityToIssue, receivedDate);
 
-          // Step 4: Update the RequestedItems table
-          final remainingRequestedQuantity =
-              requestedItem.quantity - issuedQuantity;
-          totalRemainingQuantities += remainingRequestedQuantity;
+          // Update stock
+          await _updateItemStock(ctx, baseItemId, quantityToIssue);
 
-          // Step: 5 Update RequestedItem remaining quantity and status
-          await ctx.execute(
-            Sql.named(
-              '''
-               UPDATE RequestedItems
-               SET remaining_quantity = @remaining_quantity, status = @status
-               WHERE id = @id;
-               ''',
-            ),
-            parameters: {
-              'id': requestedItem.id,
-              'remaining_quantity': remainingRequestedQuantity,
-              'status': remainingRequestedQuantity > 0
-                  ? FulfillmentStatus.partiallyFulfilled
-                      .toString()
-                      .split('.')
-                      .last
-                  : FulfillmentStatus.fulfilled.toString().split('.').last,
-            },
-          );
-
-          // Step 5: Update the Items table to reduce stock
-          await _updateItemStock(ctx, issuanceBaseItemId, issuedQuantity);
+          remainingToFulfill -= quantityToIssue;
         }
       }
+
+      // Update RequestedItems table
+      final status = remainingToFulfill <= 0
+          ? FulfillmentStatus.fulfilled
+          : FulfillmentStatus.partiallyFulfilled;
+
+      totalRemainingQuantities += remainingToFulfill;
+
+      await ctx.execute(
+        Sql.named(
+          '''
+        UPDATE RequestedItems
+        SET remaining_quantity = @remaining_quantity, status = @status
+        WHERE id = @id;
+        ''',
+        ),
+        parameters: {
+          'id': requestedItem.id,
+          'remaining_quantity': remainingToFulfill,
+          'status': status.toString().split('.').last,
+        },
+      );
     }
 
-    // Step 7: Update the PurchaseRequest status
     await _updatePurchaseRequestStatus(
       ctx,
       purchaseRequest.id,
       totalRemainingQuantities,
     );
   }
+
+  // Future<void> _handleIssuanceWithPR(
+  //   TxSession ctx,
+  //   String issuanceId,
+  //   PurchaseRequest purchaseRequest,
+  //   List<dynamic> issuanceItems,
+  //   DateTime? receivedDate,
+  // ) async {
+  //   int totalRemainingQuantities = 0;
+
+  //   // Preprocess issuanceItems into a map for faster lookup
+  //   final Map<String, dynamic> issuanceItemsMap = {};
+  //   for (final issuanceItem in issuanceItems) {
+  //     final key =
+  //         '${issuanceItem['product_stock']['product_name']['product_name_id']}-'
+  //         '${issuanceItem['product_stock']['product_description']['product_description_id']}-'
+  //         '${issuanceItem['shareable_item_information']['unit']}';
+  //     issuanceItemsMap[key] = issuanceItem;
+  //   }
+
+  //   // Iterate through each requested item in the purchase request
+  //   for (final requestedItem in purchaseRequest.requestedItems) {
+  //     final requestedProductNameId = requestedItem.productName.id;
+  //     final requestedProductDescriptionId = requestedItem.productDescription.id;
+  //     final requestedUnit = requestedItem.unit.toString().split('.').last;
+
+  //     // Construct a key for the requested item
+  //     final key =
+  //         '$requestedProductNameId-$requestedProductDescriptionId-$requestedUnit';
+
+  //     // Check if the issuanceItems map contains the requested item
+  //     if (issuanceItemsMap.containsKey(key)) {
+  //       final issuanceItem = issuanceItemsMap[key];
+  //       final issuanceBaseItemId = issuanceItem['shareable_item_information']
+  //           ['base_item_id'] as String;
+  //       final issuanceQuantity =
+  //           int.parse(issuanceItem['issued_quantity'] as String);
+
+  //       final remainingToFulfill =
+  //           requestedItem.remainingQuantity ?? requestedItem.quantity;
+
+  //       // Calculate the quantity to issue
+
+  //       final issuedQuantity = min(remainingToFulfill, issuanceQuantity);
+
+  //       if (issuedQuantity > 0) {
+  //         // Step 3: Insert into IssuanceItems table
+  //         await _insertIssuanceItem(
+  //           ctx,
+  //           issuanceId,
+  //           issuanceBaseItemId,
+  //           issuedQuantity,
+  //           receivedDate,
+  //         );
+
+  //         // Step 4: Update the RequestedItems table
+  //         final remainingRequestedQuantity =
+  //             requestedItem.quantity - issuedQuantity;
+  //         totalRemainingQuantities += remainingRequestedQuantity;
+
+  //         // Step: 5 Update RequestedItem remaining quantity and status
+  //         await ctx.execute(
+  //           Sql.named(
+  //             '''
+  //              UPDATE RequestedItems
+  //              SET remaining_quantity = @remaining_quantity, status = @status
+  //              WHERE id = @id;
+  //              ''',
+  //           ),
+  //           parameters: {
+  //             'id': requestedItem.id,
+  //             'remaining_quantity': remainingRequestedQuantity,
+  //             'status': remainingRequestedQuantity > 0
+  //                 ? FulfillmentStatus.partiallyFulfilled
+  //                     .toString()
+  //                     .split('.')
+  //                     .last
+  //                 : FulfillmentStatus.fulfilled.toString().split('.').last,
+  //           },
+  //         );
+
+  //         // Step 5: Update the Items table to reduce stock
+  //         await _updateItemStock(ctx, issuanceBaseItemId, issuedQuantity);
+  //       }
+  //     }
+  //   }
+
+  //   // Step 7: Update the PurchaseRequest status
+  //   await _updatePurchaseRequestStatus(
+  //     ctx,
+  //     purchaseRequest.id,
+  //     totalRemainingQuantities,
+  //   );
+  // }
 
   Future<void> _updatePurchaseRequestStatus(
     TxSession ctx,
@@ -2902,6 +2981,7 @@ class IssuanceRepository {
   Future<bool> receiveIssuanceEntity({
     required TxSession ctx,
     required String baseIssuanceEntityId,
+    required String entityId,
     required String receivingOfficerId,
     required DateTime receivedDate,
   }) async {
@@ -2912,6 +2992,7 @@ class IssuanceRepository {
     ];
     final params = {
       'id': baseIssuanceEntityId,
+      'entity_id': entityId,
       'receiving_officer_id': receivingOfficerId,
       'received_date': receivedDate.toIso8601String(),
       'status': IssuanceStatus.received.toString().split('.').last,

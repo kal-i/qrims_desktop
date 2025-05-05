@@ -22,7 +22,6 @@ class ItemRepository {
     final now = DateTime.now();
     final dateToUse = acquiredDate ?? now;
     final year = dateToUse.year;
-    final month = dateToUse.month.toString().padLeft(2, '0');
 
     // Format item name (e.g., "Office Chair" → "OfficeChair")
     final formattedItemName = itemName
@@ -30,39 +29,38 @@ class ItemRepository {
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join('');
 
-    // Check for existing entries for this item + year + month + FC
+    // Prepare fund cluster string for matching and formatting
+    final fcStr = fundCluster != null ? '(${fundCluster.value})' : '';
+
+    // Query the latest entry for this item/year (regardless of month/fund cluster)
     final latestEntryResult = await conn.execute(
-      Sql.named(
-        '''
-        SELECT id FROM Items
-        WHERE id ILIKE @item_name || '-' || @year || 
-              CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END || 
-              '-' || @month || '-%'
-        ORDER BY id DESC
-        LIMIT 1;
-        ''',
-      ),
+      Sql.named('''
+      SELECT id FROM Items
+      WHERE id ILIKE @item_name || '-' || @year || 
+            CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END || 
+            '-%'
+      ORDER BY id DESC
+      LIMIT 1;
+      '''),
       parameters: {
         'item_name': formattedItemName,
         'year': year.toString(),
-        'month': month,
         'fundCluster': fundCluster?.value ?? '',
       },
     );
 
+    // Determine NNN
     int cumulativeCount;
     if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
-      // Extract NNN from the latest ID (e.g., "002" from "Printer-2024(GAA)-05-002(2)")
       final latestId = latestEntryResult.first[0].toString();
       final countMatch = RegExp(r'-(\d{3})\(').firstMatch(latestId);
       cumulativeCount =
           countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
     } else {
-      // Reset to 001 if new month/year/FC
       cumulativeCount = 1;
     }
 
-    // Item-specific count (for the trailing (N))
+    // Determine (N) for duplicates
     int itemSpecificCount;
     if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
       final latestId = latestEntryResult.first[0].toString();
@@ -73,13 +71,82 @@ class ItemRepository {
       itemSpecificCount = 1;
     }
 
-    // Construct the ID (NNN resets on new month/year/FC)
+    // Construct the final ID (NNN resets yearly)
     final uniqueId = fundCluster != null
-        ? '$formattedItemName-$year(${fundCluster.value})-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
-        : '$formattedItemName-$year-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+        ? '$formattedItemName-$year$fcStr-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
+        : '$formattedItemName-$year-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
 
     return uniqueId;
   }
+
+  // Future<String> _generateUniqueItemId(
+  //   TxSession? ctx,
+  //   String itemName,
+  //   FundCluster? fundCluster,
+  //   DateTime? acquiredDate,
+  // ) async {
+  //   final conn = ctx ?? _conn;
+  //   final now = DateTime.now();
+  //   final dateToUse = acquiredDate ?? now;
+  //   final year = dateToUse.year;
+  //   final month = dateToUse.month.toString().padLeft(2, '0');
+
+  //   // Format item name (e.g., "Office Chair" → "OfficeChair")
+  //   final formattedItemName = itemName
+  //       .split(' ')
+  //       .map((word) => word[0].toUpperCase() + word.substring(1))
+  //       .join('');
+
+  //   // Check for existing entries for this item + year + month + FC
+  //   final latestEntryResult = await conn.execute(
+  //     Sql.named(
+  //       '''
+  //       SELECT id FROM Items
+  //       WHERE id ILIKE @item_name || '-' || @year ||
+  //             CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END ||
+  //             '-' || @month || '-%'
+  //       ORDER BY id DESC
+  //       LIMIT 1;
+  //       ''',
+  //     ),
+  //     parameters: {
+  //       'item_name': formattedItemName,
+  //       'year': year.toString(),
+  //       'month': month,
+  //       'fundCluster': fundCluster?.value ?? '',
+  //     },
+  //   );
+
+  //   int cumulativeCount;
+  //   if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
+  //     // Extract NNN from the latest ID (e.g., "002" from "Printer-2024(GAA)-05-002(2)")
+  //     final latestId = latestEntryResult.first[0].toString();
+  //     final countMatch = RegExp(r'-(\d{3})\(').firstMatch(latestId);
+  //     cumulativeCount =
+  //         countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
+  //   } else {
+  //     // Reset to 001 if new month/year/FC
+  //     cumulativeCount = 1;
+  //   }
+
+  //   // Item-specific count (for the trailing (N))
+  //   int itemSpecificCount;
+  //   if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
+  //     final latestId = latestEntryResult.first[0].toString();
+  //     final countMatch = RegExp(r'\((\d+)\)$').firstMatch(latestId);
+  //     itemSpecificCount =
+  //         countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
+  //   } else {
+  //     itemSpecificCount = 1;
+  //   }
+
+  //   // Construct the ID (NNN resets on new month/year/FC)
+  //   final uniqueId = fundCluster != null
+  //       ? '$formattedItemName-$year(${fundCluster.value})-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
+  //       : '$formattedItemName-$year-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+
+  //   return uniqueId;
+  // }
 
   Future<String> _generateUniqueManufacturerId(
     TxSession? ctx,

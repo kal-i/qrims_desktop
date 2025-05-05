@@ -420,6 +420,7 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
   @override
   Future<Either<Failure, bool>> receiveIssuance({
     required String baseIssuanceId,
+    required String entity,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
     required String receivingOfficerName,
@@ -428,10 +429,30 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     try {
       final response = await issuanceRemoteDataSource.receiveIssuance(
         baseIssuanceId: baseIssuanceId,
+        entity: entity,
         receivingOfficerOffice: receivingOfficerOffice,
         receivingOfficerPosition: receivingOfficerPosition,
         receivingOfficerName: receivingOfficerName,
         receivedDate: receivedDate,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String?>> getAccountableOfficerId({
+    required String office,
+    required String position,
+    required String name,
+  }) async {
+    try {
+      final response = await issuanceRemoteDataSource.getAccountableOfficerId(
+        office: office,
+        position: position,
+        name: name,
       );
 
       return right(response);

@@ -473,7 +473,9 @@ class RouteChangeManager {
       '/itemIssuance': 'Item Issuance Management',
       '/itemIssuance/viewItemIssuance': 'View Item Issuance',
       '/itemIssuance/registerItemIssuance': 'Create Issuance',
-      '/itemIssuance/registerMultipleItemIssuance': 'Create Multiple Issuance',
+      '/itemIssuance/registerMultipleItemIssuance': 'Create Issuance',
+      '/itemIssuance/viewOfficerAccountability': 'View Officer Accountability',
+
       '/usersManagement': 'User Management',
       '/officersManagement': 'Officers Management',
       '/archiveUser': 'Archive Management',

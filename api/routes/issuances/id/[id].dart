@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:api/src/entity/repository/entity_repository.dart';
 import 'package:api/src/issuance/models/issuance.dart';
 import 'package:api/src/issuance/repository/issuance_repository.dart';
 import 'package:api/src/notification/model/notification.dart';
@@ -20,6 +21,7 @@ Future<Response> onRequest(
   final connection = context.read<Connection>();
   final notifRepository = NotificationRepository(connection);
   final issuanceRepository = IssuanceRepository(connection);
+  final entityRepository = EntityRepository(connection);
   final officeRepository = OfficeRepository(connection);
   final positionRepository = PositionRepository(connection);
   final officerRepository = OfficerRepository(connection);
@@ -42,10 +44,11 @@ Future<Response> onRequest(
     HttpMethod.patch => _updateIssuance(
         context,
         connection,
+        issuanceRepository,
+        entityRepository,
         officeRepository,
         positionRepository,
         officerRepository,
-        issuanceRepository,
         id,
       ),
     _ => Future.value(Response(statusCode: HttpStatus.methodNotAllowed)),
@@ -239,13 +242,15 @@ Future<Response> _receiveIssuance(
 Future<Response> _updateIssuance(
   RequestContext context,
   Connection connection,
+  IssuanceRepository issuanceRepository,
+  EntityRepository entityRepository,
   OfficeRepository officeRepository,
   PositionRepository positionRepository,
   OfficerRepository officerRepository,
-  IssuanceRepository issuanceRepository,
   String id,
 ) async {
   final json = await context.request.json();
+  final entityName = json['entity'] as String;
   final receivingOfficerOffice = json['receiving_officer_office'] as String;
   final receivingOfficerPosition = json['receiving_officer_position'] as String;
   final receivingOfficerName = json['receiving_officer_name'] as String;
@@ -284,6 +289,9 @@ Future<Response> _updateIssuance(
   final success = await connection.runTx((ctx) async {
     final updated = await issuanceRepository.receiveIssuanceEntity(
       ctx: ctx,
+      entityId: await entityRepository.checkEntityIfExist(
+        entityName: entityName,
+      ),
       baseIssuanceEntityId: issuanceEntity.id,
       receivingOfficerId: receivingOfficerId,
       receivedDate: receivedDate,

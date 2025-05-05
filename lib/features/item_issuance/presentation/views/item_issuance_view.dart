@@ -390,10 +390,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                   builder: (context) => const GenerateInventoryReportModal(
                     generateInventoryReportType:
                         GenerateInventoryReportType.rcsep,
-                    modalTitle: 'RCSEP',
+                    modalTitle: 'RSEP',
                   ),
                 ),
-                title: 'RPSEP',
+                title: 'RSEP',
               ),
             ),
             const SizedBox(
@@ -406,10 +406,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                   builder: (context) => const GenerateInventoryReportModal(
                     generateInventoryReportType:
                         GenerateInventoryReportType.rcppe,
-                    modalTitle: 'RPPPE',
+                    modalTitle: 'RPPE',
                   ),
                 ),
-                title: 'RPPPE',
+                title: 'RPPE',
               ),
             ),
           ],
@@ -449,12 +449,17 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
         ExpandableSearchButton(controller: _searchController),
         _buildRefreshButton(),
         _buildFilterButton(),
-        // CustomFilledButton(
-        //   text: 'Find Officer Accountability',
-        //   onTap: () => context.go(
-        //     RoutingConstants.nestedViewOfficerAccountabilityRoutePath,
-        //   ),
-        // ),
+        CustomFilledButton(
+          onTap: () => context.go(
+            RoutingConstants.nestedViewOfficerAccountabilityRoutePath,
+          ),
+          prefixWidget: const Icon(
+            HugeIcons.strokeRoundedSearch01,
+            size: 15.0,
+            color: AppColor.lightPrimary,
+          ),
+          text: 'Find Accountability',
+        ),
       ],
     );
   }
@@ -523,7 +528,10 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
             state is RISRegistered ||
             state is FetchedInventoryReport ||
             state is GeneratedSemiExpendablePropertyCardData ||
-            state is ReceivedIssuance) {
+            state is ReceivedIssuance ||
+            state is FetchedAccountableOfficerId ||
+            state is FetchedOfficerAccountability ||
+            state is ResolvedIssuanceItem) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();

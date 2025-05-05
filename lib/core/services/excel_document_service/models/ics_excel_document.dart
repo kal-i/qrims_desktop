@@ -32,6 +32,95 @@ class ICSExcelDocument {
         )
         .cellStyle;
 
+    final startHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 0,
+    );
+    for (int col = startHeaderTopCell.columnIndex;
+        col <= endHeaderTopCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: 0,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 14,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final startHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 0,
+    );
+    final endHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 14,
+    );
+    for (int row = startHeaderLeftCell.rowIndex;
+        row <= endHeaderLeftCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 6,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = generalCellStyle?.copyWith(
+        topBorderVal: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     final entityTitleCell = sheet
         .cell(
           CellIndex.indexByString('A13'),
@@ -711,6 +800,11 @@ class ICSExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet.cell(endReceivingOfficerNameCell).cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Receiving Officer Name Description cells, mapped data and set a style
@@ -742,6 +836,12 @@ class ICSExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet.cell(endingReceivingOfficerNameDescriptionCell).cellStyle =
+        cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Receiving Officer Position Name Description cells, mapped data and set a style
@@ -768,6 +868,12 @@ class ICSExcelDocument {
       horizontalAlignVal: HorizontalAlign.Center,
       verticalAlignVal: VerticalAlign.Center,
       leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+    sheet.cell(endReceivingOfficerPositionNameCell).cellStyle =
+        cellStyle?.copyWith(
+      rightBorderVal: Border(
         borderStyle: BorderStyle.Medium,
       ),
     );
@@ -802,6 +908,12 @@ class ICSExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet.cell(endReceivingOfficerPositionDescriptionCell).cellStyle =
+        cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Received Date cells, mapped data and set a style
@@ -828,6 +940,11 @@ class ICSExcelDocument {
       horizontalAlignVal: HorizontalAlign.Center,
       verticalAlignVal: VerticalAlign.Center,
       leftBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+    sheet.cell(endReceivedDateCell).cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
         borderStyle: BorderStyle.Medium,
       ),
     );
@@ -860,6 +977,42 @@ class ICSExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+
+    final startFooterBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: startingRow + 5,
+    );
+    final endFooterBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: startingRow + 5,
+    );
+    for (int col = startFooterBottomCell.columnIndex;
+        col <= endFooterBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow + 5,
+        ),
+      );
+      cell.cellStyle = cellStyle?.copyWith(
+        horizontalAlignVal: HorizontalAlign.Center,
+        verticalAlignVal: VerticalAlign.Center,
+        rightBorderVal: col == 4 || col == 6
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+              )
+            : null,
+        bottomBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+        leftBorderVal: col == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+              )
+            : null,
+      );
+    }
   }
 
   static void _updateRowFooter({

@@ -165,10 +165,17 @@ abstract interface class IssuanceRepository {
 
   Future<Either<Failure, bool>> receiveIssuance({
     required String baseIssuanceId,
+    required String entity,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
     required String receivingOfficerName,
     required DateTime receivedDate,
+  });
+
+  Future<Either<Failure, String?>> getAccountableOfficerId({
+    required String office,
+    required String position,
+    required String name,
   });
 
   Future<Either<Failure, List<Map<String, dynamic>>>> getOfficerAccountability({

@@ -631,36 +631,40 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     return Column(
       children: [
         if (widget.issuanceType == IssuanceType.ics)
-          Row(
-            children: [
-              Expanded(
-                child: _buildDateSelection(),
-              ),
-              const SizedBox(
-                width: 20.0,
-              ),
-              Expanded(
-                child: _buildIcsTypeSelection(),
-              ),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDateSelection(),
+                ),
+                const SizedBox(
+                  width: 20.0,
+                ),
+                Expanded(
+                  child: _buildIcsTypeSelection(),
+                ),
+              ],
+            ),
           ),
         const SizedBox(
           height: 20.0,
         ),
-        Row(
-          spacing: 20.0,
-          children: [
-            Expanded(
-              child: _buildEntitySuggestionField(),
-            ),
-            Expanded(
-              child: _buildFundClusterSelection(),
-            ),
-            if (widget.issuanceType != IssuanceType.ics)
+        IntrinsicHeight(
+          child: Row(
+            spacing: 20.0,
+            children: [
               Expanded(
-                child: _buildDateSelection(),
+                child: _buildEntitySuggestionField(),
               ),
-          ],
+              Expanded(
+                child: _buildFundClusterSelection(),
+              ),
+              if (widget.issuanceType != IssuanceType.ics)
+                Expanded(
+                  child: _buildDateSelection(),
+                ),
+            ],
+          ),
         ),
         if (widget.issuanceType == IssuanceType.ris)
           Column(
@@ -679,6 +683,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                           (context.watch<ThemeBloc>().state == AppTheme.light
                               ? AppColor.lightCustomTextBox
                               : AppColor.darkCustomTextBox),
+                      hasValidation: false,
                     ),
                   ),
                   const SizedBox(
@@ -699,6 +704,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                           (context.watch<ThemeBloc>().state == AppTheme.light
                               ? AppColor.lightCustomTextBox
                               : AppColor.darkCustomTextBox),
+                      hasValidation: false,
                     ),
                   ),
                 ],
@@ -1139,24 +1145,26 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         if (widget.prId == null || widget.issuanceType == IssuanceType.ris)
           Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildRequestingOfficerOfficeSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildRequestingOfficerPositionSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildRequestingOfficerNameSuggestionField(),
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildRequestingOfficerOfficeSuggestionField(),
+                    ),
+                    const SizedBox(
+                      width: 20.0,
+                    ),
+                    Expanded(
+                      child: _buildRequestingOfficerPositionSuggestionField(),
+                    ),
+                    const SizedBox(
+                      width: 20.0,
+                    ),
+                    Expanded(
+                      child: _buildRequestingOfficerNameSuggestionField(),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(
                 height: 30.0,
@@ -1166,48 +1174,52 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         if (widget.issuanceType == IssuanceType.ris)
           Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildApprovingOfficerOfficeSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildApprovingOfficerPositionSuggestionField(),
-                  ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  Expanded(
-                    child: _buildApprovingOfficerNameSuggestionField(),
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildApprovingOfficerOfficeSuggestionField(),
+                    ),
+                    const SizedBox(
+                      width: 20.0,
+                    ),
+                    Expanded(
+                      child: _buildApprovingOfficerPositionSuggestionField(),
+                    ),
+                    const SizedBox(
+                      width: 20.0,
+                    ),
+                    Expanded(
+                      child: _buildApprovingOfficerNameSuggestionField(),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(
                 height: 30.0,
               ),
             ],
           ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildIssuingOfficerOfficeSuggestionField(),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            Expanded(
-              child: _buildIssuingOfficerPositionSuggestionField(),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            Expanded(
-              child: _buildIssuingOfficerNameSuggestionField(),
-            ),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildIssuingOfficerOfficeSuggestionField(),
+              ),
+              const SizedBox(
+                width: 20.0,
+              ),
+              Expanded(
+                child: _buildIssuingOfficerPositionSuggestionField(),
+              ),
+              const SizedBox(
+                width: 20.0,
+              ),
+              Expanded(
+                child: _buildIssuingOfficerNameSuggestionField(),
+              ),
+            ],
+          ),
         ),
         const SizedBox(
           height: 30.0,
@@ -1404,6 +1416,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
           ? AppColor.lightCustomTextBox
           : AppColor.darkCustomTextBox),
+      hasValidation: false,
     );
   }
 

@@ -287,6 +287,7 @@ final class GenerateSemiExpendablePropertyCardDataEvent extends IssuancesEvent {
 final class ReceiveIssuanceEvent extends IssuancesEvent {
   const ReceiveIssuanceEvent({
     required this.baseIssuanceId,
+    required this.entity,
     required this.receivingOfficerOffice,
     required this.receivingOfficerPosition,
     required this.receivingOfficerName,
@@ -294,10 +295,23 @@ final class ReceiveIssuanceEvent extends IssuancesEvent {
   });
 
   final String baseIssuanceId;
+  final String entity;
   final String receivingOfficerOffice;
   final String receivingOfficerPosition;
   final String receivingOfficerName;
   final DateTime receivedDate;
+}
+
+final class GetAccountableOfficerIdEvent extends IssuancesEvent {
+  const GetAccountableOfficerIdEvent({
+    required this.office,
+    required this.position,
+    required this.name,
+  });
+
+  final String office;
+  final String position;
+  final String name;
 }
 
 final class GetOfficerAccountabilityEvent extends IssuancesEvent {

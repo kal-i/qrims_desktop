@@ -133,6 +133,14 @@ final class ReceivedIssuance extends IssuancesState {
   final bool isSuccessful;
 }
 
+final class FetchedAccountableOfficerId extends IssuancesState {
+  const FetchedAccountableOfficerId({
+    this.officerId,
+  });
+
+  final String? officerId;
+}
+
 final class FetchedOfficerAccountability extends IssuancesState {
   const FetchedOfficerAccountability({
     required this.officerAccountability,

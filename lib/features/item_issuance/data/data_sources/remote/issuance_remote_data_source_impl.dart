@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 
 import '../../../../../core/constants/endpoints.dart';
@@ -639,6 +637,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   @override
   Future<bool> receiveIssuance({
     required String baseIssuanceId,
+    required String entity,
     required String receivingOfficerOffice,
     required String receivingOfficerPosition,
     required String receivingOfficerName,
@@ -646,6 +645,7 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
   }) async {
     try {
       final Map<String, dynamic> params = {
+        'entity': entity,
         'receiving_officer_office': receivingOfficerOffice,
         'receiving_officer_position': receivingOfficerPosition,
         'receiving_officer_name': receivingOfficerName,
@@ -663,6 +663,45 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
         throw const ServerException('Failed to receive issuance.');
       }
     } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<String?> getAccountableOfficerId({
+    required String office,
+    required String position,
+    required String name,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'office': office,
+        'position': position,
+        'name': name,
+      };
+
+      final response = await httpService.get(
+        endpoint: officerLookUpEP,
+        queryParams: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['officer_id'];
+      } else {
+        final message = response.data?['error'] ?? 'Officer not found.';
+        throw ServerException(message);
+      }
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final errorData = e.response?.data;
+      final message =
+          errorData?['error'] ?? e.message ?? 'Unknown error occurred.';
+
+      print('❌ DioException: $message (Status code: $statusCode)');
+
+      throw ServerException(message);
+    } catch (e) {
+      print('❌ Unknown error: $e');
       throw ServerException(e.toString());
     }
   }

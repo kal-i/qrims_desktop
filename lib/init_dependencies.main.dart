@@ -410,6 +410,11 @@ void _registerItemIssuanceDependencies() {
       ),
     )
     ..registerFactory(
+      () => GetAccountableOfficerId(
+        issuanceRepository: serviceLocator(),
+      ),
+    )
+    ..registerFactory(
       () => GetOfficerAccountability(
         issuanceRepository: serviceLocator(),
       ),
@@ -435,6 +440,7 @@ void _registerItemIssuanceDependencies() {
         getInventoryPropertyReport: serviceLocator(),
         generateSemiExpendablePropertyCardData: serviceLocator(),
         receiveIssuance: serviceLocator(),
+        getAccountableOfficerId: serviceLocator(),
         getOfficerAccountability: serviceLocator(),
         resolveIssuanceItem: serviceLocator(),
       ),
