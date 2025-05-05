@@ -32,26 +32,95 @@ class PARExcelDocument {
         )
         .cellStyle;
 
+    final startHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 0,
+    );
+    for (int col = startHeaderTopCell.columnIndex;
+        col <= endHeaderTopCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: 0,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: 14,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 6,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final appendixCell = sheet.cell(
+      CellIndex.indexByString('G10'),
+    );
+    appendixCell.value = TextCellValue('Appendix 71');
+    appendixCell.cellStyle = generalCellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+        borderColorHex: ExcelColor.white,
+      ),
+    );
+
     final entityTitleCell = sheet
         .cell(
-          CellIndex.indexByString('A13'),
+          CellIndex.indexByString('B13'),
         )
         .cellStyle = generalCellStyle;
 
     final fundClusterTitleCell = sheet
         .cell(
-          CellIndex.indexByString('A14'),
+          CellIndex.indexByString('B14'),
         )
         .cellStyle = generalCellStyle;
 
-    final parNoTitleCell = sheet
-        .cell(
-          CellIndex.indexByString('E14'),
-        )
-        .cellStyle = generalCellStyle;
+    final parNoCell = sheet.cell(
+      CellIndex.indexByString('F14'),
+    );
+    parNoCell.value = TextCellValue('PAR No.: ${par.parId}');
+    parNoCell.cellStyle = generalCellStyle;
 
     final entityCell = sheet.cell(
-      CellIndex.indexByString('B13'),
+      CellIndex.indexByString('C13'),
     );
     entityCell.value = TextCellValue(
       par.purchaseRequestEntity != null
@@ -61,7 +130,7 @@ class PARExcelDocument {
     entityCell.cellStyle = generalCellStyle;
 
     final fundClusterCell = sheet.cell(
-      CellIndex.indexByString('B14'),
+      CellIndex.indexByString('C14'),
     );
 
     fundClusterCell.value = TextCellValue(
@@ -71,14 +140,6 @@ class PARExcelDocument {
           : capitalizeWord(par.fundCluster?.toReadableString() ?? ''),
     );
     fundClusterCell.cellStyle = generalCellStyle;
-
-    final parNoCell = sheet.cell(
-      CellIndex.indexByString('F14'),
-    );
-    parNoCell.value = TextCellValue(
-      par.parId,
-    );
-    parNoCell.cellStyle = generalCellStyle;
 
     // Define the border style
     final borderStyle = Border(borderStyle: BorderStyle.Medium);
@@ -113,6 +174,49 @@ class PARExcelDocument {
       par.receivedDate,
       generalCellStyle,
     );
+
+    final startHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 14 + totalRowsInserted + 11,
+    );
+    for (int row = startHeaderLeftCell.rowIndex;
+        row <= endHeaderLeftCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = generalCellStyle?.copyWith(
+        topBorderVal: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorderVal: row == endHeaderLeftCell.rowIndex
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                //borderColorHex: ExcelColor.white,
+              )
+            : null,
+        bottomBorderVal: row == endHeaderLeftCell.rowIndex
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        leftBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
   }
 
   static void _applyHeadersAndStyles(
@@ -121,12 +225,12 @@ class PARExcelDocument {
     CellStyle? cellStyle,
   ) {
     final headers = [
-      const HeaderInfo('A16', 'A17', 'Quantity'),
-      const HeaderInfo('B16', 'B17', 'Unit'),
-      const HeaderInfo('C16', 'C17', 'Description'),
-      const HeaderInfo('D16', 'D17', 'Property Number'),
-      const HeaderInfo('E16', 'E17', 'Date Acquired'),
-      const HeaderInfo('F16', 'F17', 'Amount'),
+      const HeaderInfo('B16', 'B17', 'Quantity'),
+      const HeaderInfo('C16', 'C17', 'Unit'),
+      const HeaderInfo('D16', 'D17', 'Description'),
+      const HeaderInfo('E16', 'E17', 'Property Number'),
+      const HeaderInfo('F16', 'F17', 'Date Acquired'),
+      const HeaderInfo('G16', 'G17', 'Amount'),
     ];
 
     for (var header in headers) {
@@ -369,27 +473,27 @@ class PARExcelDocument {
   ) {
     final cells = [
       CellInfo(
-        0,
+        1,
         quantity,
       ),
       CellInfo(
-        1,
+        2,
         unit,
       ),
       CellInfo(
-        2,
+        3,
         description,
       ),
       CellInfo(
-        3,
+        4,
         propertyNo,
       ),
       CellInfo(
-        4,
+        5,
         dateAcquired,
       ),
       CellInfo(
-        5,
+        6,
         amount,
       ),
     ];
@@ -434,11 +538,11 @@ class PARExcelDocument {
      * Iterate through each cell, setting a styling
      */
     final startFooterCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: footerStartRow + 1,
     );
     final endFooterCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: footerStartRow + 1,
     );
 
@@ -464,7 +568,7 @@ class PARExcelDocument {
      * Mapped data and set a style for Received By cell
      */
     final startReceivedByCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: footerStartRow + 1,
     );
     final receivedByCell = sheet.cell(
@@ -486,11 +590,11 @@ class PARExcelDocument {
      * Merged Receiving Officer Name cells, mapped data and set a style
      */
     final startReceivingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow,
     );
     final endReceivingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow,
     );
     sheet.merge(
@@ -516,12 +620,12 @@ class PARExcelDocument {
      */
     final startingReceivingOfficerNameDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow + 1,
     );
     final endingReceivingOfficerNameDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow + 1,
     );
     sheet.merge(
@@ -546,11 +650,11 @@ class PARExcelDocument {
      * Merged Receiving Officer Position Name Description cells, mapped data and set a style
      */
     final startReceivingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow + 2,
     );
     final endReceivingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow + 2,
     );
     sheet.merge(
@@ -576,12 +680,12 @@ class PARExcelDocument {
      */
     final startReceivingOfficerPositionDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow + 3,
     );
     final endReceivingOfficerPositionDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow + 3,
     );
     sheet.merge(
@@ -606,11 +710,11 @@ class PARExcelDocument {
      * Merged Received Date cells, mapped data and set a style
      */
     final startReceivedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow + 4,
     );
     final endReceivedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow + 4,
     );
     sheet.merge(
@@ -635,11 +739,11 @@ class PARExcelDocument {
      * Merged Received Date Description cells, mapped data and set a style
      */
     final startReceivedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 0,
+      columnIndex: 1,
       rowIndex: startingRow + 5,
     );
     final endReceivedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 2,
+      columnIndex: 3,
       rowIndex: startingRow + 5,
     );
     sheet.merge(
@@ -664,7 +768,11 @@ class PARExcelDocument {
      * Mapped data and set a style for Received From cell
      */
     final startReceivedFromCell = CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
+      rowIndex: footerStartRow + 1,
+    );
+    final endReceivedFromCell = CellIndex.indexByColumnRow(
+      columnIndex: 6,
       rowIndex: footerStartRow + 1,
     );
     final receivedFromCell = sheet.cell(
@@ -681,16 +789,28 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endReceivedFromCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      topBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issuing Officer Name cells, mapped data and set a style
      */
     final startIssuingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow,
     );
     final endIssuingOfficerNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow,
     );
     sheet.merge(
@@ -710,17 +830,26 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endIssuingOfficerNameCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issuing Officer Name Description cells, mapped data and set a style
      */
     final startingIssuingOfficerNameDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow + 1,
     );
     final endingIssuingOfficerNameDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow + 1,
     );
     sheet.merge(
@@ -740,16 +869,25 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endingIssuingOfficerNameDescriptionCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issuing Officer Position Name Description cells, mapped data and set a style
      */
     final startIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow + 2,
     );
     final endIssuingOfficerPositionNameCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow + 2,
     );
     sheet.merge(
@@ -769,17 +907,26 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endIssuingOfficerPositionNameCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issuing Officer Position Description cells, mapped data and set a style
      */
     final startIssuingOfficerPositionDescriptionCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow + 3,
     );
     final endIssuingOfficerPositionDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow + 3,
     );
     sheet.merge(
@@ -799,16 +946,25 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endIssuingOfficerPositionDescriptionCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issued Date cells, mapped data and set a style
      */
     final startIssuedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow + 4,
     );
     final endIssuedDateCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow + 4,
     );
     sheet.merge(
@@ -828,16 +984,25 @@ class PARExcelDocument {
         borderStyle: BorderStyle.Medium,
       ),
     );
+    sheet
+        .cell(
+          endIssuedDateCell,
+        )
+        .cellStyle = cellStyle?.copyWith(
+      rightBorderVal: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     /**
      * Merged Issued Date Description cells, mapped data and set a style
      */
     final startIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 3,
+      columnIndex: 4,
       rowIndex: startingRow + 5,
     );
     final endIssuedDateDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 5,
+      columnIndex: 6,
       rowIndex: startingRow + 5,
     );
     sheet.merge(

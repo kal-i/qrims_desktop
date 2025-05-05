@@ -30,6 +30,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
   final _prIdController = TextEditingController();
 
   final ValueNotifier<String?> _selectedType = ValueNotifier(null);
+  bool _isValidPrIdSelected = false;
 
   @override
   void initState() {
@@ -70,16 +71,15 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildPRSelection(context),
-        const SizedBox(
-          height: 20.0,
-        ),
+        const SizedBox(height: 20.0),
         ValueListenableBuilder(
-            valueListenable: _selectedType,
-            builder: (context, isWithPr, child) {
-              return _selectedType.value == '/w PR'
-                  ? _buildPurchaseRequestIdSuggestionField()
-                  : const SizedBox.shrink();
-            }),
+          valueListenable: _selectedType,
+          builder: (context, isWithPr, child) {
+            return _selectedType.value == '/w PR'
+                ? _buildPurchaseRequestIdSuggestionField()
+                : const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
@@ -95,9 +95,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
                 fontWeight: FontWeight.w500,
               ),
         ),
-        const SizedBox(
-          height: 10.0,
-        ),
+        const SizedBox(height: 10.0),
         ValueListenableBuilder(
           valueListenable: _selectedType,
           builder: (context, value, child) {
@@ -112,9 +110,7 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
                   .map(
                     (type) => DropdownMenuItem(
                       value: type,
-                      child: Text(
-                        type,
-                      ),
+                      child: Text(type),
                     ),
                   )
                   .toList(),
@@ -130,12 +126,27 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
   Widget _buildPurchaseRequestIdSuggestionField() {
     return CustomSearchField(
       suggestionsCallback: (prId) async {
-        return await _purchaseRequestSuggestionsService.fetchPurchaseRequestIds(
+        _isValidPrIdSelected = false;
+
+        final results =
+            await _purchaseRequestSuggestionsService.fetchPurchaseRequestIds(
           prId: prId,
         );
+
+        if ((results == null || results.isEmpty) && prId.isNotEmpty) {
+          DelightfulToastUtils.showDelightfulToast(
+            context: context,
+            icon: Icons.warning_amber_outlined,
+            title: 'No Match',
+            subtitle: 'No Purchase Request found with that ID.',
+          );
+        }
+
+        return results;
       },
       onSelected: (value) {
         _prIdController.text = value;
+        _isValidPrIdSelected = true;
       },
       controller: _prIdController,
       label: 'PR ID',
@@ -151,30 +162,39 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
           text: 'Cancel',
           width: 180.0,
         ),
-        const SizedBox(
-          width: 10.0,
-        ),
+        const SizedBox(width: 10.0),
         CustomFilledButton(
           onTap: () {
             if (_selectedType.value == null) {
               DelightfulToastUtils.showDelightfulToast(
                 context: context,
                 icon: Icons.info_outline,
-                title: 'Informtion',
+                title: 'Information',
                 subtitle: 'Please select an issue type.',
               );
               return;
             }
 
-            if (_selectedType.value == '/w PR' &&
-                _prIdController.text.isEmpty) {
-              DelightfulToastUtils.showDelightfulToast(
-                context: context,
-                icon: Icons.info_outline,
-                title: 'Informtion',
-                subtitle: 'Please select a PR ID.',
-              );
-              return;
+            if (_selectedType.value == '/w PR') {
+              if (_prIdController.text.isEmpty) {
+                DelightfulToastUtils.showDelightfulToast(
+                  context: context,
+                  icon: Icons.info_outline,
+                  title: 'Information',
+                  subtitle: 'Please select a PR ID.',
+                );
+                return;
+              }
+
+              if (!_isValidPrIdSelected) {
+                DelightfulToastUtils.showDelightfulToast(
+                  context: context,
+                  icon: Icons.warning_amber_outlined,
+                  title: 'Invalid PR ID',
+                  subtitle: 'Please select a PR ID from the suggestions.',
+                );
+                return;
+              }
             }
 
             if (_selectedType.value == 'w/o PR' &&
