@@ -53,7 +53,7 @@ class TemplatePath {
   static const String _xls = '$_folder/xlsx';
   static const String ics = '$_xls/ics-template.xlsx';
   static const String par = '$_xls/par-template.xlsx';
-  static const String ris = '$_xls/final-ris-template.xlsx';
+  static const String ris = '$_xls/ris-template.xlsx';
   static const String rpci = '$_xls/final-rpci-template.xlsx';
   static const String rpsep = '$_xls/final-rpsep-template.xlsx';
   static const String rpppe = '$_xls/final-rpppe-template.xlsx';

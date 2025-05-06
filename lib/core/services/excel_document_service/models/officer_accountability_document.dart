@@ -21,7 +21,9 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
         List<Map<String, dynamic>>.from(data['accountabilities']);
 
     // Officer info
-    sheet.cell(CellIndex.indexByString("A1")).value = TextCellValue('Name');
+    final nameTitleCell = sheet.cell(CellIndex.indexByString("A1"));
+    nameTitleCell.value = TextCellValue('Name');
+
     sheet.cell(CellIndex.indexByString("B1")).value =
         TextCellValue(officer['name'] ?? '');
 
