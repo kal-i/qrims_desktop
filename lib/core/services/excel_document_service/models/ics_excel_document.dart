@@ -37,7 +37,7 @@ class ICSExcelDocument {
       rowIndex: 0,
     );
     final endHeaderTopCell = CellIndex.indexByColumnRow(
-      columnIndex: 7,
+      columnIndex: 8,
       rowIndex: 0,
     );
     for (int col = startHeaderTopCell.columnIndex;
@@ -51,39 +51,6 @@ class ICSExcelDocument {
       );
       cell.cellStyle = CellStyle(
         topBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.white,
-        ),
-      );
-    }
-
-    final startHeaderRightCell = CellIndex.indexByColumnRow(
-      columnIndex: 7,
-      rowIndex: 0,
-    );
-    final endHeaderRightCell = CellIndex.indexByColumnRow(
-      columnIndex: 7,
-      rowIndex: 14,
-    );
-    for (int row = startHeaderRightCell.rowIndex;
-        row <= endHeaderRightCell.rowIndex;
-        row++) {
-      final cell = sheet.cell(
-        CellIndex.indexByColumnRow(
-          columnIndex: 7,
-          rowIndex: row,
-        ),
-      );
-      cell.cellStyle = CellStyle(
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        topBorder: row == 0
-            ? Border(
-                borderStyle: BorderStyle.Medium,
-                borderColorHex: ExcelColor.white,
-              )
-            : null,
-        rightBorder: Border(
           borderStyle: BorderStyle.Medium,
           borderColorHex: ExcelColor.white,
         ),
@@ -166,13 +133,46 @@ class ICSExcelDocument {
       generalCellStyle,
     );
 
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 8,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 8,
+      rowIndex: 14 + totalRowsInserted + 13,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 8,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     final startHeaderLeftCell = CellIndex.indexByColumnRow(
       columnIndex: 0,
       rowIndex: 0,
     );
     final endHeaderLeftCell = CellIndex.indexByColumnRow(
       columnIndex: 0,
-      rowIndex: 14 + totalRowsInserted + 12,
+      rowIndex: 14 + totalRowsInserted + 13,
     );
     for (int row = startHeaderLeftCell.rowIndex;
         row <= endHeaderLeftCell.rowIndex;
@@ -203,6 +203,42 @@ class ICSExcelDocument {
               )
             : null,
         leftBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final headerBottomCellRowIndex = 14 + totalRowsInserted + 13;
+    final startHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    final endHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 8,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    for (int col = startHeaderBottomCell.columnIndex;
+        col <= endHeaderBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: headerBottomCellRowIndex,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: Border(
           borderStyle: BorderStyle.Medium,
           borderColorHex: ExcelColor.white,
         ),

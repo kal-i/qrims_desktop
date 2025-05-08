@@ -28,17 +28,16 @@ class RPPPEExcelDocument {
 
     print('data to be map processed');
 
-    /// it is possible to preserve the styling of certain cell then
-    /// we can just use the copyWith to change most of the value
-    final regularCellStyle =
-        sheet.cell(CellIndex.indexByString('C7')).cellStyle;
-
-    final headerTitleCell = CellIndex.indexByString('C3');
-    sheet.cell(headerTitleCell).cellStyle = CellStyle(
-      fontSize: 9,
+    final regStyle = CellStyle(
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
+      // fontFamily: getFontFamily(FontFamily.Garamond),
+      //underline: Underline.Double,
     );
+    final timesRegStyle = sheet.cell(CellIndex.indexByString('C7')).cellStyle;
+
+    final headerTitleCell = CellIndex.indexByString('C3');
+    sheet.cell(headerTitleCell).cellStyle = regStyle;
 
     final type = sheet.cell(
       CellIndex.indexByString(
@@ -57,11 +56,7 @@ class RPPPEExcelDocument {
         .cell(
           CellIndex.indexByString('C5'),
         )
-        .cellStyle = regularCellStyle?.copyWith(
-      horizontalAlignVal: HorizontalAlign.Center,
-      verticalAlignVal: VerticalAlign.Center,
-      fontSizeVal: 9,
-    );
+        .cellStyle = regStyle;
 
     final asAtDateCell = sheet.cell(
       CellIndex.indexByString(
@@ -82,7 +77,7 @@ class RPPPEExcelDocument {
     fundClusterCell.value = TextCellValue(
       'Fund Cluster: ${data['fund_cluster']}',
     );
-    fundClusterCell.cellStyle = regularCellStyle;
+    fundClusterCell.cellStyle = timesRegStyle;
 
     final accountableOfficerCell = sheet.cell(
       CellIndex.indexByString('C10'),
@@ -142,7 +137,7 @@ class RPPPEExcelDocument {
         ],
       ),
     );
-    accountableOfficerCell.cellStyle = regularCellStyle;
+    accountableOfficerCell.cellStyle = timesRegStyle;
 
     // Define the border style
     final borderStyle = Border(borderStyle: BorderStyle.Medium);
@@ -170,7 +165,7 @@ class RPPPEExcelDocument {
       certifyingOfficers,
       approvingEntityOrAuthorizedRepresentative,
       coaRepresentative,
-      regularCellStyle,
+      regStyle,
     );
   }
 
@@ -264,16 +259,29 @@ class RPPPEExcelDocument {
     Sheet sheet,
     List<Map<String, dynamic>> inventoryProperties,
     Border borderStyle,
-    //CellStyle? cellStyle,
   ) {
+    inventoryProperties.sort((a, b) {
+      final idA = a['base_item_id'] ?? 0;
+      final idB = b['base_item_id'] ?? 0;
+      return idA.compareTo(idB);
+    });
+
+    print('sorted: $inventoryProperties');
+
     int startRow = 13;
     int totalRowsInserted = 0;
 
-    for (int i = 0; i < inventoryProperties.length; i++) {
+    for (int i = inventoryProperties.length - 1; i >= 0; i--) {
       final inventoryProperty = inventoryProperties[i];
+      final rowIndex = startRow;
 
-      print('current inventory property: $inventoryProperty');
+      // Insert a row only if it's not the last one (which will use the original template row)
+      if (i != inventoryProperties.length - 1) {
+        sheet.insertRow(rowIndex);
+        totalRowsInserted++;
+      }
 
+      // Mapping logic (unchanged except for style object reused here)
       final article =
           inventoryProperty['article']?.toString().toUpperCase() ?? 'UNKNOWN';
       final desc = inventoryProperty['description'];
@@ -296,7 +304,6 @@ class RPPPEExcelDocument {
       final unitValue =
           double.parse(inventoryProperty['unit_value'].toString());
 
-      // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
       final totalQuantity = inventoryProperty[
                   'balance_from_previous_row_after_issuance'] ==
               0
@@ -332,9 +339,7 @@ class RPPPEExcelDocument {
           (e) =>
               e.toString().split('.').last == inventoryProperty['fund_cluster'],
         );
-        if (match.isNotEmpty) {
-          matchedFundCluster = match.first;
-        }
+        if (match.isNotEmpty) matchedFundCluster = match.first;
       }
       final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
 
@@ -352,9 +357,7 @@ class RPPPEExcelDocument {
               e.toString().split('.').last ==
               inventoryProperty['asset_classification'],
         );
-        if (match.isNotEmpty) {
-          matchedAssetClassification = match.first;
-        }
+        if (match.isNotEmpty) matchedAssetClassification = match.first;
       }
       final assetClassification = matchedAssetClassification != null
           ? readableEnumConverter(matchedAssetClassification)
@@ -367,95 +370,275 @@ class RPPPEExcelDocument {
               e.toString().split('.').last ==
               inventoryProperty['asset_sub_class'],
         );
-        if (match.isNotEmpty) {
-          matchedAssetSubClass = match.first;
-        }
+        if (match.isNotEmpty) matchedAssetSubClass = match.first;
       }
       final assetSubClass = matchedAssetSubClass != null
           ? readableEnumConverter(matchedAssetSubClass)
           : '\n';
 
-      // final thinBorder = Border(borderStyle: BorderStyle.Thin);
+      final thinBorder = Border(borderStyle: BorderStyle.Thin);
+      final cellStyle =
+          sheet.cell(CellIndex.indexByString('C14')).cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: i == 0 ? borderStyle : thinBorder,
+        rightBorder: borderStyle,
+        leftBorder: borderStyle,
+      );
 
-      /// the 2nd elem (index 1) will be at the top
-      /// while the 1st elem (index 0) will be at the bottom
-      // final cellStyle = CellStyle(
-      //   bold: false,
-      //   fontFamily: getFontFamily(FontFamily.Book_Antiqua),
-      //   fontSize: 9,
-      //   horizontalAlign: HorizontalAlign.Center,
-      //   verticalAlign: VerticalAlign.Center,
-      //   topBorder: i == 1 ? borderStyle : thinBorder,
-      //   rightBorder: borderStyle,
-      //   bottomBorder: i == 0 ? borderStyle : thinBorder,
-      //   leftBorder: borderStyle,
-      // );
-
-      final cellStyle = sheet.cell(CellIndex.indexByString('C14')).cellStyle;
-
-      print('reached here!');
-
-      if (i > 0) {
-        final rowIndex = startRow + i - 1;
-        sheet.insertRow(rowIndex);
-        _updateRow(
-          sheet,
-          rowIndex,
-          article,
-          description,
-          propertyNo,
-          unit,
-          unitValue,
-          totalQuantity,
-          balanceAfterIssue,
-          remarks,
-          dateAcquired,
-          accountableOfficer,
-          location,
-          fundCluster,
-          formattedEstimatedUsefulLife,
-          assetClassification,
-          assetSubClass,
-          specs,
-          manufacturer,
-          brand,
-          model,
-          sn,
-          cellStyle,
-        );
-
-        totalRowsInserted++;
-      } else {
-        _updateRow(
-          sheet,
-          startRow + i,
-          article,
-          description,
-          propertyNo,
-          unit,
-          unitValue,
-          totalQuantity,
-          balanceAfterIssue,
-          remarks,
-          dateAcquired,
-          accountableOfficer,
-          location,
-          fundCluster,
-          formattedEstimatedUsefulLife,
-          assetClassification,
-          assetSubClass,
-          specs,
-          manufacturer,
-          brand,
-          model,
-          sn,
-          cellStyle,
-        );
-      }
+      _updateRow(
+        sheet,
+        rowIndex,
+        article,
+        description,
+        propertyNo,
+        unit,
+        unitValue,
+        totalQuantity,
+        balanceAfterIssue,
+        remarks,
+        dateAcquired,
+        accountableOfficer,
+        location,
+        fundCluster,
+        formattedEstimatedUsefulLife,
+        assetClassification,
+        assetSubClass,
+        specs,
+        manufacturer,
+        brand,
+        model,
+        sn,
+        cellStyle,
+      );
     }
 
     return totalRowsInserted;
   }
+
+  // static int _mapDataToCells(
+  //   Sheet sheet,
+  //   List<Map<String, dynamic>> inventoryProperties,
+  //   Border borderStyle,
+  //   //CellStyle? cellStyle,
+  // ) {
+  //   inventoryProperties.sort((a, b) {
+  //     final idA = a['base_item_id'] ?? 0;
+  //     final idB = b['base_item_id'] ?? 0;
+  //     return idA.compareTo(idB);
+  //   });
+
+  //   print('sorted: $inventoryProperties');
+
+  //   int startRow = 13;
+  //   int totalRowsInserted = 0;
+
+  //   for (int i = 0; i < inventoryProperties.length; i++) {
+  //     final inventoryProperty = inventoryProperties[i];
+
+  //     print('current inventory property: $inventoryProperty');
+
+  //     final article =
+  //         inventoryProperty['article']?.toString().toUpperCase() ?? 'UNKNOWN';
+  //     final desc = inventoryProperty['description'];
+  //     final specs = inventoryProperty['specification'] ?? '\n';
+  //     final manufacturer = inventoryProperty['manufacturer_name'] ?? '\n';
+  //     final brand = inventoryProperty['brand_name'] ?? '\n';
+  //     final model = inventoryProperty['model_name'] ?? '\n';
+  //     final sn = inventoryProperty['serial_no'] ?? '\n';
+
+  //     final description = manufacturer.trim().isNotEmpty &&
+  //             brand.trim().isNotEmpty &&
+  //             model.trim().isNotEmpty &&
+  //             sn.trim().isNotEmpty
+  //         ? '$brand $model with SN: $sn'
+  //         : desc;
+
+  //     final propertyNo = inventoryProperty['property_no'] ?? 'N/A';
+  //     final unit = inventoryProperty['unit'] ?? 'N/A';
+
+  //     final unitValue =
+  //         double.parse(inventoryProperty['unit_value'].toString());
+
+  //     // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
+  //     final totalQuantity = inventoryProperty[
+  //                 'balance_from_previous_row_after_issuance'] ==
+  //             0
+  //         ? inventoryProperty['total_quantity_available_and_issued'] != null
+  //             ? int.tryParse(
+  //                     inventoryProperty['total_quantity_available_and_issued']
+  //                             ?.toString() ??
+  //                         '0') ??
+  //                 0
+  //             : inventoryProperty['current_quantity_in_stock'] ?? 0
+  //         : inventoryProperty['balance_from_previous_row_after_issuance'] ?? 0;
+
+  //     final balanceAfterIssue = int.tryParse(
+  //             inventoryProperty['balance_per_row_after_issuance']?.toString() ??
+  //                 '0') ??
+  //         0;
+
+  //     final dateAcquired = documentDateFormatter(
+  //         DateTime.parse(inventoryProperty['date_acquired']));
+
+  //     final accountableOfficer =
+  //         capitalizeWord(inventoryProperty['receiving_officer_name'] ?? '\n');
+  //     final location =
+  //         capitalizeWord(inventoryProperty['receiving_officer_office'] ?? '\n');
+
+  //     final remarks = accountableOfficer.trim().isNotEmpty
+  //         ? '${capitalizeWord(accountableOfficer)} - ${inventoryProperty['total_quantity_issued_for_a_particular_row']}'
+  //         : '\n';
+
+  //     FundCluster? matchedFundCluster;
+  //     if (inventoryProperty['fund_cluster'] != null) {
+  //       final match = FundCluster.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last == inventoryProperty['fund_cluster'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedFundCluster = match.first;
+  //       }
+  //     }
+  //     final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
+
+  //     final estimatedUsefulLife = inventoryProperty['estimated_useful_life'];
+  //     final formattedEstimatedUsefulLife = estimatedUsefulLife != null
+  //         ? estimatedUsefulLife > 1
+  //             ? '$estimatedUsefulLife years'
+  //             : '$estimatedUsefulLife year'
+  //         : '\n';
+
+  //     AssetClassification? matchedAssetClassification;
+  //     if (inventoryProperty['asset_classification'] != null) {
+  //       final match = AssetClassification.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last ==
+  //             inventoryProperty['asset_classification'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedAssetClassification = match.first;
+  //       }
+  //     }
+  //     final assetClassification = matchedAssetClassification != null
+  //         ? readableEnumConverter(matchedAssetClassification)
+  //         : '\n';
+
+  //     AssetSubClass? matchedAssetSubClass;
+  //     if (inventoryProperty['asset_sub_class'] != null) {
+  //       final match = AssetSubClass.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last ==
+  //             inventoryProperty['asset_sub_class'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedAssetSubClass = match.first;
+  //       }
+  //     }
+  //     final assetSubClass = matchedAssetSubClass != null
+  //         ? readableEnumConverter(matchedAssetSubClass)
+  //         : '\n';
+
+  //     // final thinBorder = Border(borderStyle: BorderStyle.Thin);
+
+  //     /// the 2nd elem (index 1) will be at the top
+  //     /// while the 1st elem (index 0) will be at the bottom
+  //     // final cellStyle = CellStyle(
+  //     //   bold: false,
+  //     //   fontFamily: getFontFamily(FontFamily.Book_Antiqua),
+  //     //   fontSize: 9,
+  //     //   horizontalAlign: HorizontalAlign.Center,
+  //     //   verticalAlign: VerticalAlign.Center,
+  //     //   topBorder: i == 1 ? borderStyle : thinBorder,
+  //     //   rightBorder: borderStyle,
+  //     //   bottomBorder: i == 0 ? borderStyle : thinBorder,
+  //     //   leftBorder: borderStyle,
+  //     // );
+
+  //     final thinBorder = Border(borderStyle: BorderStyle.Thin);
+  //     final cellStyle =
+  //         sheet.cell(CellIndex.indexByString('C14')).cellStyle = CellStyle(
+  //       horizontalAlign: HorizontalAlign.Center,
+  //       verticalAlign: VerticalAlign.Center,
+  //       topBorder: i == 0 ? borderStyle : thinBorder,
+  //       rightBorder: borderStyle,
+  //       //bottomBorder: i == 0 ? borderStyle : thinBorder,
+  //       leftBorder: borderStyle,
+  //     );
+  //     // ?.copyWith(
+  //     //       horizontalAlignVal: HorizontalAlign.Center,
+  //     //       verticalAlignVal: VerticalAlign.Center,
+  //     //       topBorderVal: Border(
+  //     //         borderStyle: BorderStyle.Thin,
+  //     //       ),
+  //     //       bottomBorderVal: Border(
+  //     //         borderStyle: BorderStyle.Thin,
+  //     //       ),
+  //     //     );
+
+  //     print('reached here!');
+
+  //     if (i > 0) {
+  //       final rowIndex = startRow + i - 1;
+  //       sheet.insertRow(rowIndex);
+  //       _updateRow(
+  //         sheet,
+  //         rowIndex,
+  //         article,
+  //         description,
+  //         propertyNo,
+  //         unit,
+  //         unitValue,
+  //         totalQuantity,
+  //         balanceAfterIssue,
+  //         remarks,
+  //         dateAcquired,
+  //         accountableOfficer,
+  //         location,
+  //         fundCluster,
+  //         formattedEstimatedUsefulLife,
+  //         assetClassification,
+  //         assetSubClass,
+  //         specs,
+  //         manufacturer,
+  //         brand,
+  //         model,
+  //         sn,
+  //         cellStyle,
+  //       );
+
+  //       totalRowsInserted++;
+  //     } else {
+  //       _updateRow(
+  //         sheet,
+  //         startRow + i,
+  //         article,
+  //         description,
+  //         propertyNo,
+  //         unit,
+  //         unitValue,
+  //         totalQuantity,
+  //         balanceAfterIssue,
+  //         remarks,
+  //         dateAcquired,
+  //         accountableOfficer,
+  //         location,
+  //         fundCluster,
+  //         formattedEstimatedUsefulLife,
+  //         assetClassification,
+  //         assetSubClass,
+  //         specs,
+  //         manufacturer,
+  //         brand,
+  //         model,
+  //         sn,
+  //         cellStyle,
+  //       );
+  //     }
+  //   }
+
+  //   return totalRowsInserted;
+  // }
 
   static void _updateRow(
     Sheet sheet,
@@ -553,6 +736,19 @@ class RPPPEExcelDocument {
   ) {
     int startingRow = footerStartRow + 4;
     int currentRow = startingRow;
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 2,
+            rowIndex: footerStartRow + 2,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
       for (int i = 0; i < certifyingOfficers.length; i++) {
@@ -773,9 +969,15 @@ class RPPPEExcelDocument {
 
     // ** Add Approving Entity (Merged Cells with Borders) **
     final startApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(
+      columnIndex: 9,
+      rowIndex: startingRow,
+    );
     final endApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(
+      columnIndex: 11,
+      rowIndex: startingRow,
+    );
 
     sheet.cell(startApprovingEntityOrAuthorizedRepresentativeCell).value =
         TextCellValue(approvingEntityOrAuthorizedRepresentativeName ??
@@ -791,44 +993,59 @@ class RPPPEExcelDocument {
         col <= endApprovingEntityOrAuthorizedRepresentativeCell.columnIndex;
         col++) {
       final cell = sheet.cell(
-          CellIndex.indexByColumnRow(columnIndex: col, rowIndex: startingRow));
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow,
+        ),
+      );
       cell.cellStyle = CellStyle(
         horizontalAlign: HorizontalAlign.Center,
         verticalAlign: VerticalAlign.Center,
       );
     }
 
-    // final startingApprovingEntityOrAuthorizedRepresentativeTitleCell =
-    //     CellIndex.indexByColumnRow(
-    //   columnIndex: 6,
-    //   rowIndex: startingRow,
-    // );
-    // final endingApprovingEntityOrAuthorizedRepresentativeTitleCell =
-    //     CellIndex.indexByColumnRow(
-    //   columnIndex: 10,
-    //   rowIndex: startingRow,
-    // );
+    final startApprovingEntityOrAuthorizedRepresentativeTitleCell =
+        CellIndex.indexByColumnRow(
+      columnIndex: 9,
+      rowIndex: startingRow + 1,
+    );
+    final endApprovingEntityOrAuthorizedRepresentativeTitleCell =
+        CellIndex.indexByColumnRow(
+      columnIndex: 11,
+      rowIndex: startingRow + 1,
+    );
 
-    // for (int col = 6; col <= 10; col++) {
-    //   final cell = sheet.cell(
-    //     CellIndex.indexByColumnRow(
-    //       columnIndex: col,
-    //       rowIndex: startingRow + 1,
-    //     ),
-    //   );
-    //   cell.cellStyle = footerCellStyle;
-    // }
+    sheet.merge(
+      startApprovingEntityOrAuthorizedRepresentativeTitleCell,
+      endApprovingEntityOrAuthorizedRepresentativeTitleCell,
+    );
 
-    // sheet.merge(
-    //   startingApprovingEntityOrAuthorizedRepresentativeTitleCell,
-    //   endingApprovingEntityOrAuthorizedRepresentativeTitleCell,
-    // );
+    for (int col =
+            startApprovingEntityOrAuthorizedRepresentativeTitleCell.columnIndex;
+        col <=
+            endApprovingEntityOrAuthorizedRepresentativeTitleCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow + 1,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+      );
+    }
 
     /// Add Value to COA representative cell
-    final startCoaRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 13, rowIndex: startingRow);
-    final endCoaRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 14, rowIndex: startingRow);
+    final startCoaRepresentativeCell = CellIndex.indexByColumnRow(
+      columnIndex: 13,
+      rowIndex: startingRow,
+    );
+    final endCoaRepresentativeCell = CellIndex.indexByColumnRow(
+      columnIndex: 14,
+      rowIndex: startingRow,
+    );
 
     sheet.cell(startCoaRepresentativeCell).value = TextCellValue(
         coaRepresentativeName ?? '_______________________________');
@@ -838,15 +1055,38 @@ class RPPPEExcelDocument {
       underline: Underline.Single,
     );
 
-    sheet.merge(startCoaRepresentativeCell, endCoaRepresentativeCell);
+    sheet.merge(
+      startCoaRepresentativeCell,
+      endCoaRepresentativeCell,
+    );
 
-    /// Manipulate COA representative title cell
-    // final coaRepresentativeTitleCell = sheet.cell(
-    //   CellIndex.indexByColumnRow(
-    //     columnIndex: 11,
-    //     rowIndex: startingRow + 1,
-    //   ),
-    // );
-    // coaRepresentativeTitleCell.cellStyle = footerCellStyle;
+    final startCoaRepresentativeTitleCell = CellIndex.indexByColumnRow(
+      columnIndex: 13,
+      rowIndex: startingRow + 1,
+    );
+    final endCoaRepresentativeTitleCell = CellIndex.indexByColumnRow(
+      columnIndex: 14,
+      rowIndex: startingRow + 1,
+    );
+
+    sheet.merge(
+      startCoaRepresentativeTitleCell,
+      endCoaRepresentativeTitleCell,
+    );
+
+    for (int col = startCoaRepresentativeTitleCell.columnIndex;
+        col <= endCoaRepresentativeTitleCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow + 1,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+      );
+    }
   }
 }

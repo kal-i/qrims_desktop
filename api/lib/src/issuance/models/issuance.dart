@@ -24,6 +24,7 @@ enum IssuanceItemStatus {
   received,
   returned,
   lost,
+  disposed,
 }
 
 enum IssuanceStatus {

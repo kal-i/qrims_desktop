@@ -41,12 +41,34 @@ class RPSEPExcelDocument {
 
     /// it is possible to preserve the styling of certain cell then
     /// we can just use the copyWith to change most of the value
-    final regularCellStyle =
-        sheet.cell(CellIndex.indexByString('A2')).cellStyle;
+    final startHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 27,
+      rowIndex: 0,
+    );
+    for (int col = startHeaderTopCell.columnIndex;
+        col <= endHeaderTopCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: 0,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
 
     final type = sheet.cell(
       CellIndex.indexByString(
-        'A3',
+        'B3',
       ),
     );
     type.value = assetSubClass != null
@@ -57,9 +79,12 @@ class RPSEPExcelDocument {
       verticalAlign: VerticalAlign.Center,
     );
 
+    final regularCellStyle =
+        sheet.cell(CellIndex.indexByString('B3')).cellStyle;
+
     final asAtDateCell = sheet.cell(
       CellIndex.indexByString(
-        'A5',
+        'B5',
       ),
     );
     asAtDateCell.value = TextCellValue(
@@ -71,14 +96,14 @@ class RPSEPExcelDocument {
     );
 
     final fundClusterCell = sheet.cell(
-      CellIndex.indexByString('A7'),
+      CellIndex.indexByString('B7'),
     );
     fundClusterCell.value = TextCellValue(
       'Fund Cluster: ${data['fund_cluster']}',
     );
 
     final accountableOfficerCell = sheet.cell(
-      CellIndex.indexByString('A8'),
+      CellIndex.indexByString('B8'),
     );
     accountableOfficerCell.value = TextCellValue.span(
       TextSpan(
@@ -150,13 +175,13 @@ class RPSEPExcelDocument {
       sheet,
       inventorySemiExpendableProperties,
       borderStyle,
-      //regularCellStyle,
+      regularCellStyle,
     );
 
     print('total rows inserted: $totalRowsInserted');
 
     int footerStartRow = 11 + totalRowsInserted + 1;
-    _addFooter(
+    final footerRows = _addFooter(
       sheet,
       footerStartRow,
       certifyingOfficers,
@@ -164,37 +189,173 @@ class RPSEPExcelDocument {
       coaRepresentative,
       regularCellStyle,
     );
+
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 27,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 27,
+      rowIndex: footerRows,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 27,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final startHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: footerRows,
+    );
+    for (int row = startHeaderLeftCell.rowIndex;
+        row <= endHeaderLeftCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        // bottomBorder: row == endHeaderLeftCell.rowIndex
+        //     ? Border(
+        //         borderStyle: BorderStyle.Medium,
+        //         borderColorHex: ExcelColor.white,
+        //       )
+        //     : null,
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final headerBottomCellRowIndex = footerRows + 1; // footerStartRow + 7;
+    final startHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    final endHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 27,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    for (int col = startHeaderBottomCell.columnIndex;
+        col <= endHeaderBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: headerBottomCellRowIndex,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
   }
 
   static void _applyHeadersAndStyles(Sheet sheet, Border borderStyle) {
+    // final headers = [
+    //   const HeaderInfo('A10', 'A11', 'Article'),
+    //   const HeaderInfo('B10', 'B11', 'Description'),
+    //   const HeaderInfo('F10', 'F11', 'Semi-expendable Property No.'),
+    //   const HeaderInfo('G10', 'G11', 'Unit of Measure'),
+    //   const HeaderInfo('H10', 'H11', 'Unit Value'),
+    //   const HeaderInfo('I10', 'I10', 'Balance Per Card'),
+    //   const HeaderInfo('I11', 'I11', 'Quantity'),
+    //   const HeaderInfo('J10', 'J10', 'On Hand Per Card'),
+    //   const HeaderInfo('J11', 'J11', 'Quantity'),
+    //   const HeaderInfo('K10', 'L10', 'Shortage/Overage'),
+    //   const HeaderInfo('K11', 'K11', 'Quantity'),
+    //   const HeaderInfo('L11', 'L11', 'Value'),
+    //   const HeaderInfo('M10', 'M11', 'Remarks'),
+    //   const HeaderInfo('N10', 'N11', 'Date Acquired'),
+    //   const HeaderInfo('O10', 'O11', 'Accountable Officer'),
+    //   const HeaderInfo('P10', 'P11', 'Location'),
+    //   const HeaderInfo('Q10', 'Q11', 'Fund Cluster'),
+    //   const HeaderInfo('R10', 'R11', 'Estimated Useful Life'),
+    //   const HeaderInfo('S10', 'S11', 'Current Condiiton'),
+    //   const HeaderInfo('T10', 'T11', 'Asset Classification'),
+    //   const HeaderInfo('U10', 'U11', 'Asset Sub Class'),
+    //   const HeaderInfo('V10', 'Z10', 'Description'),
+    //   const HeaderInfo('V11', 'V11', 'Specification'),
+    //   const HeaderInfo('W11', 'W11', 'Manufacturer'),
+    //   const HeaderInfo('X11', 'X11', 'Brand'),
+    //   const HeaderInfo('Y11', 'Y11', 'Model'),
+    //   const HeaderInfo('Z11', 'Z11', 'Serial #'),
+    // ];
+
     final headers = [
-      const HeaderInfo('A10', 'A11', 'Article'),
-      const HeaderInfo('B10', 'B11', 'Description'),
-      const HeaderInfo('F10', 'F11', 'Semi-expendable Property No.'),
-      const HeaderInfo('G10', 'G11', 'Unit of Measure'),
-      const HeaderInfo('H10', 'H11', 'Unit Value'),
-      const HeaderInfo('I10', 'I10', 'Balance Per Card'),
-      const HeaderInfo('I11', 'I11', 'Quantity'),
-      const HeaderInfo('J10', 'J10', 'On Hand Per Card'),
+      const HeaderInfo('B10', 'B11', 'Article'),
+      const HeaderInfo('C10', 'C11', 'Description'),
+      const HeaderInfo('G10', 'G11', 'Semi-expendable Property No.'),
+      const HeaderInfo('H10', 'H11', 'Unit of Measure'),
+      const HeaderInfo('I10', 'I11', 'Unit Value'),
+      const HeaderInfo('J10', 'J10', 'Balance Per Card'),
       const HeaderInfo('J11', 'J11', 'Quantity'),
-      const HeaderInfo('K10', 'L10', 'Shortage/Overage'),
+      const HeaderInfo('K10', 'K10', 'On Hand Per Card'),
       const HeaderInfo('K11', 'K11', 'Quantity'),
-      const HeaderInfo('L11', 'L11', 'Value'),
-      const HeaderInfo('M10', 'M11', 'Remarks'),
-      const HeaderInfo('N10', 'N11', 'Date Acquired'),
-      const HeaderInfo('O10', 'O11', 'Accountable Officer'),
-      const HeaderInfo('P10', 'P11', 'Location'),
-      const HeaderInfo('Q10', 'Q11', 'Fund Cluster'),
-      const HeaderInfo('R10', 'R11', 'Estimated Useful Life'),
-      const HeaderInfo('S10', 'S11', 'Current Condiiton'),
-      const HeaderInfo('T10', 'T11', 'Asset Classification'),
-      const HeaderInfo('U10', 'U11', 'Asset Sub Class'),
-      const HeaderInfo('V10', 'Z10', 'Description'),
-      const HeaderInfo('V11', 'V11', 'Specification'),
-      const HeaderInfo('W11', 'W11', 'Manufacturer'),
-      const HeaderInfo('X11', 'X11', 'Brand'),
-      const HeaderInfo('Y11', 'Y11', 'Model'),
-      const HeaderInfo('Z11', 'Z11', 'Serial #'),
+      const HeaderInfo('L10', 'M10', 'Shortage/Overage'),
+      const HeaderInfo('L11', 'L11', 'Quantity'),
+      const HeaderInfo('M11', 'M11', 'Value'),
+      const HeaderInfo('N10', 'N11', 'Remarks'),
+      const HeaderInfo('O10', 'O11', 'Date Acquired'),
+      const HeaderInfo('P10', 'P11', 'Accountable Officer'),
+      const HeaderInfo('Q10', 'Q11', 'Location'),
+      const HeaderInfo('R10', 'R11', 'Fund Cluster'),
+      const HeaderInfo('S10', 'S11', 'Estimated Useful Life'),
+      const HeaderInfo('T10', 'T11', 'Current Condiiton'),
+      const HeaderInfo('U10', 'U11', 'Asset Classification'),
+      const HeaderInfo('V10', 'V11', 'Asset Sub Class'),
+      const HeaderInfo('W10', 'AA10', 'Description'),
+      const HeaderInfo('W11', 'W11', 'Specification'),
+      const HeaderInfo('X11', 'X11', 'Manufacturer'),
+      const HeaderInfo('Y11', 'Y11', 'Brand'),
+      const HeaderInfo('Z11', 'Z11', 'Model'),
+      const HeaderInfo('AA11', 'AA11', 'Serial #'),
     ];
 
     for (var header in headers) {
@@ -245,17 +406,23 @@ class RPSEPExcelDocument {
     Sheet sheet,
     List<Map<String, dynamic>> inventorySemiExpendableProperties,
     Border borderStyle,
-    //CellStyle? cellStyle,
+    CellStyle? dataCellStyle,
   ) {
     int startRow = 11;
     int totalRowsInserted = 0;
 
+    // Sort by 'date_acquired' in ascending order
+    inventorySemiExpendableProperties.sort((a, b) {
+      final dateA =
+          DateTime.tryParse(a['date_acquired'] ?? '') ?? DateTime(1900);
+      final dateB =
+          DateTime.tryParse(b['date_acquired'] ?? '') ?? DateTime(1900);
+      return dateA.compareTo(dateB);
+    });
+
     for (int i = 0; i < inventorySemiExpendableProperties.length; i++) {
       final inventorySemiExpendableProperty =
           inventorySemiExpendableProperties[i];
-
-      print(
-          'current inventory semi expendable property: $inventorySemiExpendableProperty');
 
       final article = inventorySemiExpendableProperty['article']
               ?.toString()
@@ -284,7 +451,6 @@ class RPSEPExcelDocument {
       final unitValue = double.parse(
           inventorySemiExpendableProperty['unit_value'].toString());
 
-      // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
       final totalQuantity = inventorySemiExpendableProperty[
                   'balance_from_previous_row_after_issuance'] ==
               0
@@ -370,81 +536,256 @@ class RPSEPExcelDocument {
 
       final thinBorder = Border(borderStyle: BorderStyle.Thin);
 
-      /// the 2nd elem (index 1) will be at the top
-      /// while the 1st elem (index 0) will be at the bottom
-      final cellStyle = CellStyle(
-        bold: false,
-        fontFamily: getFontFamily(FontFamily.Book_Antiqua),
-        fontSize: 9,
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        topBorder: i == 1 ? borderStyle : thinBorder,
-        rightBorder: borderStyle,
-        bottomBorder: i == 0 ? borderStyle : thinBorder,
-        leftBorder: borderStyle,
+      final cellStyle = dataCellStyle?.copyWith(
+        horizontalAlignVal: HorizontalAlign.Center,
+        verticalAlignVal: VerticalAlign.Center,
+        topBorderVal: i == 1 ? borderStyle : thinBorder,
+        rightBorderVal: borderStyle,
+        bottomBorderVal: i == 0 ? borderStyle : thinBorder,
+        leftBorderVal: borderStyle,
       );
 
-      if (i > 0) {
-        final rowIndex = startRow + i - 1;
-        sheet.insertRow(rowIndex);
-        _updateRow(
-          sheet,
-          rowIndex,
-          article,
-          description,
-          semiExpendablePropertyNo,
-          unit,
-          unitValue,
-          totalQuantity,
-          balanceAfterIssue,
-          remarks,
-          dateAcquired,
-          accountableOfficer,
-          location,
-          fundCluster,
-          formattedEstimatedUsefulLife,
-          assetClassification,
-          assetSubClass,
-          specs,
-          manufacturer,
-          brand,
-          model,
-          sn,
-          cellStyle,
-        );
+      final rowIndex = startRow + i;
 
+      if (i != inventorySemiExpendableProperties.length - 1) {
+        sheet.insertRow(rowIndex);
         totalRowsInserted++;
-      } else {
-        _updateRow(
-          sheet,
-          startRow + i,
-          article,
-          description,
-          semiExpendablePropertyNo,
-          unit,
-          unitValue,
-          totalQuantity,
-          balanceAfterIssue,
-          remarks,
-          dateAcquired,
-          accountableOfficer,
-          location,
-          fundCluster,
-          formattedEstimatedUsefulLife,
-          assetClassification,
-          assetSubClass,
-          specs,
-          manufacturer,
-          brand,
-          model,
-          sn,
-          cellStyle,
-        );
       }
+
+      _updateRow(
+        sheet,
+        rowIndex,
+        article,
+        description,
+        semiExpendablePropertyNo,
+        unit,
+        unitValue,
+        totalQuantity,
+        balanceAfterIssue,
+        remarks,
+        dateAcquired,
+        accountableOfficer,
+        location,
+        fundCluster,
+        formattedEstimatedUsefulLife,
+        assetClassification,
+        assetSubClass,
+        specs,
+        manufacturer,
+        brand,
+        model,
+        sn,
+        cellStyle,
+      );
     }
 
     return totalRowsInserted;
   }
+
+  // static int _mapDataToCells(
+  //   Sheet sheet,
+  //   List<Map<String, dynamic>> inventorySemiExpendableProperties,
+  //   Border borderStyle,
+  //   CellStyle? dataCellStyle,
+  // ) {
+  //   int startRow = 11;
+  //   int totalRowsInserted = 0;
+
+  //   for (int i = 0; i < inventorySemiExpendableProperties.length; i++) {
+  //     final inventorySemiExpendableProperty =
+  //         inventorySemiExpendableProperties[i];
+
+  //     print(
+  //         'current inventory semi expendable property: $inventorySemiExpendableProperty');
+
+  //     final article = inventorySemiExpendableProperty['article']
+  //             ?.toString()
+  //             .toUpperCase() ??
+  //         'UNKNOWN';
+  //     final desc = inventorySemiExpendableProperty['description'];
+  //     final specs = inventorySemiExpendableProperty['specification'] ?? '\n';
+  //     final manufacturer =
+  //         inventorySemiExpendableProperty['manufacturer_name'] ?? '\n';
+  //     final brand = inventorySemiExpendableProperty['brand_name'] ?? '\n';
+  //     final model = inventorySemiExpendableProperty['model_name'] ?? '\n';
+  //     final sn = inventorySemiExpendableProperty['serial_no'] ?? '\n';
+
+  //     final description = manufacturer.trim().isNotEmpty &&
+  //             brand.trim().isNotEmpty &&
+  //             model.trim().isNotEmpty &&
+  //             sn.trim().isNotEmpty
+  //         ? '$brand $model with SN: $sn'
+  //         : desc;
+
+  //     final semiExpendablePropertyNo =
+  //         inventorySemiExpendableProperty['semi_expendable_property_no'] ??
+  //             'N/A';
+  //     final unit = inventorySemiExpendableProperty['unit'] ?? 'N/A';
+
+  //     final unitValue = double.parse(
+  //         inventorySemiExpendableProperty['unit_value'].toString());
+
+  //     // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
+  //     final totalQuantity = inventorySemiExpendableProperty[
+  //                 'balance_from_previous_row_after_issuance'] ==
+  //             0
+  //         ? inventorySemiExpendableProperty[
+  //                     'total_quantity_available_and_issued'] !=
+  //                 null
+  //             ? int.tryParse(inventorySemiExpendableProperty[
+  //                         'total_quantity_available_and_issued']
+  //                     ?.toString() ??
+  //                 '0')
+  //             : inventorySemiExpendableProperty['current_quantity_in_stock']
+  //         : inventorySemiExpendableProperty[
+  //             'balance_from_previous_row_after_issuance'];
+
+  //     final balanceAfterIssue = int.tryParse(
+  //             inventorySemiExpendableProperty['balance_per_row_after_issuance']
+  //                     ?.toString() ??
+  //                 '0') ??
+  //         0;
+
+  //     final dateAcquired = documentDateFormatter(
+  //         DateTime.parse(inventorySemiExpendableProperty['date_acquired']));
+
+  //     final accountableOfficer = capitalizeWord(
+  //         inventorySemiExpendableProperty['receiving_officer_name'] ?? '\n');
+  //     final location = capitalizeWord(
+  //         inventorySemiExpendableProperty['receiving_officer_office'] ?? '\n');
+
+  //     final remarks = accountableOfficer.trim().isNotEmpty
+  //         ? '${capitalizeWord(accountableOfficer)} - ${inventorySemiExpendableProperty['total_quantity_issued_for_a_particular_row']}'
+  //         : '\n';
+
+  //     FundCluster? matchedFundCluster;
+  //     if (inventorySemiExpendableProperty['fund_cluster'] != null) {
+  //       final match = FundCluster.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last ==
+  //             inventorySemiExpendableProperty['fund_cluster'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedFundCluster = match.first;
+  //       }
+  //     }
+  //     final fundCluster = matchedFundCluster?.toReadableString() ?? '\n';
+
+  //     final estimatedUsefulLife =
+  //         inventorySemiExpendableProperty['estimated_useful_life'];
+  //     final formattedEstimatedUsefulLife = estimatedUsefulLife != null
+  //         ? estimatedUsefulLife > 1
+  //             ? '$estimatedUsefulLife years'
+  //             : '$estimatedUsefulLife year'
+  //         : '\n';
+
+  //     AssetClassification? matchedAssetClassification;
+  //     if (inventorySemiExpendableProperty['asset_classification'] != null) {
+  //       final match = AssetClassification.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last ==
+  //             inventorySemiExpendableProperty['asset_classification'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedAssetClassification = match.first;
+  //       }
+  //     }
+  //     final assetClassification = matchedAssetClassification != null
+  //         ? readableEnumConverter(matchedAssetClassification)
+  //         : '\n';
+
+  //     AssetSubClass? matchedAssetSubClass;
+  //     if (inventorySemiExpendableProperty['asset_sub_class'] != null) {
+  //       final match = AssetSubClass.values.where(
+  //         (e) =>
+  //             e.toString().split('.').last ==
+  //             inventorySemiExpendableProperty['asset_sub_class'],
+  //       );
+  //       if (match.isNotEmpty) {
+  //         matchedAssetSubClass = match.first;
+  //       }
+  //     }
+  //     final assetSubClass = matchedAssetSubClass != null
+  //         ? readableEnumConverter(matchedAssetSubClass)
+  //         : '\n';
+
+  //     final thinBorder = Border(borderStyle: BorderStyle.Thin);
+
+  //     /// the 2nd elem (index 1) will be at the top
+  //     /// while the 1st elem (index 0) will be at the bottom
+  //     final cellStyle = dataCellStyle?.copyWith(
+  //       //   bold: false,
+  //       //   fontFamily: getFontFamily(FontFamily.Book_Antiqua),
+  //       //   fontSize: 9,
+  //       horizontalAlignVal: HorizontalAlign.Center,
+  //       verticalAlignVal: VerticalAlign.Center,
+  //       topBorderVal: i == 1 ? borderStyle : thinBorder,
+  //       rightBorderVal: borderStyle,
+  //       bottomBorderVal: i == 0 ? borderStyle : thinBorder,
+  //       leftBorderVal: borderStyle,
+  //     );
+
+  //     if (i > 0) {
+  //       final rowIndex = startRow + i - 1;
+  //       sheet.insertRow(rowIndex);
+  //       _updateRow(
+  //         sheet,
+  //         rowIndex,
+  //         article,
+  //         description,
+  //         semiExpendablePropertyNo,
+  //         unit,
+  //         unitValue,
+  //         totalQuantity,
+  //         balanceAfterIssue,
+  //         remarks,
+  //         dateAcquired,
+  //         accountableOfficer,
+  //         location,
+  //         fundCluster,
+  //         formattedEstimatedUsefulLife,
+  //         assetClassification,
+  //         assetSubClass,
+  //         specs,
+  //         manufacturer,
+  //         brand,
+  //         model,
+  //         sn,
+  //         cellStyle,
+  //       );
+
+  //       totalRowsInserted++;
+  //     } else {
+  //       _updateRow(
+  //         sheet,
+  //         startRow + i,
+  //         article,
+  //         description,
+  //         semiExpendablePropertyNo,
+  //         unit,
+  //         unitValue,
+  //         totalQuantity,
+  //         balanceAfterIssue,
+  //         remarks,
+  //         dateAcquired,
+  //         accountableOfficer,
+  //         location,
+  //         fundCluster,
+  //         formattedEstimatedUsefulLife,
+  //         assetClassification,
+  //         assetSubClass,
+  //         specs,
+  //         manufacturer,
+  //         brand,
+  //         model,
+  //         sn,
+  //         cellStyle,
+  //       );
+  //     }
+  //   }
+
+  //   return totalRowsInserted;
+  // }
 
   static void _updateRow(
     Sheet sheet,
@@ -473,11 +814,11 @@ class RPSEPExcelDocument {
   ) {
     /// Merge columns B (1), C (2), D (3), and E (4) into a single cell
     final startDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 1,
+      columnIndex: 2,
       rowIndex: rowIndex,
     );
     final endDescriptionCell = CellIndex.indexByColumnRow(
-      columnIndex: 4,
+      columnIndex: 5,
       rowIndex: rowIndex,
     );
 
@@ -495,29 +836,29 @@ class RPSEPExcelDocument {
     }
 
     final cells = [
-      CellInfo(0, article),
-      CellInfo(1, description),
-      CellInfo(5, semiExpendablePropertyNo.toString()),
-      CellInfo(6, unit.toString()),
-      CellInfo(7, unitValue.toString()),
-      CellInfo(8, totalQuantity.toString()),
-      CellInfo(9, balanceAfterIssue.toString()),
-      const CellInfo(10, '0'),
+      CellInfo(1, article),
+      CellInfo(2, description),
+      CellInfo(6, semiExpendablePropertyNo.toString()),
+      CellInfo(7, unit.toString()),
+      CellInfo(8, unitValue.toString()),
+      CellInfo(9, totalQuantity.toString()),
+      CellInfo(10, balanceAfterIssue.toString()),
       const CellInfo(11, '0'),
-      CellInfo(12, remarks.toString()),
-      CellInfo(13, dateAcquired.toString()),
-      CellInfo(14, accountableOfficer.toString()),
-      CellInfo(15, location.toString()),
-      CellInfo(16, fundCluster.toString()),
-      CellInfo(17, estimatedUsefulLife),
-      const CellInfo(18, ''),
-      CellInfo(19, assetClassification.toString()),
-      CellInfo(20, assetSubClass.toString()),
-      CellInfo(21, specification.toString()),
-      CellInfo(22, manufacturer.toString()),
-      CellInfo(23, brand.toString()),
-      CellInfo(24, model.toString()),
-      CellInfo(25, serialNo.toString()),
+      const CellInfo(12, '0'),
+      CellInfo(13, remarks.toString()),
+      CellInfo(14, dateAcquired.toString()),
+      CellInfo(15, accountableOfficer.toString()),
+      CellInfo(16, location.toString()),
+      CellInfo(17, fundCluster.toString()),
+      CellInfo(18, estimatedUsefulLife),
+      const CellInfo(19, ''),
+      CellInfo(20, assetClassification.toString()),
+      CellInfo(21, assetSubClass.toString()),
+      CellInfo(22, specification.toString()),
+      CellInfo(23, manufacturer.toString()),
+      CellInfo(24, brand.toString()),
+      CellInfo(25, model.toString()),
+      CellInfo(26, serialNo.toString()),
     ];
 
     for (var cellInfo in cells) {
@@ -532,7 +873,7 @@ class RPSEPExcelDocument {
     }
   }
 
-  static void _addFooter(
+  static int _addFooter(
     Sheet sheet,
     int footerStartRow,
     List<Map<String, dynamic>>? certifyingOfficers,
@@ -543,28 +884,44 @@ class RPSEPExcelDocument {
     int startingRow = footerStartRow + 2;
     int currentRow = startingRow;
 
-    sheet
+    final calibriRegStyle = sheet
         .cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 0,
+            columnIndex: 7,
             rowIndex: footerStartRow,
           ),
         )
-        .cellStyle = CellStyle(
-      fontFamily: getFontFamily(FontFamily.Book_Antiqua),
-      fontSize: 9,
-      leftBorder: Border(
+        .cellStyle;
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 1,
+            rowIndex: footerStartRow,
+          ),
+        )
+        .cellStyle = calibriRegStyle?.copyWith(
+      leftBorderVal: Border(
         borderStyle: BorderStyle.Medium,
       ),
     );
 
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 12,
+            rowIndex: footerStartRow,
+          ),
+        )
+        .cellStyle = calibriRegStyle;
+
     if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
-      for (int i = 0; i < certifyingOfficers.length; i++) {
+      for (int i = 1; i < certifyingOfficers.length; i++) {
         final certifyingOfficer = certifyingOfficers[i];
 
         final startingCertifyingOfficerNameCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 0,
+            columnIndex: 1,
             rowIndex: currentRow,
           ),
         );
@@ -572,11 +929,11 @@ class RPSEPExcelDocument {
         /// Certifying Officer Name
         /// Merge cells
         final startCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
-          columnIndex: 0,
+          columnIndex: 1,
           rowIndex: currentRow,
         );
         final endCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
-          columnIndex: 5,
+          columnIndex: 6,
           rowIndex: currentRow,
         );
 
@@ -594,7 +951,7 @@ class RPSEPExcelDocument {
         /// Add value and style to Certifying Officer Name Cell
         final certifyingOfficerNameCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 0,
+            columnIndex: 1,
             rowIndex: currentRow,
           ),
         );
@@ -611,7 +968,7 @@ class RPSEPExcelDocument {
         /// Add border right to the last cell of Certifying Officer Name
         final endingCertifyingOfficerNameCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 12,
+            columnIndex: 13,
             rowIndex: currentRow,
           ),
         );
@@ -624,11 +981,11 @@ class RPSEPExcelDocument {
         /// Certifying Officer Position
         /// Merge cells
         final startCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
-          columnIndex: 0,
+          columnIndex: 1,
           rowIndex: currentRow + 1,
         );
         final endCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
-          columnIndex: 5,
+          columnIndex: 6,
           rowIndex: currentRow + 1,
         );
 
@@ -640,7 +997,7 @@ class RPSEPExcelDocument {
         /// Add value and style to Certifying Officer Position Cell
         final certifyingOfficerPositionCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 0,
+            columnIndex: 1,
             rowIndex: currentRow + 1,
           ),
         );
@@ -658,7 +1015,7 @@ class RPSEPExcelDocument {
         /// Add right border to the first cell of Certifying Officer Position
         final endingCertifyingOfficePositionCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 12,
+            columnIndex: 13,
             rowIndex: currentRow + 1,
           ),
         );
@@ -670,7 +1027,7 @@ class RPSEPExcelDocument {
 
         final startingAllotedCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 0,
+            columnIndex: 1,
             rowIndex: currentRow + 2,
           ),
         );
@@ -682,7 +1039,7 @@ class RPSEPExcelDocument {
 
         final endingAllotedCell = sheet.cell(
           CellIndex.indexByColumnRow(
-            columnIndex: 12,
+            columnIndex: 13,
             rowIndex: currentRow + 2,
           ),
         );
@@ -693,7 +1050,7 @@ class RPSEPExcelDocument {
         );
 
         if (i == certifyingOfficers.length - 1) {
-          for (int col = 0; col <= 12; col++) {
+          for (int col = 1; col <= 13; col++) {
             final cell = sheet.cell(
               CellIndex.indexByColumnRow(
                 columnIndex: col,
@@ -703,7 +1060,7 @@ class RPSEPExcelDocument {
             cell.cellStyle = CellStyle(
               horizontalAlign: HorizontalAlign.Center,
               verticalAlign: VerticalAlign.Center,
-              rightBorder: col == 12
+              rightBorder: col == 13
                   ? Border(
                       borderStyle: BorderStyle.Medium,
                     )
@@ -711,7 +1068,7 @@ class RPSEPExcelDocument {
               bottomBorder: Border(
                 borderStyle: BorderStyle.Medium,
               ),
-              leftBorder: col == 0
+              leftBorder: col == 1
                   ? Border(
                       borderStyle: BorderStyle.Medium,
                     )
@@ -724,7 +1081,7 @@ class RPSEPExcelDocument {
         currentRow += 3;
       }
     } else {
-      for (int col = 0; col <= 12; col++) {
+      for (int col = 1; col <= 13; col++) {
         final cell = sheet.cell(
           CellIndex.indexByColumnRow(
             columnIndex: col,
@@ -734,7 +1091,7 @@ class RPSEPExcelDocument {
         cell.cellStyle = CellStyle(
           horizontalAlign: HorizontalAlign.Center,
           verticalAlign: VerticalAlign.Center,
-          rightBorder: col == 12
+          rightBorder: col == 13
               ? Border(
                   borderStyle: BorderStyle.Medium,
                 )
@@ -742,7 +1099,7 @@ class RPSEPExcelDocument {
           bottomBorder: Border(
             borderStyle: BorderStyle.Medium,
           ),
-          leftBorder: col == 0
+          leftBorder: col == 1
               ? Border(
                   borderStyle: BorderStyle.Medium,
                 )
@@ -753,9 +1110,9 @@ class RPSEPExcelDocument {
 
     // ** Add Approving Entity (Merged Cells with Borders) **
     final startApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: startingRow);
     final endApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: startingRow);
 
     sheet.cell(startApprovingEntityOrAuthorizedRepresentativeCell).value =
         TextCellValue(approvingEntityOrAuthorizedRepresentativeName ??
@@ -769,7 +1126,7 @@ class RPSEPExcelDocument {
       endApprovingEntityOrAuthorizedRepresentativeCell,
     );
 
-    for (int col = 6; col <= 10; col++) {
+    for (int col = 7; col <= 11; col++) {
       final cell = sheet.cell(
           CellIndex.indexByColumnRow(columnIndex: col, rowIndex: startingRow));
       cell.cellStyle = CellStyle(
@@ -780,20 +1137,20 @@ class RPSEPExcelDocument {
 
     final startingApprovingEntityOrAuthorizedRepresentativeTitleCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 6,
+      columnIndex: 7,
       rowIndex: startingRow,
     );
     final endingApprovingEntityOrAuthorizedRepresentativeTitleCell =
         CellIndex.indexByColumnRow(
-      columnIndex: 10,
+      columnIndex: 11,
       rowIndex: startingRow,
     );
 
-    for (int col = 6; col <= 10; col++) {
+    for (int col = 7; col <= 11; col++) {
       final cell = sheet.cell(
         CellIndex.indexByColumnRow(
           columnIndex: col,
-          rowIndex: startingRow + 1,
+          rowIndex: startingRow,
         ),
       );
       cell.cellStyle = footerCellStyle;
@@ -807,7 +1164,7 @@ class RPSEPExcelDocument {
     /// Add Value to COA representative cell
     final coaRepresentativeCell = sheet.cell(
       CellIndex.indexByColumnRow(
-        columnIndex: 11,
+        columnIndex: 12,
         rowIndex: startingRow,
       ),
     );
@@ -822,10 +1179,80 @@ class RPSEPExcelDocument {
     /// Manipulate COA representative title cell
     final coaRepresentativeTitleCell = sheet.cell(
       CellIndex.indexByColumnRow(
-        columnIndex: 11,
+        columnIndex: 12,
         rowIndex: startingRow + 1,
       ),
     );
     coaRepresentativeTitleCell.cellStyle = footerCellStyle;
+
+    /**
+     * Impose left border to the ff. cells
+     * */
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 14,
+            rowIndex: startingRow - 2,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 14,
+            rowIndex: startingRow - 1,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 14,
+            rowIndex: startingRow,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 14,
+            rowIndex: startingRow + 1,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 14,
+            rowIndex: startingRow + 2,
+          ),
+        )
+        .cellStyle = CellStyle(
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    return currentRow;
   }
 }

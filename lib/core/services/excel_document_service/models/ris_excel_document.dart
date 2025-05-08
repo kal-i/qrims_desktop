@@ -81,7 +81,7 @@ class RISExcelDocument {
       rowIndex: 0,
     );
     final endHeaderTopCell = CellIndex.indexByColumnRow(
-      columnIndex: 8,
+      columnIndex: 9,
       rowIndex: 0,
     );
     for (int col = startHeaderTopCell.columnIndex;
@@ -95,39 +95,6 @@ class RISExcelDocument {
       );
       cell.cellStyle = CellStyle(
         topBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.white,
-        ),
-      );
-    }
-
-    final startHeaderRightCell = CellIndex.indexByColumnRow(
-      columnIndex: 8,
-      rowIndex: 0,
-    );
-    final endHeaderRightCell = CellIndex.indexByColumnRow(
-      columnIndex: 8,
-      rowIndex: 12,
-    );
-    for (int row = startHeaderRightCell.rowIndex;
-        row <= endHeaderRightCell.rowIndex;
-        row++) {
-      final cell = sheet.cell(
-        CellIndex.indexByColumnRow(
-          columnIndex: 8,
-          rowIndex: row,
-        ),
-      );
-      cell.cellStyle = CellStyle(
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        topBorder: row == 0
-            ? Border(
-                borderStyle: BorderStyle.Medium,
-                borderColorHex: ExcelColor.white,
-              )
-            : null,
-        rightBorder: Border(
           borderStyle: BorderStyle.Medium,
           borderColorHex: ExcelColor.white,
         ),
@@ -226,13 +193,46 @@ class RISExcelDocument {
       ris.receivedDate != null ? documentDateFormatter(ris.receivedDate!) : '',
     );
 
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 9,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 9,
+      rowIndex: 14 + totalRowsInserted + purposeRows + 9,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 9,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     final startHeaderLeftCell = CellIndex.indexByColumnRow(
       columnIndex: 0,
       rowIndex: 0,
     );
     final endHeaderLeftCell = CellIndex.indexByColumnRow(
       columnIndex: 0,
-      rowIndex: 14 + totalRowsInserted + purposeRows + 8,
+      rowIndex: 14 + totalRowsInserted + purposeRows + 9,
     );
     for (int row = startHeaderLeftCell.rowIndex;
         row <= endHeaderLeftCell.rowIndex;
@@ -250,12 +250,6 @@ class RISExcelDocument {
                 borderColorHex: ExcelColor.white,
               )
             : null,
-        rightBorderVal: row == endHeaderLeftCell.rowIndex
-            ? Border(
-                borderStyle: BorderStyle.Medium,
-                //borderColorHex: ExcelColor.white,
-              )
-            : null,
         bottomBorderVal: row == endHeaderLeftCell.rowIndex
             ? Border(
                 borderStyle: BorderStyle.Medium,
@@ -263,6 +257,42 @@ class RISExcelDocument {
               )
             : null,
         leftBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final headerBottomCellRowIndex = 14 + totalRowsInserted + purposeRows + 9;
+    final startHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    final endHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 9,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    for (int col = startHeaderBottomCell.columnIndex;
+        col <= endHeaderBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: headerBottomCellRowIndex,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: Border(
           borderStyle: BorderStyle.Medium,
           borderColorHex: ExcelColor.white,
         ),
@@ -757,9 +787,10 @@ class RISExcelDocument {
       );
       cell.cellStyle = cellStyle?.copyWith(
         topBorderVal: Border(borderStyle: BorderStyle.Medium),
-        rightBorderVal:
-            col == 2 || col == 3 || col == 4 || col == 5 || col == 7 || col == 8
-                ? Border(borderStyle: BorderStyle.Medium)
+        rightBorderVal: col == 8
+            ? Border(borderStyle: BorderStyle.Medium)
+            : col == 2 || col == 3 || col == 4 || col == 5 || col == 7
+                ? Border(borderStyle: BorderStyle.Thin)
                 : null,
         leftBorderVal:
             col == 1 ? Border(borderStyle: BorderStyle.Medium) : null,
@@ -784,9 +815,10 @@ class RISExcelDocument {
         ),
       );
       cell.cellStyle = cellStyle?.copyWith(
-        rightBorderVal:
-            col == 2 || col == 3 || col == 4 || col == 5 || col == 7 || col == 8
-                ? Border(borderStyle: BorderStyle.Medium)
+        rightBorderVal: col == 8
+            ? Border(borderStyle: BorderStyle.Medium)
+            : col == 2 || col == 3 || col == 4 || col == 5 || col == 7
+                ? Border(borderStyle: BorderStyle.Thin)
                 : null,
         bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
         leftBorderVal:
@@ -890,7 +922,7 @@ class RISExcelDocument {
     requestingOfficerNameCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final requestingOfficerPositionCell = sheet.cell(
@@ -905,7 +937,7 @@ class RISExcelDocument {
     requestingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final requestDateCell = sheet.cell(
@@ -938,7 +970,7 @@ class RISExcelDocument {
     approvingOfficerNameCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final approvingOfficerPositionCell = sheet.cell(
@@ -953,7 +985,7 @@ class RISExcelDocument {
     approvingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final approvedDateCell = sheet.cell(
@@ -986,7 +1018,7 @@ class RISExcelDocument {
     issuingOfficerNameCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final issuingOfficerPositionCell = sheet.cell(
@@ -1001,7 +1033,7 @@ class RISExcelDocument {
     issuingOfficerPositionCell.cellStyle = cellStyle?.copyWith(
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final issuedDateCell = sheet.cell(
@@ -1035,7 +1067,7 @@ class RISExcelDocument {
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       rightBorderVal: Border(borderStyle: BorderStyle.Medium),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final receivingOfficerPositionCell = sheet.cell(
@@ -1051,7 +1083,7 @@ class RISExcelDocument {
       topBorderVal: Border(borderStyle: BorderStyle.Thin),
       rightBorderVal: Border(borderStyle: BorderStyle.Medium),
       bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-      leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+      leftBorderVal: Border(borderStyle: BorderStyle.Thin),
     );
 
     final receivedDateCell = sheet.cell(
@@ -1083,9 +1115,10 @@ class RISExcelDocument {
       );
       cell.cellStyle = cellStyle?.copyWith(
         topBorderVal: Border(borderStyle: BorderStyle.Thin),
-        rightBorderVal:
-            col == 2 || col == 3 || col == 4 || col == 5 || col == 7 || col == 8
-                ? Border(borderStyle: BorderStyle.Medium)
+        rightBorderVal: col == 8
+            ? Border(borderStyle: BorderStyle.Medium)
+            : col == 2 || col == 3 || col == 4 || col == 5 || col == 7
+                ? Border(borderStyle: BorderStyle.Thin)
                 : null,
         bottomBorderVal: Border(
           borderStyle: BorderStyle.Medium,

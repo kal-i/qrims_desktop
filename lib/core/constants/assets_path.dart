@@ -50,11 +50,11 @@ class ImagePath {
 
 class TemplatePath {
   static const String _folder = '$_rootFolder/templates';
-  static const String _xls = '$_folder/xlsx';
-  static const String ics = '$_xls/ics-template.xlsx';
-  static const String par = '$_xls/par-template.xlsx';
-  static const String ris = '$_xls/ris-template.xlsx';
-  static const String rpci = '$_xls/final-rpci-template.xlsx';
-  static const String rpsep = '$_xls/final-rpsep-template.xlsx';
-  static const String rpppe = '$_xls/final-rpppe-template.xlsx';
+  static const String _xlsx = '$_folder/xlsx';
+  static const String ics = '$_xlsx/ics-xlsx-template.xlsx';
+  static const String par = '$_xlsx/par-xlsx-template.xlsx';
+  static const String ris = '$_xlsx/ris-xlsx-template.xlsx';
+  static const String rpci = '$_xlsx/rpci-xlsx-template.xlsx';
+  static const String rpsep = '$_xlsx/rsep-xlsx-template.xlsx';
+  static const String rpppe = '$_xlsx/rppe-xlsx-template.xlsx';
 }

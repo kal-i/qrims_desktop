@@ -20,6 +20,31 @@ class RPCIExcelDocument {
     final certifyingOfficers =
         data['certifying_officers'] as List<Map<String, dynamic>>?;
 
+    final startHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 15,
+      rowIndex: 0,
+    );
+    for (int col = startHeaderTopCell.columnIndex;
+        col <= endHeaderTopCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: 0,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     final asAtDateCell = sheet.cell(
       CellIndex.indexByString(
         'B6',
@@ -32,75 +57,6 @@ class RPCIExcelDocument {
       bold: true,
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
-    );
-
-    final fundClusterCell = sheet.cell(
-      CellIndex.indexByString('B8'),
-    );
-    fundClusterCell.value = TextCellValue(
-      'Fund Cluster: ${data['fund_cluster']}',
-    );
-    fundClusterCell.cellStyle = CellStyle(
-      bold: true,
-    );
-
-    final accountableOfficerCell = sheet.cell(
-      CellIndex.indexByString('B10'),
-    );
-    accountableOfficerCell.value = TextCellValue.span(
-      TextSpan(
-        text: 'For which ',
-        children: [
-          TextSpan(
-            text: accountableOfficer?['name'] != null &&
-                    accountableOfficer!['name']!.isNotEmpty
-                ? '${accountableOfficer['name']}'
-                : '_________________',
-            style: CellStyle(
-              underline: Underline.Single,
-            ),
-          ),
-          const TextSpan(
-            text: ', ',
-          ),
-          TextSpan(
-            text: accountableOfficer?['position'] != null &&
-                    accountableOfficer!['position']!.isNotEmpty
-                ? '${accountableOfficer['position']}'
-                : '_________________',
-            style: CellStyle(
-              underline: Underline.Single,
-            ),
-          ),
-          const TextSpan(
-            text: ', ',
-          ),
-          TextSpan(
-            text: accountableOfficer?['location'] != null &&
-                    accountableOfficer!['location']!.isNotEmpty
-                ? '${accountableOfficer['location']}'
-                : '_________________',
-            style: CellStyle(
-              underline: Underline.Single,
-            ),
-          ),
-          const TextSpan(
-            text: 'is accountable, having assumed such accountability on ',
-          ),
-          TextSpan(
-            text: accountableOfficer?['accountability_date'] != null &&
-                    accountableOfficer!['accountability_date']!.isNotEmpty
-                ? '${accountableOfficer['accountability_date']}'
-                : '_________________',
-            style: CellStyle(
-              underline: Underline.Single,
-            ),
-          ),
-          const TextSpan(
-            text: '.',
-          ),
-        ],
-      ),
     );
 
     // Define the border style
@@ -119,13 +75,196 @@ class RPCIExcelDocument {
     print('total rows inserted: $totalRowsInserted');
 
     int footerStartRow = 14 + totalRowsInserted + 1;
-    _addFooter(
+    final footerRows = _addFooter(
       sheet,
       footerStartRow,
       certifyingOfficers,
       approvingEntityOrAuthorizedRepresentative,
       coaRepresentative,
     );
+
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 15,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 15,
+      rowIndex: footerRows + 1,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 15,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: row >= 1 && row <= 10 ||
+                row >= footerStartRow && row <= footerRows + 1
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+      );
+    }
+
+    final startHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: footerRows + 1,
+    );
+    for (int row = startHeaderLeftCell.rowIndex;
+        row <= endHeaderLeftCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        bottomBorder: row == endHeaderLeftCell.rowIndex
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final headerBottomCellRowIndex = footerRows + 1; // footerStartRow + 7;
+    final startHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    final endHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 15,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    for (int col = startHeaderBottomCell.columnIndex;
+        col <= endHeaderBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: headerBottomCellRowIndex,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final cellStyle = sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 10,
+            rowIndex: footerStartRow + 1,
+          ),
+        )
+        .cellStyle;
+
+    final fundClusterCell = sheet.cell(
+      CellIndex.indexByString('B8'),
+    );
+    fundClusterCell.value = TextCellValue(
+      'Fund Cluster: ${data['fund_cluster']}',
+    );
+    fundClusterCell.cellStyle = cellStyle;
+
+    final accountableOfficerCell = sheet.cell(
+      CellIndex.indexByString('B10'),
+    );
+    accountableOfficerCell.value = TextCellValue.span(
+      TextSpan(
+        style: cellStyle,
+        text: 'For which ',
+        children: [
+          TextSpan(
+            text: accountableOfficer?['name'] != null &&
+                    accountableOfficer!['name']!.isNotEmpty
+                ? '${accountableOfficer['name']}'
+                : '_________________',
+            style: cellStyle,
+          ),
+          const TextSpan(
+            text: ', ',
+          ),
+          TextSpan(
+            text: accountableOfficer?['position'] != null &&
+                    accountableOfficer!['position']!.isNotEmpty
+                ? '${accountableOfficer['position']}'
+                : '_________________',
+            style: cellStyle,
+          ),
+          const TextSpan(
+            text: ', ',
+          ),
+          TextSpan(
+            text: accountableOfficer?['location'] != null &&
+                    accountableOfficer!['location']!.isNotEmpty
+                ? '${accountableOfficer['location']}'
+                : '_________________',
+            style: cellStyle,
+          ),
+          const TextSpan(
+            text: 'is accountable, having assumed such accountability on ',
+          ),
+          TextSpan(
+            text: accountableOfficer?['accountability_date'] != null &&
+                    accountableOfficer!['accountability_date']!.isNotEmpty
+                ? '${accountableOfficer['accountability_date']}'
+                : '_________________',
+            style: cellStyle,
+          ),
+          const TextSpan(
+            text: '.',
+          ),
+        ],
+      ),
+    );
+    accountableOfficerCell.cellStyle = cellStyle;
   }
 
   static void _applyHeadersAndStyles(Sheet sheet, Border borderStyle) {
@@ -329,22 +468,28 @@ class RPCIExcelDocument {
       CellInfo(14, fundCluster),
     ];
 
+    final cellStyle = sheet
+        .cell(
+          CellIndex.indexByString('B5'),
+        )
+        .cellStyle;
+
     for (var cellInfo in cells) {
       final cell = sheet.cell(CellIndex.indexByColumnRow(
           columnIndex: cellInfo.columnIndex, rowIndex: rowIndex));
       cell.value = TextCellValue(cellInfo.value);
-      cell.cellStyle = CellStyle(
-        topBorder: Border(borderStyle: BorderStyle.Thin),
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
-        leftBorder: borderStyle,
-        rightBorder: borderStyle,
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
+      cell.cellStyle = cellStyle?.copyWith(
+        topBorderVal: Border(borderStyle: BorderStyle.Thin),
+        bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
+        leftBorderVal: borderStyle,
+        rightBorderVal: borderStyle,
+        horizontalAlignVal: HorizontalAlign.Center,
+        verticalAlignVal: VerticalAlign.Center,
       );
     }
   }
 
-  static void _addFooter(
+  static int _addFooter(
     Sheet sheet,
     int footerStartRow,
     List<Map<String, dynamic>>? certifyingOfficers,
@@ -353,6 +498,15 @@ class RPCIExcelDocument {
   ) {
     int startingRow = footerStartRow + 3;
     int currentRow = startingRow;
+
+    final cellStyle = sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 1,
+            rowIndex: 4,
+          ),
+        )
+        .cellStyle;
 
     if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
       for (int i = 0; i < certifyingOfficers.length; i++) {
@@ -391,11 +545,7 @@ class RPCIExcelDocument {
         );
         certifyingOfficerNameCell.value =
             TextCellValue(certifyingOfficer['name']);
-        certifyingOfficerNameCell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-          bottomBorder: Border(borderStyle: BorderStyle.Thin),
-        );
+        certifyingOfficerNameCell.cellStyle = cellStyle;
 
         final startingCertifyingOfficerPositionCell = sheet.cell(
           CellIndex.indexByColumnRow(
@@ -430,10 +580,7 @@ class RPCIExcelDocument {
         );
         certifyingOfficerPositionCell.value =
             TextCellValue(certifyingOfficer['position']);
-        certifyingOfficerPositionCell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-        );
+        certifyingOfficerPositionCell.cellStyle = cellStyle;
 
         final startingAllotedCell = sheet.cell(
           CellIndex.indexByColumnRow(
@@ -459,6 +606,7 @@ class RPCIExcelDocument {
           ),
         );
 
+        // Add border at the last row index
         if (i == certifyingOfficers.length - 1) {
           for (int col = 1; col <= 10; col++) {
             final cell = sheet.cell(
@@ -491,6 +639,15 @@ class RPCIExcelDocument {
         currentRow += 3;
       }
     } else {
+      final startingCertifyingOfficerPositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 1,
+          rowIndex: startingRow + 1,
+        ),
+      );
+      startingCertifyingOfficerPositionCell.cellStyle = cellStyle;
+
+      // Add border at the last row index
       for (int col = 1; col <= 10; col++) {
         final cell = sheet.cell(
           CellIndex.indexByColumnRow(
@@ -520,9 +677,15 @@ class RPCIExcelDocument {
 
     // ** Add Approving Entity (Merged Cells with Borders) **
     final startApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(
+      columnIndex: 6,
+      rowIndex: startingRow,
+    );
     final endApprovingEntityOrAuthorizedRepresentativeCell =
-        CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: startingRow);
+        CellIndex.indexByColumnRow(
+      columnIndex: 8,
+      rowIndex: startingRow,
+    );
 
     sheet.cell(startApprovingEntityOrAuthorizedRepresentativeCell).value =
         TextCellValue(approvingEntityOrAuthorizedRepresentativeName ??
@@ -535,20 +698,20 @@ class RPCIExcelDocument {
 
     for (int col = 6; col <= 8; col++) {
       final cell = sheet.cell(
-          CellIndex.indexByColumnRow(columnIndex: col, rowIndex: startingRow));
-      cell.cellStyle = CellStyle(
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startingRow,
+        ),
       );
+      cell.cellStyle = cellStyle;
     }
 
-    final startingApprovingEntityOrAuthorizedRepresentativeTitleCell =
+    final startingApprovingEntityOrAuthorizedRepresentativeTitleCellIndex =
         CellIndex.indexByColumnRow(
       columnIndex: 6,
       rowIndex: startingRow + 1,
     );
-    final endingApprovingEntityOrAuthorizedRepresentativeTitleCell =
+    final endingApprovingEntityOrAuthorizedRepresentativeTitleCellIndex =
         CellIndex.indexByColumnRow(
       columnIndex: 8,
       rowIndex: startingRow + 1,
@@ -561,65 +724,75 @@ class RPCIExcelDocument {
           rowIndex: startingRow + 1,
         ),
       );
-      cell.cellStyle = CellStyle(
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        topBorder: Border(
-          borderStyle: BorderStyle.Thin,
-        ),
-        bottomBorder: Border(
-          borderColorHex: ExcelColor.grey,
-          borderStyle: BorderStyle.Thin,
-        ),
-      );
+      cell.cellStyle = cellStyle;
     }
 
     sheet.merge(
-      startingApprovingEntityOrAuthorizedRepresentativeTitleCell,
-      endingApprovingEntityOrAuthorizedRepresentativeTitleCell,
+      startingApprovingEntityOrAuthorizedRepresentativeTitleCellIndex,
+      endingApprovingEntityOrAuthorizedRepresentativeTitleCellIndex,
     );
+
+    final entityOrAuthorizedRepresentativeTitleCell = sheet.cell(
+      startingApprovingEntityOrAuthorizedRepresentativeTitleCellIndex,
+    );
+    entityOrAuthorizedRepresentativeTitleCell.value = TextCellValue(
+      'Entity or Authorized Representative',
+    );
+    entityOrAuthorizedRepresentativeTitleCell.cellStyle = cellStyle;
 
     // ** Add COA Representative **
     final coaRepresentativeCell = sheet.cell(
-      CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: startingRow),
+      CellIndex.indexByColumnRow(
+        columnIndex: 10,
+        rowIndex: startingRow,
+      ),
     );
     coaRepresentativeCell.value = TextCellValue(
         coaRepresentativeName ?? '_______________________________');
-    coaRepresentativeCell.cellStyle = CellStyle(
-      horizontalAlign: HorizontalAlign.Center,
-      verticalAlign: VerticalAlign.Center,
-      underline: Underline.Single,
-    );
+    coaRepresentativeCell.cellStyle = cellStyle;
 
-    final startingCell = CellIndex.indexByColumnRow(
-      columnIndex: 1,
-      rowIndex: startingRow + 2,
+    final coaRepresentativeTitleCell = sheet.cell(
+      CellIndex.indexByColumnRow(
+        columnIndex: 10,
+        rowIndex: startingRow + 1,
+      ),
     );
-    final endingCell = CellIndex.indexByColumnRow(
-      columnIndex: 10,
-      rowIndex: startingRow + 2,
+    coaRepresentativeTitleCell.value = TextCellValue(
+      'Signature over Printed Name of COA Representative',
     );
+    coaRepresentativeTitleCell.cellStyle = cellStyle;
 
-    for (int col = 1; col <= 10; col++) {
-      final cell = sheet.cell(
-        CellIndex.indexByColumnRow(
-          columnIndex: col,
-          rowIndex: startingRow + 2,
-        ),
-      );
-      cell.cellStyle = CellStyle(
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        bottomBorder: Border(
-          borderColorHex: ExcelColor.grey,
-          borderStyle: BorderStyle.Thin,
-        ),
-      );
-    }
+    return currentRow;
 
-    sheet.merge(
-      startingCell,
-      endingCell,
-    );
+    // final startingCell = CellIndex.indexByColumnRow(
+    //   columnIndex: 1,
+    //   rowIndex: startingRow + 2,
+    // );
+    // final endingCell = CellIndex.indexByColumnRow(
+    //   columnIndex: 10,
+    //   rowIndex: startingRow + 2,
+    // );
+
+    // for (int col = 1; col <= 10; col++) {
+    //   final cell = sheet.cell(
+    //     CellIndex.indexByColumnRow(
+    //       columnIndex: col,
+    //       rowIndex: startingRow + 2,
+    //     ),
+    //   );
+    //   cell.cellStyle = CellStyle(
+    //     horizontalAlign: HorizontalAlign.Center,
+    //     verticalAlign: VerticalAlign.Center,
+    //     bottomBorder: Border(
+    //       borderColorHex: ExcelColor.grey,
+    //       borderStyle: BorderStyle.Thin,
+    //     ),
+    //   );
+    // }
+
+    // sheet.merge(
+    //   startingCell,
+    //   endingCell,
+    // );
   }
 }
