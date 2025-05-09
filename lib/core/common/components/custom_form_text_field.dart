@@ -91,10 +91,16 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
             controller: widget.controller,
             enabled: widget.enabled,
             focusNode: _focusNode,
-            onEditingComplete: () =>
-                FocusScope.of(context).nextFocus(), // grab the next focus
             maxLines: widget.maxLines,
-            keyboardType: keyboardType,
+            keyboardType: widget.maxLines == 1
+                ? TextInputType.text
+                : TextInputType.multiline,
+            textInputAction: widget.maxLines == 1
+                ? TextInputAction.next
+                : TextInputAction.newline,
+            onEditingComplete: widget.maxLines == 1
+                ? () => FocusScope.of(context).nextFocus()
+                : null,
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               filled: true,

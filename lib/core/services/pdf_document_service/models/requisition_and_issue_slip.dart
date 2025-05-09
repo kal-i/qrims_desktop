@@ -12,6 +12,7 @@ import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
+import '../../../utils/group_specification_by_section.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -176,10 +177,12 @@ class RequisitionAndIssueSlip implements BaseDocument {
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll([
-          'Specifications:',
-          ...extractSpecification(specification, ','),
-        ]);
+        descriptionColumn.addAll(groupSpecificationBySection(specification));
+
+        // descriptionColumn.addAll([
+        //   'Specifications:',
+        //   ...extractSpecification(specification, ','),
+        // ]);
       }
 
       if (itemEntity is InventoryItemEntity) {

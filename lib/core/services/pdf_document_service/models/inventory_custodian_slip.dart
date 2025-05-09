@@ -7,10 +7,10 @@ import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
+import '../../../utils/group_specification_by_section.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -137,10 +137,11 @@ class InventoryCustodianSlip implements BaseDocument {
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll([
-          'Specifications:',
-          ...extractSpecification(specification, ','),
-        ]);
+        descriptionColumn.addAll(groupSpecificationBySection(specification));
+        // descriptionColumn.addAll([
+        //   'Specifications:',
+        //   ...extractSpecification(specification, ':'),
+        // ]);
       }
 
       if (itemEntity is InventoryItemEntity) {
@@ -266,9 +267,9 @@ class InventoryCustodianSlip implements BaseDocument {
           DocumentComponents.buildRowTextValue(
             text: 'Entity Name:',
             value: purchaseRequestEntity != null
-                ? capitalizeWord(purchaseRequestEntity.entity.name)
+                ? purchaseRequestEntity.entity.name.toUpperCase()
                 : ics.entity != null
-                    ? capitalizeWord(ics.entity?.name ?? '\n')
+                    ? ics.entity?.name.toUpperCase() ?? '\n'
                     : '\n',
           ),
           pw.SizedBox(height: 3.0),
@@ -366,45 +367,4 @@ class InventoryCustodianSlip implements BaseDocument {
       rowHeight: 13.0,
     );
   }
-}
-
-class CompressedItemKey {
-  final String description;
-  final String specification;
-  final String unit;
-  final double unitCost;
-  final String? brand;
-  final String? model;
-  final int? estimatedUsefulLife;
-
-  CompressedItemKey({
-    required this.description,
-    required this.specification,
-    required this.unit,
-    required this.unitCost,
-    this.brand,
-    this.model,
-    this.estimatedUsefulLife,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      other is CompressedItemKey &&
-      other.description == description &&
-      other.specification == specification &&
-      other.unit == unit &&
-      other.unitCost == unitCost &&
-      other.brand == brand &&
-      other.model == model &&
-      other.estimatedUsefulLife == estimatedUsefulLife;
-
-  @override
-  int get hashCode =>
-      description.hashCode ^
-      specification.hashCode ^
-      unit.hashCode ^
-      unitCost.hashCode ^
-      (brand?.hashCode ?? 0) ^
-      (model?.hashCode ?? 0) ^
-      (estimatedUsefulLife?.hashCode ?? 0);
 }

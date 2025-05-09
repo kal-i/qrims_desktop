@@ -250,8 +250,8 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               icon: Icons.check_circle_outline,
               title: 'Success',
               subtitle: itemCount > 1
-                  ? '$itemCount equipment items registered successfully.'
-                  : 'Equipment item registered successfully.',
+                  ? '$itemCount inventory items registered successfully.'
+                  : 'Inventory item registered successfully.',
             );
             await Future.delayed(const Duration(seconds: 3));
             context.pop();

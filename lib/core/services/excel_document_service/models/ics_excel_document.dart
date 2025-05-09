@@ -10,6 +10,7 @@ import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
+import '../../../utils/group_specification_by_section.dart';
 import '../../../utils/readable_enum_converter.dart';
 import 'cell_info.dart';
 import 'header_info.dart';
@@ -74,8 +75,8 @@ class ICSExcelDocument {
     );
     entityCell.value = TextCellValue(
       ics.purchaseRequestEntity != null
-          ? capitalizeWord(ics.purchaseRequestEntity!.entity.name)
-          : capitalizeWord(ics.entity?.name ?? ''),
+          ? ics.purchaseRequestEntity!.entity.name.toUpperCase()
+          : ics.entity?.name.toUpperCase() ?? '',
     );
     entityCell.cellStyle = generalCellStyle;
 
@@ -330,10 +331,11 @@ class ICSExcelDocument {
 
       final specification = shareableItemInformationEntity.specification;
       if (specification != null && specification.isNotEmpty) {
-        descriptionColumn.addAll([
-          'Specifications:',
-          ...extractSpecification(specification, ','),
-        ]);
+        descriptionColumn.addAll(groupSpecificationBySection(specification));
+        // descriptionColumn.addAll([
+        //   'Specifications:',
+        //   ...extractSpecification(specification, ','),
+        // ]);
       }
 
       if (itemEntity is InventoryItemEntity) {
@@ -376,14 +378,11 @@ class ICSExcelDocument {
       final dataCellStyle = cellStyle?.copyWith(
         horizontalAlignVal: HorizontalAlign.Center,
         verticalAlignVal: VerticalAlign.Center,
-        topBorderVal: i == 1
-            ? Border(borderStyle: BorderStyle.Medium)
-            : Border(borderStyle: BorderStyle.Thin),
+        topBorderVal: Border(borderStyle: BorderStyle.Thin),
         rightBorderVal: Border(borderStyle: BorderStyle.Medium),
-        bottomBorderVal: i == 0
-            ? Border(borderStyle: BorderStyle.Medium)
-            : Border(borderStyle: BorderStyle.Thin),
+        bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
         leftBorderVal: Border(borderStyle: BorderStyle.Medium),
+        textWrappingVal: TextWrapping.WrapText,
       );
 
       for (int j = 0; j < descriptionColumn.length; j++) {
@@ -543,15 +542,7 @@ class ICSExcelDocument {
       );
       cell.value = TextCellValue(cellInfo.value);
 
-      cell.cellStyle = cellStyle?.copyWith(
-        horizontalAlignVal: HorizontalAlign.Center,
-        verticalAlignVal: VerticalAlign.Center,
-        topBorderVal: Border(borderStyle: BorderStyle.Thin),
-        rightBorderVal: Border(borderStyle: BorderStyle.Medium),
-        bottomBorderVal: Border(borderStyle: BorderStyle.Thin),
-        leftBorderVal: Border(borderStyle: BorderStyle.Medium),
-        textWrappingVal: TextWrapping.WrapText,
-      );
+      cell.cellStyle = cellStyle;
     }
   }
 
