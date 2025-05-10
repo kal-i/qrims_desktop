@@ -301,16 +301,24 @@ class InventoryCustodianSlip extends Issuance {
     super.status,
     super.isArchived,
     this.supplier,
+    this.deliveryReceiptId,
+    this.prReferenceId,
+    this.inventoryTransferReportId,
     this.inspectionAndAcceptanceReportId,
     this.contractNumber,
     this.purchaseOrderNumber,
+    this.dateAcquired,
   });
 
   final String icsId;
   final Supplier? supplier;
+  final String? deliveryReceiptId;
+  final String? prReferenceId; // no actual obj save on sys
+  final String? inventoryTransferReportId;
   final String? inspectionAndAcceptanceReportId;
   final String? contractNumber;
   final String? purchaseOrderNumber;
+  final DateTime? dateAcquired;
 
   factory InventoryCustodianSlip.fromJson(Map<String, dynamic> json) {
     print('received raw json by ics: $json');
@@ -574,10 +582,18 @@ class InventoryCustodianSlip extends Issuance {
       entity: entity, // done
       fundCluster: fundCluster,
       supplier: supplier,
+      deliveryReceiptId: json['delivery_receipt_id'] as String?,
+      prReferenceId: json['pr_reference_id'] as String?,
+      inventoryTransferReportId:
+          json['inventory_transfer_report_id'] as String?,
       inspectionAndAcceptanceReportId:
           json['inspection_and_acceptance_report_id'] as String?,
       contractNumber: json['contract_number'] as String?,
       purchaseOrderNumber: json['purchase_order_number'] as String?,
+      dateAcquired:
+          json['date_acquired'] != null && json['date_acquired'] is String
+              ? DateTime.tryParse(json['date_acquired'] as String)
+              : json['date_acquired'] as DateTime?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
       receivedDate:
@@ -606,9 +622,13 @@ class InventoryCustodianSlip extends Issuance {
       'entity': entity?.toJson(),
       'fund_cluster': fundCluster.toString().split('.').last,
       'supplier': supplier?.toJson(),
+      'delivery_receipt_id': deliveryReceiptId,
+      'pr_reference_id': prReferenceId,
+      'inventory_transfer_report_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_number': purchaseOrderNumber,
+      'date_acquired': dateAcquired,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
       'received_date': receivedDate?.toIso8601String(),
@@ -638,16 +658,24 @@ class PropertyAcknowledgementReceipt extends Issuance {
     super.status,
     super.isArchived,
     this.supplier,
+    this.deliveryReceiptId,
+    this.prReferenceId,
+    this.inventoryTransferReportId,
     this.inspectionAndAcceptanceReportId,
     this.contractNumber,
     this.purchaseOrderNumber,
+    this.dateAcquired,
   });
 
   final String parId;
   final Supplier? supplier;
+  final String? deliveryReceiptId;
+  final String? prReferenceId; // no actual obj save on sys
+  final String? inventoryTransferReportId;
   final String? inspectionAndAcceptanceReportId;
   final String? contractNumber;
   final String? purchaseOrderNumber;
+  final DateTime? dateAcquired;
 
   factory PropertyAcknowledgementReceipt.fromJson(Map<String, dynamic> json) {
     Entity? entity;
@@ -891,10 +919,18 @@ class PropertyAcknowledgementReceipt extends Issuance {
             json['fund_cluster'].toString().split('.').last,
       ),
       supplier: supplier,
+      deliveryReceiptId: json['delivery_receipt_id'] as String?,
+      prReferenceId: json['pr_reference_id'] as String?,
+      inventoryTransferReportId:
+          json['inventory_transfer_report_id'] as String?,
       inspectionAndAcceptanceReportId:
           json['inspection_and_acceptance_report_id'] as String?,
       contractNumber: json['contract_number'] as String?,
       purchaseOrderNumber: json['purchase_order_number'] as String?,
+      dateAcquired:
+          json['date_acquired'] != null && json['date_acquired'] is String
+              ? DateTime.tryParse(json['date_acquired'] as String)
+              : json['date_acquired'] as DateTime?,
       receivingOfficer: receivingOfficer,
       issuingOfficer: issuingOfficer,
       receivedDate:
@@ -922,9 +958,13 @@ class PropertyAcknowledgementReceipt extends Issuance {
       'entity': entity?.toJson(),
       'fund_cluster': fundCluster.toString().split('.').last,
       'supplier': supplier?.toJson(),
+      'delivery_receipt_id': deliveryReceiptId,
+      'pr_reference_id': prReferenceId,
+      'inventory_transfer_report_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_number': purchaseOrderNumber,
+      'date_acquired': dateAcquired,
       'receiving_officer': receivingOfficer?.toJson(),
       'issuing_officer': issuingOfficer?.toJson(),
       'received_date': receivedDate?.toIso8601String(),
