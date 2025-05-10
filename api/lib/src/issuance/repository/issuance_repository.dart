@@ -102,74 +102,138 @@ class IssuanceRepository {
   //   return uniqueId;
   // }
 
+  // Future<String> _generateUniqueIcsId({
+  //   IcsType? type,
+  //   FundCluster? fundCluster,
+  //   required DateTime issuedDate,
+  // }) async {
+  //   final yearMonth =
+  //       "${issuedDate.year}-${issuedDate.month.toString().padLeft(2, '0')}";
+
+  //   // Start building the LIKE pattern for the query
+  //   String likePattern = '%$yearMonth-%';
+
+  //   // If fundCluster is provided, include it in the pattern
+  //   if (fundCluster != null) {
+  //     likePattern =
+  //         '%${issuedDate.year}(${fundCluster.value})-${issuedDate.month.toString().padLeft(2, '0')}-%';
+  //   }
+
+  //   // Fetch all IDs for the given year, month, and fund cluster
+  //   final result = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //   SELECT id FROM InventoryCustodianSlips
+  //   WHERE id LIKE @likePattern
+  //   ORDER BY id DESC;
+  //   ''',
+  //     ),
+  //     parameters: {
+  //       'likePattern': likePattern,
+  //     },
+  //   );
+
+  //   int maxN = 0; // Track the maximum sequence number
+
+  //   if (result.isNotEmpty) {
+  //     for (final row in result) {
+  //       final id = row[0].toString();
+  //       // Extract the sequence number (NNN) from the ID
+  //       final parts = id.split('-');
+  //       if (parts.length >= 4) {
+  //         // Changed from 3 to 4 to match your ID structure
+  //         final lastPart = parts.last;
+  //         final currentN = int.tryParse(lastPart) ?? 0;
+  //         if (currentN > maxN) {
+  //           maxN = currentN; // Update the maximum sequence number
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   // Increment the maximum sequence number
+  //   final n = maxN + 1;
+
+  //   String uniqueId = '';
+
+  //   // Add type prefix if type exists
+  //   if (type != null) {
+  //     uniqueId += '${type == IcsType.sphv ? 'SPHV' : 'SPLV'}-';
+  //   }
+
+  //   // Add year and fund cluster if fund cluster exists
+  //   uniqueId += '${issuedDate.year}';
+  //   if (fundCluster != null) {
+  //     uniqueId += '(${fundCluster.value})';
+  //   }
+
+  //   // Add month and sequence number
+  //   uniqueId +=
+  //       '-${issuedDate.month.toString().padLeft(2, '0')}-${n.toString().padLeft(3, '0')}';
+
+  //   print('Generated ICS ID: $uniqueId');
+  //   return uniqueId;
+  // }
+
   Future<String> _generateUniqueIcsId({
     IcsType? type,
     FundCluster? fundCluster,
     required DateTime issuedDate,
   }) async {
-    final yearMonth =
-        "${issuedDate.year}-${issuedDate.month.toString().padLeft(2, '0')}";
+    final year = issuedDate.year;
+    final month = issuedDate.month.toString().padLeft(2, '0');
 
-    // Start building the LIKE pattern for the query
-    String likePattern = '%$yearMonth-%';
+    // LIKE pattern to match all IDs for the given year, regardless of fund cluster
+    final likePattern = '%$year-%';
 
-    // If fundCluster is provided, include it in the pattern
-    if (fundCluster != null) {
-      likePattern =
-          '%${issuedDate.year}(${fundCluster.value})-${issuedDate.month.toString().padLeft(2, '0')}-%';
-    }
-
-    // Fetch all IDs for the given year, month, and fund cluster
+    // Fetch all matching IDs
     final result = await _conn.execute(
       Sql.named(
         '''
-    SELECT id FROM InventoryCustodianSlips
-    WHERE id LIKE @likePattern
-    ORDER BY id DESC;
-    ''',
+      SELECT id FROM InventoryCustodianSlips
+      WHERE id LIKE @likePattern
+      ORDER BY id DESC;
+      ''',
       ),
       parameters: {
         'likePattern': likePattern,
       },
     );
 
-    int maxN = 0; // Track the maximum sequence number
+    int maxN = 0;
 
     if (result.isNotEmpty) {
       for (final row in result) {
         final id = row[0].toString();
-        // Extract the sequence number (NNN) from the ID
         final parts = id.split('-');
-        if (parts.length >= 4) {
-          // Changed from 3 to 4 to match your ID structure
+        if (parts.length >= 3) {
           final lastPart = parts.last;
           final currentN = int.tryParse(lastPart) ?? 0;
           if (currentN > maxN) {
-            maxN = currentN; // Update the maximum sequence number
+            maxN = currentN;
           }
         }
       }
     }
 
-    // Increment the maximum sequence number
     final n = maxN + 1;
-
     String uniqueId = '';
 
-    // Add type prefix if type exists
+    // Add type prefix
     if (type != null) {
       uniqueId += '${type == IcsType.sphv ? 'SPHV' : 'SPLV'}-';
     }
 
-    // Add year and fund cluster if fund cluster exists
-    uniqueId += '${issuedDate.year}';
+    // Add year
+    uniqueId += '$year';
+
+    // Include fund cluster if present
     if (fundCluster != null) {
       uniqueId += '(${fundCluster.value})';
     }
 
-    // Add month and sequence number
-    uniqueId +=
-        '-${issuedDate.month.toString().padLeft(2, '0')}-${n.toString().padLeft(3, '0')}';
+    // Add month and padded sequence number
+    uniqueId += '-$month-${n.toString().padLeft(3, '0')}';
 
     print('Generated ICS ID: $uniqueId');
     return uniqueId;

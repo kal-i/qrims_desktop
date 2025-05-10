@@ -84,7 +84,7 @@ Future<Response> _getItems(
     );
 
     final suppliesCount = await repository.getSuppliesCount();
-    final equipmentCount = await repository.getInventoryItemCount();
+    final inventoryCount = await repository.getInventoryItemCount();
     final outOfStockCount = await repository.getOutOfStocksCount();
 
     final itemJsonList = itemList
@@ -102,7 +102,7 @@ Future<Response> _getItems(
       body: {
         'total_item_count': filteredItemsCount,
         'supplies_count': suppliesCount,
-        'inventory_count': equipmentCount,
+        'inventory_count': inventoryCount,
         'out_of_stock_count': outOfStockCount,
         'items': itemJsonList,
       },

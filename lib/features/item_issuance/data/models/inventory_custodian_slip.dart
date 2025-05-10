@@ -3,7 +3,6 @@ import '../../../../core/enums/issuance_status.dart';
 import '../../../officer/data/models/officer.dart';
 import '../../../purchase_request/data/models/purchase_request.dart';
 import '../../domain/entities/inventory_custodian_slip.dart';
-import 'batch_item.dart';
 import 'issuance.dart';
 import 'issuance_item.dart';
 import 'supplier.dart';

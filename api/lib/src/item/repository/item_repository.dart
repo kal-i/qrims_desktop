@@ -22,6 +22,7 @@ class ItemRepository {
     final now = DateTime.now();
     final dateToUse = acquiredDate ?? now;
     final year = dateToUse.year;
+    final month = dateToUse.month.toString().padLeft(2, '0');
 
     // Format item name (e.g., "Office Chair" → "OfficeChair")
     final formattedItemName = itemName
@@ -29,30 +30,23 @@ class ItemRepository {
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join('');
 
-    // Prepare fund cluster string for matching and formatting
-    final fcStr = fundCluster != null ? '(${fundCluster.value})' : '';
-
-    // Query the latest entry for this item/year (regardless of month/fund cluster)
-    final latestEntryResult = await conn.execute(
+    // NNN: Count items for the same year
+    final latestYearlyResult = await conn.execute(
       Sql.named('''
       SELECT id FROM Items
-      WHERE id ILIKE @item_name || '-' || @year || 
-            CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END || 
-            '-%'
+      WHERE id ILIKE @item_name || '-' || @year || '%'
       ORDER BY id DESC
       LIMIT 1;
       '''),
       parameters: {
         'item_name': formattedItemName,
         'year': year.toString(),
-        'fundCluster': fundCluster?.value ?? '',
       },
     );
 
-    // Determine NNN
     int cumulativeCount;
-    if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
-      final latestId = latestEntryResult.first[0].toString();
+    if (latestYearlyResult.isNotEmpty && latestYearlyResult.first[0] != null) {
+      final latestId = latestYearlyResult.first[0].toString();
       final countMatch = RegExp(r'-(\d{3})\(').firstMatch(latestId);
       cumulativeCount =
           countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
@@ -60,10 +54,25 @@ class ItemRepository {
       cumulativeCount = 1;
     }
 
-    // Determine (N) for duplicates
+    // (N): Count items for the same date
+    final dailyDate = dateToUse.toIso8601String().split('T').first;
+
+    final latestDailyResult = await conn.execute(
+      Sql.named('''
+      SELECT id FROM Items
+      WHERE id ILIKE @item_name || '-%' AND DATE(acquired_date) = @daily_date
+      ORDER BY id DESC
+      LIMIT 1;
+      '''),
+      parameters: {
+        'item_name': formattedItemName,
+        'daily_date': dailyDate,
+      },
+    );
+
     int itemSpecificCount;
-    if (latestEntryResult.isNotEmpty && latestEntryResult.first[0] != null) {
-      final latestId = latestEntryResult.first[0].toString();
+    if (latestDailyResult.isNotEmpty && latestDailyResult.first[0] != null) {
+      final latestId = latestDailyResult.first[0].toString();
       final countMatch = RegExp(r'\((\d+)\)$').firstMatch(latestId);
       itemSpecificCount =
           countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
@@ -71,10 +80,10 @@ class ItemRepository {
       itemSpecificCount = 1;
     }
 
-    // Construct the final ID (NNN resets yearly)
+    // Construct the unique item ID
     final uniqueId = fundCluster != null
-        ? '$formattedItemName-$year$fcStr-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
-        : '$formattedItemName-$year-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+        ? '$formattedItemName-$year(${fundCluster.value})-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
+        : '$formattedItemName-$year-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
 
     return uniqueId;
   }
@@ -101,13 +110,13 @@ class ItemRepository {
   //   final latestEntryResult = await conn.execute(
   //     Sql.named(
   //       '''
-  //       SELECT id FROM Items
-  //       WHERE id ILIKE @item_name || '-' || @year ||
-  //             CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END ||
-  //             '-' || @month || '-%'
-  //       ORDER BY id DESC
-  //       LIMIT 1;
-  //       ''',
+  //     SELECT id FROM Items
+  //     WHERE id ILIKE @item_name || '-' || @year ||
+  //           CASE WHEN @fundCluster != '' THEN '(' || @fundCluster || ')' ELSE '' END ||
+  //           '-' || @month || '-%'
+  //     ORDER BY id DESC
+  //     LIMIT 1;
+  //     ''',
   //     ),
   //     parameters: {
   //       'item_name': formattedItemName,
@@ -2728,21 +2737,26 @@ class ItemRepository {
     final result = await _conn.execute(
       Sql.named(
         '''
-      SELECT
-          CASE
-              WHEN s.id IS NOT NULL THEN 'Supply'
-              WHEN inv.id IS NOT NULL THEN 'Inventory'
-              ELSE 'Unknown'
-          END AS item_type,
-          SUM(i.quantity) AS total_stock
-      FROM
-          items i
-      LEFT JOIN
-          supplies s ON i.id = s.base_item_id
-      LEFT JOIN
-          inventoryitems inv ON i.id = inv.base_item_id
-      GROUP BY
-          item_type;
+        SELECT
+            CASE
+                WHEN s.id IS NOT NULL THEN 'Supply'
+                WHEN inv.id IS NOT NULL THEN 'Inventory'
+                ELSE 'Unknown'
+            END AS item_type,
+            COUNT(i.id) AS item_count,
+            SUM(COALESCE(i.quantity, 0)) AS total_stock
+        FROM
+            items i
+        LEFT JOIN
+            supplies s ON i.id = s.base_item_id
+        LEFT JOIN
+            inventoryitems inv ON i.id = inv.base_item_id
+        GROUP BY
+            CASE
+                WHEN s.id IS NOT NULL THEN 'Supply'
+                WHEN inv.id IS NOT NULL THEN 'Inventory'
+                ELSE 'Unknown'
+            END;
       ''',
       ),
     );

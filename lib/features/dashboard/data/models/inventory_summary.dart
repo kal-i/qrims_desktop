@@ -14,39 +14,36 @@ class InventorySummaryModel extends InventorySummaryEntity {
   });
 
   factory InventorySummaryModel.fromJson(Map<String, dynamic> json) {
-    // Debugging: Print the received JSON
     print('json received by inv summ model:\n\n$json');
 
-    // Extract weekly trends
-    final supplyWeeklyTrends = (json['weekly_trends']['supply_trends'] as List)
+    final weeklyTrends = json['weekly_trends'] as Map<String, dynamic>? ?? {};
+
+    final supplyWeeklyTrends = (weeklyTrends['supply_trends'] as List? ?? [])
         .map((e) => WeeklyItemTrendModel.fromJson(e))
         .toList();
 
     final inventoryWeeklyTrends =
-        (json['weekly_trends']['inventory_trends'] as List)
+        (weeklyTrends['inventory_trends'] as List? ?? [])
             .map((e) => WeeklyItemTrendModel.fromJson(e))
             .toList();
 
-    // Extract inventory stocks
-    final inventoryStocks = (json['stock_levels'] as List)
+    final inventoryStocks = (json['stock_levels'] as List? ?? [])
         .map((e) => InventoryStockModel.fromJson(e))
         .toList();
 
-    // Debugging: Print converted inventory stocks
     print('converted inventory stocks: $inventoryStocks');
 
-    // Create and return the InventorySummaryModel
     return InventorySummaryModel(
       supplyWeeklyTrendEntities: supplyWeeklyTrends,
       inventoryWeeklyTrendEntities: inventoryWeeklyTrends,
       inventoryStocks: inventoryStocks,
       supplyPercentageChange:
-          (json['weekly_trends']['supply_percentage_change'] as num).toDouble(),
+          (weeklyTrends['supply_percentage_change'] as num?)?.toDouble() ?? 0.0,
       inventoryPercentageChange:
-          (json['weekly_trends']['inventory_percentage_change'] as num)
-              .toDouble(),
-      suppliesCount: json['supplies_count'] as int,
-      inventoryCount: json['inventory_count'] as int,
+          (weeklyTrends['inventory_percentage_change'] as num?)?.toDouble() ??
+              0.0,
+      suppliesCount: json['supplies_count'] as int? ?? 0,
+      inventoryCount: json['inventory_count'] as int? ?? 0,
     );
   }
 }
