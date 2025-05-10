@@ -241,67 +241,133 @@ class IssuanceRepository {
 
   Future<String> _generateUniqueParId() async {
     final now = DateTime.now();
-    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+    final year = now.year.toString();
+    final month = now.month.toString().padLeft(2, '0');
 
-    print('Current year-month for PAR ID: $yearMonth');
+    print('Current year for PAR ID: $year');
 
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT id FROM PropertyAcknowledgementReceipts
-        WHERE id LIKE @year_month || '-%'
-        ORDER BY id DESC 
-        LIMIT 1;
-        ''',
+      SELECT id FROM PropertyAcknowledgementReceipts
+      WHERE id LIKE @year || '-%'
+      ORDER BY id DESC 
+      LIMIT 1;
+      ''',
       ),
       parameters: {
-        'year_month': yearMonth,
+        'year': year,
       },
     );
 
-    int? n; // represent the no. of record
+    int n;
     if (result.isNotEmpty) {
       n = int.parse(result.first[0].toString().split('-').last) + 1;
     } else {
       n = 1;
     }
 
-    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+    final uniqueId = '$year-$month-${n.toString().padLeft(3, '0')}';
     print('Generated PAR ID: $uniqueId');
     return uniqueId;
   }
 
+  // Future<String> _generateUniqueParId() async {
+  //   final now = DateTime.now();
+  //   final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+  //   print('Current year-month for PAR ID: $yearMonth');
+
+  //   final result = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //       SELECT id FROM PropertyAcknowledgementReceipts
+  //       WHERE id LIKE @year_month || '-%'
+  //       ORDER BY id DESC
+  //       LIMIT 1;
+  //       ''',
+  //     ),
+  //     parameters: {
+  //       'year_month': yearMonth,
+  //     },
+  //   );
+
+  //   int? n; // represent the no. of record
+  //   if (result.isNotEmpty) {
+  //     n = int.parse(result.first[0].toString().split('-').last) + 1;
+  //   } else {
+  //     n = 1;
+  //   }
+
+  //   final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+  //   print('Generated PAR ID: $uniqueId');
+  //   return uniqueId;
+  // }
+
   Future<String> _generateUniqueRisId() async {
     final now = DateTime.now();
-    final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+    final year = now.year.toString();
+    final month = now.month.toString().padLeft(2, '0');
 
-    print('Current year-month for RIS ID: $yearMonth');
+    print('Current year for RIS ID: $year');
 
     final result = await _conn.execute(
       Sql.named(
         '''
-        SELECT id FROM RequisitionAndIssueSlips
-        WHERE id LIKE @year_month || '-%'
-        ORDER BY id DESC 
-        LIMIT 1;
-        ''',
+      SELECT id FROM RequisitionAndIssueSlips
+      WHERE id LIKE @year || '-%'
+      ORDER BY id DESC 
+      LIMIT 1;
+      ''',
       ),
       parameters: {
-        'year_month': yearMonth,
+        'year': year,
       },
     );
 
-    int? n; // represent the no. of record
+    int n;
     if (result.isNotEmpty) {
       n = int.parse(result.first[0].toString().split('-').last) + 1;
     } else {
       n = 1;
     }
 
-    final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+    final uniqueId = '$year-$month-${n.toString().padLeft(3, '0')}';
     print('Generated RIS ID: $uniqueId');
     return uniqueId;
   }
+
+  // Future<String> _generateUniqueRisId() async {
+  //   final now = DateTime.now();
+  //   final yearMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+
+  //   print('Current year-month for RIS ID: $yearMonth');
+
+  //   final result = await _conn.execute(
+  //     Sql.named(
+  //       '''
+  //       SELECT id FROM RequisitionAndIssueSlips
+  //       WHERE id LIKE @year_month || '-%'
+  //       ORDER BY id DESC
+  //       LIMIT 1;
+  //       ''',
+  //     ),
+  //     parameters: {
+  //       'year_month': yearMonth,
+  //     },
+  //   );
+
+  //   int? n; // represent the no. of record
+  //   if (result.isNotEmpty) {
+  //     n = int.parse(result.first[0].toString().split('-').last) + 1;
+  //   } else {
+  //     n = 1;
+  //   }
+
+  //   final uniqueId = '$yearMonth-${n.toString().padLeft(3, '0')}';
+  //   print('Generated RIS ID: $uniqueId');
+  //   return uniqueId;
+  // }
 
   Future<List<IssuanceItem>> _getIssuanceItems({
     required String issuanceId,
