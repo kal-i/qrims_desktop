@@ -68,6 +68,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   final _purposeController = TextEditingController();
 
   final _supplierNameController = TextEditingController();
+  final _deliveryReceiptIdController = TextEditingController();
+  final _prReferenceIdController = TextEditingController();
+  final _inventoryTransferReportIdController = TextEditingController();
   final _inspectionAndAcceptanceReportIdController = TextEditingController();
   final _contractNumberController = TextEditingController();
   final _purchaseOrderNumberController = TextEditingController();
@@ -106,7 +109,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       ValueNotifier(null);
   final ValueNotifier<String?> _selectedRequestingOfficerPosition =
       ValueNotifier(null);
+
   final ValueNotifier<DateTime> _pickedDate = ValueNotifier(DateTime.now());
+  final ValueNotifier<DateTime?> _dateAcquired = ValueNotifier(null);
 
   final ValueNotifier<List<Map<String, dynamic>>> _items = ValueNotifier([]);
 
@@ -280,10 +285,15 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value,
               supplierName: _supplierNameController.text,
+              deliveryReceiptId: _deliveryReceiptIdController.text,
+              prReferenceId: _prReferenceIdController.text,
+              inventoryTransferReportId:
+                  _inventoryTransferReportIdController.text,
               inspectionAndAcceptanceReportId:
                   _inspectionAndAcceptanceReportIdController.text,
               contractNumber: _contractNumberController.text,
               purchaseOrderNumber: _purchaseOrderNumberController.text,
+              dateAcquired: _dateAcquired.value,
               receivingOfficerOffice:
                   _receivingOfficerOfficeNameController.text,
               receivingOfficerPosition:
@@ -306,10 +316,15 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               entityName: _entityNameController.text,
               fundCluster: _selectedFundCluster.value,
               supplierName: _supplierNameController.text,
+              deliveryReceiptId: _deliveryReceiptIdController.text,
+              prReferenceId: _prReferenceIdController.text,
+              inventoryTransferReportId:
+                  _inventoryTransferReportIdController.text,
               inspectionAndAcceptanceReportId:
                   _inspectionAndAcceptanceReportIdController.text,
               contractNumber: _contractNumberController.text,
               purchaseOrderNumber: _purchaseOrderNumberController.text,
+              dateAcquired: _dateAcquired.value,
               receivingOfficerOffice:
                   _receivingOfficerOfficeNameController.text,
               receivingOfficerPosition:
@@ -380,6 +395,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     _purposeController.dispose();
 
     _supplierNameController.dispose();
+    _deliveryReceiptIdController.dispose();
+    _prReferenceIdController.dispose();
+    _inventoryTransferReportIdController.dispose();
     _inspectionAndAcceptanceReportIdController.dispose();
     _contractNumberController.dispose();
     _purchaseOrderNumberController.dispose();
@@ -412,6 +430,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
     _selectedIssuingOfficerPosition.dispose();
 
     _pickedDate.dispose();
+    _dateAcquired.dispose();
 
     super.dispose();
   }
@@ -1288,10 +1307,34 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               width: 20.0,
             ),
             Expanded(
+              child: _buildDateAcquiredSelection(),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            Expanded(
               child: CustomFormTextField(
                 controller: _inspectionAndAcceptanceReportIdController,
-                label: 'Inspection and Acceptance Report ID',
-                placeholderText: 'Enter inspection and acceptance report ID',
+                label: 'Delivery Receipt ID',
+                placeholderText: 'Enter delivery receipt ID',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+                hasValidation: false,
+              ),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: CustomFormTextField(
+                controller: _contractNumberController,
+                label: 'Contract Number',
+                placeholderText: 'Enter contract number',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
@@ -1308,8 +1351,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             Expanded(
               child: CustomFormTextField(
                 controller: _contractNumberController,
-                label: 'Contract Number',
-                placeholderText: 'Enter contract number',
+                label: 'Purchase Request Number',
+                placeholderText: 'Enter purchase request number',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
@@ -1324,6 +1367,38 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 controller: _purchaseOrderNumberController,
                 label: 'Purchase Order Number',
                 placeholderText: 'Enter purchase order number',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+                hasValidation: false,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: CustomFormTextField(
+                controller: _supplierNameController,
+                label: 'Inventory Transfer Report ID',
+                placeholderText: 'Enter inventory transfer report ID',
+                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+                    ? AppColor.lightCustomTextBox
+                    : AppColor.darkCustomTextBox),
+                hasValidation: false,
+              ),
+            ),
+            const SizedBox(
+              width: 20.0,
+            ),
+            Expanded(
+              child: CustomFormTextField(
+                controller: _inspectionAndAcceptanceReportIdController,
+                label: 'Inspection and Acceptance Report ID',
+                placeholderText: 'Enter inspection and acceptance report ID',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
                     : AppColor.darkCustomTextBox),
@@ -1929,6 +2004,30 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               hasValidation: false,
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildDateAcquiredSelection() {
+    return ValueListenableBuilder(
+      valueListenable: _dateAcquired,
+      builder: (context, dateAcquired, child) {
+        final dateController = TextEditingController(
+          text: dateAcquired != null ? dateFormatter(dateAcquired) : '',
+        );
+
+        return CustomDatePicker(
+          onDateChanged: (DateTime? date) {
+            if (date != null) {
+              _dateAcquired.value = date;
+            }
+          },
+          label: 'Date Acquired',
+          dateController: dateController,
+          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
+              ? AppColor.lightCustomTextBox
+              : AppColor.darkCustomTextBox),
         );
       },
     );

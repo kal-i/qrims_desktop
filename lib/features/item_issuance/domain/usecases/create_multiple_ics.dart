@@ -27,9 +27,13 @@ class CreateMultipleICS
       entityName: params.entityName,
       fundCluster: params.fundCluster,
       supplierName: params.supplierName,
+      deliveryReceiptId: params.deliveryReceiptId,
+      prReferenceId: params.prReferenceId,
+      inventoryTransferReportId: params.inventoryTransferReportId,
       inspectionAndAcceptanceReportId: params.inspectionAndAcceptanceReportId,
       contractNumber: params.contractNumber,
       purchaseOrderNumber: params.purchaseOrderNumber,
+      dateAcquired: params.dateAcquired,
       issuingOfficerOffice: params.issuingOfficerOffice,
       issuingOfficerPosition: params.issuingOfficerPosition,
       issuingOfficerName: params.issuingOfficerName,
@@ -47,9 +51,13 @@ class CreateMultipleICSParams {
     this.entityName,
     this.fundCluster,
     this.supplierName,
+    this.deliveryReceiptId,
+    this.prReferenceId,
+    this.inventoryTransferReportId,
     this.inspectionAndAcceptanceReportId,
     this.contractNumber,
     this.purchaseOrderNumber,
+    this.dateAcquired,
     this.issuingOfficerOffice,
     this.issuingOfficerPosition,
     this.issuingOfficerName,
@@ -63,9 +71,13 @@ class CreateMultipleICSParams {
   final String? entityName;
   final FundCluster? fundCluster;
   final String? supplierName;
+  final String? deliveryReceiptId;
+  final String? prReferenceId;
+  final String? inventoryTransferReportId;
   final String? inspectionAndAcceptanceReportId;
   final String? contractNumber;
   final String? purchaseOrderNumber;
+  final DateTime? dateAcquired;
   final String? issuingOfficerOffice;
   final String? issuingOfficerPosition;
   final String? issuingOfficerName;

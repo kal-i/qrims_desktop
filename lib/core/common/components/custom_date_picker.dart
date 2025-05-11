@@ -67,9 +67,13 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
       suffixIcon: HugeIcons.strokeRoundedCalendar03,
       onTap: widget.enabled ? () => _selectDate(context) : null,
       enabled: widget.enabled,
-      validator: ValidationBuilder()
-          .regExp(RegExp(r'^\d{4}-\d{2}-\d{2}$'), 'Invalid date format')
-          .build(),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return null;
+        }
+        final isValid = RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value);
+        return isValid ? null : 'Invalid date format';
+      },
     );
   }
 }

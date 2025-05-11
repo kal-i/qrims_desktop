@@ -32,9 +32,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? entityName,
     FundCluster? fundCluster,
     String? supplierName,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderNumber,
+    DateTime? dateAcquired,
     String? receivingOfficerOffice,
     String? receivingOfficerPosition,
     String? receivingOfficerName,
@@ -54,6 +58,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'fund_cluster': fundCluster.toString().split('.').last,
         if (supplierName != null && supplierName.isNotEmpty)
           'supplier_name': supplierName,
+        if (deliveryReceiptId != null && deliveryReceiptId.isNotEmpty)
+          'delivery_receipt_id': deliveryReceiptId,
+        if (prReferenceId != null && prReferenceId.isNotEmpty)
+          'pr_reference_id': prReferenceId,
+        if (inventoryTransferReportId != null &&
+            inventoryTransferReportId.isNotEmpty)
+          'inventory_transfer_report_id': inventoryTransferReportId,
         if (inspectionAndAcceptanceReportId != null &&
             inspectionAndAcceptanceReportId.isNotEmpty)
           'inspection_and_acceptance_report_id':
@@ -62,6 +73,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'contract_number': contractNumber,
         if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
           'purchase_order_number': purchaseOrderNumber,
+        if (dateAcquired != null)
+          'date_acquired': dateAcquired.toIso8601String(),
         if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
           'receiving_officer_office': receivingOfficerOffice,
         if (receivingOfficerPosition != null &&
@@ -102,9 +115,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? entityName,
     FundCluster? fundCluster,
     String? supplierName,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderNumber,
+    DateTime? dateAcquired,
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
@@ -120,6 +137,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'fund_cluster': fundCluster.toString().split('.').last,
         if (supplierName != null && supplierName.isNotEmpty)
           'supplier_name': supplierName,
+        if (deliveryReceiptId != null && deliveryReceiptId.isNotEmpty)
+          'delivery_receipt_id': deliveryReceiptId,
+        if (prReferenceId != null && prReferenceId.isNotEmpty)
+          'pr_reference_id': prReferenceId,
+        if (inventoryTransferReportId != null &&
+            inventoryTransferReportId.isNotEmpty)
+          'inventory_transfer_report_id': inventoryTransferReportId,
         if (inspectionAndAcceptanceReportId != null &&
             inspectionAndAcceptanceReportId.isNotEmpty)
           'inspection_and_acceptance_report_id':
@@ -128,6 +152,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'contract_number': contractNumber,
         if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
           'purchase_order_number': purchaseOrderNumber,
+        if (dateAcquired != null)
+          'date_acquired': dateAcquired.toIso8601String(),
         if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
           'issuing_officer_office': issuingOfficerOffice,
         if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)
@@ -172,9 +198,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? entityName,
     FundCluster? fundCluster,
     String? supplierName,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderNumber,
+    DateTime? dateAcquired,
     String? receivingOfficerOffice,
     String? receivingOfficerPosition,
     String? receivingOfficerName,
@@ -193,6 +223,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'fund_cluster': fundCluster.toString().split('.').last,
         if (supplierName != null && supplierName.isNotEmpty)
           'supplier_name': supplierName,
+        if (deliveryReceiptId != null && deliveryReceiptId.isNotEmpty)
+          'delivery_receipt_id': deliveryReceiptId,
+        if (prReferenceId != null && prReferenceId.isNotEmpty)
+          'pr_reference_id': prReferenceId,
+        if (inventoryTransferReportId != null &&
+            inventoryTransferReportId.isNotEmpty)
+          'inventory_transfer_report_id': inventoryTransferReportId,
         if (inspectionAndAcceptanceReportId != null &&
             inspectionAndAcceptanceReportId.isNotEmpty)
           'inspection_and_acceptance_report_id':
@@ -201,6 +238,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'contract_number': contractNumber,
         if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
           'purchase_order_number': purchaseOrderNumber,
+        if (dateAcquired != null)
+          'date_acquired': dateAcquired.toIso8601String(),
         if (receivingOfficerOffice != null && receivingOfficerOffice.isNotEmpty)
           'receiving_officer_office': receivingOfficerOffice,
         if (receivingOfficerPosition != null &&
@@ -241,9 +280,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     String? entityName,
     FundCluster? fundCluster,
     String? supplierName,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderNumber,
+    DateTime? dateAcquired,
     String? issuingOfficerOffice,
     String? issuingOfficerPosition,
     String? issuingOfficerName,
@@ -258,6 +301,13 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'fund_cluster': fundCluster.toString().split('.').last,
         if (supplierName != null && supplierName.isNotEmpty)
           'supplier_name': supplierName,
+        if (deliveryReceiptId != null && deliveryReceiptId.isNotEmpty)
+          'delivery_receipt_id': deliveryReceiptId,
+        if (prReferenceId != null && prReferenceId.isNotEmpty)
+          'pr_reference_id': prReferenceId,
+        if (inventoryTransferReportId != null &&
+            inventoryTransferReportId.isNotEmpty)
+          'inventory_transfer_report_id': inventoryTransferReportId,
         if (inspectionAndAcceptanceReportId != null &&
             inspectionAndAcceptanceReportId.isNotEmpty)
           'inspection_and_acceptance_report_id':
@@ -266,6 +316,8 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
           'contract_number': contractNumber,
         if (purchaseOrderNumber != null && purchaseOrderNumber.isNotEmpty)
           'purchase_order_number': purchaseOrderNumber,
+        if (dateAcquired != null)
+          'date_acquired': dateAcquired.toIso8601String(),
         if (issuingOfficerOffice != null && issuingOfficerOffice.isNotEmpty)
           'issuing_officer_office': issuingOfficerOffice,
         if (issuingOfficerPosition != null && issuingOfficerPosition.isNotEmpty)

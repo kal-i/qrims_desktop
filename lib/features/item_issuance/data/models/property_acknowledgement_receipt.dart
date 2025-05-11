@@ -19,9 +19,13 @@ class PropertyAcknowledgementReceiptModel
     super.entity,
     super.fundCluster,
     super.supplierEntity,
+    super.deliveryReceiptId,
+    super.prReferenceId,
+    super.inventoryTransferReportId,
     super.inspectionAndAcceptanceReportId,
     super.contractNumber,
     super.purchaseOrderNumber,
+    super.dateAcquired,
     super.receivingOfficerEntity,
     super.issuingOfficerEntity,
     super.receivedDate,
@@ -108,10 +112,18 @@ class PropertyAcknowledgementReceiptModel
       entity: entity,
       fundCluster: fundCluster,
       supplierEntity: supplier,
+      deliveryReceiptId: json['delivery_receipt_id'] as String?,
+      prReferenceId: json['pr_reference_id'] as String?,
+      inventoryTransferReportId:
+          json['inventory_transfer_report_id'] as String?,
       inspectionAndAcceptanceReportId:
           json['inspection_and_acceptance_report_id'] as String?,
       contractNumber: json['contract_number'] as String?,
       purchaseOrderNumber: json['purchase_order_number'] as String?,
+      dateAcquired:
+          json['date_acquired'] != null && json['date_acquired'] is String
+              ? DateTime.tryParse(json['date_acquired'] as String)
+              : json['date_acquired'] as DateTime?,
       receivingOfficerEntity: receivingOfficer,
       issuingOfficerEntity: issuingOfficer,
       receivedDate: json['received_date'] != null
