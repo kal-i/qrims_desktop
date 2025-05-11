@@ -622,9 +622,13 @@ class IssuanceRepository {
         ics.id AS ics_id,
         ics.supplier_id AS supplier_id,
         s.name AS supplier_name,
+        ics.delivery_receipt_id AS delivery_receipt_id,
+        ics.pr_reference_id AS pr_reference_id,
+        ics.inventory_transfer_report_id AS inventory_transfer_report_id,
         ics.inspection_and_acceptance_report_id AS iar_no,
         ics.contract_number AS cn,
-        ics.purchase_order_id AS po_no
+        ics.purchase_order_id AS po_no,
+        ics.date_acquired
       FROM
         Issuances iss
       JOIN
@@ -705,9 +709,13 @@ class IssuanceRepository {
         'entity': entity?.toJson(),
         'fund_cluster': fundCluster,
         'supplier': supplier?.toJson(),
-        'inspection_and_acceptance_report_no': row[15],
-        'contract_number': row[16],
-        'purchase_order_number': row[17],
+        'delivery_receipt_id': row[15],
+        'pr_reference_id': row[16],
+        'inventory_transfer_report_id': row[17],
+        'inspection_and_acceptance_report_id': row[18],
+        'contract_number': row[19],
+        'purchase_order_number': row[20],
+        'date_acquired': row[21],
         'receiving_officer': receivingOfficer?.toJson(),
         'issuing_officer': issuingOfficer?.toJson(),
         'received_date': row[11],
@@ -738,9 +746,13 @@ class IssuanceRepository {
         par.id AS par_id,
 		    par.supplier_id AS supplier_id,
 		    s.name AS supplier_name,
+        par.delivery_receipt_id AS delivery_receipt_id,
+        par.pr_reference_id AS pr_reference_id,
+        par.inventory_transfer_report_id AS inventory_transfer_report_id,
 		    par.inspection_and_acceptance_report_id AS iar_no,
 		    par.contract_number AS cn,
-		    par.purchase_order_id AS po_no
+		    par.purchase_order_id AS po_no,
+        par.date_acquired AS date_acquired
       FROM
         Issuances iss
       JOIN
@@ -822,9 +834,13 @@ class IssuanceRepository {
           'entity': entity?.toJson(),
           'fund_cluster': fundCluster,
           'supplier': supplier?.toJson(),
-          'inspection_and_acceptance_report_no': row[15],
-          'contract_number': row[16],
-          'purchase_order_number': row[17],
+          'delivery_receipt_id': row[15],
+          'pr_reference_id': row[16],
+          'inventory_transfer_report_id': row[17],
+          'inspection_and_acceptance_report_id': row[18],
+          'contract_number': row[19],
+          'purchase_order_number': row[20],
+          'date_acquired': row[21],
           'receiving_officer': receivingOfficer?.toJson(),
           'issuing_officer': issuingOfficer?.toJson(),
           'received_date': row[11],
@@ -1979,9 +1995,13 @@ class IssuanceRepository {
     String? entityId,
     FundCluster? fundCluster,
     int? supplierId,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderId,
+    DateTime? dateAcquired,
     String? receivingOfficerId,
     String? issuingOfficerId,
     DateTime? receivedDate,
@@ -1995,16 +2015,42 @@ class IssuanceRepository {
     print('Generated ICS ID: $icsId');
 
     final concreteIssuanceEntityQuery = '''
-    INSERT INTO InventoryCustodianSlips (id, issuance_id, supplier_id, inspection_and_acceptance_report_id, contract_number, purchase_order_id)
-    VALUES (@id, @issuance_id, @supplier_id, @inspection_and_acceptance_report_id, @contract_number, @purchase_order_id);
+    INSERT INTO InventoryCustodianSlips (
+      id, 
+      issuance_id, 
+      supplier_id,
+      delivery_receipt_id,
+      pr_reference_id,
+      inventory_transfer_report_id, 
+      inspection_and_acceptance_report_id, 
+      contract_number, 
+      purchase_order_id,
+      date_acquired
+    )
+    VALUES (
+      @id, 
+      @issuance_id, 
+      @supplier_id,
+      @delivery_receipt_id,
+      @pr_reference_id,
+      @inventory_transfer_report_id, 
+      @inspection_and_acceptance_report_id, 
+      @contract_number, 
+      @purchase_order_id,
+      @date_acquired
+    );
     ''';
 
     final concreteIssuanceEntityParams = {
       'id': icsId,
       'supplier_id': supplierId,
+      'delivery_receipt_id': deliveryReceiptId,
+      'pr_reference_id': prReferenceId,
+      'inventory_transfer_receipt_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_id': purchaseOrderId,
+      'date_acquired': dateAcquired,
     };
 
     return await _createIssuance(
@@ -2028,9 +2074,13 @@ class IssuanceRepository {
     String? entityId,
     FundCluster? fundCluster,
     int? supplierId,
+    String? deliveryReceiptId,
+    String? prReferenceId,
+    String? inventoryTransferReportId,
     String? inspectionAndAcceptanceReportId,
     String? contractNumber,
     String? purchaseOrderId,
+    DateTime? dateAcquired,
     String? receivingOfficerId,
     String? issuingOfficerId,
     DateTime? receivedDate,
@@ -2038,16 +2088,42 @@ class IssuanceRepository {
     final parId = await _generateUniqueParId();
 
     final concreteIssuanceEntityQuery = '''
-    INSERT INTO PropertyAcknowledgementReceipts (id, issuance_id, supplier_id, inspection_and_acceptance_report_id, contract_number, purchase_order_id)
-    VALUES (@id, @issuance_id, @supplier_id, @inspection_and_acceptance_report_id, @contract_number, @purchase_order_id);
+    INSERT INTO PropertyAcknowledgementReceipts (
+      id, 
+      issuance_id, 
+      supplier_id,
+      delivery_receipt_id,
+      pr_reference_id,
+      inventory_transfer_report_id, 
+      inspection_and_acceptance_report_id, 
+      contract_number, 
+      purchase_order_id,
+      date_acquired
+    )
+    VALUES (
+      @id, 
+      @issuance_id, 
+      @supplier_id,
+      @delivery_receipt_id,
+      @pr_reference_id,
+      @inventory_transfer_report_id, 
+      @inspection_and_acceptance_report_id, 
+      @contract_number, 
+      @purchase_order_id,
+      @date_acquired
+    );
     ''';
 
     final concreteIssuanceEntityParams = {
       'id': parId,
       'supplier_id': supplierId,
+      'delivery_receipt_id': deliveryReceiptId,
+      'pr_reference_id': prReferenceId,
+      'inventory_transfer_receipt_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_id': purchaseOrderId,
+      'date_acquired': dateAcquired,
     };
 
     return await _createIssuance(
