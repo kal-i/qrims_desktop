@@ -184,4 +184,23 @@ class ItemInventoryRepositoryImpl implements ItemInventoryRepository {
       return left(Failure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> manageStock({
+    required String itemName,
+    required String description,
+    required int stockNo,
+  }) async {
+    try {
+      final response = await itemInventoryRemoteDateSource.manageStock(
+        itemName: itemName,
+        description: description,
+        stockNo: stockNo,
+      );
+
+      return right(response);
+    } on ServerException catch (e) {
+      return left(Failure(e.message));
+    }
+  }
 }

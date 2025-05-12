@@ -229,6 +229,7 @@ class ItemRepository {
     FundCluster? fundCluster,
     required String productName,
     String? description,
+    int? stockNo,
     required String manufacturerName,
     required String brandName,
     required String modelName,
@@ -301,6 +302,7 @@ class ItemRepository {
         await registerProductStock(
           productNameId: productNameId,
           productDescriptionId: productDescriptionId,
+          stockNo: stockNo,
         );
       }
       print('saved product stock!');
@@ -999,15 +1001,36 @@ class ItemRepository {
   Future<void> registerProductStock({
     required int productNameId,
     required int productDescriptionId,
+    int? stockNo,
   }) async {
     await _conn.execute(
       Sql.named('''
-      INSERT INTO ProductStocks (product_name_id, product_description_id)
-      VALUES (@product_name_id, @product_description_id)
+      INSERT INTO ProductStocks (product_name_id, product_description_id, stock_no)
+      VALUES (@product_name_id, @product_description_id, @stock_no)
     '''),
       parameters: {
         'product_name_id': productNameId,
         'product_description_id': productDescriptionId,
+        'stock_no': stockNo,
+      },
+    );
+  }
+
+  Future<void> updateStockNo({
+    required int productNameId,
+    required int productDescriptionId,
+    required int newStockNo,
+  }) async {
+    await _conn.execute(
+      Sql.named('''
+      UPDATE ProductStocks
+      SET stock_no = @stock_no
+      WHERE product_name_id = @product_name_id AND product_description_id = @product_description_id;
+    '''),
+      parameters: {
+        'product_name_id': productNameId,
+        'product_description_id': productDescriptionId,
+        'stock_no': newStockNo,
       },
     );
   }
@@ -1027,17 +1050,6 @@ class ItemRepository {
     );
 
     return checkIfExists.first[0] as int;
-    // final count = checkIfExists.first[0] as int;
-
-    // if (count == 0) {
-    //   print('product stock result is empty');
-    //   await registerProductStock(
-    //     productNameId: productNameId,
-    //     productDescriptionId: productDescriptionId,
-    //   );
-    // } else {
-    //   print('product stock result is not empty: $checkIfExists');
-    // }
   }
 
   Future<String> registerManufacturer({
@@ -1259,13 +1271,16 @@ class ItemRepository {
           inv.estimated_useful_life,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
-          md.model_name
+          md.model_name,
+          ps.stock_no
         FROM
           Items i
         LEFT JOIN
           ProductNames pn ON i.product_name_id = pn.id
         LEFT JOIN
           ProductDescriptions pd ON i.product_description_id = pd.id
+        LEFT JOIN
+          ProductStocks ps ON i.product_name_id = ps.product_name_id AND i.product_description_id = ps.product_description_id
         LEFT JOIN
           Supplies s ON i.id = s.base_item_id
         LEFT JOIN
@@ -1303,6 +1318,7 @@ class ItemRepository {
         'fund_cluster': row[10],
         'product_name': row[11],
         'product_description': row[12],
+        'stock_no': row[25],
       };
       return Supply.fromJson(supplyMap);
     } else if (row[14] != null) {
@@ -1331,6 +1347,7 @@ class ItemRepository {
         'manufacturer_name': row[22],
         'brand_name': row[23],
         'model_name': row[24],
+        'stock_no': row[25],
       };
       return InventoryItem.fromJson(inventoryMap);
     }
@@ -1572,13 +1589,16 @@ class ItemRepository {
           inv.estimated_useful_life,
           mnf.name as manufacturer_name,
           brnd.name as brand_name,
-          md.model_name
+          md.model_name,
+          ps.stock_no
         FROM
           Items i
         LEFT JOIN
           ProductNames pn ON i.product_name_id = pn.id
         LEFT JOIN
           ProductDescriptions pd ON i.product_description_id = pd.id
+        LEFT JOIN
+          ProductStocks ps ON i.product_name_id = ps.product_name_id AND i.product_description_id = ps.product_description_id
         LEFT JOIN
           Supplies s ON i.id = s.base_item_id
         LEFT JOIN
@@ -1682,6 +1702,7 @@ class ItemRepository {
             'fund_cluster': row[10],
             'product_name': row[11],
             'product_description': row[12],
+            'stock_no': row[25],
           };
           itemList.add(Supply.fromJson(supplyMap));
         } else if (row[14] != null) {
@@ -1710,6 +1731,7 @@ class ItemRepository {
             'manufacturer_name': row[22],
             'brand_name': row[23],
             'model_name': row[24],
+            'stock_no': row[25],
           };
           itemList.add(InventoryItem.fromJson(inventoryMap));
         }
@@ -1744,13 +1766,16 @@ class ItemRepository {
             inv.estimated_useful_life,
             mnf.name as manufacturer_name,
             brnd.name as brand_name,
-            md.model_name
+            md.model_name,
+            ps.stock_no
           FROM
             Items i
           LEFT JOIN
             ProductNames pn ON i.product_name_id = pn.id
           LEFT JOIN
             ProductDescriptions pd ON i.product_description_id = pd.id
+          LEFT JOIN
+            ProductStocks ps ON i.product_name_id = ps.product_name_id AND i.product_description_id = ps.product_description_id
           LEFT JOIN
             Supplies s ON i.id = s.base_item_id
           LEFT JOIN
@@ -1788,6 +1813,7 @@ class ItemRepository {
           'fund_cluster': row[10],
           'product_name': row[11],
           'product_description': row[12],
+          'stock_no': row[25],
         };
         return Supply.fromJson(supplyMap);
       } else if (row[14] != null) {
@@ -1816,6 +1842,7 @@ class ItemRepository {
           'manufacturer_name': row[22],
           'brand_name': row[23],
           'model_name': row[24],
+          'stock_no': row[25],
         };
         return InventoryItem.fromJson(inventoryMap);
       }
@@ -1829,6 +1856,7 @@ class ItemRepository {
     required String id,
     String? productName,
     String? description,
+    int? stockNo,
     String? specification,
     Unit? unit,
     int? quantity,

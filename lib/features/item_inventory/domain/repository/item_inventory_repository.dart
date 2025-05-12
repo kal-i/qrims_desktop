@@ -71,4 +71,10 @@ abstract interface class ItemInventoryRepository {
     double? unitCost,
     int? estimatedUsefulLife,
   });
+
+  Future<Either<Failure, bool>> manageStock({
+    required String itemName,
+    required String description,
+    required int stockNo,
+  });
 }

@@ -97,10 +97,19 @@ Future<Response> _createMultipleICS(
       : DateTime.now();
   final fundClusterData = json['fund_cluster'] as String?;
   final supplierName = json['supplier_name'] as String?;
+  final deliveryReceiptId = json['delivery_receipt_id'] as String?;
+  final prReferenceId = json['pr_reference_id'] as String?;
+  final inventoryTransferReportId =
+      json['inventory_transfer_report_id'] as String;
   final inspectionAndAcceptanceReportId =
       json['inspection_and_acceptance_report_id'] as String?;
   final contractNumber = json['contract_number'] as String?;
   final purchaseOrderNumber = json['purchase_order_number'] as String?;
+  final dateAcquired = json['date_acquired'] != null
+      ? json['date_acquired'] is String
+          ? DateTime.parse(json['date_acquired'] as String)
+          : json['date_acquired'] as DateTime
+      : null;
   final receivingOfficers = json['receiving_officers'] as List<dynamic>? ?? [];
 
   final issuingOfficerOffice = json['issuing_officer_office'] as String?;
@@ -212,9 +221,13 @@ Future<Response> _createMultipleICS(
             : null,
         fundCluster: fundCluster,
         supplierId: supplierId,
+        deliveryReceiptId: deliveryReceiptId,
+        prReferenceId: prReferenceId,
+        inventoryTransferReportId: inspectionAndAcceptanceReportId,
         inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
         contractNumber: contractNumber,
         purchaseOrderId: purchaseOrderNumber,
+        dateAcquired: dateAcquired,
         receivingOfficerId: officerId,
         issuingOfficerId: issuingOfficerId,
         receivedDate: receivedDate,

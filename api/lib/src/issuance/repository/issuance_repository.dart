@@ -180,63 +180,43 @@ class IssuanceRepository {
     FundCluster? fundCluster,
     required DateTime issuedDate,
   }) async {
-    final year = issuedDate.year;
-    final month = issuedDate.month.toString().padLeft(2, '0');
+    return await _conn.runTx((ctx) async {
+      final year = issuedDate.year;
+      final month = issuedDate.month.toString().padLeft(2, '0');
+      final typePrefix = type == IcsType.sphv ? 'SPHV' : 'SPLV';
+      final clusterSuffix = fundCluster != null ? '(${fundCluster.value})' : '';
 
-    // LIKE pattern to match all IDs for the given year, regardless of fund cluster
-    final likePattern = '%$year-%';
+      // 1. Get or create the sequence record with row locking
+      final sequence = await ctx.execute(
+        Sql.named('''
+        INSERT INTO ics_id_sequences (year, last_value)
+        VALUES (@year, 0)
+        ON CONFLICT (year) DO UPDATE SET last_value = ics_id_sequences.last_value + 1
+        RETURNING last_value
+      '''),
+        parameters: {'year': year},
+      );
 
-    // Fetch all matching IDs
-    final result = await _conn.execute(
-      Sql.named(
-        '''
-      SELECT id FROM InventoryCustodianSlips
-      WHERE id LIKE @likePattern
-      ORDER BY id DESC;
-      ''',
-      ),
-      parameters: {
-        'likePattern': likePattern,
-      },
-    );
+      // 2. Get the new sequence value
+      final sequenceNumber = sequence.first[0] as int;
 
-    int maxN = 0;
+      // 3. Format the ID
+      final newId =
+          '$typePrefix-$year$clusterSuffix-$month-${sequenceNumber.toString().padLeft(3, '0')}';
 
-    if (result.isNotEmpty) {
-      for (final row in result) {
-        final id = row[0].toString();
-        final parts = id.split('-');
-        if (parts.length >= 3) {
-          final lastPart = parts.last;
-          final currentN = int.tryParse(lastPart) ?? 0;
-          if (currentN > maxN) {
-            maxN = currentN;
-          }
-        }
+      // 4. Final verification (should never fail with this approach)
+      final exists = await ctx.execute(
+        Sql.named('SELECT 1 FROM InventoryCustodianSlips WHERE id = @id'),
+        parameters: {'id': newId},
+      );
+
+      if (exists.isNotEmpty) {
+        throw StateError(
+            'CRITICAL: Duplicate ID detected despite sequence. Database integrity may be compromised.');
       }
-    }
 
-    final n = maxN + 1;
-    String uniqueId = '';
-
-    // Add type prefix
-    if (type != null) {
-      uniqueId += '${type == IcsType.sphv ? 'SPHV' : 'SPLV'}-';
-    }
-
-    // Add year
-    uniqueId += '$year';
-
-    // Include fund cluster if present
-    if (fundCluster != null) {
-      uniqueId += '(${fundCluster.value})';
-    }
-
-    // Add month and padded sequence number
-    uniqueId += '-$month-${n.toString().padLeft(3, '0')}';
-
-    print('Generated ICS ID: $uniqueId');
-    return uniqueId;
+      return newId;
+    });
   }
 
   Future<String> _generateUniqueParId() async {
@@ -244,32 +224,23 @@ class IssuanceRepository {
     final year = now.year.toString();
     final month = now.month.toString().padLeft(2, '0');
 
-    print('Current year for PAR ID: $year');
-
+    // Get the highest existing PAR number for this year
     final result = await _conn.execute(
-      Sql.named(
-        '''
+      Sql.named('''
       SELECT id FROM PropertyAcknowledgementReceipts
       WHERE id LIKE @year || '-%'
-      ORDER BY id DESC 
+      ORDER BY id DESC
       LIMIT 1;
-      ''',
-      ),
-      parameters: {
-        'year': year,
-      },
+    '''),
+      parameters: {'year': year},
     );
 
-    int n;
-    if (result.isNotEmpty) {
-      n = int.parse(result.first[0].toString().split('-').last) + 1;
-    } else {
-      n = 1;
-    }
+    // If no records exist for this year, start at 001, else increment
+    final nextNum = result.isEmpty
+        ? 1
+        : int.parse(result.first[0].toString().split('-').last) + 1;
 
-    final uniqueId = '$year-$month-${n.toString().padLeft(3, '0')}';
-    print('Generated PAR ID: $uniqueId');
-    return uniqueId;
+    return '$year-$month-${nextNum.toString().padLeft(3, '0')}';
   }
 
   // Future<String> _generateUniqueParId() async {
@@ -309,30 +280,23 @@ class IssuanceRepository {
     final year = now.year.toString();
     final month = now.month.toString().padLeft(2, '0');
 
-    print('Current year for RIS ID: $year');
-
+    // Get the highest existing RIS number for this year
     final result = await _conn.execute(
-      Sql.named(
-        '''
+      Sql.named('''
       SELECT id FROM RequisitionAndIssueSlips
       WHERE id LIKE @year || '-%'
       ORDER BY id DESC 
       LIMIT 1;
-      ''',
-      ),
-      parameters: {
-        'year': year,
-      },
+      '''),
+      parameters: {'year': year},
     );
 
-    int n;
-    if (result.isNotEmpty) {
-      n = int.parse(result.first[0].toString().split('-').last) + 1;
-    } else {
-      n = 1;
-    }
+    // Determine the next sequence number
+    final nextNum = result.isEmpty
+        ? 1
+        : int.parse(result.first[0].toString().split('-').last) + 1;
 
-    final uniqueId = '$year-$month-${n.toString().padLeft(3, '0')}';
+    final uniqueId = '$year-$month-${nextNum.toString().padLeft(3, '0')}';
     print('Generated RIS ID: $uniqueId');
     return uniqueId;
   }
@@ -394,7 +358,8 @@ class IssuanceRepository {
         brnd.name as brand_name,
         md.model_name,
         iss.issued_date as issued_date,
-        iss.received_date as received_date
+        iss.received_date as received_date,
+        ps.stock_no
       FROM 
         IssuanceItems issi
       LEFT JOIN
@@ -405,6 +370,8 @@ class IssuanceRepository {
         ProductNames pn ON i.product_name_id = pn.id
       LEFT JOIN
         ProductDescriptions pd ON i.product_description_id = pd.id
+      LEFT JOIN
+        ProductStocks ps ON i.product_name_id = ps.product_name_id AND i.product_description_id = ps.product_description_id
       LEFT JOIN
         Supplies s ON i.id = s.base_item_id
       LEFT JOIN
@@ -442,6 +409,7 @@ class IssuanceRepository {
           'fund_cluster': row[17],
           'product_name': row[18],
           'product_description': row[19],
+          'stock_no': row[34],
         };
         item = Supply.fromJson(supplyMap).toJson();
       } else if (row[21] != null) {
@@ -470,6 +438,7 @@ class IssuanceRepository {
           'manufacturer_name': row[29],
           'brand_name': row[30],
           'model_name': row[31],
+          'stock_no': row[34],
         };
         item = InventoryItem.fromJson(inventoryMap).toJson();
       }
@@ -2046,7 +2015,7 @@ class IssuanceRepository {
       'supplier_id': supplierId,
       'delivery_receipt_id': deliveryReceiptId,
       'pr_reference_id': prReferenceId,
-      'inventory_transfer_receipt_id': inventoryTransferReportId,
+      'inventory_transfer_report_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_id': purchaseOrderId,
@@ -2119,7 +2088,7 @@ class IssuanceRepository {
       'supplier_id': supplierId,
       'delivery_receipt_id': deliveryReceiptId,
       'pr_reference_id': prReferenceId,
-      'inventory_transfer_receipt_id': inventoryTransferReportId,
+      'inventory_transfer_report_id': inventoryTransferReportId,
       'inspection_and_acceptance_report_id': inspectionAndAcceptanceReportId,
       'contract_number': contractNumber,
       'purchase_order_id': purchaseOrderId,

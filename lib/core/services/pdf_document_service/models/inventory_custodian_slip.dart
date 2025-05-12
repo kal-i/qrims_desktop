@@ -5,8 +5,8 @@ import '../../../../features/item_inventory/domain/entities/inventory_item.dart'
 import '../../../../features/item_issuance/domain/entities/inventory_custodian_slip.dart';
 import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../../init_dependencies.dart';
-import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
+import '../../../utils/document_date_formatter.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -216,25 +216,46 @@ class InventoryCustodianSlip implements BaseDocument {
             ics.purchaseOrderNumber != null) {
           tableRows.add(_buildIcsTableRowFooter(data: '\n'));
         }
-        if (purchaseRequestEntity != null) {
-          tableRows.add(
-              _buildIcsTableRowFooter(data: 'PR: ${purchaseRequestEntity.id}'));
+
+        if (purchaseRequestEntity != null || ics.prReferenceId != null) {
+          final prValue = purchaseRequestEntity?.id ?? ics.prReferenceId;
+          tableRows.add(_buildIcsTableRowFooter(data: 'PR: $prValue'));
         }
+
+        if (ics.purchaseOrderNumber != null) {
+          tableRows.add(
+              _buildIcsTableRowFooter(data: 'PO: ${ics.purchaseOrderNumber}'));
+        }
+
         if (supplierEntity != null) {
           tableRows.add(_buildIcsTableRowFooter(
               data: 'Supplier: ${supplierEntity.name}'));
         }
+
+        if (ics.deliveryReceiptId != null) {
+          tableRows.add(
+              _buildIcsTableRowFooter(data: 'DR: ${ics.deliveryReceiptId}'));
+        }
+
+        if (ics.dateAcquired != null) {
+          tableRows.add(_buildIcsTableRowFooter(
+              data:
+                  'Date Acquired: ${documentDateFormatter(ics.dateAcquired!)}'));
+        }
+
+        if (ics.inventoryTransferReportId != null) {
+          tableRows.add(_buildIcsTableRowFooter(
+              data: 'ITR: ${ics.inventoryTransferReportId}'));
+        }
+
         if (ics.inspectionAndAcceptanceReportId != null) {
           tableRows.add(_buildIcsTableRowFooter(
               data: 'IAR: ${ics.inspectionAndAcceptanceReportId}'));
         }
+
         if (ics.contractNumber != null) {
           tableRows
               .add(_buildIcsTableRowFooter(data: 'CN: ${ics.contractNumber}'));
-        }
-        if (ics.purchaseOrderNumber != null) {
-          tableRows.add(
-              _buildIcsTableRowFooter(data: 'PO: ${ics.purchaseOrderNumber}'));
         }
       }
     }

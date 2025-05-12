@@ -1318,7 +1318,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           children: [
             Expanded(
               child: CustomFormTextField(
-                controller: _inspectionAndAcceptanceReportIdController,
+                controller: _deliveryReceiptIdController,
                 label: 'Delivery Receipt ID',
                 placeholderText: 'Enter delivery receipt ID',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -1350,7 +1350,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           children: [
             Expanded(
               child: CustomFormTextField(
-                controller: _contractNumberController,
+                controller: _prReferenceIdController,
                 label: 'Purchase Request Number',
                 placeholderText: 'Enter purchase request number',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
@@ -1382,7 +1382,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           children: [
             Expanded(
               child: CustomFormTextField(
-                controller: _supplierNameController,
+                controller: _inventoryTransferReportIdController,
                 label: 'Inventory Transfer Report ID',
                 placeholderText: 'Enter inventory transfer report ID',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light

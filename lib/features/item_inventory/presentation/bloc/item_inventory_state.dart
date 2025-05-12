@@ -71,3 +71,11 @@ final class ItemUpdated extends ItemInventoryState {
         isSuccessful,
       ];
 }
+
+final class ManagedStock extends ItemInventoryState {
+  const ManagedStock({
+    required this.isSuccessful,
+  });
+
+  final bool isSuccessful;
+}

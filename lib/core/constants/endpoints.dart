@@ -37,6 +37,7 @@ const itemDescriptionsEP = '$itemsEP/product_descriptions';
 const itemManufacturersEP = '$itemsEP/manufacturers';
 const itemBrandsEP = '$itemsEP/brands';
 const itemModelsEP = '$itemsEP/models';
+const itemStocksEP = '$itemsEP/stocks';
 
 const officesEP = '/offices';
 const positionsEP = '/positions';

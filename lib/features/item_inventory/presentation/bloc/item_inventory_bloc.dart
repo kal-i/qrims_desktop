@@ -8,6 +8,7 @@ import '../../../../core/enums/unit.dart';
 import '../../domain/entities/base_item.dart';
 import '../../domain/usecases/get_item_by_id.dart';
 import '../../domain/usecases/get_items.dart';
+import '../../domain/usecases/manage_stock.dart';
 import '../../domain/usecases/register_inventory_item.dart';
 import '../../domain/usecases/register_supply_item.dart';
 import '../../domain/usecases/update_item.dart';
@@ -22,17 +23,20 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
     required RegisterInventoryItem registerInventoryItem,
     required GetItemById getItemById,
     required UpdateItem updateItem,
+    required ManageStock manageStock,
   })  : _getItems = getItems,
         _registerSupplyItem = registerSupplyItem,
         _registerInventoryItem = registerInventoryItem,
         _getItemById = getItemById,
         _updateItem = updateItem,
+        _manageStock = manageStock,
         super(ItemsInitial()) {
     on<FetchItems>(_onFetchItems);
     on<SupplyItemRegister>(_onRegisterSupplyItem);
     on<InventoryItemRegister>(_onRegisterInventoryItem);
     on<FetchItemById>(_onFetchItemById);
     on<ItemUpdate>(_onUpdateItem);
+    on<ManageStockEvent>(_onManageStock);
   }
 
   final GetItems _getItems;
@@ -40,6 +44,7 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
   final RegisterInventoryItem _registerInventoryItem;
   final GetItemById _getItemById;
   final UpdateItem _updateItem;
+  final ManageStock _manageStock;
 
   void _onFetchItems(FetchItems event, Emitter<ItemInventoryState> emit) async {
     emit(ItemsLoading());
@@ -197,6 +202,30 @@ class ItemInventoryBloc extends Bloc<ItemInventoryEvent, ItemInventoryState> {
       ),
       (r) => emit(
         ItemUpdated(isSuccessful: r),
+      ),
+    );
+  }
+
+  void _onManageStock(
+    ManageStockEvent event,
+    Emitter<ItemInventoryState> emit,
+  ) async {
+    emit(ItemsLoading());
+
+    final response = await _manageStock(
+      ManageStockParams(
+        itemName: event.itemName,
+        description: event.description,
+        stockNo: event.stockNo,
+      ),
+    );
+
+    response.fold(
+      (l) => emit(
+        ItemsError(message: l.message),
+      ),
+      (r) => emit(
+        ManagedStock(isSuccessful: r),
       ),
     );
   }

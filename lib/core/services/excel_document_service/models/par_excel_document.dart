@@ -447,12 +447,60 @@ class PARExcelDocument {
           currentRow++;
         }
 
+        if (par.purchaseOrderNumber != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'PO: ${par.purchaseOrderNumber}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
         if (supplierEntity != null) {
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
             index: currentRow,
             data: 'Supplier: ${supplierEntity.name}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (par.deliveryReceiptId != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'DR: ${par.deliveryReceiptId}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (par.dateAcquired != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'Date Acquired: ${documentDateFormatter(par.dateAcquired!)}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (par.inventoryTransferReportId != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'ITR: ${par.inventoryTransferReportId}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
@@ -477,18 +525,6 @@ class PARExcelDocument {
             sheet: sheet,
             index: currentRow,
             data: 'CN: ${par.contractNumber}',
-            dataCellStyle: dataCellStyle,
-          );
-          totalRowsInserted++;
-          currentRow++;
-        }
-
-        if (par.purchaseOrderNumber != null) {
-          sheet.insertRow(currentRow);
-          _updateRowFooter(
-            sheet: sheet,
-            index: currentRow,
-            data: 'PO: ${par.purchaseOrderNumber}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;

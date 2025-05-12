@@ -6,7 +6,6 @@ import '../../../../features/item_issuance/domain/entities/requisition_and_issue
 import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -534,7 +533,7 @@ class RISExcelDocument {
 
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
-      final stockNo = '$productNameId$productDescriptionId';
+      final stockNo = productStockEntity.stockNo;
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
       final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
@@ -567,7 +566,7 @@ class RISExcelDocument {
         _updateRow(
           sheet,
           currentRow,
-          j == 0 ? stockNo : '',
+          j == 0 ? stockNo.toString() : '',
           j == 0 ? readableEnumConverter(unit) : '',
           descriptionColumn[j],
           j == 0 ? requestedQuantity.toString() : '\n',

@@ -6,7 +6,6 @@ import '../../../../features/item_issuance/domain/entities/issuance_item.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -422,12 +421,25 @@ class ICSExcelDocument {
           currentRow++;
         }
 
-        if (purchaseRequestEntity != null) {
+        if (purchaseRequestEntity != null || ics.prReferenceId != null) {
+          final prValue = purchaseRequestEntity?.id ?? ics.prReferenceId;
           sheet.insertRow(currentRow);
           _updateRowFooter(
             sheet: sheet,
             index: currentRow,
-            data: 'PR: ${purchaseRequestEntity.id}',
+            data: 'PR: $prValue',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.purchaseOrderNumber != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'PO: ${ics.purchaseOrderNumber}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
@@ -440,6 +452,42 @@ class ICSExcelDocument {
             sheet: sheet,
             index: currentRow,
             data: 'Supplier: ${supplierEntity.name}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.deliveryReceiptId != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'DR: ${ics.deliveryReceiptId}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.dateAcquired != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'Date Acquired: ${documentDateFormatter(ics.dateAcquired!)}',
+            dataCellStyle: dataCellStyle,
+          );
+          totalRowsInserted++;
+          currentRow++;
+        }
+
+        if (ics.inventoryTransferReportId != null) {
+          sheet.insertRow(currentRow);
+          _updateRowFooter(
+            sheet: sheet,
+            index: currentRow,
+            data: 'ITR: ${ics.inventoryTransferReportId}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;
@@ -464,18 +512,6 @@ class ICSExcelDocument {
             sheet: sheet,
             index: currentRow,
             data: 'CN: ${ics.contractNumber}',
-            dataCellStyle: dataCellStyle,
-          );
-          totalRowsInserted++;
-          currentRow++;
-        }
-
-        if (ics.purchaseOrderNumber != null) {
-          sheet.insertRow(currentRow);
-          _updateRowFooter(
-            sheet: sheet,
-            index: currentRow,
-            data: 'PO: ${ics.purchaseOrderNumber}',
             dataCellStyle: dataCellStyle,
           );
           totalRowsInserted++;

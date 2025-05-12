@@ -131,6 +131,7 @@ Future<Response> _registerItem(
     final itemType = json['type'] as String?;
     final productName = json['product_name'] as String;
     final description = json['description'] as String?;
+    final stockNo = json['stock_no'] as int?;
     final specification = json['specification'] as String?;
     final quantity = json['quantity'] as int;
     final unitCost = json['unit_cost'] as double;
@@ -215,6 +216,7 @@ Future<Response> _registerItem(
         await itemRepository.registerProductStock(
           productNameId: productNameId,
           productDescriptionId: productDescriptionId,
+          stockNo: stockNo,
         );
       }
     } catch (e) {

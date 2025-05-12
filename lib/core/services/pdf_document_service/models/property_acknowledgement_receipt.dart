@@ -8,7 +8,6 @@ import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -187,25 +186,45 @@ class PropertyAcknowledgementReceipt implements BaseDocument {
             par.purchaseOrderNumber != null) {
           tableRows.add(_buildParTableRowFooter(data: '\n'));
         }
-        if (purchaseRequestEntity != null) {
-          tableRows.add(
-              _buildParTableRowFooter(data: 'PR: ${purchaseRequestEntity.id}'));
+        if (purchaseRequestEntity != null || par.prReferenceId != null) {
+          final prValue = purchaseRequestEntity?.id ?? par.prReferenceId;
+          tableRows.add(_buildParTableRowFooter(data: 'PR: $prValue'));
         }
+
+        if (par.purchaseOrderNumber != null) {
+          tableRows.add(
+              _buildParTableRowFooter(data: 'PO: ${par.purchaseOrderNumber}'));
+        }
+
         if (supplierEntity != null) {
           tableRows.add(_buildParTableRowFooter(
               data: 'Supplier: ${supplierEntity.name}'));
         }
+
+        if (par.deliveryReceiptId != null) {
+          tableRows.add(
+              _buildParTableRowFooter(data: 'DR: ${par.deliveryReceiptId}'));
+        }
+
+        if (par.dateAcquired != null) {
+          tableRows.add(_buildParTableRowFooter(
+              data:
+                  'Date Acquired: ${documentDateFormatter(par.dateAcquired!)}'));
+        }
+
+        if (par.inventoryTransferReportId != null) {
+          tableRows.add(_buildParTableRowFooter(
+              data: 'ITR: ${par.inventoryTransferReportId}'));
+        }
+
         if (par.inspectionAndAcceptanceReportId != null) {
           tableRows.add(_buildParTableRowFooter(
               data: 'IAR: ${par.inspectionAndAcceptanceReportId}'));
         }
+
         if (par.contractNumber != null) {
           tableRows
               .add(_buildParTableRowFooter(data: 'CN: ${par.contractNumber}'));
-        }
-        if (par.purchaseOrderNumber != null) {
-          tableRows.add(
-              _buildParTableRowFooter(data: 'PO: ${par.purchaseOrderNumber}'));
         }
       }
     }

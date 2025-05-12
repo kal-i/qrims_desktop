@@ -120,6 +120,7 @@ class IssuanceItem {
                   ['product_description']['product_description_id'],
               'product_description': itemJson['product_stock']
                   ['product_description']['product_description'],
+              'stock_no': itemJson['product_stock']['stock_no'],
               'specification': itemJson['shareable_item_information']
                   ['specification'],
               'unit': itemJson['shareable_item_information']['unit'],
@@ -146,6 +147,7 @@ class IssuanceItem {
                   ['product_description']['product_description_id'],
               'product_description': itemJson['product_stock']
                   ['product_description']['product_description'],
+              'stock_no': itemJson['product_stock']['stock_no'],
               'specification': itemJson['shareable_item_information']
                   ['specification'],
               'unit': itemJson['shareable_item_information']['unit'],
@@ -1064,6 +1066,7 @@ class RequisitionAndIssueSlip extends Issuance {
                   'product_description': itemJson['item']['product_stock']
                       ['product_description']['product_description'],
                 },
+                'stock_no': itemJson['item']['product_stock']['stock_no'],
               },
             }
           : {
@@ -1083,6 +1086,7 @@ class RequisitionAndIssueSlip extends Issuance {
                   'product_description': itemJson['item']?['product_stock']
                       ?['product_description']?['product_description'],
                 },
+                'stock_no': itemJson['item']['product_stock']['stock_no'],
               },
               'manufacturer_brand': itemJson['item']?['manufacturer_brand'] ==
                       null

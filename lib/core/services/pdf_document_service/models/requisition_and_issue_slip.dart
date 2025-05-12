@@ -8,7 +8,6 @@ import '../../../../features/officer/domain/entities/officer.dart';
 import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -224,7 +223,8 @@ class RequisitionAndIssueSlip implements BaseDocument {
 
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
-      final stockNo = '$productNameId$productDescriptionId';
+      final stockNo =
+          productStockEntity.stockNo; // '$productNameId$productDescriptionId';
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
       final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);
@@ -251,7 +251,7 @@ class RequisitionAndIssueSlip implements BaseDocument {
       for (int j = 0; j < descriptionColumn.length; j++) {
         tableRows.add(
           DocumentComponents.buildRISTableRow(
-            stockNo: j == 0 ? stockNo : '\n',
+            stockNo: j == 0 ? stockNo.toString() : '\n',
             unit: j == 0 ? readableEnumConverter(unit) : '\n',
             description: descriptionColumn[j],
             requestQuantity: j == 0 ? requestedQuantity.toString() : '\n',

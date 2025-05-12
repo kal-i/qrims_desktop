@@ -68,4 +68,10 @@ abstract interface class ItemInventoryRemoteDateSource {
     double? unitCost,
     int? estimatedUsefulLife,
   });
+
+  Future<bool> manageStock({
+    required String itemName,
+    required String description,
+    required int stockNo,
+  });
 }

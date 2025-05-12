@@ -25,6 +25,7 @@ import '../../../../core/enums/role.dart';
 import '../../../../core/models/supply_department_employee.dart';
 import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/document_date_formatter.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
@@ -33,6 +34,7 @@ import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/supply.dart';
 import '../bloc/item_inventory_bloc.dart';
 import '../components/filter_item_modal.dart';
+import '../components/manage_stock_modal.dart';
 import '../components/register_new_item_modal.dart';
 
 class ItemInventoryView extends StatefulWidget {
@@ -306,18 +308,25 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       children: [
         _buildFilterTableRow(),
         Row(
+          spacing: 10.0,
           children: [
             ExpandableSearchButton(
               controller: _searchController,
             ),
-            const SizedBox(
-              width: 10.0,
-            ),
             _buildRefreshButton(),
-            const SizedBox(
-              width: 10.0,
-            ),
             _buildFilterButton(),
+            CustomFilledButton(
+              onTap: () => showDialog(
+                context: context,
+                builder: (context) => const ManageStockModal(),
+              ),
+              prefixWidget: const Icon(
+                HugeIcons.strokeRoundedLayers01,
+                size: 15.0,
+                color: AppColor.lightPrimary,
+              ),
+              text: 'Manage Stock',
+            ),
           ],
         ),
       ],
@@ -409,6 +418,26 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
             state is ItemUpdated) {
           _isLoading = false;
           _refreshItemList();
+        }
+
+        if (state is ManagedStock) {
+          if (state.isSuccessful) {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.check_circle_outline,
+              title: 'Success',
+              subtitle: 'Stock saved successfully.',
+            );
+            _refreshItemList();
+            ();
+          } else {
+            DelightfulToastUtils.showDelightfulToast(
+              context: context,
+              icon: Icons.error_outline,
+              title: 'Failed',
+              subtitle: 'Stock saved unsuccessfully.',
+            );
+          }
         }
 
         if (state is ItemsLoaded) {

@@ -181,3 +181,15 @@ final class ItemUpdate extends ItemInventoryEvent {
   final double? unitCost;
   final int? estimatedUsefulLife;
 }
+
+final class ManageStockEvent extends ItemInventoryEvent {
+  const ManageStockEvent({
+    required this.itemName,
+    required this.description,
+    required this.stockNo,
+  });
+
+  final String itemName;
+  final String description;
+  final int stockNo;
+}

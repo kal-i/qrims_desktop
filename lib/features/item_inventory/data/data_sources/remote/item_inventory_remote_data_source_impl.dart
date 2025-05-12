@@ -337,4 +337,28 @@ class ItemInventoryRemoteDataSourceImpl
       throw ServerException(e.toString());
     }
   }
+
+  @override
+  Future<bool> manageStock({
+    required String itemName,
+    required String description,
+    required int stockNo,
+  }) async {
+    final Map<String, dynamic> params = {
+      'product_name': itemName,
+      'description': description,
+      'stock_no': stockNo,
+    };
+
+    final response = await httpService.post(
+      endpoint: itemStocksEP,
+      params: params,
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

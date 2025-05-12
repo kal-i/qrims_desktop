@@ -85,7 +85,7 @@ class A73 implements BaseDocument {
     ];
 
     tableRows.add(
-      _buildHeaderTableRow(),
+      _buildHeaderTableRow(pageFormat),
     );
 
     for (final inventoryProperty in inventoryProperties) {
@@ -478,9 +478,9 @@ class A73 implements BaseDocument {
                   8: const pw.FixedColumnWidth(500.0),
                 }
               : {
-                  0: const pw.FixedColumnWidth(360.0),
-                  1: const pw.FixedColumnWidth(500.0),
-                  2: const pw.FixedColumnWidth(200.0),
+                  0: const pw.FixedColumnWidth(400.0),
+                  1: const pw.FixedColumnWidth(550.0),
+                  2: const pw.FixedColumnWidth(300.0),
                   3: const pw.FixedColumnWidth(120.0),
                   4: const pw.FixedColumnWidth(100.0),
                   5: const pw.FixedColumnWidth(160.0),
@@ -519,13 +519,13 @@ class A73 implements BaseDocument {
                   8: const pw.FixedColumnWidth(500.0),
                 }
               : {
-                  0: const pw.FixedColumnWidth(360.0),
-                  1: const pw.FixedColumnWidth(470.0),
-                  2: const pw.FixedColumnWidth(200.0),
-                  3: const pw.FixedColumnWidth(80.0),
-                  4: const pw.FixedColumnWidth(200.0),
-                  5: const pw.FixedColumnWidth(80.0),
-                  6: const pw.FixedColumnWidth(80.0),
+                  0: const pw.FixedColumnWidth(400.0),
+                  1: const pw.FixedColumnWidth(550.0),
+                  2: const pw.FixedColumnWidth(300.0),
+                  3: const pw.FixedColumnWidth(120.0),
+                  4: const pw.FixedColumnWidth(100.0),
+                  5: const pw.FixedColumnWidth(160.0),
+                  6: const pw.FixedColumnWidth(160.0),
                   7: const pw.FixedColumnWidth(240.0),
                   8: const pw.FixedColumnWidth(470.0),
                 },
@@ -536,24 +536,24 @@ class A73 implements BaseDocument {
     );
   }
 
-  pw.TableRow _buildHeaderTableRow() {
+  pw.TableRow _buildHeaderTableRow(PdfPageFormat pageFormat) {
     return pw.TableRow(
       children: [
         DocumentComponents.buildHeaderContainerCell(
           data: 'Article',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 14.8,
+          verticalPadding: 15.0,
         ),
         DocumentComponents.buildHeaderContainerCell(
           data: 'Description (Specification, Brand, Model, Serial #, Etc.)',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 10.6,
+          verticalPadding: pageFormat == PdfPageFormat.legal ? 15.0 : 10.5,
           horizontalPadding: 3.0,
           borderRight: false,
           borderLeft: false,
-          borderWidthBottom: 2.0,
+          borderWidthBottom: 3.0,
         ),
         // pw.Column(
         //   crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -626,7 +626,7 @@ class A73 implements BaseDocument {
           data: 'Property Number',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 14.8,
+          verticalPadding: 15.0,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
@@ -634,7 +634,7 @@ class A73 implements BaseDocument {
           data: 'Unit of Measure',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 10.6,
+          verticalPadding: 10.5,
           horizontalPadding: 3.0,
           borderRight: false,
         ),
@@ -642,7 +642,7 @@ class A73 implements BaseDocument {
           data: 'Unit Value',
           font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
           fontSize: 8.0,
-          verticalPadding: 10.6,
+          verticalPadding: pageFormat == PdfPageFormat.legal ? 15.0 : 10.5,
           borderRight: false,
         ),
         pw.Column(

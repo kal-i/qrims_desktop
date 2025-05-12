@@ -60,10 +60,12 @@ class ProductStock {
   const ProductStock({
     required this.productName,
     this.productDescription,
+    this.stockNo,
   });
 
   final ProductName productName;
   final ProductDescription? productDescription;
+  final int? stockNo;
 
   factory ProductStock.fromJson(Map<String, dynamic> json) {
     return ProductStock(
@@ -75,6 +77,7 @@ class ProductStock {
         'product_description_id': json['product_description_id'],
         'product_description': json['product_description'],
       }),
+      stockNo: json['stock_no'] as int?,
     );
   }
 
@@ -82,6 +85,7 @@ class ProductStock {
     return {
       'product_name': productName.toJson(),
       'product_description': productDescription?.toJson(),
+      'stock_no': stockNo,
     };
   }
 }
@@ -567,6 +571,7 @@ class Supply extends BaseItemModel {
       'product_name': json['product_name'],
       'product_description_id': json['product_description_id'],
       'product_description': json['product_description'],
+      'stock_no': json['stock_no'],
     });
 
     final shareableItemInformation = ShareableItemInformationModel.fromJson({
@@ -643,6 +648,7 @@ class InventoryItem extends BaseItemModel {
       'product_name': json['product_name'],
       'product_description_id': json['product_description_id'],
       'product_description': json['product_description'],
+      'stock_no': json['stock_no'],
     });
 
     final shareableItemInformation = ShareableItemInformationModel.fromJson({
