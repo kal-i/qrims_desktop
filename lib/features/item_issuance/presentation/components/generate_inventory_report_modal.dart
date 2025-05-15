@@ -671,11 +671,19 @@ class _GenerateInventoryReportModalState
     return BlocListener<IssuancesBloc, IssuancesState>(
       listener: (context, state) {
         if (state is FetchedInventoryReport) {
-          List<Map<String, String>> certifyingOffcers =
-              _officers.value.map((officer) {
+          // List<Map<String, String>> certifyingOffcers =
+          //     _officers.value.map((officer) {
+          //   return {
+          //     'name': officer['name']!.text,
+          //     'position': officer['position']!.text,
+          //   };
+          // }).toList();
+
+          List<Map<String, String>> certifyingOfficers =
+              _officers.value.map((e) {
             return {
-              'name': officer['name']!.text,
-              'position': officer['position']!.text,
+              'name': e['name']?.text ?? '',
+              'position': e['position']?.text ?? '',
             };
           }).toList();
 
@@ -699,7 +707,7 @@ class _GenerateInventoryReportModalState
             'approving_entity_or_authorized_representative':
                 _approvingEntityOrAuthorizedRepresentativeController.text,
             'coa_representative': _coaRepresentativeController.text,
-            'certifying_officers': certifyingOffcers,
+            'certifying_officers': certifyingOfficers,
           };
 
           showCustomDocumentPreview(

@@ -285,6 +285,9 @@ class _PurchaseRequestReusableViewState
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                         Text(
                           readableEnumConverter(requestedItem.unit),
@@ -303,7 +306,7 @@ class _PurchaseRequestReusableViewState
                                   ),
                         ),
                         Text(
-                          capitalizeWord(requestedItem.unitCost.toString()),
+                          formatCurrency(requestedItem.unitCost),
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontSize: 14.0,

@@ -3187,6 +3187,7 @@ class IssuanceRepository {
     required DateTime receivedDate,
   }) async {
     final setClauses = <String>[
+      'entity_id = @entity_id',
       'receiving_officer_id = @receiving_officer_id',
       'received_date = @received_date',
       'status = @status',

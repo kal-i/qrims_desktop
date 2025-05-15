@@ -583,15 +583,16 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                           ? issuance.parId
                           : issuance is RequisitionAndIssueSlipEntity
                               ? issuance.risId
-                              : 'N/A',
+                              : 'Unavailable',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
                 ),
                 Text(
-                  capitalizeWord(
-                      issuance.receivingOfficerEntity?.name ?? 'N/A'),
+                  issuance.receivingOfficerEntity != null
+                      ? capitalizeWord(issuance.receivingOfficerEntity!.name)
+                      : 'To be assigned',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,

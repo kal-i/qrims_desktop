@@ -290,6 +290,7 @@ Future<Response> _updateIssuance(
     final updated = await issuanceRepository.receiveIssuanceEntity(
       ctx: ctx,
       entityId: await entityRepository.checkEntityIfExist(
+        ctx: ctx,
         entityName: entityName,
       ),
       baseIssuanceEntityId: issuanceEntity.id,

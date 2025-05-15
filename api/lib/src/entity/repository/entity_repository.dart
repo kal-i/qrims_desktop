@@ -8,11 +8,12 @@ class EntityRepository {
 
   final Connection _conn;
 
-  Future<String> generateUniqueEntityId() async {
+  Future<String> generateUniqueEntityId(TxSession? ctx) async {
+    final conn = ctx ?? _conn;
     while (true) {
       final entityId = generatedId('NTTY');
 
-      final result = await _conn.execute(
+      final result = await conn.execute(
         Sql.named(
           '''SELECT COUNT(id) FROM Entities WHERE id = @id;''',
         ),
@@ -30,12 +31,14 @@ class EntityRepository {
   }
 
   Future<String> registerEntity({
+    TxSession? ctx,
     required String entityName,
   }) async {
     try {
-      final entityId = await generateUniqueEntityId();
+      final conn = ctx ?? _conn;
+      final entityId = await generateUniqueEntityId(ctx);
 
-      await _conn.execute(
+      await conn.execute(
         Sql.named(
           '''
         INSERT INTO Entities
@@ -58,9 +61,11 @@ class EntityRepository {
   }
 
   Future<String> checkEntityIfExist({
+    TxSession? ctx,
     required String entityName,
   }) async {
-    final result = await _conn.execute(
+    final conn = ctx ?? _conn;
+    final result = await conn.execute(
       Sql.named(
         '''SELECT id FROM Entities WHERE name ILIKE @name''',
       ),

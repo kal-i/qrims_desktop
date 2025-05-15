@@ -21,6 +21,7 @@ class CustomFormTextField extends StatefulWidget {
     this.suffixWidget,
     this.validator,
     this.enabled,
+    this.isReadOnly = false,
     this.isNumeric = false,
     this.isCurrency = false,
     this.fillColor,
@@ -38,6 +39,7 @@ class CustomFormTextField extends StatefulWidget {
   final Widget? suffixWidget;
   final String? Function(String?)? validator;
   final bool? enabled;
+  final bool isReadOnly;
   final bool isNumeric;
   final bool isCurrency;
   final Color? fillColor;
@@ -90,6 +92,7 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
           TextFormField(
             controller: widget.controller,
             enabled: widget.enabled,
+            readOnly: widget.isReadOnly,
             focusNode: _focusNode,
             maxLines: widget.maxLines,
             keyboardType: widget.maxLines == 1

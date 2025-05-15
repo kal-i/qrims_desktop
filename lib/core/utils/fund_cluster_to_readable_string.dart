@@ -23,7 +23,7 @@ extension FundClusterExtension on FundCluster {
         return "Asset is Leased";
       case FundCluster.unknown:
       default:
-        return "Unknown";
+        return "No fund cluster assigned";
     }
   }
 }

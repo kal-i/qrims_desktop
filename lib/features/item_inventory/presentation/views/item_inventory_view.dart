@@ -243,60 +243,69 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
       children: [
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _totalItemsCount,
-              builder: (context, totalItemsCount, child) {
-                return KPICard(
-                  icon: HugeIcons.strokeRoundedPackageAdd,
-                  title: 'Total Items',
-                  data: totalItemsCount.toString(),
-                  // baseColor: Colors.transparent,
-                );
-              }),
+            valueListenable: _totalItemsCount,
+            builder: (context, totalItemsCount, child) {
+              return KPICard(
+                icon: HugeIcons.strokeRoundedPackageAdd,
+                title: 'Total Items',
+                data: totalItemsCount.toString(),
+                description:
+                    'All tracked items, including supplies and inventory.',
+                // baseColor: Colors.transparent,
+              );
+            },
+          ),
         ),
         const SizedBox(
           width: 10.0,
         ),
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _suppliesCount,
-              builder: (context, suppliesCount, child) {
-                return KPICard(
-                  icon: HugeIcons.strokeRoundedPackageDelivered,
-                  title: 'Supply Items',
-                  data: suppliesCount.toString(),
-                  // baseColor: Colors.transparent,
-                );
-              }),
+            valueListenable: _suppliesCount,
+            builder: (context, suppliesCount, child) {
+              return KPICard(
+                icon: HugeIcons.strokeRoundedPackageDelivered,
+                title: 'Supply Items',
+                data: suppliesCount.toString(),
+                description: 'Bulk items tracked by batch and quantity.',
+                // baseColor: Colors.transparent,
+              );
+            },
+          ),
         ),
         const SizedBox(
           width: 10.0,
         ),
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _inventoryCount,
-              builder: (context, inventoryCount, child) {
-                return KPICard(
-                  icon: HugeIcons.strokeRoundedPackageProcess,
-                  title: 'Inventory Items',
-                  data: inventoryCount.toString(),
-                  // baseColor: Colors.transparent,
-                );
-              }),
+            valueListenable: _inventoryCount,
+            builder: (context, inventoryCount, child) {
+              return KPICard(
+                icon: HugeIcons.strokeRoundedPackageProcess,
+                title: 'Inventory Items',
+                data: inventoryCount.toString(),
+                description: 'Individually tracked items with unique IDs.',
+                // baseColor: Colors.transparent,
+              );
+            },
+          ),
         ),
         const SizedBox(
           width: 10.0,
         ),
         Expanded(
           child: ValueListenableBuilder(
-              valueListenable: _outOfStockCount,
-              builder: (context, outOfStockCount, child) {
-                return KPICard(
+            valueListenable: _outOfStockCount,
+            builder: (context, outOfStockCount, child) {
+              return KPICard(
                   icon: HugeIcons.strokeRoundedPackageRemove,
                   title: 'Out of stock',
                   data: outOfStockCount.toString(),
+                  description: 'Items fully issued, consumed, or disposed.'
                   //baseColor: Colors.transparent,
-                );
-              }),
+                  );
+            },
+          ),
         ),
       ],
     );
@@ -471,6 +480,11 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                                     null ||
                                 item.shareableItemInformationEntity
                                         .specification
+                                        ?.trim()
+                                        .isEmpty ==
+                                    true ||
+                                item.shareableItemInformationEntity
+                                        .specification
                                         ?.toLowerCase() ==
                                     'na' ||
                                 item.shareableItemInformationEntity
@@ -486,6 +500,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontWeight: FontWeight.w500,
                             ),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         readableEnumConverter(
@@ -530,6 +546,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                     ],
                     menuItems: [

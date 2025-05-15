@@ -17,6 +17,7 @@ import '../../../../core/common/components/pagination_controls.dart';
 import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../item_inventory/data/models/inventory_item.dart';
 import '../../../item_inventory/data/models/supply.dart';
 import '../../../item_inventory/domain/entities/inventory_item.dart';
@@ -257,11 +258,17 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                 Text(
                   (item.shareableItemInformationEntity.specification == null ||
                           item.shareableItemInformationEntity.specification
+                                  ?.trim()
+                                  .isEmpty ==
+                              true ||
+                          item.shareableItemInformationEntity.specification
+                                  ?.toLowerCase() ==
+                              'na' ||
+                          item.shareableItemInformationEntity.specification
                                   ?.toLowerCase() ==
                               'n/a')
-                      ? capitalizeWord(item.productStockEntity
-                              .productDescription?.description ??
-                          '')
+                      ? capitalizeWord(
+                          '${item.productStockEntity.productDescription?.description}')
                       : capitalizeWord(
                           '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -269,6 +276,8 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                         fontWeight: FontWeight.w500,
                       ),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 Text(
                   item.shareableItemInformationEntity.quantity.toString(),
@@ -278,7 +287,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
                       ),
                 ),
                 Text(
-                  item.shareableItemInformationEntity.unitCost.toString(),
+                  formatCurrency(item.shareableItemInformationEntity.unitCost),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
