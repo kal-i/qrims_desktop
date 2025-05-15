@@ -43,6 +43,8 @@ class _CreateExistingIssuanceToRISModalState
 
   late IssuanceEntity _issuanceEntity;
 
+  final _formKey = GlobalKey<FormState>();
+
   PurchaseRequestEntity? _purchaseRequestEntity;
   Entity? _entity;
   FundCluster? _fundCluster;
@@ -145,48 +147,50 @@ class _CreateExistingIssuanceToRISModalState
   }
 
   void _saveIssuance() async {
-    _issuancesBloc.add(
-      CreateRISEvent(
-        issuedDate: _issuanceEntity.issuedDate,
-        issuanceItems: _issuanceEntity.items
-            .map(
-              (issuanceItem) => (issuanceItem as IssuanceItemModel).toJson(),
-            )
-            .toList(),
-        prId: _purchaseRequestEntity?.id,
-        entityName: _entity?.name ?? _entityNameController.text,
-        fundCluster: _fundCluster,
-        division: _divisionController.text,
-        responsibilityCenterCode: _responsibilityCenterCode ??
-            _responsibilityCenterCodeController.text,
-        officeName: _officeEntity?.officeName ?? _officeController.text,
-        purpose: _purpose ?? _purposeController.text,
-        receivingOfficerOffice: _receivingOfficerEntity?.officeName ??
-            _receivingOfficerOfficeNameController.text,
-        receivingOfficerPosition: _receivingOfficerEntity?.positionName ??
-            _receivingOfficerPositionNameController.text,
-        receivingOfficerName: _receivingOfficerEntity?.name ??
-            _receivingOfficerNameController.text,
-        issuingOfficerOffice: _issuingOfficerEntity?.officeName ??
-            _issuingOfficerOfficeNameController.text,
-        issuingOfficerPosition: _issuingOfficerEntity?.positionName ??
-            _issuingOfficerPositionNameController.text,
-        issuingOfficerName:
-            _issuingOfficerEntity?.name ?? _issuingOfficerNameController.text,
-        approvingOfficerOffice: _approvingOfficerEntity?.officeName ??
-            _approvingOfficerOfficeNameController.text,
-        approvingOfficerPosition: _approvingOfficerEntity?.positionName ??
-            _approvingOfficerPositionNameController.text,
-        approvingOfficerName: _approvingOfficerEntity?.name ??
-            _approvingOfficerNameController.text,
-        requestingOfficerOffice: _requestingOfficerEntity?.officeName ??
-            _requestingOfficerOfficeNameController.text,
-        requestingOfficerPosition: _requestingOfficerEntity?.positionName ??
-            _requestingOfficerPositionNameController.text,
-        requestingOfficerName: _requestingOfficerEntity?.name ??
-            _requestingOfficerNameController.text,
-      ),
-    );
+    if (_formKey.currentState!.validate()) {
+      _issuancesBloc.add(
+        CreateRISEvent(
+          issuedDate: _issuanceEntity.issuedDate,
+          issuanceItems: _issuanceEntity.items
+              .map(
+                (issuanceItem) => (issuanceItem as IssuanceItemModel).toJson(),
+              )
+              .toList(),
+          prId: _purchaseRequestEntity?.id,
+          entityName: _entity?.name ?? _entityNameController.text,
+          fundCluster: _fundCluster,
+          division: _divisionController.text,
+          responsibilityCenterCode: _responsibilityCenterCode ??
+              _responsibilityCenterCodeController.text,
+          officeName: _officeEntity?.officeName ?? _officeController.text,
+          purpose: _purpose ?? _purposeController.text,
+          receivingOfficerOffice: _receivingOfficerEntity?.officeName ??
+              _receivingOfficerOfficeNameController.text,
+          receivingOfficerPosition: _receivingOfficerEntity?.positionName ??
+              _receivingOfficerPositionNameController.text,
+          receivingOfficerName: _receivingOfficerEntity?.name ??
+              _receivingOfficerNameController.text,
+          issuingOfficerOffice: _issuingOfficerEntity?.officeName ??
+              _issuingOfficerOfficeNameController.text,
+          issuingOfficerPosition: _issuingOfficerEntity?.positionName ??
+              _issuingOfficerPositionNameController.text,
+          issuingOfficerName:
+              _issuingOfficerEntity?.name ?? _issuingOfficerNameController.text,
+          approvingOfficerOffice: _approvingOfficerEntity?.officeName ??
+              _approvingOfficerOfficeNameController.text,
+          approvingOfficerPosition: _approvingOfficerEntity?.positionName ??
+              _approvingOfficerPositionNameController.text,
+          approvingOfficerName: _approvingOfficerEntity?.name ??
+              _approvingOfficerNameController.text,
+          requestingOfficerOffice: _requestingOfficerEntity?.officeName ??
+              _requestingOfficerOfficeNameController.text,
+          requestingOfficerPosition: _requestingOfficerEntity?.positionName ??
+              _requestingOfficerPositionNameController.text,
+          requestingOfficerName: _requestingOfficerEntity?.name ??
+              _requestingOfficerNameController.text,
+        ),
+      );
+    }
   }
 
   @override
@@ -217,7 +221,7 @@ class _CreateExistingIssuanceToRISModalState
       width: 900.0,
       height: 500.0,
       headerTitle: 'Create RIS from Existing Issuance',
-      subtitle: '',
+      subtitle: 'Fill in the following information (ignore if not applicable).',
       content: _buildModalContent(),
       footer: _buildActionsRow(),
     );
@@ -225,160 +229,177 @@ class _CreateExistingIssuanceToRISModalState
 
   Widget _buildModalContent() {
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            spacing: 20.0,
-            children: [
-              if (_entity == null)
-                Expanded(
-                  child: _buildEntitySuggestionField(),
-                ),
-              if (_fundCluster == null)
-                Expanded(
-                  child: _buildFundClusterSelection(),
-                ),
-            ],
-          ),
-          Row(
-            spacing: 20.0,
-            children: [
-              Expanded(
-                child: CustomFormTextField(
-                  label: 'Division',
-                  controller: _divisionController,
-                  placeholderText: 'Enter division',
-                ),
-              ),
-              if (_officeEntity == null)
-                Expanded(
-                  child: _buildOfficeSuggestionField(),
-                ),
-              if (_responsibilityCenterCode == null ||
-                  _responsibilityCenterCode!.trim().isEmpty)
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(
+              height: 15.0,
+            ),
+            Row(
+              spacing: 20.0,
+              children: [
+                if (_entity == null)
+                  Expanded(
+                    child: _buildEntitySuggestionField(),
+                  ),
+                if (_fundCluster == null)
+                  Expanded(
+                    child: _buildFundClusterSelection(),
+                  ),
+                if (_entity == null || _fundCluster == null)
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+              ],
+            ),
+            Row(
+              spacing: 20.0,
+              children: [
                 Expanded(
                   child: CustomFormTextField(
-                    label: 'Responsibility Center Code',
-                    placeholderText: 'Enter responsibility center code',
-                    controller: _responsibilityCenterCodeController,
+                    label: 'Division',
+                    controller: _divisionController,
+                    placeholderText: 'Enter division',
+                    hasValidation: false,
                   ),
                 ),
-            ],
-          ),
-          if (_purpose == null || _purpose!.trim().isEmpty)
+                if (_officeEntity == null)
+                  Expanded(
+                    child: _buildOfficeSuggestionField(),
+                  ),
+                if (_responsibilityCenterCode == null ||
+                    _responsibilityCenterCode!.trim().isEmpty)
+                  Expanded(
+                    child: CustomFormTextField(
+                      label: 'Responsibility Center Code',
+                      placeholderText: 'Enter responsibility center code',
+                      controller: _responsibilityCenterCodeController,
+                      hasValidation: false,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
             CustomFormTextField(
               label: 'Purpose',
               controller: _purposeController,
               maxLines: 4,
               placeholderText: 'Enter purpose',
             ),
-          if (_requestingOfficerEntity == null)
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildRequestingOfficerOfficeSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildRequestingOfficerPositionSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildRequestingOfficerNameSuggestionField(),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 30.0,
-                ),
-              ],
+            const SizedBox(
+              height: 50.0,
             ),
-          if (_approvingOfficerEntity == null)
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildApprovingOfficerOfficeSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildApprovingOfficerPositionSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildApprovingOfficerNameSuggestionField(),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 30.0,
-                ),
-              ],
-            ),
-          if (_issuingOfficerEntity == null)
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildIssuingOfficerOfficeSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildIssuingOfficerPositionSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildIssuingOfficerNameSuggestionField(),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 30.0,
-                ),
-              ],
-            ),
-          if (_receivingOfficerEntity == null)
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildReceivingOfficerOfficeSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildReceivingOfficerPositionSuggestionField(),
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    Expanded(
-                      child: _buildReceivingOfficerNameSuggestionField(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-        ],
+            if (_requestingOfficerEntity == null)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildRequestingOfficerOfficeSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildRequestingOfficerPositionSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildRequestingOfficerNameSuggestionField(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 30.0,
+                  ),
+                ],
+              ),
+            if (_approvingOfficerEntity == null)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildApprovingOfficerOfficeSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildApprovingOfficerPositionSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildApprovingOfficerNameSuggestionField(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 30.0,
+                  ),
+                ],
+              ),
+            if (_issuingOfficerEntity == null)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildIssuingOfficerOfficeSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildIssuingOfficerPositionSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildIssuingOfficerNameSuggestionField(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 30.0,
+                  ),
+                ],
+              ),
+            if (_receivingOfficerEntity == null)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildReceivingOfficerOfficeSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildReceivingOfficerPositionSuggestionField(),
+                      ),
+                      const SizedBox(
+                        width: 20.0,
+                      ),
+                      Expanded(
+                        child: _buildReceivingOfficerNameSuggestionField(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -446,6 +467,7 @@ class _CreateExistingIssuanceToRISModalState
       controller: _officeController,
       label: 'Office',
       placeHolderText: 'Enter purchase request\'s office',
+      hasValidation: false,
     );
   }
 

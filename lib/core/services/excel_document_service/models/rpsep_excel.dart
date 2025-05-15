@@ -429,12 +429,12 @@ class RPSEPExcelDocument {
               .toUpperCase() ??
           'UNKNOWN';
       final desc = inventorySemiExpendableProperty['description'];
-      final specs = inventorySemiExpendableProperty['specification'] ?? '\n';
+      final specs = inventorySemiExpendableProperty['specification'] ?? '';
       final manufacturer =
-          inventorySemiExpendableProperty['manufacturer_name'] ?? '\n';
-      final brand = inventorySemiExpendableProperty['brand_name'] ?? '\n';
-      final model = inventorySemiExpendableProperty['model_name'] ?? '\n';
-      final sn = inventorySemiExpendableProperty['serial_no'] ?? '\n';
+          inventorySemiExpendableProperty['manufacturer_name'] ?? '';
+      final brand = inventorySemiExpendableProperty['brand_name'] ?? '';
+      final model = inventorySemiExpendableProperty['model_name'] ?? '';
+      final sn = inventorySemiExpendableProperty['serial_no'] ?? '';
 
       final description = manufacturer.trim().isNotEmpty &&
               brand.trim().isNotEmpty &&
@@ -539,10 +539,11 @@ class RPSEPExcelDocument {
       final cellStyle = dataCellStyle?.copyWith(
         horizontalAlignVal: HorizontalAlign.Center,
         verticalAlignVal: VerticalAlign.Center,
-        topBorderVal: i == 1 ? borderStyle : thinBorder,
+        topBorderVal: thinBorder,
         rightBorderVal: borderStyle,
-        bottomBorderVal: i == 0 ? borderStyle : thinBorder,
+        bottomBorderVal: thinBorder,
         leftBorderVal: borderStyle,
+        textWrappingVal: TextWrapping.WrapText,
       );
 
       final rowIndex = startRow + i;
@@ -884,6 +885,8 @@ class RPSEPExcelDocument {
     int startingRow = footerStartRow + 2;
     int currentRow = startingRow;
 
+    print('certifying officers: $certifyingOfficers');
+
     final calibriRegStyle = sheet
         .cell(
           CellIndex.indexByColumnRow(
@@ -914,6 +917,18 @@ class RPSEPExcelDocument {
           ),
         )
         .cellStyle = calibriRegStyle;
+
+    /**
+     * Add a default empty string value to preserve styling
+     */
+    if (certifyingOfficers == null || certifyingOfficers.isEmpty) {
+      certifyingOfficers = [
+        {
+          'name': '',
+          'position': '',
+        },
+      ];
+    }
 
     if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
       for (int i = 1; i < certifyingOfficers.length; i++) {

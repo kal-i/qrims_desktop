@@ -89,7 +89,9 @@ class RPCI implements BaseDocument {
     for (final inventorySupply in inventorySupplies) {
       final article = inventorySupply['article'].toString().toUpperCase();
       final description = inventorySupply['description'];
-      final stockNumber = inventorySupply['stock_number'];
+      final stockNumber = inventorySupply['stock_number'] != null
+          ? inventorySupply['stock_number'].toString()
+          : '\n';
       final unit = inventorySupply['unit'];
       final unitValue = double.parse(inventorySupply['unit_value'].toString());
 

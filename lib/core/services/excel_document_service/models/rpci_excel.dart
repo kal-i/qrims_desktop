@@ -198,10 +198,7 @@ class RPCIExcelDocument {
 
     final cellStyle = sheet
         .cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 10,
-            rowIndex: footerStartRow + 1,
-          ),
+          CellIndex.indexByString('B10'),
         )
         .cellStyle;
 
@@ -345,7 +342,9 @@ class RPCIExcelDocument {
       final inventorySupply = inventorySupplies[i];
       final article = inventorySupply['article'].toString().toUpperCase();
       final description = inventorySupply['description'];
-      final stockNumber = inventorySupply['stock_number'];
+      final stockNumber = inventorySupply['stock_number'] != null
+          ? inventorySupply['stock_number'].toString()
+          : '\n';
       final unit = inventorySupply['unit'];
       final unitValue = double.parse(inventorySupply['unit_value'].toString());
       final totalQuantity =
@@ -508,171 +507,146 @@ class RPCIExcelDocument {
         )
         .cellStyle;
 
-    if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
-      for (int i = 0; i < certifyingOfficers.length; i++) {
-        final certifyingOfficer = certifyingOfficers[i];
+    /**
+     * Add a default empty string value to preserve styling
+     */
+    if (certifyingOfficers == null || certifyingOfficers.isEmpty) {
+      certifyingOfficers = [
+        {
+          'name': '',
+          'position': '',
+        },
+      ];
+    }
 
-        final startingCertifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 1,
-            rowIndex: currentRow,
-          ),
-        );
-        startingCertifyingOfficerNameCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
+    for (int i = 0; i < certifyingOfficers.length; i++) {
+      final certifyingOfficer = certifyingOfficers[i];
 
-        final endingCertifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 10,
-            rowIndex: currentRow,
-          ),
-        );
-        endingCertifyingOfficerNameCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
+      final startingCertifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 1,
+          rowIndex: currentRow,
+        ),
+      );
+      startingCertifyingOfficerNameCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
 
-        // Add Certifying Officer Name
-        final certifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 2,
-            rowIndex: currentRow,
-          ),
-        );
-        certifyingOfficerNameCell.value =
-            TextCellValue(certifyingOfficer['name']);
-        certifyingOfficerNameCell.cellStyle = cellStyle;
+      final endingCertifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 10,
+          rowIndex: currentRow,
+        ),
+      );
+      endingCertifyingOfficerNameCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
 
-        final startingCertifyingOfficerPositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 1,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        startingCertifyingOfficerPositionCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
+      // Add Certifying Officer Name
+      final certifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 2,
+          rowIndex: currentRow,
+        ),
+      );
+      certifyingOfficerNameCell.value =
+          TextCellValue(certifyingOfficer['name']);
+      certifyingOfficerNameCell.cellStyle = cellStyle;
 
-        final endingCertifyingOfficerPositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 10,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        endingCertifyingOfficerPositionCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        // Add Certifying Officer Position (Below Name)
-        final certifyingOfficerPositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 2,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        certifyingOfficerPositionCell.value =
-            TextCellValue(certifyingOfficer['position']);
-        certifyingOfficerPositionCell.cellStyle = cellStyle;
-
-        final startingAllotedCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 1,
-            rowIndex: currentRow + 2,
-          ),
-        );
-        startingAllotedCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        final endingAllotedCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 10,
-            rowIndex: currentRow + 2,
-          ),
-        );
-        endingAllotedCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        // Add border at the last row index
-        if (i == certifyingOfficers.length - 1) {
-          for (int col = 1; col <= 10; col++) {
-            final cell = sheet.cell(
-              CellIndex.indexByColumnRow(
-                columnIndex: col,
-                rowIndex: currentRow + 3,
-              ),
-            );
-            cell.cellStyle = CellStyle(
-              horizontalAlign: HorizontalAlign.Center,
-              verticalAlign: VerticalAlign.Center,
-              rightBorder: col == 10
-                  ? Border(
-                      borderStyle: BorderStyle.Medium,
-                    )
-                  : null,
-              bottomBorder: Border(
-                borderStyle: BorderStyle.Medium,
-              ),
-              leftBorder: col == 1
-                  ? Border(
-                      borderStyle: BorderStyle.Medium,
-                    )
-                  : null,
-            );
-          }
-        }
-
-        // Add spacing row after each officer
-        currentRow += 3;
-      }
-    } else {
       final startingCertifyingOfficerPositionCell = sheet.cell(
         CellIndex.indexByColumnRow(
           columnIndex: 1,
-          rowIndex: startingRow + 1,
+          rowIndex: currentRow + 1,
         ),
       );
-      startingCertifyingOfficerPositionCell.cellStyle = cellStyle;
+      startingCertifyingOfficerPositionCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      final endingCertifyingOfficerPositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 10,
+          rowIndex: currentRow + 1,
+        ),
+      );
+      endingCertifyingOfficerPositionCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      // Add Certifying Officer Position (Below Name)
+      final certifyingOfficerPositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 2,
+          rowIndex: currentRow + 1,
+        ),
+      );
+      certifyingOfficerPositionCell.value =
+          TextCellValue(certifyingOfficer['position']);
+      certifyingOfficerPositionCell.cellStyle = cellStyle;
+
+      final startingAllotedCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 1,
+          rowIndex: currentRow + 2,
+        ),
+      );
+      startingAllotedCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      final endingAllotedCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 10,
+          rowIndex: currentRow + 2,
+        ),
+      );
+      endingAllotedCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
 
       // Add border at the last row index
-      for (int col = 1; col <= 10; col++) {
-        final cell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: col,
-            rowIndex: startingRow + 3,
-          ),
-        );
-        cell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-          rightBorder: col == 10
-              ? Border(
-                  borderStyle: BorderStyle.Medium,
-                )
-              : null,
-          bottomBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-          leftBorder: col == 1
-              ? Border(
-                  borderStyle: BorderStyle.Medium,
-                )
-              : null,
-        );
+      if (i == certifyingOfficers.length - 1) {
+        for (int col = 1; col <= 10; col++) {
+          final cell = sheet.cell(
+            CellIndex.indexByColumnRow(
+              columnIndex: col,
+              rowIndex: currentRow + 3,
+            ),
+          );
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Center,
+            verticalAlign: VerticalAlign.Center,
+            rightBorder: col == 10
+                ? Border(
+                    borderStyle: BorderStyle.Medium,
+                  )
+                : null,
+            bottomBorder: Border(
+              borderStyle: BorderStyle.Medium,
+            ),
+            leftBorder: col == 1
+                ? Border(
+                    borderStyle: BorderStyle.Medium,
+                  )
+                : null,
+          );
+        }
       }
+
+      // Add spacing row after each officer
+      currentRow += 3;
     }
 
     // ** Add Approving Entity (Merged Cells with Borders) **

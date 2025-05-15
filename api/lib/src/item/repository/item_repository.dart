@@ -1457,10 +1457,16 @@ class ItemRepository {
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
           '''
-          WHERE pn.name ILIKE @search_query
+          WHERE (
+            i.id ILIKE @search_query OR
+            pn.name ILIKE @search_query OR
+            pd.description ILIKE @search_query OR
+            i.specification ILIKE @search_query OR
+            inv.serial_no ILIKE @search_query OR
+            md.model_name ILIKE @search_query
+          )
           ''',
         );
-
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -1615,10 +1621,16 @@ class ItemRepository {
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
           '''
-          WHERE pn.name ILIKE @search_query
+          WHERE (
+            i.id ILIKE @search_query OR
+            pn.name ILIKE @search_query OR
+            pd.description ILIKE @search_query OR
+            i.specification ILIKE @search_query OR
+            inv.serial_no ILIKE @search_query OR
+            md.model_name ILIKE @search_query
+          )
           ''',
         );
-
         params['search_query'] = '%$searchQuery%';
       }
 

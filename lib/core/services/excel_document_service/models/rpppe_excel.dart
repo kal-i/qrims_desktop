@@ -285,11 +285,11 @@ class RPPPEExcelDocument {
       final article =
           inventoryProperty['article']?.toString().toUpperCase() ?? 'UNKNOWN';
       final desc = inventoryProperty['description'];
-      final specs = inventoryProperty['specification'] ?? '\n';
-      final manufacturer = inventoryProperty['manufacturer_name'] ?? '\n';
-      final brand = inventoryProperty['brand_name'] ?? '\n';
-      final model = inventoryProperty['model_name'] ?? '\n';
-      final sn = inventoryProperty['serial_no'] ?? '\n';
+      final specs = inventoryProperty['specification'] ?? '';
+      final manufacturer = inventoryProperty['manufacturer_name'] ?? '';
+      final brand = inventoryProperty['brand_name'] ?? '';
+      final model = inventoryProperty['model_name'] ?? '';
+      final sn = inventoryProperty['serial_no'] ?? '';
 
       final description = manufacturer.trim().isNotEmpty &&
               brand.trim().isNotEmpty &&
@@ -381,9 +381,11 @@ class RPPPEExcelDocument {
           sheet.cell(CellIndex.indexByString('C14')).cellStyle = CellStyle(
         horizontalAlign: HorizontalAlign.Center,
         verticalAlign: VerticalAlign.Center,
-        topBorder: i == 0 ? borderStyle : thinBorder,
+        topBorder: thinBorder,
         rightBorder: borderStyle,
+        bottomBorder: thinBorder,
         leftBorder: borderStyle,
+        textWrapping: TextWrapping.WrapText,
       );
 
       _updateRow(
@@ -750,221 +752,204 @@ class RPPPEExcelDocument {
       ),
     );
 
-    if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
-      for (int i = 0; i < certifyingOfficers.length; i++) {
-        final certifyingOfficer = certifyingOfficers[i];
+    /**
+     * Add a default empty string value to preserve styling
+     */
+    if (certifyingOfficers == null || certifyingOfficers.isEmpty) {
+      certifyingOfficers = [
+        {
+          'name': '',
+          'position': '',
+        },
+      ];
+    }
 
-        /// Add left border to the first cell of Certifying Officer Name
-        final startingCertifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 2,
-            rowIndex: currentRow,
-          ),
-        );
-        startingCertifyingOfficerNameCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
+    for (int i = 0; i < certifyingOfficers.length; i++) {
+      final certifyingOfficer = certifyingOfficers[i];
 
-        /// Certifying Officer Name
-        /// Merge cells
-        final startCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
+      /// Add left border to the first cell of Certifying Officer Name
+      final startingCertifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 2,
+          rowIndex: currentRow,
+        ),
+      );
+      startingCertifyingOfficerNameCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      /// Certifying Officer Name
+      /// Merge cells
+      final startCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
+        columnIndex: 3,
+        rowIndex: currentRow,
+      );
+      final endCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
+        columnIndex: 6,
+        rowIndex: currentRow,
+      );
+
+      sheet.merge(startCertifyingOfficerNameCell, endCertifyingOfficerNameCell);
+
+      for (int col = startCertifyingOfficerNameCell.columnIndex;
+          col <= endCertifyingOfficerNameCell.columnIndex;
+          col++) {
+        final cell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: col, rowIndex: currentRow),
+        );
+      }
+
+      //       // cell.cellStyle = CellStyle(
+      //       //   bottomBorder: Border(
+      //       //     borderStyle: BorderStyle.Thin,
+      //       //   ),
+      //       //   horizontalAlign: HorizontalAlign.Center,
+      //       //   verticalAlign: VerticalAlign.Center,
+      //       //);
+      //     }
+
+      /// Add value and style to Certifying Officer Name Cell
+      final certifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
           columnIndex: 3,
           rowIndex: currentRow,
-        );
-        final endCertifyingOfficerNameCell = CellIndex.indexByColumnRow(
-          columnIndex: 6,
+        ),
+      );
+      certifyingOfficerNameCell.value =
+          TextCellValue(certifyingOfficer['name']);
+      certifyingOfficerNameCell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+      );
+
+      /// Add border right to the last cell of Certifying Officer Name
+      final endingCertifyingOfficerNameCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 14,
           rowIndex: currentRow,
-        );
+        ),
+      );
+      endingCertifyingOfficerNameCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
 
-        sheet.merge(
-            startCertifyingOfficerNameCell, endCertifyingOfficerNameCell);
+      /// Add left border to the first cell of Certifying Officer Position
+      final startingCertifyingOfficePositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 2,
+          rowIndex: currentRow + 1,
+        ),
+      );
+      startingCertifyingOfficePositionCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
 
-        for (int col = startCertifyingOfficerNameCell.columnIndex;
-            col <= endCertifyingOfficerNameCell.columnIndex;
-            col++) {
+      /// Certifying Officer Position
+      /// Merge cells
+      final startCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
+        columnIndex: 3,
+        rowIndex: currentRow + 1,
+      );
+      final endCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
+        columnIndex: 6,
+        rowIndex: currentRow + 1,
+      );
+
+      sheet.merge(
+        startCertifyingOfficerPositionCell,
+        endCertifyingOfficerPositionCell,
+      );
+
+      /// Add value and style to Certifying Officer Position Cell
+      final certifyingOfficerPositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 3,
+          rowIndex: currentRow + 1,
+        ),
+      );
+      certifyingOfficerPositionCell.value = TextCellValue(
+        certifyingOfficer['position'],
+      );
+      certifyingOfficerPositionCell.cellStyle = footerCellStyle?.copyWith(
+        horizontalAlignVal: HorizontalAlign.Center,
+        verticalAlignVal: VerticalAlign.Center,
+      );
+
+      /// Add right border to the last cell of Certifying Officer Position
+      final endingCertifyingOfficePositionCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 14,
+          rowIndex: currentRow + 1,
+        ),
+      );
+      endingCertifyingOfficePositionCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      /// Add left border to the first allotted cell
+      final startingAllotedCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 2,
+          rowIndex: currentRow + 2,
+        ),
+      );
+      startingAllotedCell.cellStyle = CellStyle(
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      /// Add right border to the last allotted cell
+      final endingAllotedCell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 14,
+          rowIndex: currentRow + 2,
+        ),
+      );
+      endingAllotedCell.cellStyle = CellStyle(
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+        ),
+      );
+
+      if (i == certifyingOfficers.length - 1) {
+        for (int col = 2; col <= 14; col++) {
           final cell = sheet.cell(
-            CellIndex.indexByColumnRow(columnIndex: col, rowIndex: currentRow),
+            CellIndex.indexByColumnRow(
+              columnIndex: col,
+              rowIndex: currentRow + 3,
+            ),
+          );
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Center,
+            verticalAlign: VerticalAlign.Center,
+            rightBorder: col == 14
+                ? Border(
+                    borderStyle: BorderStyle.Medium,
+                  )
+                : null,
+            bottomBorder: Border(
+              borderStyle: BorderStyle.Medium,
+            ),
+            leftBorder: col == 2
+                ? Border(
+                    borderStyle: BorderStyle.Medium,
+                  )
+                : null,
           );
         }
-
-        //       // cell.cellStyle = CellStyle(
-        //       //   bottomBorder: Border(
-        //       //     borderStyle: BorderStyle.Thin,
-        //       //   ),
-        //       //   horizontalAlign: HorizontalAlign.Center,
-        //       //   verticalAlign: VerticalAlign.Center,
-        //       //);
-        //     }
-
-        /// Add value and style to Certifying Officer Name Cell
-        final certifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 3,
-            rowIndex: currentRow,
-          ),
-        );
-        certifyingOfficerNameCell.value =
-            TextCellValue(certifyingOfficer['name']);
-        certifyingOfficerNameCell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-        );
-
-        /// Add border right to the last cell of Certifying Officer Name
-        final endingCertifyingOfficerNameCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 14,
-            rowIndex: currentRow,
-          ),
-        );
-        endingCertifyingOfficerNameCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        /// Add left border to the first cell of Certifying Officer Position
-        final startingCertifyingOfficePositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 2,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        startingCertifyingOfficePositionCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        /// Certifying Officer Position
-        /// Merge cells
-        final startCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
-          columnIndex: 3,
-          rowIndex: currentRow + 1,
-        );
-        final endCertifyingOfficerPositionCell = CellIndex.indexByColumnRow(
-          columnIndex: 6,
-          rowIndex: currentRow + 1,
-        );
-
-        sheet.merge(
-          startCertifyingOfficerPositionCell,
-          endCertifyingOfficerPositionCell,
-        );
-
-        /// Add value and style to Certifying Officer Position Cell
-        final certifyingOfficerPositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 3,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        certifyingOfficerPositionCell.value = TextCellValue(
-          certifyingOfficer['position'],
-        );
-        certifyingOfficerPositionCell.cellStyle = footerCellStyle?.copyWith(
-          horizontalAlignVal: HorizontalAlign.Center,
-          verticalAlignVal: VerticalAlign.Center,
-        );
-
-        /// Add right border to the last cell of Certifying Officer Position
-        final endingCertifyingOfficePositionCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 14,
-            rowIndex: currentRow + 1,
-          ),
-        );
-        endingCertifyingOfficePositionCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        /// Add left border to the first allotted cell
-        final startingAllotedCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 2,
-            rowIndex: currentRow + 2,
-          ),
-        );
-        startingAllotedCell.cellStyle = CellStyle(
-          leftBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        /// Add right border to the last allotted cell
-        final endingAllotedCell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 14,
-            rowIndex: currentRow + 2,
-          ),
-        );
-        endingAllotedCell.cellStyle = CellStyle(
-          rightBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-        );
-
-        if (i == certifyingOfficers.length - 1) {
-          for (int col = 2; col <= 14; col++) {
-            final cell = sheet.cell(
-              CellIndex.indexByColumnRow(
-                columnIndex: col,
-                rowIndex: currentRow + 3,
-              ),
-            );
-            cell.cellStyle = CellStyle(
-              horizontalAlign: HorizontalAlign.Center,
-              verticalAlign: VerticalAlign.Center,
-              rightBorder: col == 14
-                  ? Border(
-                      borderStyle: BorderStyle.Medium,
-                    )
-                  : null,
-              bottomBorder: Border(
-                borderStyle: BorderStyle.Medium,
-              ),
-              leftBorder: col == 2
-                  ? Border(
-                      borderStyle: BorderStyle.Medium,
-                    )
-                  : null,
-            );
-          }
-        }
-
-        /// Add spacing row after each officer
-        currentRow += 3;
       }
-    } else {
-      for (int col = 2; col <= 14; col++) {
-        final cell = sheet.cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: col,
-            rowIndex: startingRow + 3,
-          ),
-        );
-        cell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-          rightBorder: col == 14
-              ? Border(
-                  borderStyle: BorderStyle.Medium,
-                )
-              : null,
-          bottomBorder: Border(
-            borderStyle: BorderStyle.Medium,
-          ),
-          leftBorder: col == 2
-              ? Border(
-                  borderStyle: BorderStyle.Medium,
-                )
-              : null,
-        );
-      }
+
+      /// Add spacing row after each officer
+      currentRow += 3;
     }
 
     // ** Add Approving Entity (Merged Cells with Borders) **

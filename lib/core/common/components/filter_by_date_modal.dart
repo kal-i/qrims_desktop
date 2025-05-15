@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../config/themes/app_color.dart';
-import '../../../config/themes/app_theme.dart';
-import '../../../config/themes/bloc/theme_bloc.dart';
 import 'custom_date_picker.dart';
 import 'custom_filled_button.dart';
 import 'custom_outline_button.dart';
@@ -24,8 +20,8 @@ class FilterByDateModal extends StatefulWidget {
   final String title;
   final String? subtitle;
   final Function(
-      DateTime? startDate,
-      DateTime? endDate,
+    DateTime? startDate,
+    DateTime? endDate,
   ) onApplyFilters;
   final DateTime? startDate;
   final DateTime? endDate;
@@ -36,9 +32,9 @@ class FilterByDateModal extends StatefulWidget {
 
 class _FilterByDateModalState extends State<FilterByDateModal> {
   late final ValueNotifier<DateTime> _pickedStartDate =
-  ValueNotifier<DateTime>(widget.startDate ?? DateTime.now());
+      ValueNotifier<DateTime>(widget.startDate ?? DateTime.now());
   late final ValueNotifier<DateTime> _pickedEndDate =
-  ValueNotifier<DateTime>(widget.endDate ?? DateTime.now());
+      ValueNotifier<DateTime>(widget.endDate ?? DateTime.now());
 
   @override
   void dispose() {
@@ -87,9 +83,6 @@ class _FilterByDateModalState extends State<FilterByDateModal> {
           },
           label: 'Start Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );
@@ -111,9 +104,6 @@ class _FilterByDateModalState extends State<FilterByDateModal> {
           },
           label: 'End Date',
           dateController: dateController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
         );
       },
     );

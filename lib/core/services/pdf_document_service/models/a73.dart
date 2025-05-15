@@ -90,8 +90,15 @@ class A73 implements BaseDocument {
 
     for (final inventoryProperty in inventoryProperties) {
       final article = inventoryProperty['article'].toString().toUpperCase();
-      final description =
-          '${inventoryProperty['brand_name']} ${inventoryProperty['model_name']} with SN: ${inventoryProperty['serial_no']}';
+      final brand = inventoryProperty['brand_name'] ?? '';
+      final model = inventoryProperty['model_name'] ?? '';
+      final sn = inventoryProperty['serial_no'] ?? '';
+
+      final description = brand.trim().isNotEmpty &&
+              model.trim().isNotEmpty() &&
+              sn.trim().isNotEmtpy
+          ? '$brand $model with SN: $sn'
+          : inventoryProperty['description'];
       final propertyNo = inventoryProperty['property_no'];
       final unit = inventoryProperty['unit'];
       final unitValue =

@@ -92,8 +92,15 @@ class AnnexA8 implements BaseDocument {
         in inventorySemiExpendableProperties) {
       final article =
           inventorySemiExpendableProperty['article'].toString().toUpperCase();
-      final description =
-          '${inventorySemiExpendableProperty['brand_name']} ${inventorySemiExpendableProperty['model_name']} with SN: ${inventorySemiExpendableProperty['serial_no']}';
+      final brand = inventorySemiExpendableProperty['brand_name'] ?? '';
+      final model = inventorySemiExpendableProperty['model_name'] ?? '';
+      final sn = inventorySemiExpendableProperty['serial_no'] ?? '';
+
+      final description = brand.trim().isNotEmpty &&
+              model.trim().isNotEmpty() &&
+              sn.trim().isNotEmtpy
+          ? '$brand $model with SN: $sn'
+          : inventorySemiExpendableProperty['description'];
       final semiExpendablePropertyNo =
           inventorySemiExpendableProperty['semi_expendable_property_no'];
       final unit = inventorySemiExpendableProperty['unit'];

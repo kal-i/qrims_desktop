@@ -988,13 +988,24 @@ class IssuanceRepository {
       LEFT JOIN InventoryCustodianSlips ics ON iss.id = ics.issuance_id
       LEFT JOIN PropertyAcknowledgementReceipts par ON iss.id = par.issuance_id
       LEFT JOIN RequisitionAndIssueSlips ris ON iss.id = ris.issuance_id
+      LEFT JOIN Officers ofc ON iss.receiving_officer_id = ofc.id
       ''';
 
       final whereClause = StringBuffer('WHERE iss.is_archived = @is_archived');
       params['is_archived'] = isArchived;
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        whereClause.write(' AND iss.id ILIKE @search_query');
+        whereClause.write(
+          '''
+          AND (
+            iss.id ILIKE @search_query OR
+            ics.id ILIKE @search_query OR
+            par.id ILIKE @search_query OR
+            ris.id ILIKE @search_query OR
+            ofc.name ILIKE @search_query
+          )
+          ''',
+        );
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -1012,8 +1023,8 @@ class IssuanceRepository {
       }
 
       if (type != null && type.isNotEmpty) {
-        whereClause.write(
-            ' AND (ics.id IS NOT NULL OR par.id IS NOT NULL OR ris.id IS NOT NULL)');
+        // whereClause.write(
+        //     ' AND (ics.id IS NOT NULL OR par.id IS NOT NULL OR ris.id IS NOT NULL)');
         if (type == 'ics') {
           whereClause.write(' AND ics.id IS NOT NULL');
         } else if (type == 'par') {
@@ -1087,7 +1098,16 @@ class IssuanceRepository {
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
         whereClause.write(
-            ' AND iss.id ILIKE @search_query OR ofc.name ILIKE @search_query');
+          '''
+          AND (
+            iss.id ILIKE @search_query OR
+            ics.id ILIKE @search_query OR
+            par.id ILIKE @search_query OR
+            ris.id ILIKE @search_query OR
+            ofc.name ILIKE @search_query
+          )
+          ''',
+        );
         params['search_query'] = '%$searchQuery%';
       }
 
@@ -1105,8 +1125,8 @@ class IssuanceRepository {
       }
 
       if (type != null && type.isNotEmpty) {
-        whereClause.write(
-            ' AND (ics.id IS NOT NULL OR par.id IS NOT NULL OR ris.id IS NOT NULL)');
+        // whereClause.write(
+        //     ' AND (ics.id IS NOT NULL OR par.id IS NOT NULL OR ris.id IS NOT NULL)');
         if (type == 'ics') {
           whereClause.write(' AND ics.id IS NOT NULL');
         } else if (type == 'par') {
@@ -2498,6 +2518,7 @@ class IssuanceRepository {
               rec_off_pos.position_name AS receiving_officer_position,
               i.acquired_date AS date_acquired,
               i.fund_cluster AS fund_cluster,
+              ps.stock_no,
               ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY iss.id) AS row_num -- To order issuances for each item
           FROM
               Items i
@@ -2507,6 +2528,8 @@ class IssuanceRepository {
               ProductNames pn ON i.product_name_id = pn.id
           LEFT JOIN
               ProductDescriptions pd ON i.product_description_id = pd.id
+          LEFT JOIN
+              ProductStocks ps ON i.product_name_id = ps.product_name_id AND i.product_description_id = ps.product_description_id
           LEFT JOIN
               IssuanceItems issi ON i.id = issi.item_id
           LEFT JOIN
@@ -2544,6 +2567,7 @@ class IssuanceRepository {
               receiving_officer_position,              
               date_acquired,
               fund_cluster,
+              stock_no,
               row_num,
               SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id) AS total_issued_quantity_all_entities,
               SUM(total_quantity_issued_for_a_particular_row) OVER (PARTITION BY item_id ORDER BY row_num) AS cumulative_issued_quantity
@@ -2569,6 +2593,7 @@ class IssuanceRepository {
               receiving_officer_position,  
               date_acquired,
               fund_cluster,
+              stock_no,
               row_num,
               total_issued_quantity_all_entities,
               current_quantity_in_stock + total_issued_quantity_all_entities AS total_quantity_available_and_issued,
@@ -2602,7 +2627,8 @@ class IssuanceRepository {
           receiving_officer_office,
           receiving_officer_position,  
           date_acquired,
-          fund_cluster
+          fund_cluster,
+          stock_no
       FROM
           RunningBalance
       ORDER BY
@@ -2625,7 +2651,7 @@ class IssuanceRepository {
         {
           'article': row[5],
           'description': row[6],
-          'stock_number': '${row[1]}${row[2]}',
+          'stock_number': row[20],
           'unit': row[3],
           'unit_value': row[4],
           'current_quantity_in_stock': row[8],

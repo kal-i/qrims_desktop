@@ -55,6 +55,7 @@ class _ReceiveIssuanceModalState extends State<ReceiveIssuanceModal> {
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
+    _entitySuggestionService = serviceLocator<EntitySuggestionService>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
 
     _officeNameController.text = widget.receivingOfficerOffice ?? '';
