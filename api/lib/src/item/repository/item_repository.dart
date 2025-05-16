@@ -1566,8 +1566,8 @@ class ItemRepository {
     required int page,
     required int pageSize,
     String? searchQuery,
-    String sortBy = 'acquired_date',
-    bool sortAscending = false,
+    String? sortBy,
+    bool sortAscending = true,
     String? filter,
     String? manufacturerName,
     String? brandName,
@@ -1680,7 +1680,7 @@ class ItemRepository {
       $baseQuery
       $whereClause
       ORDER BY
-        $sortBy $sortDirection
+        ${sortBy ?? 'i.id'} $sortDirection
       LIMIT @page_size OFFSET @offset;
       ''';
 

@@ -18,394 +18,404 @@ class A73 implements BaseDocument {
     required data,
     required bool withQr,
   }) async {
-    final pdf = pw.Document();
+    try {
+      final pdf = pw.Document();
 
-    final assetSubClass = data['asset_sub_class'] as String?;
-    final accountableOfficer =
-        data['accountable_officer'] as Map<String, String>?;
-    final inventoryProperties = data['inventory_report'];
-    final approvingEntityOrAuthorizedRepresentative =
-        data['approving_entity_or_authorized_representative'] as String?;
-    final coaRepresentative = data['coa_representative'] as String?;
-    final certifyingOfficers =
-        data['certifying_officers'] as List<Map<String, dynamic>>?;
+      final assetSubClass = data['asset_sub_class'] as String?;
+      final accountableOfficer =
+          data['accountable_officer'] as Map<String, String>?;
+      final inventoryProperties = data['inventory_report'];
+      final approvingEntityOrAuthorizedRepresentative =
+          data['approving_entity_or_authorized_representative'] as String?;
+      final coaRepresentative = data['coa_representative'] as String?;
+      final certifyingOfficers =
+          data['certifying_officers'] as List<Map<String, dynamic>>?;
 
-    List<pw.TableRow> tableRows = [];
-    List<pw.TableRow> tableFooterRows = [
-      pw.TableRow(
-        children: [
-          DocumentComponents.buildContainer(
-            borderTop: false,
-            borderRight: false,
-            borderBottom: false,
-            verticalPadding: 3.0,
-            horizontalPadding: 3.0,
-            child: pw.Text(
-              'Certified Correct by:',
-              style: pw.TextStyle(
-                font: serviceLocator<FontService>()
-                    .getFont('timesNewRomanRegular'),
-                fontSize: 8.0,
-              ),
-            ),
-          ),
-          DocumentComponents.buildContainer(
-            borderTop: false,
-            borderRight: false,
-            borderBottom: false,
-            borderLeft: false,
-            verticalPadding: 3.0,
-            horizontalPadding: 3.0,
-            child: pw.Text(
-              'Approved by:',
-              style: pw.TextStyle(
-                font: serviceLocator<FontService>()
-                    .getFont('timesNewRomanRegular'),
-                fontSize: 8.0,
-              ),
-            ),
-          ),
-          DocumentComponents.buildContainer(
-            borderTop: false,
-            borderBottom: false,
-            borderLeft: false,
-            verticalPadding: 3.0,
-            horizontalPadding: 3.0,
-            child: pw.Text(
-              'Witnessed by:',
-              style: pw.TextStyle(
-                font: serviceLocator<FontService>()
-                    .getFont('timesNewRomanRegular'),
-                fontSize: 8.0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ];
-
-    tableRows.add(
-      _buildHeaderTableRow(pageFormat),
-    );
-
-    for (final inventoryProperty in inventoryProperties) {
-      final article = inventoryProperty['article'].toString().toUpperCase();
-      final brand = inventoryProperty['brand_name'] ?? '';
-      final model = inventoryProperty['model_name'] ?? '';
-      final sn = inventoryProperty['serial_no'] ?? '';
-
-      final description = brand.trim().isNotEmpty &&
-              model.trim().isNotEmpty() &&
-              sn.trim().isNotEmtpy
-          ? '$brand $model with SN: $sn'
-          : inventoryProperty['description'];
-      final propertyNo = inventoryProperty['property_no'];
-      final unit = inventoryProperty['unit'];
-      final unitValue =
-          double.parse(inventoryProperty['unit_value'].toString());
-
-      // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
-      final totalQuantity =
-          inventoryProperty['balance_from_previous_row_after_issuance'] == 0
-              ? inventoryProperty['total_quantity_available_and_issued'] != null
-                  ? int.tryParse(
-                      inventoryProperty['total_quantity_available_and_issued']
-                              ?.toString() ??
-                          '0')
-                  : inventoryProperty['current_quantity_in_stock']
-              : inventoryProperty['balance_from_previous_row_after_issuance'];
-
-      final balanceAfterIssue = int.tryParse(
-              inventoryProperty['balance_per_row_after_issuance']?.toString() ??
-                  '0') ??
-          0;
-
-      final remarks = inventoryProperty['receiving_officer_name'] != null
-          ? '${capitalizeWord(inventoryProperty['receiving_officer_name'])}/${capitalizeWord(inventoryProperty['receiving_officer_office'])}-${standardizePositionName(inventoryProperty['receiving_officer_position'])}'
-          : '\n';
-
-      final rowHeight = DocumentService.getRowHeight(
-        description,
-        fontSize: 8.0,
-        cellWidth: pageFormat == PdfPageFormat.a4
-            ? 600.0
-            : pageFormat == PdfPageFormat.letter
-                ? 500.0
-                : 500.0,
-      );
-
-      tableRows.add(
-        _buildContentTableRow(
-          article: article,
-          description: description,
-          semiExpendablePropertyNo: propertyNo,
-          unit: unit,
-          unitValue: unitValue,
-          totalQuantity: totalQuantity,
-          quantityAfterIssued: balanceAfterIssue,
-          remarks: remarks,
-          rowHeight: rowHeight,
-        ),
-      );
-    }
-
-    if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
-      for (int i = 0; i < certifyingOfficers.length; i++) {
-        final certifyingOfficer = certifyingOfficers[i];
-
-        if (i == 0) {
-          tableFooterRows.add(
-            pw.TableRow(
-              children: [
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderRight: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  verticalPadding: 5.0,
-                  child: _buildAssociatedOfficerField(
-                    title: certifyingOfficer['position'],
-                    officerName: certifyingOfficer['name'],
-                  ),
-                ),
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderRight: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  borderLeft: false,
-                  verticalPadding: 5.0,
-                  child: _buildAssociatedOfficerField(
-                    title: 'Entity or Authorized Representative',
-                    officerName: approvingEntityOrAuthorizedRepresentative,
-                  ),
-                ),
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  borderLeft: false,
-                  verticalPadding: 5.0,
-                  child: _buildAssociatedOfficerField(
-                    title: 'COA Representative',
-                    officerName: coaRepresentative,
-                  ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          tableFooterRows.add(
-            pw.TableRow(
-              children: [
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderRight: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  verticalPadding: 5.0,
-                  child: _buildAssociatedOfficerField(
-                    title: certifyingOfficer['position'],
-                    officerName: certifyingOfficer['name'],
-                  ),
-                ),
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderRight: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  borderLeft: false,
-                  verticalPadding: 20.7,
-                  child: pw.SizedBox.shrink(),
-                ),
-                DocumentComponents.buildContainer(
-                  borderTop: false,
-                  borderBottom:
-                      i == certifyingOfficers.length - 1 ? true : false,
-                  borderLeft: false,
-                  verticalPadding: 20.7,
-                  child: pw.SizedBox.shrink(),
-                ),
-              ],
-            ),
-          );
-        }
-      }
-    } else {
-      tableFooterRows.add(
+      List<pw.TableRow> tableRows = [];
+      List<pw.TableRow> tableFooterRows = [
         pw.TableRow(
           children: [
             DocumentComponents.buildContainer(
               borderTop: false,
               borderRight: false,
-              verticalPadding: 20.7,
-              child: pw.SizedBox.shrink(),
+              borderBottom: false,
+              verticalPadding: 3.0,
+              horizontalPadding: 3.0,
+              child: pw.Text(
+                'Certified Correct by:',
+                style: pw.TextStyle(
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
+                  fontSize: 8.0,
+                ),
+              ),
             ),
             DocumentComponents.buildContainer(
               borderTop: false,
               borderRight: false,
+              borderBottom: false,
               borderLeft: false,
-              verticalPadding: 5.0,
-              child: _buildAssociatedOfficerField(
-                title: 'Entity or Authorized Representative',
+              verticalPadding: 3.0,
+              horizontalPadding: 3.0,
+              child: pw.Text(
+                'Approved by:',
+                style: pw.TextStyle(
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
+                  fontSize: 8.0,
+                ),
               ),
             ),
             DocumentComponents.buildContainer(
               borderTop: false,
+              borderBottom: false,
               borderLeft: false,
-              verticalPadding: 5.0,
-              child: _buildAssociatedOfficerField(
-                title: 'COA Representative',
+              verticalPadding: 3.0,
+              horizontalPadding: 3.0,
+              child: pw.Text(
+                'Witnessed by:',
+                style: pw.TextStyle(
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanRegular'),
+                  fontSize: 8.0,
+                ),
               ),
             ),
           ],
         ),
-      );
-    }
+      ];
 
-    pdf.addPage(
-      pw.MultiPage(
-        pageTheme: DocumentPageUtil.getPageTheme(
-          pageFormat: pageFormat,
-          orientation: pw.PageOrientation.landscape,
-        ),
-        build: (context) => [
-          pw.Center(
-            child: _buildHeader(
-              assetSubClass: assetSubClass != null && assetSubClass.isNotEmpty
-                  ? assetSubClass
-                  : null,
+      tableRows.add(
+        _buildHeaderTableRow(pageFormat),
+      );
+
+      for (final inventoryProperty in inventoryProperties) {
+        final article = inventoryProperty['article'].toString().toUpperCase();
+        final brand = inventoryProperty['brand_name'] ?? '';
+        final model = inventoryProperty['model_name'] ?? '';
+        final sn = inventoryProperty['serial_no'] ?? '';
+
+        final description = brand.trim().isNotEmpty &&
+                model.trim().isNotEmpty &&
+                sn.trim().isNotEmpty
+            ? '$brand $model with SN: $sn'
+            : inventoryProperty['description'];
+        final propertyNo = inventoryProperty['property_no'];
+        final unit = inventoryProperty['unit'];
+        final unitValue =
+            double.parse(inventoryProperty['unit_value'].toString());
+
+        // check 1st if we have bal from prev issue, if 0, check if totaal qty avail and issued is not empty, otherwise use current stock
+        final totalQuantity =
+            inventoryProperty['balance_from_previous_row_after_issuance'] == 0
+                ? inventoryProperty['total_quantity_available_and_issued'] !=
+                        null
+                    ? int.tryParse(
+                        inventoryProperty['total_quantity_available_and_issued']
+                                ?.toString() ??
+                            '0')
+                    : inventoryProperty['current_quantity_in_stock']
+                : inventoryProperty['balance_from_previous_row_after_issuance'];
+
+        final balanceAfterIssue = int.tryParse(
+                inventoryProperty['balance_per_row_after_issuance']
+                        ?.toString() ??
+                    '0') ??
+            0;
+
+        final remarks = inventoryProperty['receiving_officer_name'] != null
+            ? '${capitalizeWord(inventoryProperty['receiving_officer_name'])}/${capitalizeWord(inventoryProperty['receiving_officer_office'])}-${standardizePositionName(inventoryProperty['receiving_officer_position'])}'
+            : '\n';
+
+        final rowHeight = DocumentService.getRowHeight(
+          description,
+          fontSize: 8.0,
+          cellWidth: pageFormat == PdfPageFormat.a4
+              ? 600.0
+              : pageFormat == PdfPageFormat.letter
+                  ? 500.0
+                  : 500.0,
+        );
+
+        tableRows.add(
+          _buildContentTableRow(
+            article: article,
+            description: description,
+            semiExpendablePropertyNo: propertyNo,
+            unit: unit,
+            unitValue: unitValue,
+            totalQuantity: totalQuantity,
+            quantityAfterIssued: balanceAfterIssue,
+            remarks: remarks,
+            rowHeight: rowHeight,
+          ),
+        );
+      }
+
+      if (certifyingOfficers != null && certifyingOfficers.isNotEmpty) {
+        for (int i = 0; i < certifyingOfficers.length; i++) {
+          final certifyingOfficer = certifyingOfficers[i];
+
+          if (i == 0) {
+            tableFooterRows.add(
+              pw.TableRow(
+                children: [
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderRight: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    verticalPadding: 5.0,
+                    child: _buildAssociatedOfficerField(
+                      title: certifyingOfficer['position'],
+                      officerName: certifyingOfficer['name'],
+                    ),
+                  ),
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderRight: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    borderLeft: false,
+                    verticalPadding: 5.0,
+                    child: _buildAssociatedOfficerField(
+                      title: 'Entity or Authorized Representative',
+                      officerName: approvingEntityOrAuthorizedRepresentative,
+                    ),
+                  ),
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    borderLeft: false,
+                    verticalPadding: 5.0,
+                    child: _buildAssociatedOfficerField(
+                      title: 'COA Representative',
+                      officerName: coaRepresentative,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            tableFooterRows.add(
+              pw.TableRow(
+                children: [
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderRight: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    verticalPadding: 5.0,
+                    child: _buildAssociatedOfficerField(
+                      title: certifyingOfficer['position'],
+                      officerName: certifyingOfficer['name'],
+                    ),
+                  ),
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderRight: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    borderLeft: false,
+                    verticalPadding: 20.7,
+                    child: pw.SizedBox.shrink(),
+                  ),
+                  DocumentComponents.buildContainer(
+                    borderTop: false,
+                    borderBottom:
+                        i == certifyingOfficers.length - 1 ? true : false,
+                    borderLeft: false,
+                    verticalPadding: 20.7,
+                    child: pw.SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      } else {
+        tableFooterRows.add(
+          pw.TableRow(
+            children: [
+              DocumentComponents.buildContainer(
+                borderTop: false,
+                borderRight: false,
+                verticalPadding: 20.7,
+                child: pw.SizedBox.shrink(),
+              ),
+              DocumentComponents.buildContainer(
+                borderTop: false,
+                borderRight: false,
+                borderLeft: false,
+                verticalPadding: 5.0,
+                child: _buildAssociatedOfficerField(
+                  title: 'Entity or Authorized Representative',
+                ),
+              ),
+              DocumentComponents.buildContainer(
+                borderTop: false,
+                borderLeft: false,
+                verticalPadding: 5.0,
+                child: _buildAssociatedOfficerField(
+                  title: 'COA Representative',
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageTheme: DocumentPageUtil.getPageTheme(
+            pageFormat: pageFormat,
+            orientation: pw.PageOrientation.landscape,
+          ),
+          build: (context) => [
+            pw.Center(
+              child: _buildHeader(
+                assetSubClass: assetSubClass != null && assetSubClass.isNotEmpty
+                    ? assetSubClass
+                    : null,
+              ),
             ),
-          ),
-          pw.SizedBox(
-            height: 10.0,
-          ),
-          pw.Text(
-            'Fund Cluster: ${data['fund_cluster']}',
-            style: pw.TextStyle(
-              font: serviceLocator<FontService>().getFont('timesNewRomanBold'),
-              fontSize: 8.0,
+            pw.SizedBox(
+              height: 10.0,
             ),
-          ),
-          pw.SizedBox(
-            height: 10.0,
-          ),
-          pw.RichText(
-            text: pw.TextSpan(
-              text: 'For which ',
+            pw.Text(
+              'Fund Cluster: ${data['fund_cluster']}',
               style: pw.TextStyle(
                 font:
                     serviceLocator<FontService>().getFont('timesNewRomanBold'),
                 fontSize: 8.0,
               ),
-              children: [
-                pw.TextSpan(
-                  text: accountableOfficer?['name'] != null &&
-                          accountableOfficer!['name']!.isNotEmpty
-                      ? '${accountableOfficer['name']}'
-                      : '_______________________',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanRegular'),
-                    fontSize: 7.5,
-                    decoration: pw.TextDecoration.underline,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: ', ',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanBold'),
-                    fontSize: 8.0,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: accountableOfficer?['position'] != null &&
-                          accountableOfficer!['position']!.isNotEmpty
-                      ? '${accountableOfficer['position']}'
-                      : '_______________________',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanRegular'),
-                    fontSize: 7.5,
-                    decoration: pw.TextDecoration.underline,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: ', ',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanBold'),
-                    fontSize: 8.0,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: accountableOfficer?['location'] != null &&
-                          accountableOfficer!['location']!.isNotEmpty
-                      ? '${accountableOfficer['location']}'
-                      : '_______________________',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanRegular'),
-                    fontSize: 7.5,
-                    decoration: pw.TextDecoration.underline,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: ', ',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanBold'),
-                    fontSize: 8.0,
-                  ),
-                ),
-                pw.TextSpan(
-                  text:
-                      'is accountable, having assumed such accountability on ',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanBold'),
-                    fontSize: 8.0,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: accountableOfficer?['accountability_date'] != null
-                      ? '${accountableOfficer?['accountability_date']}'
-                      : '_______________________',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanRegular'),
-                    fontSize: 7.5,
-                    decoration: pw.TextDecoration.underline,
-                  ),
-                ),
-                pw.TextSpan(
-                  text: '.',
-                  style: pw.TextStyle(
-                    font: serviceLocator<FontService>()
-                        .getFont('timesNewRomanBold'),
-                    fontSize: 8.0,
-                  ),
-                ),
-              ],
             ),
-          ),
-          pw.SizedBox(
-            height: 10.0,
-          ),
-          _buildTableHeader(
-            pageFormat,
-            tableRows,
-          ),
-          _buildTableFooter(
-            pageFormat,
-            tableFooterRows,
-          ),
-        ],
-      ),
-    );
+            pw.SizedBox(
+              height: 10.0,
+            ),
+            pw.RichText(
+              text: pw.TextSpan(
+                text: 'For which ',
+                style: pw.TextStyle(
+                  font: serviceLocator<FontService>()
+                      .getFont('timesNewRomanBold'),
+                  fontSize: 8.0,
+                ),
+                children: [
+                  pw.TextSpan(
+                    text: accountableOfficer?['name'] != null &&
+                            accountableOfficer!['name']!.isNotEmpty
+                        ? '${accountableOfficer['name']}'
+                        : '_______________________',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanRegular'),
+                      fontSize: 7.5,
+                      decoration: pw.TextDecoration.underline,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: ', ',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: accountableOfficer?['position'] != null &&
+                            accountableOfficer!['position']!.isNotEmpty
+                        ? '${accountableOfficer['position']}'
+                        : '_______________________',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanRegular'),
+                      fontSize: 7.5,
+                      decoration: pw.TextDecoration.underline,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: ', ',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: accountableOfficer?['location'] != null &&
+                            accountableOfficer!['location']!.isNotEmpty
+                        ? '${accountableOfficer['location']}'
+                        : '_______________________',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanRegular'),
+                      fontSize: 7.5,
+                      decoration: pw.TextDecoration.underline,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: ', ',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text:
+                        'is accountable, having assumed such accountability on ',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: accountableOfficer?['accountability_date'] != null
+                        ? '${accountableOfficer?['accountability_date']}'
+                        : '_______________________',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanRegular'),
+                      fontSize: 7.5,
+                      decoration: pw.TextDecoration.underline,
+                    ),
+                  ),
+                  pw.TextSpan(
+                    text: '.',
+                    style: pw.TextStyle(
+                      font: serviceLocator<FontService>()
+                          .getFont('timesNewRomanBold'),
+                      fontSize: 8.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(
+              height: 10.0,
+            ),
+            _buildTableHeader(
+              pageFormat,
+              tableRows,
+            ),
+            _buildTableFooter(
+              pageFormat,
+              tableFooterRows,
+            ),
+          ],
+        ),
+      );
 
-    return pdf;
+      return pdf;
+    } catch (e, stackTrace) {
+      print('Error generating PDF: $e');
+      print(stackTrace);
+      // Return empty document or handle error appropriately
+      return pw.Document();
+    }
   }
 
   pw.Widget _buildHeader({

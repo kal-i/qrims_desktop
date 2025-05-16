@@ -42,7 +42,7 @@ class _FilterOfficerModalState extends State<FilterOfficerModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 900.0,
+      width: 600.0,
       height: 300.0,
       headerTitle: 'Filter Officer',
       subtitle: 'Filter officer by their office.',

@@ -97,8 +97,8 @@ class AnnexA8 implements BaseDocument {
       final sn = inventorySemiExpendableProperty['serial_no'] ?? '';
 
       final description = brand.trim().isNotEmpty &&
-              model.trim().isNotEmpty() &&
-              sn.trim().isNotEmtpy
+              model.trim().isNotEmpty &&
+              sn.trim().isNotEmpty
           ? '$brand $model with SN: $sn'
           : inventorySemiExpendableProperty['description'];
       final semiExpendablePropertyNo =

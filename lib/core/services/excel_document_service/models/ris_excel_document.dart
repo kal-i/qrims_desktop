@@ -533,7 +533,7 @@ class RISExcelDocument {
 
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
-      final stockNo = productStockEntity.stockNo;
+      final stockNo = productStockEntity.stockNo ?? '';
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
       final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);

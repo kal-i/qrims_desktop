@@ -36,9 +36,9 @@ Future<Response> _getItems(
     final page = int.tryParse(queryParams['page'] ?? '1') ?? 1;
     final pageSize = int.tryParse(queryParams['page_size'] ?? '10') ?? 10;
     final searchQuery = queryParams['search_query']?.trim() ?? '';
-    final sortBy = queryParams['sort_by']?.trim() ?? 'acquired_date';
+    final sortBy = queryParams['sort_by']?.trim();
     final sortAscending =
-        bool.tryParse(queryParams['sort_ascending'] ?? 'false') ?? false;
+        bool.tryParse(queryParams['sort_ascending'] ?? 'true') ?? true;
 
     final filter = queryParams['filter'];
 

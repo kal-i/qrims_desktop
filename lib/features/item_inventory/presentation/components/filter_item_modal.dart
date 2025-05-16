@@ -130,7 +130,7 @@ class _FilterItemModalState extends State<FilterItemModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 900.0,
+      width: 600.0,
       height: 600.0,
       headerTitle: 'Filter Item',
       subtitle: 'Filter items by the following parameters.',

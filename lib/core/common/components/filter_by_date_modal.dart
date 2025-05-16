@@ -46,7 +46,7 @@ class _FilterByDateModalState extends State<FilterByDateModal> {
   @override
   Widget build(BuildContext context) {
     return BaseModal(
-      width: 900.0,
+      width: 600.0,
       height: 400.0,
       headerTitle: widget.title,
       subtitle: widget.subtitle,

@@ -46,14 +46,14 @@ class ItemInventoryView extends StatefulWidget {
 
 class _ItemInventoryViewState extends State<ItemInventoryView> {
   late ItemInventoryBloc _itemInventoryBloc;
-  late String _selectedSortValue = 'acquired_date';
+  //late String _selectedSortValue = 'acquired_date';
 
   late String? _selectedManufacturer;
   late String? _selectedBrand;
   late AssetClassification? _selectedClassificationFilter;
   late AssetSubClass? _selectedSubClassFilter;
 
-  final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
+  //final ValueNotifier<String> _selectedSortOrder = ValueNotifier('Descending');
   final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('');
 
   final ValueNotifier<int> _totalItemsCount = ValueNotifier(0);
@@ -125,8 +125,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
         pageSize: _pageSize,
         searchQuery: _searchController.text,
         filter: _selectedFilterNotifier.value,
-        sortBy: _selectedSortValue,
-        sortAscending: _selectedSortOrder.value == 'Ascending',
+        //sortBy: _selectedSortValue,
+        //sortAscending: _selectedSortOrder.value == 'Ascending',
         manufacturerName: _selectedManufacturer,
         brandName: _selectedBrand,
         classificationFilter: _selectedClassificationFilter,
@@ -145,8 +145,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
     _selectedSubClassFilter = null;
 
     _selectedFilterNotifier.value = '';
-    _selectedSortValue = '';
-    _selectedSortOrder.value = 'Descending';
+    //_selectedSortValue = '';
+    //_selectedSortOrder.value = 'Ascending';
     _fetchItems();
   }
 
@@ -168,7 +168,7 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
   void dispose() {
     _searchController.dispose();
     _debounce?.cancel();
-    _selectedSortOrder.dispose();
+    //_selectedSortOrder.dispose();
     _selectedFilterNotifier.dispose();
     _totalItemsCount.dispose();
     super.dispose();

@@ -223,8 +223,8 @@ class RequisitionAndIssueSlip implements BaseDocument {
 
       final productNameId = productNameEntity.id;
       final productDescriptionId = productDescriptionEntity?.id;
-      final stockNo =
-          productStockEntity.stockNo; // '$productNameId$productDescriptionId';
+      final stockNo = productStockEntity.stockNo ??
+          '\n'; // '$productNameId$productDescriptionId';
       final unit = shareableItemInformationEntity.unit;
       final stockQuantity = shareableItemInformationEntity.quantity;
       final issuedQuantity = group.fold<int>(0, (sum, e) => sum + e.quantity);

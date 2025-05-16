@@ -110,6 +110,7 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
         child: Form(
           key: _formKey,
           child: Column(
+            spacing: 20.0,
             children: [
               Row(
                 children: [
@@ -118,9 +119,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 15.0,
-              ),
               Row(
                 children: [
                   Expanded(
@@ -128,27 +126,16 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 15.0,
-              ),
               IntrinsicHeight(
                 child: Row(
+                  spacing: 20.0,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: _buildUnitSelection(),
                     ),
-                    const SizedBox(
-                      width: 50.0,
-                    ),
                     Expanded(
                       child: _buildQuantityCounterField(),
-                      // CustomFormTextField(
-                      //   label: 'Quantity',
-                      // ),
-                    ),
-                    const SizedBox(
-                      width: 50.0,
                     ),
                     Expanded(
                       child: CustomFormTextField(
@@ -159,9 +146,6 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(
-                height: 15.0,
               ),
               CustomFormTextField(
                 label: 'Specification (optional)',
