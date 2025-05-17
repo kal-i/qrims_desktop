@@ -60,6 +60,8 @@ Future<Response> _createICS(
     final headers = await context.request.headers;
     final json = await context.request.json() as Map<String, dynamic>;
 
+    print('raw json data: $json');
+
     /// Get current user from session
     final bearerToken = headers['Authorization']?.substring(7);
     if (bearerToken == null) {

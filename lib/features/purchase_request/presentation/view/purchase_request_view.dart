@@ -383,6 +383,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                           fontSize: 14.0,
                           fontWeight: FontWeight.w500,
                         ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
                   Text(
                     capitalizeWord(
@@ -391,6 +394,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                           fontSize: 14.0,
                           fontWeight: FontWeight.w500,
                         ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
                   Text(
                     documentDateFormatter(purchaseRequest.date),
@@ -398,6 +404,9 @@ class _PurchaseRequestViewState extends State<PurchaseRequestView> {
                           fontSize: 14.0,
                           fontWeight: FontWeight.w500,
                         ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
                   SizedBox(
                     width: 50.0,

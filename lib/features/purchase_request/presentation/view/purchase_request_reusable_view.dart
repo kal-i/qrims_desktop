@@ -620,6 +620,9 @@ class _PurchaseRequestReusableViewState
                                       fontSize: 14.0,
                                       fontWeight: FontWeight.w500,
                                     ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                           Text(
                             (requestedItemSpecification == null ||
@@ -638,6 +641,8 @@ class _PurchaseRequestReusableViewState
                                       fontWeight: FontWeight.w500,
                                     ),
                             overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                           Text(
                             readableEnumConverter(requestedItem['unit']),
@@ -646,6 +651,9 @@ class _PurchaseRequestReusableViewState
                                       fontSize: 14.0,
                                       fontWeight: FontWeight.w500,
                                     ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                           Text(
                             capitalizeWord(
@@ -655,6 +663,9 @@ class _PurchaseRequestReusableViewState
                                       fontSize: 14.0,
                                       fontWeight: FontWeight.w500,
                                     ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                           Text(
                             formatCurrency(requestedItem['unit_cost']),
@@ -663,6 +674,9 @@ class _PurchaseRequestReusableViewState
                                       fontSize: 14.0,
                                       fontWeight: FontWeight.w500,
                                     ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                         ],
                         menuItems: [

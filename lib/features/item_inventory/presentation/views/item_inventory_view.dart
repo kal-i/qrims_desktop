@@ -474,6 +474,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         (item.shareableItemInformationEntity.specification ==
@@ -512,6 +515,8 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontWeight: FontWeight.w500,
                             ),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         item.shareableItemInformationEntity.quantity.toString(),
@@ -519,6 +524,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         formatCurrency(
@@ -528,6 +536,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         documentDateFormatter(
@@ -537,6 +548,9 @@ class _ItemInventoryViewState extends State<ItemInventoryView> {
                               fontSize: 14.0,
                               fontWeight: FontWeight.w500,
                             ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
                       Text(
                         item.shareableItemInformationEntity.fundCluster

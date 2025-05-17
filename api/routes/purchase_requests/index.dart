@@ -207,11 +207,13 @@ Future<Response> _registerPurchaseRequest(
 
     final requestedItemsMap = <Map<String, dynamic>>[];
 
+    print('processing requested items');
     for (int i = 0; i < requestedItems.length; i++) {
       final requestedItem = requestedItems[i];
+      print('requested item being process: $requestedItem');
       final productName = requestedItem['product_name'] as String;
       final productDescription = requestedItem['product_description'] as String;
-      final productSpecification = requestedItem['specification'] as String;
+      final productSpecification = requestedItem['specification'] as String?;
       final unitString = requestedItem['unit'] as String;
       final quantity = requestedItem['quantity'] as int;
       final unitCost = requestedItem['unit_cost'] as double;
@@ -223,6 +225,8 @@ Future<Response> _registerPurchaseRequest(
             productName: productName,
           );
 
+      print('product name id: $productNameId ');
+
       final productDescriptionId =
           await itemRepository.checkProductDescriptionIfExist(
                 productDescription: productDescription,
@@ -231,8 +235,7 @@ Future<Response> _registerPurchaseRequest(
                 productDescription: productDescription,
               );
 
-      print(
-          'product name id: $productNameId - product desc id: $productDescriptionId');
+      print('product desc id: $productDescriptionId');
 
       final productStockResult = await itemRepository.checkProductStockIfExist(
         productNameId: productNameId,
@@ -263,7 +266,10 @@ Future<Response> _registerPurchaseRequest(
           'unit_cost': unitCost,
         },
       );
+
+      print('successful coversion of item');
     }
+    print('processed requested items: $requestedItemsMap');
 
     /// requesting officer info
     final requestingOfficerOfficeId = await officeRepository.checkOfficeIfExist(

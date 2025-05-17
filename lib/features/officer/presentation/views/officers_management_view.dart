@@ -321,6 +321,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 Text(
                   capitalizeWord(officer.officeName),
@@ -328,6 +331,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 Text(
                   standardizePositionName(officer.positionName),
@@ -335,6 +341,9 @@ class _OfficersManagementViewState extends State<OfficersManagementView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
               ],
               menuItems: [

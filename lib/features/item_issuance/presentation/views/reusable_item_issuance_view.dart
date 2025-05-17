@@ -467,6 +467,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                         Text(
                           requestedItem.productDescriptionEntity.description ??
@@ -476,6 +479,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                         Text(
                           requestedItem.quantity.toString(),
@@ -484,6 +490,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                         Text(
                           requestedItem.remainingQuantity.toString(),
@@ -492,6 +501,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                         Text(
                           readableEnumConverter(requestedItem.status),
@@ -500,6 +512,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                       ],
                     ),

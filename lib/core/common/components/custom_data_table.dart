@@ -152,6 +152,9 @@ class _CustomDataTableState extends State<CustomDataTable> {
                                     fontSize: 13.0,
                                     fontWeight: FontWeight.w500,
                                   ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
                         ),
                       ),
                     );

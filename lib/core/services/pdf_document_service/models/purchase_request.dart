@@ -7,8 +7,8 @@ import '../../../../init_dependencies.dart';
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
+import '../../../utils/group_specification_by_section.dart';
 import '../../../utils/readable_enum_converter.dart';
 import '../document_service.dart';
 import '../font_service.dart';
@@ -78,11 +78,9 @@ class PurchaseRequest implements BaseDocument {
           requestedItem.specification!.isNotEmpty &&
           requestedItem.specification!.toLowerCase() != 'na' &&
           requestedItem.specification!.toLowerCase() != 'n/a') {
-        descriptionColumn.add('Specifications');
         descriptionColumn.addAll(
-          extractSpecification(
+          groupSpecificationBySection(
             requestedItem.specification!,
-            ',',
           ),
         );
       }
@@ -98,9 +96,7 @@ class PurchaseRequest implements BaseDocument {
       for (int i = 0; i < descriptionColumn.length; i++) {
         tableRows.add(
           _buildTableRows(
-            stockOrPropertyNo: i == 0
-                ? '${requestedItem.productNameEntity.id}${requestedItem.productDescriptionEntity.id}'
-                : '\n',
+            stockOrPropertyNo: i == 0 ? '' : '\n',
             unit: i == 0 ? readableEnumConverter(requestedItem.unit) : '\n',
             itemDescription: descriptionColumn[i],
             quantity: i == 0 ? requestedItem.quantity.toString() : '\n',

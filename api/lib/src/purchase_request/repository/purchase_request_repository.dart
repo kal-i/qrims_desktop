@@ -148,18 +148,17 @@ class PurchaseRequestRepository {
     try {
       print('triggered');
       final prId = await _generateUniquePurchaseRequestId();
-      final rcc = await _generateUniqueResponsibilityCenterCode();
+      // final rcc = await _generateUniqueResponsibilityCenterCode();
       print('pr id: $prId');
 
       await _conn.execute(
         Sql.named(
           '''
         INSERT INTO PurchaseRequests (
-          id, entity_id, fund_cluster, office_id, responsibility_center_code,
-          date, purpose, requesting_officer_id, approving_officer_id
+          id, entity_id, fund_cluster, office_id, date, 
+          purpose, requesting_officer_id, approving_officer_id
         ) VALUES (
-          @id, @entity_id, @fund_cluster, @office_id, 
-          @responsibility_center_code, @date,
+          @id, @entity_id, @fund_cluster, @office_id, @date,
           @purpose, @requesting_officer_id, @approving_officer_id
         );
         ''',
@@ -169,7 +168,6 @@ class PurchaseRequestRepository {
           'entity_id': entityId,
           'fund_cluster': fundCluster.toString().split('.').last,
           'office_id': officeId,
-          'responsibility_center_code': rcc,
           'date': date,
           'purpose': purpose,
           'requesting_officer_id': requestingOfficerId,

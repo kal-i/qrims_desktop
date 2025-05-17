@@ -588,6 +588,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 Text(
                   issuance.receivingOfficerEntity != null
@@ -597,6 +600,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 Text(
                   documentDateFormatter(issuance.issuedDate),
@@ -604,6 +610,9 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
                         fontSize: 14.0,
                         fontWeight: FontWeight.w500,
                       ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
                 ),
                 SizedBox(
                   width: 50.0,

@@ -522,8 +522,8 @@ class InventoryCustodianSlip extends Issuance {
         'entity_id': prJson['entity']['entity_id'],
         'entity_name': prJson['entity']['entity_name'],
         'fund_cluster': prJson['fund_cluster'],
-        'office_id': prJson['office']['office_id'],
-        'office_name': prJson['office']['office_name'],
+        'office_id': prJson['office']['id'],
+        'office_name': prJson['office']['name'],
         'responsibility_center_code': prJson['responsibility_center_code'],
         'date': prJson['date'],
         'requested_items': requestedItems,
@@ -872,8 +872,8 @@ class PropertyAcknowledgementReceipt extends Issuance {
         'entity_id': prJson['entity']['entity_id'],
         'entity_name': prJson['entity']['entity_name'],
         'fund_cluster': prJson['fund_cluster'],
-        'office_id': prJson['office']['office_id'],
-        'office_name': prJson['office']['office_name'],
+        'office_id': prJson['office']['id'],
+        'office_name': prJson['office']['name'],
         'responsibility_center_code': prJson['responsibility_center_code'],
         'date': prJson['date'],
         'requested_items': requestedItems,
@@ -1066,7 +1066,7 @@ class RequisitionAndIssueSlip extends Issuance {
                   'product_description': itemJson['item']['product_stock']
                       ['product_description']['product_description'],
                 },
-                'stock_no': itemJson['item']['product_stock']['stock_no'],
+                'stock_no': itemJson['item']['product_stock']?['stock_no'],
               },
             }
           : {
@@ -1086,7 +1086,7 @@ class RequisitionAndIssueSlip extends Issuance {
                   'product_description': itemJson['item']?['product_stock']
                       ?['product_description']?['product_description'],
                 },
-                'stock_no': itemJson['item']['product_stock']['stock_no'],
+                'stock_no': itemJson['item']['product_stock']?['stock_no'],
               },
               'manufacturer_brand': itemJson['item']?['manufacturer_brand'] ==
                       null
@@ -1135,6 +1135,8 @@ class RequisitionAndIssueSlip extends Issuance {
       return issuanceItem;
     }).toList();
 
+    print('processed issued items');
+
     if (prJson != null) {
       final requestedItems = (prJson['requested_items'] as List<dynamic>)
           .map((requestedItem) => RequestedItem.fromJson({
@@ -1156,6 +1158,8 @@ class RequisitionAndIssueSlip extends Issuance {
                 'status': requestedItem['status'],
               }).toJson())
           .toList();
+
+      print('processed pr');
 
       final requestingOfficerJson = prJson['requesting_officer'];
       final requestingOfficerData = {
@@ -1211,8 +1215,8 @@ class RequisitionAndIssueSlip extends Issuance {
         'entity_id': prJson['entity']['entity_id'],
         'entity_name': prJson['entity']['entity_name'],
         'fund_cluster': prJson['fund_cluster'],
-        'office_id': prJson['office']['office_id'],
-        'office_name': prJson['office']['office_name'],
+        'office_id': prJson['office']['id'],
+        'office_name': prJson['office']['name'],
         'responsibility_center_code': prJson['responsibility_center_code'],
         'date': prJson['date'],
         'requested_items': requestedItems,
