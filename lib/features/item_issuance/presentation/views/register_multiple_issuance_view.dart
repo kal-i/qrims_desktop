@@ -17,6 +17,7 @@ import '../../../../core/enums/ics_type.dart';
 import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/entity_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
+import '../../../../core/utils/confirmation_dialog.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
@@ -171,54 +172,63 @@ class _RegisterMultipleIssuanceViewState
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
-      if (widget.issuanceType == IssuanceType.ics) {
-        _issuancesBloc.add(
-          CreateMultipleICSEvent(
-            issuedDate: _pickedDate.value,
-            type: _selectedIcsType.value,
-            receivingOfficers: _officers.value,
-            fundCluster: _selectedFundCluster.value,
-            supplierName: _supplierNameController.text,
-            deliveryReceiptId: _deliveryReceiptIdController.text,
-            prReferenceId: _prReferenceIdController.text,
-            inventoryTransferReportId:
-                _inventoryTransferReportIdController.text,
-            inspectionAndAcceptanceReportId:
-                _inspectionAndAcceptanceReportIdController.text,
-            contractNumber: _contractNumberController.text,
-            purchaseOrderNumber: _purchaseOrderNumberController.text,
-            dateAcquired: _dateAcquired.value,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
-          ),
-        );
-      }
+    if (!_formKey.currentState!.validate()) return;
 
-      if (widget.issuanceType == IssuanceType.par) {
-        _issuancesBloc.add(
-          CreateMultiplePAREvent(
-            issuedDate: _pickedDate.value,
-            receivingOfficers: _officers.value,
-            fundCluster: _selectedFundCluster.value,
-            supplierName: _supplierNameController.text,
-            deliveryReceiptId: _deliveryReceiptIdController.text,
-            prReferenceId: _prReferenceIdController.text,
-            inventoryTransferReportId:
-                _inventoryTransferReportIdController.text,
-            inspectionAndAcceptanceReportId:
-                _inspectionAndAcceptanceReportIdController.text,
-            contractNumber: _contractNumberController.text,
-            purchaseOrderNumber: _purchaseOrderNumberController.text,
-            dateAcquired: _dateAcquired.value,
-            issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
-            issuingOfficerPosition: _issuingOfficerPositionNameController.text,
-            issuingOfficerName: _issuingOfficerNameController.text,
-          ),
-        );
-      }
-    }
+    confirmationDialog(
+      context: context,
+      title: 'Register Issuance?',
+      content: 'Are you sure you want to register this issuance?',
+      onConfirmed: () {
+        if (widget.issuanceType == IssuanceType.ics) {
+          _issuancesBloc.add(
+            CreateMultipleICSEvent(
+              issuedDate: _pickedDate.value,
+              type: _selectedIcsType.value,
+              receivingOfficers: _officers.value,
+              fundCluster: _selectedFundCluster.value,
+              supplierName: _supplierNameController.text,
+              deliveryReceiptId: _deliveryReceiptIdController.text,
+              prReferenceId: _prReferenceIdController.text,
+              inventoryTransferReportId:
+                  _inventoryTransferReportIdController.text,
+              inspectionAndAcceptanceReportId:
+                  _inspectionAndAcceptanceReportIdController.text,
+              contractNumber: _contractNumberController.text,
+              purchaseOrderNumber: _purchaseOrderNumberController.text,
+              dateAcquired: _dateAcquired.value,
+              issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+              issuingOfficerPosition:
+                  _issuingOfficerPositionNameController.text,
+              issuingOfficerName: _issuingOfficerNameController.text,
+            ),
+          );
+        }
+
+        if (widget.issuanceType == IssuanceType.par) {
+          _issuancesBloc.add(
+            CreateMultiplePAREvent(
+              issuedDate: _pickedDate.value,
+              receivingOfficers: _officers.value,
+              fundCluster: _selectedFundCluster.value,
+              supplierName: _supplierNameController.text,
+              deliveryReceiptId: _deliveryReceiptIdController.text,
+              prReferenceId: _prReferenceIdController.text,
+              inventoryTransferReportId:
+                  _inventoryTransferReportIdController.text,
+              inspectionAndAcceptanceReportId:
+                  _inspectionAndAcceptanceReportIdController.text,
+              contractNumber: _contractNumberController.text,
+              purchaseOrderNumber: _purchaseOrderNumberController.text,
+              dateAcquired: _dateAcquired.value,
+              issuingOfficerOffice: _issuingOfficerOfficeNameController.text,
+              issuingOfficerPosition:
+                  _issuingOfficerPositionNameController.text,
+              issuingOfficerName: _issuingOfficerNameController.text,
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override

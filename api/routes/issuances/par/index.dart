@@ -101,7 +101,7 @@ Future<Response> _createPAR(
     final deliveryReceiptId = json['delivery_receipt_id'] as String?;
     final prReferenceId = json['pr_reference_id'] as String?;
     final inventoryTransferReportId =
-        json['inventory_transfer_report_id'] as String;
+        json['inventory_transfer_report_id'] as String?;
     final inspectionAndAcceptanceReportId =
         json['inspection_and_acceptance_report_id'] as String?;
     final contractNumber = json['contract_number'] as String?;
@@ -206,6 +206,8 @@ Future<Response> _createPAR(
           )
         : null;
 
+    print('creating par');
+
     /// Create PAR
     final issuanceId = await issuanceRepository.createPAR(
       issuedDate: issuedDate,
@@ -269,6 +271,18 @@ Future<Response> _createPAR(
       },
     );
   } catch (e) {
+    final errorMessage = e.toString();
+
+    if (errorMessage
+        .contains('Issuance includes items that were not requested.')) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {
+          'message': 'Issuance includes items that were not requested.',
+        },
+      );
+    }
+
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {'message': 'Error processing create PAR: $e'},

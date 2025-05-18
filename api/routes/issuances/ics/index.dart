@@ -279,6 +279,18 @@ Future<Response> _createICS(
       },
     );
   } catch (e) {
+    final errorMessage = e.toString();
+
+    if (errorMessage
+        .contains('Issuance includes items that were not requested.')) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {
+          'message': 'Issuance includes items that were not requested.',
+        },
+      );
+    }
+
     return Response.json(
       statusCode: HttpStatus.internalServerError,
       body: {

@@ -142,6 +142,8 @@ class _AddRequestedItemModalState extends State<AddRequestedItemModal> {
                         label: '* Unit Cost',
                         controller: _unitCostController,
                         placeholderText: 'Enter item\'s unit cost',
+                        isNumeric: true,
+                        isCurrency: true,
                       ),
                     ),
                   ],

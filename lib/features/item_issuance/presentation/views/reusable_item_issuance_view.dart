@@ -19,6 +19,7 @@ import '../../../../core/enums/issuance_type.dart';
 import '../../../../core/services/entity_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/confirmation_dialog.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/document_date_formatter.dart';
@@ -267,14 +268,13 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
-      final shouldProceed = await showConfirmationDialog(
-        context: context,
-        confirmationTitle: 'Register Issuance',
-        confirmationMessage: 'Are you sure you want to register the issuance?',
-      );
+    if (!_formKey.currentState!.validate()) return;
 
-      if (shouldProceed) {
+    confirmationDialog(
+      context: context,
+      title: 'Register Issuance?',
+      content: 'Are you sure you want to register this issuance?',
+      onConfirmed: () {
         if (widget.issuanceType == IssuanceType.ics) {
           _issuancesBloc.add(
             CreateICSEvent(
@@ -339,8 +339,6 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         }
 
         if (widget.issuanceType == IssuanceType.ris) {
-          print(
-              'issuing off pos selected: ${_issuingOfficerPositionNameController.text}');
           _issuancesBloc.add(
             CreateRISEvent(
               issuedDate: _pickedDate.value,
@@ -375,8 +373,8 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             ),
           );
         }
-      }
-    }
+      },
+    );
   }
 
   @override

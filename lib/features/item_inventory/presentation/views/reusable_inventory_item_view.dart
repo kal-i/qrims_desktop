@@ -20,6 +20,7 @@ import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/confirmation_dialog.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
@@ -139,8 +140,13 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
       );
     }
 
-    if (_formKey.currentState!.validate()) {
-      context.read<ItemInventoryBloc>().add(
+    if (!_formKey.currentState!.validate()) return;
+
+    confirmationDialog(
+      context: context,
+      title: 'Register Inventory Item?',
+      content: 'Are you sure you want to register this item?',
+      onConfirmed: () => context.read<ItemInventoryBloc>().add(
             InventoryItemRegister(
               fundCluster: _selectedFundCluster.value,
               itemName: _itemNameController.text,
@@ -167,8 +173,8 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                       : null,
               acquiredDate: _pickedDate.value,
             ),
-          );
-    }
+          ),
+    );
   }
 
   void _updateItem() {
@@ -184,8 +190,13 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
       );
     }
 
-    if (_formKey.currentState!.validate()) {
-      context.read<ItemInventoryBloc>().add(
+    if (!_formKey.currentState!.validate()) return;
+
+    confirmationDialog(
+      context: context,
+      title: 'Update Inventory Item?',
+      content: 'Are you sure you want to update this item?',
+      onConfirmed: () => context.read<ItemInventoryBloc>().add(
             ItemUpdate(
               id: widget.itemId!,
               itemName: _itemNameController.text,
@@ -205,8 +216,8 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                       ? int.parse(_estimatedUsefulLifeController.text)
                       : null,
             ),
-          );
-    }
+          ),
+    );
   }
 
   @override

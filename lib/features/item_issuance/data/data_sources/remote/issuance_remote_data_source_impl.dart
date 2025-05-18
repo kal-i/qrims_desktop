@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../../../core/constants/endpoints.dart';
@@ -267,6 +269,24 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
             response.data['par']);
       } else {
         throw const ServerException('PAR registration failed.');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorData = e.response?.data as Map<String, dynamic>;
+        final errorMessage = errorData['message'] ?? e.response?.statusMessage;
+
+        if (e.response?.statusCode == HttpStatus.badRequest ||
+            e.response?.statusCode == HttpStatus.internalServerError) {
+          // Pass through the specific error message about which serial number exists
+          throw ServerException(errorMessage);
+        }
+        throw ServerException(
+          'DioException: ${e.response?.statusCode} - ${e.response?.statusMessage}',
+        );
+      } else {
+        throw ServerException(
+          'DioException: ${e.message}',
+        );
       }
     } catch (e) {
       throw ServerException(e.toString());

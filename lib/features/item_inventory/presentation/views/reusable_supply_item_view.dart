@@ -16,6 +16,7 @@ import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/unit.dart';
 import '../../../../core/services/item_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/confirmation_dialog.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
@@ -92,8 +93,13 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
   }
 
   void _saveItem() {
-    if (_formKey.currentState!.validate()) {
-      context.read<ItemInventoryBloc>().add(
+    if (!_formKey.currentState!.validate()) return;
+
+    confirmationDialog(
+      context: context,
+      title: 'Register Supply Item?',
+      content: 'Are you sure you want to register this item?',
+      onConfirmed: () => context.read<ItemInventoryBloc>().add(
             SupplyItemRegister(
               itemName: _itemNameController.text,
               description: _itemDescriptionsController.text,
@@ -106,13 +112,18 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               acquiredDate: _pickedDate.value,
               fundCluster: _selectedFundCluster.value,
             ),
-          );
-    }
+          ),
+    );
   }
 
   void _updateItem() {
-    if (_formKey.currentState!.validate()) {
-      context.read<ItemInventoryBloc>().add(
+    if (!_formKey.currentState!.validate()) return;
+
+    confirmationDialog(
+      context: context,
+      title: 'Update Supply Item?',
+      content: 'Are you sure you want to update this item?',
+      onConfirmed: () => context.read<ItemInventoryBloc>().add(
             ItemUpdate(
               id: widget.itemId!,
               itemName: _itemNameController.text,
@@ -122,8 +133,8 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
               quantity: int.parse(_quantityController.text),
               unitCost: double.parse(_unitCostController.text),
             ),
-          );
-    }
+          ),
+    );
   }
 
   @override

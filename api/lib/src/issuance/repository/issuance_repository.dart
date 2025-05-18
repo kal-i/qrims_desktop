@@ -1572,6 +1572,8 @@ class IssuanceRepository {
   ) async {
     int totalRemainingQuantities = 0;
 
+    final matchedBaseItemIds = <String>{};
+
     for (final requestedItem in purchaseRequest.requestedItems) {
       if (requestedItem.fulfillmentStatus == FulfillmentStatus.fulfilled) {
         continue;
@@ -1607,6 +1609,8 @@ class IssuanceRepository {
         if (productNameId == requestedProductNameId &&
             productDescriptionId == requestedProductDescriptionId &&
             unit == requestedUnit) {
+          matchedBaseItemIds.add(baseItemId); // mark as matched
+
           print('matched requested and issuance item!');
           print('requested quantity: ${remainingToFulfill.runtimeType}');
           print(
@@ -1654,6 +1658,17 @@ class IssuanceRepository {
           'status': status.toString().split('.').last,
         },
       );
+    }
+
+    final unmatchedItems = issuanceItems.where((item) {
+      final baseItemId =
+          item['shareable_item_information']['base_item_id'] as String;
+      return !matchedBaseItemIds.contains(baseItemId);
+    }).toList();
+
+    if (unmatchedItems.isNotEmpty) {
+      print('unmatched thrown');
+      throw Exception('Issuance includes items that were not requested.');
     }
 
     await _updatePurchaseRequestStatus(

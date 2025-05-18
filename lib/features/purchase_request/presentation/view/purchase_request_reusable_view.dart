@@ -17,6 +17,7 @@ import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/services/entity_suggestions_service.dart';
 import '../../../../core/services/officer_suggestions_service.dart';
 import '../../../../core/utils/capitalizer.dart';
+import '../../../../core/utils/confirmation_dialog.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/delightful_toast_utils.dart';
@@ -129,49 +130,43 @@ class _PurchaseRequestReusableViewState
   }
 
   void _savePurchaseRequest() async {
-    if (_formKey.currentState!.validate()) {
-      if (_tableRows.value.isEmpty) {
-        DelightfulToastUtils.showDelightfulToast(
-          context: context,
-          icon: Icons.error_outline,
-          title: 'Error',
-          subtitle: 'Requested Item(s) cannot be empty.',
-        );
-        return;
-      }
+    if (!_formKey.currentState!.validate()) return;
 
-      // Show confirmation dialog before proceeding
-      final shouldProceed = await showConfirmationDialog(
+    if (_tableRows.value.isEmpty) {
+      DelightfulToastUtils.showDelightfulToast(
         context: context,
-        confirmationTitle: 'Register Purchase Request',
-        confirmationMessage:
-            'Are you sure you want to register the purchase request?',
+        icon: Icons.error_outline,
+        title: 'Error',
+        subtitle: 'Requested Item(s) cannot be empty.',
       );
-
-      if (shouldProceed) {
-        context.read<PurchaseRequestsBloc>().add(
-              RegisterPurchaseRequestEvent(
-                entityName: _entityNameController.text,
-                fundCluster: _selectedFundCluster.value!,
-                officeName: _officeController.text,
-                date: _pickedDate.value,
-                requestedItems: _tableRows.value
-                    .map((e) => e.object as Map<String, dynamic>)
-                    .toList(),
-                purpose: _purposeController.text,
-                requestingOfficerOffice:
-                    _requestingOfficerOfficeController.text,
-                requestingOfficerPosition:
-                    _requestingOfficerPositionController.text,
-                requestingOfficerName: _requestingOfficerNameController.text,
-                approvingOfficerOffice: _approvingOfficerOfficeController.text,
-                approvingOfficerPosition:
-                    _approvingOfficerPositionController.text,
-                approvingOfficerName: _approvingOfficerNameController.text,
-              ),
-            );
-      }
+      return;
     }
+
+    confirmationDialog(
+      context: context,
+      title: 'Register Purchase Request?',
+      content: 'Are you sure you want to register this request?',
+      onConfirmed: () => context.read<PurchaseRequestsBloc>().add(
+            RegisterPurchaseRequestEvent(
+              entityName: _entityNameController.text,
+              fundCluster: _selectedFundCluster.value!,
+              officeName: _officeController.text,
+              date: _pickedDate.value,
+              requestedItems: _tableRows.value
+                  .map((e) => e.object as Map<String, dynamic>)
+                  .toList(),
+              purpose: _purposeController.text,
+              requestingOfficerOffice: _requestingOfficerOfficeController.text,
+              requestingOfficerPosition:
+                  _requestingOfficerPositionController.text,
+              requestingOfficerName: _requestingOfficerNameController.text,
+              approvingOfficerOffice: _approvingOfficerOfficeController.text,
+              approvingOfficerPosition:
+                  _approvingOfficerPositionController.text,
+              approvingOfficerName: _approvingOfficerNameController.text,
+            ),
+          ),
+    );
   }
 
   void _onTrackingIdTapped(BuildContext context, String trackingId) {
