@@ -13,6 +13,7 @@ import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_form_text_field.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
+import '../../../../core/enums/fulfillment_status.dart';
 import '../../../../core/enums/fund_cluster.dart';
 import '../../../../core/enums/ics_type.dart';
 import '../../../../core/enums/issuance_type.dart';
@@ -25,7 +26,7 @@ import '../../../../core/utils/delightful_toast_utils.dart';
 import '../../../../core/utils/document_date_formatter.dart';
 import '../../../../core/utils/fund_cluster_to_readable_string.dart';
 import '../../../../core/utils/readable_enum_converter.dart';
-import '../../../../core/utils/show_confirmation_dialog.dart';
+import '../../../../core/utils/standardize_position_name.dart';
 import '../../../../init_dependencies.dart';
 import '../../../purchase_request/presentation/components/custom_search_field.dart';
 import '../bloc/issuances_bloc.dart';
@@ -122,8 +123,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
   final List<String> _prTableHeaders = [
     'Item Name',
     'Description',
-    'Requested Quantity',
-    'Remaining Quantity',
+    'Remaining Quantity To Fulfill',
     'Status',
   ];
   final List<String> _issuedTableHeaders = [
@@ -165,7 +165,6 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         2,
         1,
         1,
-        1,
       ],
     );
 
@@ -200,7 +199,17 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Edit Quantity'),
+              backgroundColor: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              title: Text(
+                'Edit Quantity',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -229,7 +238,13 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(
+                    'Cancel',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -240,7 +255,13 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                       // do nothing, because the error message is already shown
                     }
                   },
-                  child: const Text('Save'),
+                  child: Text(
+                    'Save',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
               ],
             );
@@ -447,7 +468,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             _prStatusController.text =
                 readableEnumConverter(prData.purchaseRequestStatus);
             _requestingOfficerController.text =
-                '${capitalizeWord(prData.requestingOfficerEntity.name)} (${capitalizeWord(prData.requestingOfficerEntity.officeName)} - ${capitalizeWord(prData.requestingOfficerEntity.positionName)})';
+                '${capitalizeWord(prData.requestingOfficerEntity.name)} (${capitalizeWord(prData.requestingOfficerEntity.officeName)} - ${standardizePositionName(prData.requestingOfficerEntity.positionName)})';
             _approvingOfficerController.text =
                 '${capitalizeWord(prData.approvingOfficerEntity.name)} (${capitalizeWord(prData.approvingOfficerEntity.officeName)} - ${capitalizeWord(prData.approvingOfficerEntity.positionName)})';
 
@@ -482,18 +503,11 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                           softWrap: false,
                         ),
                         Text(
-                          requestedItem.quantity.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          softWrap: false,
-                        ),
-                        Text(
-                          requestedItem.remainingQuantity.toString(),
+                          requestedItem.status == FulfillmentStatus.fulfilled ||
+                                  requestedItem.status ==
+                                      FulfillmentStatus.partiallyFulfilled
+                              ? requestedItem.remainingQuantity.toString()
+                              : requestedItem.quantity.toString(),
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontSize: 14.0,
@@ -519,43 +533,6 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                   )
                   .toList(),
             );
-            //_itemNameController.text = prData.productNameEntity.name;
-            //_quantityController.text = prData.quantity.toString();
-
-            // _issuanceItems = initData.matchedItemEntity!
-            //     .map(
-            //       (matchedItem) => {
-            //         'item_id': matchedItem.itemId,
-            //         'issued_quantity': matchedItem.issuedQuantity,
-            //       },
-            //     )
-            //     .toList();
-            // print(_issuanceItems);
-
-            // _tableRows.clear();
-            // _tableRows.addAll(initData.matchedItemEntity!
-            //     .map(
-            //       (matchedItem) => TableData(
-            //         id: matchedItem.itemId,
-            //         columns: [
-            //           Text(
-            //             matchedItem.itemId,
-            //             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            //                   fontSize: 14.0,
-            //                   fontWeight: FontWeight.w500,
-            //                 ),
-            //           ),
-            //           Text(
-            //             matchedItem.issuedQuantity.toString(),
-            //             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            //                   fontSize: 14.0,
-            //                   fontWeight: FontWeight.w500,
-            //                 ),
-            //           ),
-            //         ],
-            //       ),
-            //     )
-            //     .toList());
           }
 
           if (state is ICSRegistered) {
@@ -643,16 +620,16 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
                 ),
               ],
             ),
-          _buildItemIssuanceSection(),
-          const SizedBox(
-            height: 50.0,
-          ),
           _buildRelatedOfficersSection(),
           const SizedBox(
             height: 80.0,
           ),
           if (widget.issuanceType != IssuanceType.ris)
             _buildAdditionalInformationSection(),
+          _buildItemIssuanceSection(),
+          // const SizedBox(
+          //   height: 50.0,
+          // ),
           _buildActionsRow(),
         ],
       ),
@@ -786,7 +763,6 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
         Row(
           children: [
             Expanded(
-              flex: 2,
               child: CustomFormTextField(
                 controller: _prIdController,
                 enabled: false,
@@ -804,7 +780,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
               child: CustomFormTextField(
                 controller: _prDateController,
                 enabled: false,
-                label: 'Date',
+                label: 'Request Date',
                 placeholderText: '0000/00/00',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
@@ -816,41 +792,9 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             ),
             Expanded(
               child: CustomFormTextField(
-                controller: _prStatusController,
-                enabled: false,
-                label: 'Status',
-                placeholderText: 'Unknown',
-                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightCustomTextBox
-                    : AppColor.darkCustomTextBox),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: CustomFormTextField(
                 controller: _requestingOfficerController,
                 enabled: false,
                 label: 'Requesting Officer',
-                placeholderText: 'Name (Office - Position)',
-                fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-                    ? AppColor.lightCustomTextBox
-                    : AppColor.darkCustomTextBox),
-              ),
-            ),
-            const SizedBox(
-              width: 20.0,
-            ),
-            Expanded(
-              child: CustomFormTextField(
-                controller: _approvingOfficerController,
-                enabled: false,
-                label: 'Approving Officer',
                 placeholderText: 'Name (Office - Position)',
                 fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
                     ? AppColor.lightCustomTextBox
@@ -1069,84 +1013,7 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
             );
           },
         ),
-        // SizedBox(
-        //   height: 250.0,
-        //   child: ValueListenableBuilder(
-        //     valueListenable: _issuedTableRows,
-        //     builder: (context, issuedTableRows, child) {
-        //       return CustomDataTable(
-        //         config: _issuedTableConfig.copyWith(
-        //           rows: issuedTableRows,
-        //         ),
-        //         onActionSelected: (index, action) {
-        //           if (action.contains('Remove')) {
-        //             final removedItemId = _issuedTableRows.value[index]
-        //                 .object['shareable_item_information']['base_item_id'];
-
-        //             // Remove the associated notifier and controller
-        //             _quantityNotifiers.remove(removedItemId);
-        //             _quantityControllers.remove(removedItemId);
-
-        //             final updatedRows =
-        //                 List<TableData>.from(_issuedTableRows.value);
-        //             updatedRows.removeAt(index);
-        //             _issuedTableRows.value = updatedRows;
-        //           }
-        //         },
-        //       );
-        //     },
-        //   ),
-        // ),
       ],
-    );
-  }
-
-  final Map<String, ValueNotifier<int>> _quantityNotifiers = {};
-  final Map<String, TextEditingController> _quantityControllers = {};
-
-  Widget _buildQuantityCounterField(String baseItemId) {
-    final ValueNotifier<int> quantityNotifier = _quantityNotifiers[baseItemId]!;
-    final TextEditingController quantityController =
-        _quantityControllers[baseItemId]!;
-
-    return ValueListenableBuilder<int>(
-      valueListenable: quantityNotifier,
-      builder: (BuildContext context, int value, Widget? child) {
-        return CustomFormTextField(
-          controller: quantityController,
-          fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
-              ? AppColor.lightCustomTextBox
-              : AppColor.darkCustomTextBox),
-          isNumeric: true,
-          suffixWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              InkWell(
-                onTap: () {
-                  quantityNotifier.value++;
-                  quantityController.text = quantityNotifier.value.toString();
-                },
-                child: const Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 18.0,
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  if (quantityNotifier.value > 0) {
-                    quantityNotifier.value--;
-                    quantityController.text = quantityNotifier.value.toString();
-                  }
-                },
-                child: const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 18.0,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

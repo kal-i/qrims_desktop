@@ -424,6 +424,9 @@ class DocumentComponents {
                   fontSize: 7.0,
                   decoration: isPAR ? pw.TextDecoration.underline : null,
                 ),
+                overflow: pw.TextOverflow.clip,
+                maxLines: 1,
+                softWrap: false,
               ),
               pw.Text(
                 'Signature Over Printed Name',
@@ -442,6 +445,9 @@ class DocumentComponents {
                       .getFont('timesNewRomanRegular'),
                   fontSize: 6.5,
                 ),
+                overflow: pw.TextOverflow.clip,
+                maxLines: 1,
+                softWrap: false,
               ),
               pw.Text(
                 'Position/Office',

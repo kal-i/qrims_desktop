@@ -100,7 +100,7 @@ Future<Response> _createMultipleICS(
   final deliveryReceiptId = json['delivery_receipt_id'] as String?;
   final prReferenceId = json['pr_reference_id'] as String?;
   final inventoryTransferReportId =
-      json['inventory_transfer_report_id'] as String;
+      json['inventory_transfer_report_id'] as String?;
   final inspectionAndAcceptanceReportId =
       json['inspection_and_acceptance_report_id'] as String?;
   final contractNumber = json['contract_number'] as String?;
@@ -223,7 +223,7 @@ Future<Response> _createMultipleICS(
         supplierId: supplierId,
         deliveryReceiptId: deliveryReceiptId,
         prReferenceId: prReferenceId,
-        inventoryTransferReportId: inspectionAndAcceptanceReportId,
+        inventoryTransferReportId: inventoryTransferReportId,
         inspectionAndAcceptanceReportId: inspectionAndAcceptanceReportId,
         contractNumber: contractNumber,
         purchaseOrderId: purchaseOrderNumber,

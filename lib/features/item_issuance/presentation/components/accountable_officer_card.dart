@@ -25,6 +25,7 @@ class AccountableOfficerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final entity = officer['entity'] as String?;
     final officerInfo = officer['officer'] as Map<String, dynamic>;
     final items = (officer['items'] as List).cast<Map<String, dynamic>>();
 
@@ -76,6 +77,16 @@ class AccountableOfficerCard extends StatelessWidget {
                             ),
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (entity != null && entity.isNotEmpty)
+                        Text(
+                          entity,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                     ],
                   ),
                 ),
