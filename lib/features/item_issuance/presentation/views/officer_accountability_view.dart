@@ -296,8 +296,8 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
             ),
             CustomFilledButton(
               onTap: _onGetAccountableOfficerId,
-              width: 80.0,
-              height: 40.0,
+              width: 100.0,
+              height: 50.0,
               prefixWidget: const Icon(
                 HugeIcons.strokeRoundedSearch01,
                 size: 15.0,

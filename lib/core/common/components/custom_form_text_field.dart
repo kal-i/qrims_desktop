@@ -26,6 +26,7 @@ class CustomFormTextField extends StatefulWidget {
     this.isCurrency = false,
     this.fillColor,
     this.hasValidation = true,
+    this.isMultiline = false,
   });
 
   final TextEditingController? controller;
@@ -44,6 +45,7 @@ class CustomFormTextField extends StatefulWidget {
   final bool isCurrency;
   final Color? fillColor;
   final bool hasValidation;
+  final bool isMultiline;
 
   @override
   State<CustomFormTextField> createState() => _CustomFormTextFieldState();
@@ -95,13 +97,17 @@ class _CustomFormTextFieldState extends State<CustomFormTextField> {
             readOnly: widget.isReadOnly,
             focusNode: _focusNode,
             maxLines: widget.maxLines,
-            keyboardType: widget.maxLines == 1
-                ? TextInputType.text
-                : TextInputType.multiline,
-            textInputAction: widget.maxLines == 1
-                ? TextInputAction.next
-                : TextInputAction.newline,
-            onEditingComplete: widget.maxLines == 1
+            keyboardType: widget.isMultiline
+                ? TextInputType.multiline
+                : (widget.maxLines == 1
+                    ? TextInputType.text
+                    : TextInputType.multiline),
+            textInputAction: widget.isMultiline
+                ? TextInputAction.newline
+                : (widget.maxLines == 1
+                    ? TextInputAction.next
+                    : TextInputAction.newline),
+            onEditingComplete: (!widget.isMultiline && widget.maxLines == 1)
                 ? () => FocusScope.of(context).nextFocus()
                 : null,
             inputFormatters: inputFormatters,

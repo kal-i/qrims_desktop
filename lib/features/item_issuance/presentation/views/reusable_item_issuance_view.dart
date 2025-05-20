@@ -974,41 +974,44 @@ class _ReusableItemIssuanceViewState extends State<ReusableItemIssuanceView> {
           builder: (context, value, child) {
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(value.length, (index) {
-                  return DragTarget(
-                    builder: (context, candidatedDate, rejectedDate) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Draggable<int>(
-                          data: index,
-                          feedback: SizedBox(
-                            width: 250.0,
-                            child: Material(
-                              color: Colors.transparent,
+              child: IntrinsicWidth(
+                // <-- Added this wrapper
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(value.length, (index) {
+                    return DragTarget(
+                      builder: (context, candidatedDate, rejectedDate) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Draggable<int>(
+                            data: index,
+                            feedback: SizedBox(
+                              width: 250.0,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: ItemCard(
+                                  data: value[index],
+                                  isDragging: true,
+                                ),
+                              ),
+                            ),
+                            childWhenDragging: const SizedBox(
+                              width: 250.0,
+                            ),
+                            child: SizedBox(
+                              width: 250,
                               child: ItemCard(
                                 data: value[index],
-                                isDragging: true,
+                                onRemove: () => _removeItem(index),
+                                onEditQuantity: () => _editItemQuantity(index),
                               ),
                             ),
                           ),
-                          childWhenDragging: const SizedBox(
-                            width: 250.0,
-                          ),
-                          child: SizedBox(
-                            width: 250,
-                            child: ItemCard(
-                              data: value[index],
-                              onRemove: () => _removeItem(index),
-                              onEditQuantity: () => _editItemQuantity(index),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
+                        );
+                      },
+                    );
+                  }),
+                ),
               ),
             );
           },
