@@ -59,7 +59,12 @@ class _MostRequestedItemsBarChartState
           tooltipHorizontalAlignment: FLHorizontalAlignment.right,
           tooltipMargin: -10,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
-            final item = _effectiveData[group.x.toInt()];
+            final index = group.x.toInt();
+
+            if (index < 0 || index >= _effectiveData.length) return null;
+
+            final item = _effectiveData[index];
+
             return BarTooltipItem(
               capitalizeWord('${item.productName}\n'),
               const TextStyle(
@@ -80,20 +85,20 @@ class _MostRequestedItemsBarChartState
             );
           },
         ),
-        touchCallback: (FlTouchEvent event, barTouchResponse) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            setState(() {
-              if (!event.isInterestedForInteractions ||
-                  barTouchResponse == null ||
-                  barTouchResponse.spot == null) {
-                touchedIndex = -1;
-                return;
-              }
-              touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
-            });
-          });
-        },
+        // touchCallback: (FlTouchEvent event, barTouchResponse) {
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     if (!mounted) return;
+        //     setState(() {
+        //       if (!event.isInterestedForInteractions ||
+        //           barTouchResponse == null ||
+        //           barTouchResponse.spot == null) {
+        //         touchedIndex = -1;
+        //         return;
+        //       }
+        //       touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+        //     });
+        //   });
+        // },
       ),
       titlesData: FlTitlesData(
         rightTitles: const AxisTitles(),
