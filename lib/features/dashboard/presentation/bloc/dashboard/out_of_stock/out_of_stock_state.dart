@@ -14,13 +14,16 @@ final class OutOfStocksLoading extends OutOfStockState {}
 final class OutOfStocksLoaded extends OutOfStockState {
   const OutOfStocksLoaded({
     required this.items,
+    required this.totalItemsCount,
   });
 
   final List<ReusableItemInformationEntity> items;
+  final int totalItemsCount;
 
   @override
   List<Object?> get props => [
         items,
+        totalItemsCount,
       ];
 }
 

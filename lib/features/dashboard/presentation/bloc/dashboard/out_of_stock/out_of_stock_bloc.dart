@@ -36,6 +36,7 @@ class OutOfStockBloc extends Bloc<OutOfStockEvent, OutOfStockState> {
       (r) => emit(
         OutOfStocksLoaded(
           items: r.reusableItemInformationEntities,
+          totalItemsCount: r.totalItemCount,
         ),
       ),
     );

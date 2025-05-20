@@ -20,7 +20,6 @@ import '../../../../core/utils/capitalizer.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../item_inventory/data/models/inventory_item.dart';
 import '../../../item_inventory/data/models/supply.dart';
-import '../../../item_inventory/domain/entities/inventory_item.dart';
 import '../../../item_inventory/domain/entities/supply.dart';
 import '../../../item_inventory/presentation/bloc/item_inventory_bloc.dart';
 
@@ -45,7 +44,6 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   late List<Map<String, dynamic>> _preselectedItems;
 
   final ValueNotifier<String> _selectedFilterNotifier = ValueNotifier('supply');
-
   final _searchController = TextEditingController();
   final _searchDelay = const Duration(milliseconds: 500);
   Timer? _debounce;
@@ -66,7 +64,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   ];
   late List<TableData> _tableRows;
 
-  // Add a new Set to track selected item IDs
+  // Global selection state
   final Set<String> _selectedItemIds = {};
 
   @override
@@ -76,15 +74,16 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
 
     final excludeIds = widget.excludeItemIds ?? {};
 
-    // Filter out excluded items from preselectedItems
     _preselectedItems = (widget.preselectedItems ?? [])
         .where((item) => !excludeIds
             .contains(item['shareable_item_information']['base_item_id']))
         .toList();
 
-    // Initialize selected IDs from filtered preselected items
-    _selectedItemIds.addAll(_preselectedItems.map((item) =>
-        item['shareable_item_information']['base_item_id'].toString()));
+    // Initialize selected IDs from preselected items
+    _selectedItemIds.addAll(
+      _preselectedItems.map((item) =>
+          item['shareable_item_information']['base_item_id'].toString()),
+    );
 
     _searchController.addListener(_onSearchChanged);
     _selectedFilterNotifier.addListener(_onFilterChanged);
@@ -98,12 +97,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     _tableConfig = TableConfig(
       headers: _tableHeaders,
       rows: _tableRows,
-      columnFlex: [
-        2,
-        3,
-        1,
-        1,
-      ],
+      columnFlex: [2, 3, 1, 1],
     );
   }
 
@@ -121,9 +115,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
   void _refreshItemList() {
     _searchController.clear();
     _currentPage = 1;
-
     _selectedFilterNotifier.value = 'supply';
-
     _fetchItems();
   }
 
@@ -159,9 +151,7 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
       content: Column(
         children: [
           _buildTableRelatedActionsRow(),
-          Expanded(
-            child: _buildDataTable(),
-          ),
+          Expanded(child: _buildDataTable()),
         ],
       ),
       footer: _buildActionsRow(),
@@ -173,37 +163,24 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildFilterTableRow(),
-        Row(
-          children: [
-            ExpandableSearchButton(
-              controller: _searchController,
-            ),
-            const SizedBox(
-              width: 10.0,
-            ),
-            _buildRefreshButton(),
-          ],
-        ),
+        Row(children: [
+          ExpandableSearchButton(controller: _searchController),
+          const SizedBox(width: 10.0),
+          _buildRefreshButton(),
+        ]),
       ],
     );
   }
 
   Widget _buildFilterTableRow() {
-    final Map<String, String> filterMapping = {
-      //'View All': '',
-      'Supply': 'supply',
-      'Inventory': 'inventory',
-    };
     return FilterTableRow(
       selectedFilterNotifier: _selectedFilterNotifier,
-      filterMapping: filterMapping,
+      filterMapping: {'Supply': 'supply', 'Inventory': 'inventory'},
     );
   }
 
   Widget _buildRefreshButton() {
-    return ReusableCustomRefreshOutlineButton(
-      onTap: _refreshItemList,
-    );
+    return ReusableCustomRefreshOutlineButton(onTap: _refreshItemList);
   }
 
   Widget _buildDataTable() {
@@ -213,216 +190,179 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
           _isLoading = true;
           _errorMessage = null;
         }
-
-        // no need to trigger refresh when just fetching data
-        if (state is ItemFetched) {
+        if (state is ItemsLoaded) {
           _isLoading = false;
-        }
+          _totalRecords = state.totalItemCount;
+          _tableRows.clear();
 
-        // just to reset the loading state
+          final excludeIds = widget.excludeItemIds ?? {};
+
+          _tableRows.addAll(
+            state.items
+                .where(
+              (item) =>
+                  !excludeIds.contains(item.shareableItemInformationEntity.id),
+            )
+                .map((item) {
+              final id = item.shareableItemInformationEntity.id.toString();
+              return TableData(
+                id: id,
+                object: item,
+                // persist selection across pagination:
+                isSelected: _selectedItemIds.contains(id),
+                columns: [
+                  Text(
+                    capitalizeWord(item.productStockEntity.productName.name),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                  Text(
+                    (item.shareableItemInformationEntity.specification ==
+                                null ||
+                            item.shareableItemInformationEntity.specification
+                                    ?.trim()
+                                    .isEmpty ==
+                                true ||
+                            item.shareableItemInformationEntity.specification
+                                    ?.toLowerCase() ==
+                                'na' ||
+                            item.shareableItemInformationEntity.specification
+                                    ?.toLowerCase() ==
+                                'n/a')
+                        ? capitalizeWord(
+                            '${item.productStockEntity.productDescription?.description}')
+                        : capitalizeWord(
+                            '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}'),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                  Text(
+                    item.shareableItemInformationEntity.quantity.toString(),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                  Text(
+                    formatCurrency(
+                        item.shareableItemInformationEntity.unitCost),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ],
+                menuItems: [
+                  {'text': 'View', 'icon': FluentIcons.eye_12_regular}
+                ],
+              );
+            }).toList(),
+          );
+        }
+        if (state is ItemsError) {
+          _isLoading = false;
+          _errorMessage = state.message;
+        }
+        // on supply/inventory registration or update, refresh
         if (state is SupplyItemRegistered ||
             state is InventoryItemRegistered ||
             state is ItemUpdated) {
           _isLoading = false;
           _refreshItemList();
         }
-
-        if (state is ItemsLoaded) {
-          _isLoading = false;
-          _totalRecords = state.totalItemCount;
-          _tableRows.clear();
-
-          print('preselected items: ${widget.preselectedItems}');
-
-          final selectedItemIds = (widget.preselectedItems ?? [])
-              .map((item) => item['shareable_item_information']['base_item_id'])
-              .toSet();
-
-          final excludeIds = widget.excludeItemIds ?? {};
-
-          _tableRows.addAll(state.items.where((item) {
-            // Exclude items assigned to other officers
-            return !excludeIds.contains(item.shareableItemInformationEntity.id);
-          }).map((item) {
-            return TableData(
-              id: item.shareableItemInformationEntity.id,
-              object: item,
-              columns: [
-                Text(
-                  capitalizeWord(item.productStockEntity.productName.name),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                Text(
-                  (item.shareableItemInformationEntity.specification == null ||
-                          item.shareableItemInformationEntity.specification
-                                  ?.trim()
-                                  .isEmpty ==
-                              true ||
-                          item.shareableItemInformationEntity.specification
-                                  ?.toLowerCase() ==
-                              'na' ||
-                          item.shareableItemInformationEntity.specification
-                                  ?.toLowerCase() ==
-                              'n/a')
-                      ? capitalizeWord(
-                          '${item.productStockEntity.productDescription?.description}')
-                      : capitalizeWord(
-                          '${item.productStockEntity.productDescription?.description}, ${item.shareableItemInformationEntity.specification}'),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  softWrap: false,
-                ),
-                Text(
-                  item.shareableItemInformationEntity.quantity.toString(),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                Text(
-                  formatCurrency(item.shareableItemInformationEntity.unitCost),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-              ],
-              menuItems: [
-                {
-                  'text': 'View',
-                  'icon': FluentIcons.eye_12_regular,
-                },
-              ],
-            );
-          }).toList());
-        }
-
-        if (state is ItemsError) {
-          _isLoading = false;
-          _errorMessage = state.message;
-        }
       },
       builder: (context, state) {
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: CustomDataTable(
-                      config: _tableConfig.copyWith(
-                        rows: _tableRows,
-                      ),
-                      onRowSelected: (index) {
-                        final itemObj = _tableRows[index].object;
-                        final newItem = itemObj is SupplyEntity
-                            ? (itemObj as SupplyModel).toJson()
-                            : (itemObj as InventoryItemModel).toJson();
+              child: CustomDataTable(
+                config: _tableConfig.copyWith(rows: _tableRows),
+                onRowSelected: (index) {
+                  setState(() {
+                    final row = _tableRows[index];
+                    final itemObj = row.object;
+                    final newItem = itemObj is SupplyEntity
+                        ? (itemObj as SupplyModel).toJson()
+                        : (itemObj as InventoryItemModel).toJson();
+                    final baseItemId = newItem['shareable_item_information']
+                            ['base_item_id']
+                        .toString();
 
-                        final baseItemId = newItem['shareable_item_information']
-                            ['base_item_id'];
+                    if (_selectedItemIds.remove(baseItemId)) {
+                      _preselectedItems.removeWhere((it) =>
+                          it['shareable_item_information']['base_item_id']
+                              .toString() ==
+                          baseItemId);
+                    } else {
+                      _selectedItemIds.add(baseItemId);
+                      final isDup = _preselectedItems.any((it) =>
+                          it['shareable_item_information']['base_item_id']
+                              .toString() ==
+                          baseItemId);
+                      if (!isDup) _preselectedItems.add(newItem);
+                    }
 
-                        if (_selectedItemIds.contains(baseItemId)) {
-                          _selectedItemIds.remove(baseItemId);
-                          _preselectedItems.removeWhere((item) =>
-                              item['shareable_item_information']
-                                  ['base_item_id'] ==
-                              baseItemId);
-                        } else {
-                          _selectedItemIds.add(baseItemId);
-
-                          final isDuplicate = _preselectedItems.any((item) =>
-                              item['shareable_item_information']
-                                  ['base_item_id'] ==
-                              baseItemId);
-
-                          if (!isDuplicate) {
-                            _preselectedItems.add(newItem);
-                          }
-                        }
-                      },
-                      onActionSelected: (index, action) {
-                        final itemId = _tableRows[index].id;
-                        final itemObj = _tableRows[index].object;
-
-                        String? path;
-                        final Map<String, dynamic> extras = {
-                          'item_id': itemId,
-                        };
-
-                        if (action.isNotEmpty) {
-                          if (itemObj is SupplyEntity) {
-                            if (action.contains('View')) {
-                              extras['is_update'] = false;
-                              path = RoutingConstants
-                                  .nestedViewSupplyItemRoutePath;
-                            }
-
-                            if (action.contains('Edit')) {
-                              extras['is_update'] = true;
-                              path = RoutingConstants
-                                  .nestedUpdateSupplyItemViewRoutePath;
-                            }
-                          }
-
-                          if (itemObj is InventoryItemEntity) {
-                            if (action.contains('View')) {
-                              extras['is_update'] = false;
-                              path = RoutingConstants
-                                  .nestedViewInventoryItemRoutePath;
-                            }
-
-                            if (action.contains('Edit')) {
-                              extras['is_update'] = true;
-                              path = RoutingConstants
-                                  .nestedUpdateInventoryItemViewRoutePath;
-                            }
-                          }
-
-                          context.go(
-                            path!,
-                            extra: extras,
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  if (_isLoading)
-                    LinearProgressIndicator(
-                      backgroundColor: Theme.of(context).dividerColor,
-                      color: AppColor.accent,
-                    ),
-                  if (_errorMessage != null)
-                    Center(
-                      child: CustomMessageBox.error(
-                        message: _errorMessage!,
-                      ),
-                    ),
-                ],
+                    // update this row’s selected state
+                    row.isSelected = _selectedItemIds.contains(baseItemId);
+                  });
+                },
+                onActionSelected: (index, action) {
+                  final row = _tableRows[index];
+                  final itemId = row.id;
+                  final itemObj = row.object;
+                  String? path;
+                  final extras = {'item_id': itemId};
+                  if (action.contains('View')) {
+                    path = (itemObj is SupplyEntity)
+                        ? RoutingConstants.nestedViewSupplyItemRoutePath
+                        : RoutingConstants.nestedViewInventoryItemRoutePath;
+                  }
+                  if (action.contains('Edit')) {
+                    path = (itemObj is SupplyEntity)
+                        ? RoutingConstants.nestedUpdateSupplyItemViewRoutePath
+                        : RoutingConstants
+                            .nestedUpdateInventoryItemViewRoutePath;
+                  }
+                  context.go(path!, extra: extras);
+                },
               ),
             ),
-            const SizedBox(
-              height: 10.0,
-            ),
+            if (_isLoading)
+              LinearProgressIndicator(
+                  backgroundColor: Theme.of(context).dividerColor,
+                  color: AppColor.accent),
+            if (_errorMessage != null)
+              Center(child: CustomMessageBox.error(message: _errorMessage!)),
+            const SizedBox(height: 10.0),
             PaginationControls(
               currentPage: _currentPage,
               totalRecords: _totalRecords,
               pageSize: _pageSize,
               onPageChanged: (page) {
-                _currentPage = page;
+                setState(() {
+                  _currentPage = page;
+                });
                 _fetchItems();
               },
               onPageSizeChanged: (size) {
-                _pageSize = size;
+                setState(() {
+                  _pageSize = size;
+                });
                 _fetchItems();
               },
             ),
@@ -436,36 +376,35 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Add Clear Selection button
-        // CustomOutlineButton(
-        //   onTap: () {
-        //     setState(() {
-        //       _selectedItemIds.clear();
-        //       _preselectedItems.clear();
-        //     });
-        //   },
-        //   text: 'Clear Selection',
-        //   width: 150.0,
-        // ),
-        // const SizedBox(
-        //   width: 10.0,
-        // ),
+        if (_selectedItemIds.isNotEmpty) ...[
+          Text('${_selectedItemIds.length} selected'),
+          const SizedBox(width: 10),
+          CustomOutlineButton(
+            onTap: () => setState(() {
+              _selectedItemIds.clear();
+              _preselectedItems.clear();
+              for (var row in _tableRows) {
+                row.isSelected = false;
+              }
+            }),
+            text: 'Clear Selection',
+            width: 150.0,
+          ),
+          const SizedBox(width: 10),
+        ],
         CustomOutlineButton(
           onTap: () => context.pop(),
           text: 'Cancel',
           width: 180.0,
         ),
-        const SizedBox(
-          width: 10.0,
-        ),
+        const SizedBox(width: 10),
         CustomFilledButton(
           onTap: () {
-            // Only pass items that are currently selected
             final selectedItems = _preselectedItems
                 .where((item) => _selectedItemIds.contains(
-                    item['shareable_item_information']['base_item_id']))
+                    item['shareable_item_information']['base_item_id']
+                        .toString()))
                 .toList();
-
             widget.onSelectedItems(selectedItems);
             context.pop();
           },

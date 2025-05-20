@@ -61,7 +61,7 @@ class InventoryStockPieChart extends StatelessWidget {
                 ),
                 Indicator(
                   color: AppColor.chartColor.withValues(alpha: .5),
-                  text: 'Equipment',
+                  text: 'Inventory',
                   isSquare: false,
                 ),
               ],
@@ -100,8 +100,8 @@ class InventoryStockPieChart extends StatelessWidget {
     switch (itemType) {
       case 'Supply':
         return AppColor.chartColor;
-      case 'Equipment':
-        return AppColor.chartColor.withValues(alpha: .5);
+      case 'Inventory':
+        return AppColor.chartColor.withValues(alpha: .1);
       default:
         return AppColor.defaultChartColor;
     }

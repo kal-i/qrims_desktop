@@ -1137,7 +1137,7 @@ class PurchaseRequestRepository {
           pn.name
       ORDER BY
           request_count DESC
-      LIMIT 10;
+      LIMIT 5;
       ''',
       ),
     );

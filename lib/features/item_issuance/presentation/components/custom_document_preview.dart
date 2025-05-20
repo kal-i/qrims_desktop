@@ -367,12 +367,11 @@ class _CustomDocumentPreview extends State<CustomDocumentPreview> {
   }
 
   Future<void> _onSaveAsExcel() async {
-    print('doc obj: ${widget.documentObject['inventory_report']}');
-    final inventory = widget.documentObject['inventory_report'];
-
     if (widget.docType == DocumentType.rpci ||
         widget.docType == DocumentType.annexA8 ||
         widget.docType == DocumentType.a73) {
+      final inventory = widget.documentObject['inventory_report'];
+
       if (inventory == null || (inventory is List && inventory.isEmpty)) {
         DelightfulToastUtils.showDelightfulToast(
           context: context,

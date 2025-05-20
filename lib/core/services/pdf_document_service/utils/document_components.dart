@@ -166,6 +166,7 @@ class DocumentComponents {
     bool borderRight = true,
     bool borderBottom = true,
     bool borderLeft = true,
+    bool isCompressed = false,
   }) {
     return pw.Container(
       height: rowHeight,
@@ -177,6 +178,9 @@ class DocumentComponents {
           fontSize: fontSize ?? 8.5,
         ),
         textAlign: isAlignCenter ? pw.TextAlign.center : null,
+        maxLines: isCompressed ? 1 : null,
+        overflow: isCompressed ? pw.TextOverflow.clip : null,
+        softWrap: isCompressed ? false : null,
       ),
       decoration: pw.BoxDecoration(
         border: pw.Border(
@@ -662,25 +666,30 @@ class DocumentComponents {
           isAlignCenter: false,
           borderRight: false,
           fontSize: 7.0,
+          isCompressed: true,
         ),
         buildTableRowColumn(
           data: dataRowColumnOne?.toUpperCase() ?? '\n',
           borderRight: false,
           fontSize: 7.0,
+          isCompressed: true,
         ),
         buildTableRowColumn(
           data: dataRowColumnTwo?.toUpperCase() ?? '\n',
           borderRight: false,
           fontSize: 7.0,
+          isCompressed: true,
         ),
         buildTableRowColumn(
           data: dataRowColumnThree?.toUpperCase() ?? '\n',
           borderRight: false,
           fontSize: 7.0,
+          isCompressed: true,
         ),
         buildTableRowColumn(
           data: dataRowColumnFour?.toUpperCase() ?? '\n',
           fontSize: 7.0,
+          isCompressed: true,
         ),
       ],
     );

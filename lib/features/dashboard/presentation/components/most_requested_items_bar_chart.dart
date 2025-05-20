@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../config/themes/app_color.dart';
+import '../../../../core/utils/capitalizer.dart';
 import '../../domain/entities/most_requested_item.dart';
 import 'chart_container.dart';
 
@@ -60,7 +61,7 @@ class _MostRequestedItemsBarChartState
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
             final item = _effectiveData[group.x.toInt()];
             return BarTooltipItem(
-              '${item.productName}\n',
+              capitalizeWord('${item.productName}\n'),
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -80,14 +81,17 @@ class _MostRequestedItemsBarChartState
           },
         ),
         touchCallback: (FlTouchEvent event, barTouchResponse) {
-          setState(() {
-            if (!event.isInterestedForInteractions ||
-                barTouchResponse == null ||
-                barTouchResponse.spot == null) {
-              touchedIndex = -1;
-              return;
-            }
-            touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            setState(() {
+              if (!event.isInterestedForInteractions ||
+                  barTouchResponse == null ||
+                  barTouchResponse.spot == null) {
+                touchedIndex = -1;
+                return;
+              }
+              touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+            });
           });
         },
       ),
@@ -103,9 +107,9 @@ class _MostRequestedItemsBarChartState
                 return SideTitleWidget(
                   meta: meta,
                   child: Text(
-                    _effectiveData[index].productName,
+                    capitalizeWord(_effectiveData[index].productName),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 12.0,
+                          fontSize: 10.0,
                           fontWeight: FontWeight.w500,
                         ),
                   ),

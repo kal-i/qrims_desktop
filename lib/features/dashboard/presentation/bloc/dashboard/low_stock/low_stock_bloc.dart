@@ -34,6 +34,7 @@ class LowStockBloc extends Bloc<LowStockEvent, LowStockState> {
       (r) => emit(
         LowStockLoaded(
           items: r.reusableItemInformationEntities,
+          totalItemsCount: r.totalItemCount,
         ),
       ),
     );

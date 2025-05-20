@@ -4,7 +4,7 @@ class ReusableItemInformationModel extends ReusableItemInformationEntity {
   const ReusableItemInformationModel({
     required super.productName,
     required super.productDescription,
-    required super.specifciation,
+    required super.specification,
     super.quantity,
   });
 
@@ -14,7 +14,7 @@ class ReusableItemInformationModel extends ReusableItemInformationEntity {
     final reusableItemInfoModel = ReusableItemInformationModel(
       productName: json['product_name'],
       productDescription: json['product_description'],
-      specifciation: json['specification'],
+      specification: json['specification'] as String?,
       quantity: json['quantity'] as int?,
     );
 

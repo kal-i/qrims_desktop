@@ -14,13 +14,16 @@ final class LowStockLoading extends LowStockState {}
 final class LowStockLoaded extends LowStockState {
   const LowStockLoaded({
     required this.items,
+    required this.totalItemsCount,
   });
 
   final List<ReusableItemInformationEntity> items;
+  final int totalItemsCount;
 
   @override
   List<Object?> get props => [
         items,
+        totalItemsCount,
       ];
 }
 

@@ -64,8 +64,14 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     required int pageSize,
   }) async {
     try {
+      final queryParams = {
+        'page': page,
+        'page_size': pageSize,
+      };
+
       final response = await httpService.get(
         endpoint: lowStockEP,
+        queryParams: queryParams,
       );
 
       print('dash low stock impl: $response');
@@ -89,8 +95,14 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     required int pageSize,
   }) async {
     try {
+      final queryParams = {
+        'page': page,
+        'page_size': pageSize,
+      };
+
       final response = await httpService.get(
         endpoint: outOfStockEP,
+        queryParams: queryParams,
       );
 
       print('dash inv sum impl: $response');

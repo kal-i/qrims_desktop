@@ -2,12 +2,12 @@ class ReusableItemInformationEntity {
   const ReusableItemInformationEntity({
     required this.productName,
     required this.productDescription,
-    required this.specifciation,
+    this.specification,
     this.quantity,
   });
 
   final String productName;
   final String productDescription;
-  final String specifciation;
+  final String? specification;
   final int? quantity;
 }

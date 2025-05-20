@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../config/themes/app_color.dart';
 import '../../../../core/common/components/pagination_controls_2.dart';
 import '../../domain/entities/fulfilled_request_trend.dart';
 import '../../domain/entities/inventory_stock.dart';
@@ -34,9 +33,9 @@ class _DashboardViewState extends State<DashboardView> {
   final ValueNotifier<List<int>> _suppliesTrends = ValueNotifier([]);
   final ValueNotifier<List<int>> _equipmentTrends = ValueNotifier([]);
   final ValueNotifier<int> _suppliesCount = ValueNotifier(0);
-  final ValueNotifier<int> _equipmentCount = ValueNotifier(0);
+  final ValueNotifier<int> _inventoryCount = ValueNotifier(0);
   final ValueNotifier<double> _supplyPercentageChange = ValueNotifier(0.0);
-  final ValueNotifier<double> _equipmentPercentageChange = ValueNotifier(0.0);
+  final ValueNotifier<double> _inventoryPercentageChange = ValueNotifier(0.0);
 
   final ValueNotifier<int> _ongoingRequestsCount = ValueNotifier(0);
   final ValueNotifier<int> _fulfilledRequestsCount = ValueNotifier(0);
@@ -52,10 +51,8 @@ class _DashboardViewState extends State<DashboardView> {
   final ValueNotifier<List<FulfilledRequestTrendEntity>>
       _fulfilledRequestTrendEntities = ValueNotifier([]);
 
-  final ValueNotifier<List<ReusableItemInformationEntity>>
-      _lowStockItemEntities = ValueNotifier([]);
-  final ValueNotifier<List<ReusableItemInformationEntity>>
-      _outOfStockItemEntities = ValueNotifier([]);
+  final List<ReusableItemInformationEntity> _lowStockItemEntities = [];
+  final List<ReusableItemInformationEntity> _outOfStockItemEntities = [];
 
   int _lowStockCurrentPage = 1;
   int _lowStockPageSize = 5;
@@ -112,7 +109,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void dispose() {
     _suppliesCount.dispose();
-    _equipmentCount.dispose();
+    _inventoryCount.dispose();
     _ongoingRequestsCount.dispose();
     _fulfilledRequestsCount.dispose();
     super.dispose();
@@ -128,7 +125,7 @@ class _DashboardViewState extends State<DashboardView> {
               if (state is InventorySummaryLoaded) {
                 _suppliesCount.value =
                     state.inventorySummaryEntity.suppliesCount;
-                _equipmentCount.value =
+                _inventoryCount.value =
                     state.inventorySummaryEntity.inventoryCount;
 
                 _suppliesTrends.value = state
@@ -142,7 +139,7 @@ class _DashboardViewState extends State<DashboardView> {
 
                 _supplyPercentageChange.value =
                     state.inventorySummaryEntity.supplyPercentageChange;
-                _equipmentPercentageChange.value =
+                _inventoryPercentageChange.value =
                     state.inventorySummaryEntity.inventoryPercentageChange;
 
                 _inventoryStocks.value =
@@ -177,20 +174,6 @@ class _DashboardViewState extends State<DashboardView> {
 
                 _fulfilledRequestTrendEntities.value =
                     state.requestsSummaryEntity.fulfilledRequestTrendEntities;
-              }
-            },
-          ),
-          BlocListener<LowStockBloc, LowStockState>(
-            listener: (context, state) {
-              if (state is LowStockLoaded) {
-                _lowStockItemEntities.value = state.items;
-              }
-            },
-          ),
-          BlocListener<OutOfStockBloc, OutOfStockState>(
-            listener: (context, state) {
-              if (state is OutOfStocksLoaded) {
-                _outOfStockItemEntities.value = state.items;
               }
             },
           ),
@@ -243,7 +226,7 @@ class _DashboardViewState extends State<DashboardView> {
       children: [
         Expanded(
           child: DashboardKPICard(
-            title: 'Supplies',
+            title: 'Supply',
             count: _suppliesCount.value,
             change: _supplyPercentageChange.value,
             weeklyTrends: _suppliesTrends.value,
@@ -254,9 +237,9 @@ class _DashboardViewState extends State<DashboardView> {
         ),
         Expanded(
           child: DashboardKPICard(
-            title: 'Equipment',
-            count: _equipmentCount.value,
-            change: _equipmentPercentageChange.value,
+            title: 'Inventory',
+            count: _inventoryCount.value,
+            change: _inventoryPercentageChange.value,
             weeklyTrends: _equipmentTrends.value,
           ),
         ),
@@ -328,7 +311,14 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildRunningOutOfStocksSection() {
-    return BlocBuilder<LowStockBloc, LowStockState>(
+    return BlocConsumer<LowStockBloc, LowStockState>(
+      listener: (context, state) {
+        if (state is LowStockLoaded) {
+          _lowStockTotalRecords = state.totalItemsCount;
+          _lowStockItemEntities.clear();
+          _lowStockItemEntities.addAll(state.items);
+        }
+      },
       builder: (context, state) {
         return ChartContainer(
           title: 'Running-out-of-stocks',
@@ -348,11 +338,10 @@ class _DashboardViewState extends State<DashboardView> {
             },
           ),
           child: ListView.builder(
-            itemCount: _lowStockItemEntities.value.length,
+            itemCount: _lowStockItemEntities.length,
             itemBuilder: (context, index) {
               return ReusableItemInformationContainer(
-                reusableItemInformationEntity:
-                    _lowStockItemEntities.value[index],
+                reusableItemInformationEntity: _lowStockItemEntities[index],
               );
             },
           ),
@@ -362,33 +351,44 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildOutOfStocksSection() {
-    return BlocBuilder<OutOfStockBloc, OutOfStockState>(
+    return BlocConsumer<OutOfStockBloc, OutOfStockState>(
+      listener: (context, state) {
+        if (state is OutOfStocksLoaded) {
+          _outOfStockTotalRecords = state.totalItemsCount;
+          _outOfStockItemEntities.clear();
+          _outOfStockItemEntities.addAll(state.items);
+        }
+      },
       builder: (context, state) {
-        return ChartContainer(
-          title: 'Out-of-stocks',
-          description: 'Supply items that have reached a quantity of 0.',
-          action: PaginationControls2(
-            currentPage: _outOfStockCurrentPage,
-            totalRecords: _outOfStockTotalRecords,
-            pageSize: _outOfStockPageSize,
-            onPageChanged: (page) {
-              _outOfStockCurrentPage = page;
-              _fetchOutOfStockItems();
-            },
-            onPageSizeChanged: (size) {
-              _outOfStockPageSize = size;
-              _fetchOutOfStockItems();
-            },
-          ),
-          child: ListView.builder(
-            itemCount: _outOfStockItemEntities.value.length,
-            itemBuilder: (context, index) {
-              return ReusableItemInformationContainer(
-                reusableItemInformationEntity:
-                    _outOfStockItemEntities.value[index],
-              );
-            },
-          ),
+        return BlocBuilder<OutOfStockBloc, OutOfStockState>(
+          builder: (context, state) {
+            return ChartContainer(
+              title: 'Out-of-stocks',
+              description: 'Supply items that have reached a quantity of 0.',
+              action: PaginationControls2(
+                currentPage: _outOfStockCurrentPage,
+                totalRecords: _outOfStockTotalRecords,
+                pageSize: _outOfStockPageSize,
+                onPageChanged: (page) {
+                  _outOfStockCurrentPage = page;
+                  _fetchOutOfStockItems();
+                },
+                onPageSizeChanged: (size) {
+                  _outOfStockPageSize = size;
+                  _fetchOutOfStockItems();
+                },
+              ),
+              child: ListView.builder(
+                itemCount: _outOfStockItemEntities.length,
+                itemBuilder: (context, index) {
+                  return ReusableItemInformationContainer(
+                    reusableItemInformationEntity:
+                        _outOfStockItemEntities[index],
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );

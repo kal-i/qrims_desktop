@@ -8,7 +8,8 @@ import '../../../../domain/usecases/get_inventory_summary.dart';
 part 'inventory_summary_event.dart';
 part 'inventory_summary_state.dart';
 
-class InventorySummaryBloc extends Bloc<InventorySummaryEvent, InventorySummaryState> {
+class InventorySummaryBloc
+    extends Bloc<InventorySummaryEvent, InventorySummaryState> {
   InventorySummaryBloc({
     required GetInventorySummary getInventorySummary,
   })  : _getInventorySummary = getInventorySummary,
