@@ -12,9 +12,86 @@ class ItemRepository {
 
   final Connection _conn;
 
+  // Future<String> _generateUniqueItemId(
+  //   TxSession? ctx,
+  //   String itemName,
+  //   FundCluster? fundCluster,
+  //   DateTime? acquiredDate,
+  // ) async {
+  //   final conn = ctx ?? _conn;
+  //   final now = DateTime.now();
+  //   final dateToUse = acquiredDate ?? now;
+  //   final year = dateToUse.year;
+  //   final month = dateToUse.month.toString().padLeft(2, '0');
+
+  //   // Format item name (e.g., "Office Chair" → "OfficeChair")
+  //   final formattedItemName = itemName
+  //       .split(' ')
+  //       .map((word) => word[0].toUpperCase() + word.substring(1))
+  //       .join('');
+
+  //   // NNN: Count items for the same year
+  //   final latestYearlyResult = await conn.execute(
+  //     Sql.named('''
+  //     SELECT id FROM Items
+  //     WHERE id ILIKE @item_name || '-' || @year || '%'
+  //     ORDER BY id DESC
+  //     LIMIT 1;
+  //     '''),
+  //     parameters: {
+  //       'item_name': formattedItemName,
+  //       'year': year.toString(),
+  //     },
+  //   );
+
+  //   int cumulativeCount;
+  //   if (latestYearlyResult.isNotEmpty && latestYearlyResult.first[0] != null) {
+  //     final latestId = latestYearlyResult.first[0].toString();
+  //     final countMatch = RegExp(r'-(\d{3})\(').firstMatch(latestId);
+  //     cumulativeCount =
+  //         countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
+  //   } else {
+  //     cumulativeCount = 1;
+  //   }
+
+  //   // (N): Count items for the same date
+  //   final dailyDate = dateToUse.toIso8601String().split('T').first;
+
+  //   final latestDailyResult = await conn.execute(
+  //     Sql.named('''
+  //     SELECT id FROM Items
+  //     WHERE id ILIKE @item_name || '-%' AND DATE(acquired_date) = @daily_date
+  //     ORDER BY id DESC
+  //     LIMIT 1;
+  //     '''),
+  //     parameters: {
+  //       'item_name': formattedItemName,
+  //       'daily_date': dailyDate,
+  //     },
+  //   );
+
+  //   int itemSpecificCount;
+  //   if (latestDailyResult.isNotEmpty && latestDailyResult.first[0] != null) {
+  //     final latestId = latestDailyResult.first[0].toString();
+  //     final countMatch = RegExp(r'\((\d+)\)$').firstMatch(latestId);
+  //     itemSpecificCount =
+  //         countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
+  //   } else {
+  //     itemSpecificCount = 1;
+  //   }
+
+  //   // Construct the unique item ID
+  //   final uniqueId = fundCluster != null
+  //       ? '$formattedItemName-$year(${fundCluster.value})-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
+  //       : '$formattedItemName-$year-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+
+  //   return uniqueId;
+  // }
+
   Future<String> _generateUniqueItemId(
     TxSession? ctx,
     String itemName,
+    int productDescriptionId,
     FundCluster? fundCluster,
     DateTime? acquiredDate,
   ) async {
@@ -23,69 +100,96 @@ class ItemRepository {
     final dateToUse = acquiredDate ?? now;
     final year = dateToUse.year;
     final month = dateToUse.month.toString().padLeft(2, '0');
+    final dailyDate = dateToUse.toIso8601String().split('T').first;
 
-    // Format item name (e.g., "Office Chair" → "OfficeChair")
+    // Format item name
     final formattedItemName = itemName
         .split(' ')
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join('');
 
-    // NNN: Count items for the same year
-    final latestYearlyResult = await conn.execute(
-      Sql.named('''
-      SELECT id FROM Items
-      WHERE id ILIKE @item_name || '-' || @year || '%'
-      ORDER BY id DESC
-      LIMIT 1;
-      '''),
-      parameters: {
-        'item_name': formattedItemName,
-        'year': year.toString(),
-      },
-    );
+    Future<int> getYearlyCount() async {
+      // First lock existing rows
+      await conn.execute(
+        Sql.named('''
+        SELECT id FROM Items
+        WHERE id LIKE @item_name || '-' || @year || '%'
+        FOR UPDATE;
+        '''),
+        parameters: {
+          'item_name': formattedItemName,
+          'year': year.toString(),
+        },
+      );
 
-    int cumulativeCount;
-    if (latestYearlyResult.isNotEmpty && latestYearlyResult.first[0] != null) {
-      final latestId = latestYearlyResult.first[0].toString();
-      final countMatch = RegExp(r'-(\d{3})\(').firstMatch(latestId);
-      cumulativeCount =
-          countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
-    } else {
-      cumulativeCount = 1;
+      // Then get count
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT COUNT(*) FROM Items
+        WHERE id LIKE @item_name || '-' || @year || '%';
+        '''),
+        parameters: {
+          'item_name': formattedItemName,
+          'year': year.toString(),
+        },
+      );
+      return result.first[0] as int;
     }
 
-    // (N): Count items for the same date
-    final dailyDate = dateToUse.toIso8601String().split('T').first;
+    Future<int> getDailyCount() async {
+      // First lock existing rows
+      await conn.execute(
+        Sql.named('''
+        SELECT id FROM Items
+        WHERE id LIKE @item_name || '-%' 
+          AND DATE(acquired_date) = @daily_date
+          AND product_description_id = @product_description_id
+        FOR UPDATE;
+        '''),
+        parameters: {
+          'item_name': formattedItemName,
+          'daily_date': dailyDate,
+          'product_description_id': productDescriptionId,
+        },
+      );
 
-    final latestDailyResult = await conn.execute(
-      Sql.named('''
-      SELECT id FROM Items
-      WHERE id ILIKE @item_name || '-%' AND DATE(acquired_date) = @daily_date
-      ORDER BY id DESC
-      LIMIT 1;
-      '''),
-      parameters: {
-        'item_name': formattedItemName,
-        'daily_date': dailyDate,
-      },
-    );
-
-    int itemSpecificCount;
-    if (latestDailyResult.isNotEmpty && latestDailyResult.first[0] != null) {
-      final latestId = latestDailyResult.first[0].toString();
-      final countMatch = RegExp(r'\((\d+)\)$').firstMatch(latestId);
-      itemSpecificCount =
-          countMatch != null ? int.parse(countMatch.group(1)!) + 1 : 1;
-    } else {
-      itemSpecificCount = 1;
+      // Then get count
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT COUNT(*) FROM Items
+        WHERE id LIKE @item_name || '-%' 
+          AND DATE(acquired_date) = @daily_date
+          AND product_description_id = @product_description_id;
+        '''),
+        parameters: {
+          'item_name': formattedItemName,
+          'daily_date': dailyDate,
+          'product_description_id': productDescriptionId,
+        },
+      );
+      return result.first[0] as int;
     }
 
-    // Construct the unique item ID
-    final uniqueId = fundCluster != null
-        ? '$formattedItemName-$year(${fundCluster.value})-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)'
-        : '$formattedItemName-$year-$month-${cumulativeCount.toString().padLeft(3, '0')}($itemSpecificCount)';
+    // If we're already in a transaction (ctx provided)
+    if (ctx != null) {
+      final yearlyCount = await getYearlyCount();
+      final dailyCount = await getDailyCount();
 
-    return uniqueId;
+      return fundCluster != null
+          ? '$formattedItemName-$year(${fundCluster.value})-$month-${(yearlyCount + 1).toString().padLeft(3, '0')}(${dailyCount + 1})'
+          : '$formattedItemName-$year-$month-${(yearlyCount + 1).toString().padLeft(3, '0')}(${dailyCount + 1})';
+    }
+    // If we need to create a new transaction
+    else {
+      return await (conn as Connection).runTx((tx) async {
+        final yearlyCount = await getYearlyCount();
+        final dailyCount = await getDailyCount();
+
+        return fundCluster != null
+            ? '$formattedItemName-$year(${fundCluster.value})-$month-${(yearlyCount + 1).toString().padLeft(3, '0')}(${dailyCount + 1})'
+            : '$formattedItemName-$year-$month-${(yearlyCount + 1).toString().padLeft(3, '0')}(${dailyCount + 1})';
+      });
+    }
   }
 
   // Future<String> _generateUniqueItemId(
@@ -248,6 +352,7 @@ class ItemRepository {
       final itemId = await _generateUniqueItemId(
         null,
         productName,
+        0,
         fundCluster,
         acquiredDate,
       );
@@ -434,6 +539,7 @@ class ItemRepository {
       final itemId = await _generateUniqueItemId(
         ctx,
         productName,
+        productDescriptionId ?? 0,
         fundCluster,
         acquiredDate,
       );
@@ -746,6 +852,7 @@ class ItemRepository {
       final itemId = await _generateUniqueItemId(
         null,
         productName,
+        0,
         fundCluster,
         acquiredDate,
       );
