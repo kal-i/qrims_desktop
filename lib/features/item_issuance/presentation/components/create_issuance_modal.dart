@@ -88,8 +88,11 @@ class _CreateIssuanceModalState extends State<CreateIssuanceModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(
+          height: 10.0,
+        ),
         Text(
-          'Issue with a Purchase Request?',
+          'Issue with an actual Purchase Request object saved on the?',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontSize: 14.0,
                 fontWeight: FontWeight.w500,

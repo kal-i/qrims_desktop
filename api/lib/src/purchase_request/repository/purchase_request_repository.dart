@@ -658,7 +658,7 @@ class PurchaseRequestRepository {
       $baseQuery
       $whereClause
       ORDER BY
-        pr.date DESC
+        pr.id ASC
       LIMIT @page_size OFFSET @offset
       ''';
 

@@ -47,6 +47,7 @@ Future<Response> _updateIssuanceItem(
       );
     }
 
+    // loop if have multiple ids
     final success = await repository.updateIssuanceItemEntityStatus(
       baseItemId: id,
       status: status,

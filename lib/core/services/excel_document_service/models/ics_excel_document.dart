@@ -57,38 +57,19 @@ class ICSExcelDocument {
       );
     }
 
-    final entityTitleCell = sheet
-        .cell(
-          CellIndex.indexByString('B13'),
-        )
-        .cellStyle = generalCellStyle;
-
-    final fundClusterTitleCell = sheet
-        .cell(
-          CellIndex.indexByString('B14'),
-        )
-        .cellStyle = generalCellStyle;
-
     final entityCell = sheet.cell(
-      CellIndex.indexByString('C13'),
+      CellIndex.indexByString('B13'),
     );
     entityCell.value = TextCellValue(
-      ics.purchaseRequestEntity != null
-          ? ics.purchaseRequestEntity!.entity.name.toUpperCase()
-          : ics.entity?.name.toUpperCase() ?? '',
+      'Entity Name: ${ics.purchaseRequestEntity != null ? ics.purchaseRequestEntity!.entity.name.toUpperCase() : ics.entity?.name.toUpperCase() ?? ''}',
     );
     entityCell.cellStyle = generalCellStyle;
 
     final fundClusterCell = sheet.cell(
-      CellIndex.indexByString('C14'),
+      CellIndex.indexByString('B14'),
     );
-
     fundClusterCell.value = TextCellValue(
-      ics.purchaseRequestEntity != null
-          ? capitalizeWord(
-              ics.purchaseRequestEntity!.fundCluster.toReadableString())
-          : capitalizeWord(ics.fundCluster?.toReadableString() ?? ''),
-    );
+        'Fund Cluster: ${ics.purchaseRequestEntity != null ? capitalizeWord(ics.purchaseRequestEntity!.fundCluster.toReadableString()) : capitalizeWord(ics.fundCluster?.toReadableString() ?? '')}');
     fundClusterCell.cellStyle = generalCellStyle;
 
     final icsNoCell = sheet.cell(

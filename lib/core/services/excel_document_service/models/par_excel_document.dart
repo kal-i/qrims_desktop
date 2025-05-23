@@ -6,7 +6,6 @@ import '../../../../features/item_issuance/domain/entities/property_acknowledgem
 import '../../../utils/capitalizer.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/document_date_formatter.dart';
-import '../../../utils/extract_specification.dart';
 import '../../../utils/fund_cluster_to_readable_string.dart';
 import '../../../utils/generate_compression_key.dart';
 import '../../../utils/get_position_at.dart';
@@ -69,45 +68,26 @@ class PARExcelDocument {
       ),
     );
 
-    final entityTitleCell = sheet
-        .cell(
-          CellIndex.indexByString('B13'),
-        )
-        .cellStyle = generalCellStyle;
+    final entityCell = sheet.cell(
+      CellIndex.indexByString('B13'),
+    );
+    entityCell.value = TextCellValue(
+        'Entity Name: ${par.purchaseRequestEntity != null ? capitalizeWord(par.purchaseRequestEntity!.entity.name) : capitalizeWord(par.entity?.name ?? '')}');
+    entityCell.cellStyle = generalCellStyle;
 
-    final fundClusterTitleCell = sheet
-        .cell(
-          CellIndex.indexByString('B14'),
-        )
-        .cellStyle = generalCellStyle;
+    final fundClusterCell = sheet.cell(
+      CellIndex.indexByString('B14'),
+    );
+    fundClusterCell.value = TextCellValue(
+      'Fund Cluster: ${par.purchaseRequestEntity != null ? capitalizeWord(par.purchaseRequestEntity!.fundCluster.toReadableString()) : capitalizeWord(par.fundCluster?.toReadableString() ?? '')}',
+    );
+    fundClusterCell.cellStyle = generalCellStyle;
 
     final parNoCell = sheet.cell(
       CellIndex.indexByString('F14'),
     );
     parNoCell.value = TextCellValue('PAR No.: ${par.parId}');
     parNoCell.cellStyle = generalCellStyle;
-
-    final entityCell = sheet.cell(
-      CellIndex.indexByString('C13'),
-    );
-    entityCell.value = TextCellValue(
-      par.purchaseRequestEntity != null
-          ? capitalizeWord(par.purchaseRequestEntity!.entity.name)
-          : capitalizeWord(par.entity?.name ?? ''),
-    );
-    entityCell.cellStyle = generalCellStyle;
-
-    final fundClusterCell = sheet.cell(
-      CellIndex.indexByString('C14'),
-    );
-
-    fundClusterCell.value = TextCellValue(
-      par.purchaseRequestEntity != null
-          ? capitalizeWord(
-              par.purchaseRequestEntity!.fundCluster.toReadableString())
-          : capitalizeWord(par.fundCluster?.toReadableString() ?? ''),
-    );
-    fundClusterCell.cellStyle = generalCellStyle;
 
     // Define the border style
     final borderStyle = Border(borderStyle: BorderStyle.Medium);

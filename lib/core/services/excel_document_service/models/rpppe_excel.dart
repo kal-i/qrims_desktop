@@ -28,6 +28,31 @@ class RPPPEExcelDocument {
 
     print('data to be map processed');
 
+    final startHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderTopCell = CellIndex.indexByColumnRow(
+      columnIndex: 27,
+      rowIndex: 0,
+    );
+    for (int col = startHeaderTopCell.columnIndex;
+        col <= endHeaderTopCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: 0,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     final regStyle = CellStyle(
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
@@ -159,7 +184,7 @@ class RPPPEExcelDocument {
     // print('total rows inserted: $totalRowsInserted');
 
     int footerStartRow = 12 + totalRowsInserted + 1;
-    _addFooter(
+    final footerRows = _addFooter(
       sheet,
       footerStartRow,
       certifyingOfficers,
@@ -167,6 +192,118 @@ class RPPPEExcelDocument {
       coaRepresentative,
       regStyle,
     );
+
+    final startHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 28,
+      rowIndex: 0,
+    );
+    final endHeaderRightCell = CellIndex.indexByColumnRow(
+      columnIndex: 28,
+      rowIndex: footerRows,
+    );
+    for (int row = startHeaderRightCell.rowIndex;
+        row <= endHeaderRightCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 28,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+      );
+    }
+
+    final startHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: 0,
+    );
+    final endHeaderLeftCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: footerRows,
+    );
+    for (int row = startHeaderLeftCell.rowIndex;
+        row <= endHeaderLeftCell.rowIndex;
+        row++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: row,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        topBorder: row == 0
+            ? Border(
+                borderStyle: BorderStyle.Medium,
+                borderColorHex: ExcelColor.white,
+              )
+            : null,
+        // bottomBorder: row == endHeaderLeftCell.rowIndex
+        //     ? Border(
+        //         borderStyle: BorderStyle.Medium,
+        //         borderColorHex: ExcelColor.white,
+        //       )
+        //     : null,
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
+    final headerBottomCellRowIndex = footerRows + 1; // footerStartRow + 7;
+    final startHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    final endHeaderBottomCell = CellIndex.indexByColumnRow(
+      columnIndex: 28,
+      rowIndex: headerBottomCellRowIndex,
+    );
+    for (int col = startHeaderBottomCell.columnIndex;
+        col <= endHeaderBottomCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: headerBottomCellRowIndex,
+        ),
+      );
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        rightBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorder: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
   }
 
   static void _applyHeadersAndStyles(Sheet sheet, Border borderStyle) {
@@ -728,7 +865,7 @@ class RPPPEExcelDocument {
     }
   }
 
-  static void _addFooter(
+  static int _addFooter(
     Sheet sheet,
     int footerStartRow,
     List<Map<String, dynamic>>? certifyingOfficers,
@@ -1073,5 +1210,7 @@ class RPPPEExcelDocument {
         verticalAlign: VerticalAlign.Center,
       );
     }
+
+    return currentRow;
   }
 }

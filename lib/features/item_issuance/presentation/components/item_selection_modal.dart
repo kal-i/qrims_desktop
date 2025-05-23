@@ -133,6 +133,29 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
     });
   }
 
+  void _selectAllCurrentPage() {
+    setState(() {
+      for (var row in _tableRows) {
+        final itemObj = row.object;
+        final newItem = itemObj is SupplyEntity
+            ? (itemObj as SupplyModel).toJson()
+            : (itemObj as InventoryItemModel).toJson();
+        final baseItemId =
+            newItem['shareable_item_information']['base_item_id'].toString();
+
+        if (!_selectedItemIds.contains(baseItemId)) {
+          _selectedItemIds.add(baseItemId);
+          final isDup = _preselectedItems.any((it) =>
+              it['shareable_item_information']['base_item_id'].toString() ==
+              baseItemId);
+          if (!isDup) _preselectedItems.add(newItem);
+        }
+
+        row.isSelected = true;
+      }
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -163,11 +186,14 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildFilterTableRow(),
-        Row(children: [
-          ExpandableSearchButton(controller: _searchController),
-          const SizedBox(width: 10.0),
-          _buildRefreshButton(),
-        ]),
+        Row(
+          spacing: 10.0,
+          children: [
+            ExpandableSearchButton(controller: _searchController),
+            _buildRefreshButton(),
+            _buildSelectAllButton(),
+          ],
+        ),
       ],
     );
   }
@@ -181,6 +207,14 @@ class _ItemSelectionModalState extends State<ItemSelectionModal> {
 
   Widget _buildRefreshButton() {
     return ReusableCustomRefreshOutlineButton(onTap: _refreshItemList);
+  }
+
+  Widget _buildSelectAllButton() {
+    return CustomOutlineButton(
+      onTap: _selectAllCurrentPage,
+      text: 'Select All',
+      icon: FluentIcons.checkbox_checked_20_regular,
+    );
   }
 
   Widget _buildDataTable() {

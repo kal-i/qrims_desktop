@@ -406,6 +406,7 @@ class PurchaseRequest implements BaseDocument {
               borderTop: false,
               borderRight: false,
               borderBottom: false,
+              isFooterData: true,
             ),
             _buildCell(
               data: capitalizeWord(approvingOfficerEntity.name),
@@ -424,6 +425,7 @@ class PurchaseRequest implements BaseDocument {
               isCenter: false,
               borderTop: false,
               borderRight: false,
+              isFooterData: true,
             ),
             _buildCell(
               data: capitalizeWord(requestingOfficerEntity.positionName),
@@ -462,6 +464,7 @@ class PurchaseRequest implements BaseDocument {
     double fontSize = 8.0,
     bool isCenter = true,
     double? rowHeight,
+    bool isFooterData = false,
   }) {
     return DocumentComponents.buildContainer(
       height: rowHeight,
@@ -481,6 +484,9 @@ class PurchaseRequest implements BaseDocument {
           fontSize: fontSize,
         ),
         textAlign: isCenter ? pw.TextAlign.center : null,
+        maxLines: isFooterData ? 1 : null,
+        overflow: isFooterData ? pw.TextOverflow.clip : null,
+        softWrap: isFooterData ? false : null,
       ),
       verticalPadding: verticalPadding,
       horizontalPadding: horizontalPadding,

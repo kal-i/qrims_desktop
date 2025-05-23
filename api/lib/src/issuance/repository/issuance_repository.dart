@@ -1139,7 +1139,7 @@ class IssuanceRepository {
       final finalQuery = '''
       $baseQuery
       ${whereClause.toString()}
-      ORDER BY iss.issued_date DESC
+      ORDER BY iss.id ASC
       LIMIT @page_size OFFSET @offset
       ''';
 
@@ -3335,7 +3335,8 @@ class IssuanceRepository {
               ${status == IssuanceItemStatus.returned ? 'returned_date = @date,' : ''}
               ${status == IssuanceItemStatus.lost ? 'lost_date = @date,' : ''}
               remarks = @remarks
-          WHERE item_id = @item_id;
+          WHERE 
+              item_id = @item_id;
           '''),
           parameters: {
             'item_id': baseItemId,
