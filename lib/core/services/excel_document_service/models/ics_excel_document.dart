@@ -70,7 +70,9 @@ class ICSExcelDocument {
     );
     fundClusterCell.value = TextCellValue(
         'Fund Cluster: ${ics.purchaseRequestEntity != null ? capitalizeWord(ics.purchaseRequestEntity!.fundCluster.toReadableString()) : capitalizeWord(ics.fundCluster?.toReadableString() ?? '')}');
-    fundClusterCell.cellStyle = generalCellStyle;
+    fundClusterCell.cellStyle = generalCellStyle?.copyWith(
+      textWrappingVal: TextWrapping.Clip,
+    );
 
     final icsNoCell = sheet.cell(
       CellIndex.indexByString('G14'),

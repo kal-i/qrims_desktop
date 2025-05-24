@@ -200,12 +200,24 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
             ItemUpdate(
               id: widget.itemId!,
               itemName: _itemNameController.text,
-              description: _itemDescriptionsController.text,
-              manufacturerName: _manufacturerController.text,
-              brandName: _brandController.text,
-              modelName: _modelController.text,
-              serialNo: _serialNoController.text,
-              specification: _specificationController.text,
+              description: _itemDescriptionsController.text == ''
+                  ? 'No description defined.'
+                  : _itemDescriptionsController.text,
+              manufacturerName: _manufacturerController.text == ''
+                  ? 'No manufacturer defined.'
+                  : _manufacturerController.text,
+              brandName: _brandController.text == ''
+                  ? 'No brand defined.'
+                  : _brandController.text,
+              modelName: _modelController.text == ''
+                  ? 'No model defined.'
+                  : _modelController.text,
+              serialNo: _serialNoController.text == ''
+                  ? 'No serial no. defined.'
+                  : _serialNoController.text,
+              specification: _specificationController.text == ''
+                  ? 'No specification defined.'
+                  : _specificationController.text,
               assetClassification: _selectedAssetClassification.value,
               assetSubClass: _selectedAssetSubClassification.value,
               unit: _selectedUnit.value,
@@ -311,13 +323,13 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
                               'n/a')
                       ? 'No specification defined.'
                       : shareableItemInformationEntity.specification!;
-              _brandController.text =
-                  brandEntity?.name ?? 'No brand specified.';
+              _brandController.text = brandEntity?.name ?? 'No brand defined.';
               _modelController.text =
-                  modelEntity?.modelName ?? 'No model specified.';
-              _serialNoController.text = itemEntity.serialNo ?? 'No serial no.';
+                  modelEntity?.modelName ?? 'No model defined.';
+              _serialNoController.text =
+                  itemEntity.serialNo ?? 'No serial no. defined.';
               _manufacturerController.text =
-                  manufacturerEntity?.name ?? 'No manufacturer specified.';
+                  manufacturerEntity?.name ?? 'No manufacturer defined.';
               _selectedAssetClassification.value =
                   AssetClassification.values.firstWhere(
                 (e) =>
@@ -349,7 +361,7 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
               _estimatedUsefulLifeController.text =
                   itemEntity.estimatedUsefulLife != null
                       ? itemEntity.estimatedUsefulLife.toString()
-                      : 'No estimated useful life specified.';
+                      : 'No estimated useful life defined.';
               _pickedDate.value =
                   initItemData.shareableItemInformationEntity.acquiredDate ??
                       DateTime.now();

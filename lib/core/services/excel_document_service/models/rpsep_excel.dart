@@ -870,7 +870,9 @@ class RPSEPExcelDocument {
         ),
       );
       cell.value = TextCellValue(cellInfo.value);
-      cell.cellStyle = dataCellStyle;
+      cell.cellStyle = dataCellStyle?.copyWith(
+        textWrappingVal: TextWrapping.WrapText,
+      );
     }
   }
 
@@ -887,15 +889,6 @@ class RPSEPExcelDocument {
 
     print('certifying officers: $certifyingOfficers');
 
-    final calibriRegStyle = sheet
-        .cell(
-          CellIndex.indexByColumnRow(
-            columnIndex: 7,
-            rowIndex: footerStartRow,
-          ),
-        )
-        .cellStyle;
-
     sheet
         .cell(
           CellIndex.indexByColumnRow(
@@ -903,8 +896,24 @@ class RPSEPExcelDocument {
             rowIndex: footerStartRow,
           ),
         )
-        .cellStyle = calibriRegStyle?.copyWith(
-      leftBorderVal: Border(
+        .cellStyle = CellStyle(
+      topBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+      leftBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
+
+    sheet
+        .cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 7,
+            rowIndex: footerStartRow,
+          ),
+        )
+        .cellStyle = CellStyle(
+      topBorder: Border(
         borderStyle: BorderStyle.Medium,
       ),
     );
@@ -916,7 +925,11 @@ class RPSEPExcelDocument {
             rowIndex: footerStartRow,
           ),
         )
-        .cellStyle = calibriRegStyle;
+        .cellStyle = CellStyle(
+      topBorder: Border(
+        borderStyle: BorderStyle.Medium,
+      ),
+    );
 
     print('certifying officers received by footer: $certifyingOfficers');
 

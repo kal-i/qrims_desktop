@@ -127,8 +127,14 @@ class _ReusableSupplyItemViewState extends State<ReusableSupplyItemView> {
             ItemUpdate(
               id: widget.itemId!,
               itemName: _itemNameController.text,
-              description: _itemDescriptionsController.text,
-              specification: _specificationController.text,
+              description:
+                  _itemDescriptionsController.text == 'No description defined.'
+                      ? null
+                      : _itemDescriptionsController.text,
+              specification:
+                  _specificationController.text == 'No specification defined.'
+                      ? null
+                      : _specificationController.text,
               unit: _selectedUnit.value,
               quantity: int.parse(_quantityController.text),
               unitCost: double.parse(_unitCostController.text),

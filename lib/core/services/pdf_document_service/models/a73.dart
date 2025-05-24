@@ -141,7 +141,7 @@ class A73 implements BaseDocument {
           _buildContentTableRow(
             article: article,
             description: description,
-            semiExpendablePropertyNo: propertyNo,
+            propertyNo: propertyNo,
             unit: unit,
             unitValue: unitValue,
             totalQuantity: totalQuantity,
@@ -763,7 +763,7 @@ class A73 implements BaseDocument {
   pw.TableRow _buildContentTableRow({
     String? article,
     String? description,
-    String? semiExpendablePropertyNo,
+    String? propertyNo,
     String? unit,
     double? unitValue,
     int? totalQuantity,
@@ -831,7 +831,7 @@ class A73 implements BaseDocument {
         //   ],
         // ),
         DocumentComponents.buildTableRowColumn(
-          data: semiExpendablePropertyNo ?? '\n',
+          data: propertyNo ?? '\n',
           borderRight: false,
           fontSize: 8.0,
           rowHeight: rowHeight,
