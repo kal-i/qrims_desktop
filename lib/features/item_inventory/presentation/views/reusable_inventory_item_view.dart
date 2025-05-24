@@ -200,24 +200,27 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
             ItemUpdate(
               id: widget.itemId!,
               itemName: _itemNameController.text,
-              description: _itemDescriptionsController.text == ''
-                  ? 'No description defined.'
-                  : _itemDescriptionsController.text,
-              manufacturerName: _manufacturerController.text == ''
-                  ? 'No manufacturer defined.'
-                  : _manufacturerController.text,
-              brandName: _brandController.text == ''
-                  ? 'No brand defined.'
+              description:
+                  _itemDescriptionsController.text == 'No description defined.'
+                      ? null
+                      : _itemDescriptionsController.text,
+              manufacturerName:
+                  _manufacturerController.text == 'No manufacturer defined.'
+                      ? null
+                      : _manufacturerController.text,
+              brandName: _brandController.text == 'No brand defined.'
+                  ? null
                   : _brandController.text,
-              modelName: _modelController.text == ''
-                  ? 'No model defined.'
+              modelName: _modelController.text == 'No model defined.'
+                  ? null
                   : _modelController.text,
-              serialNo: _serialNoController.text == ''
-                  ? 'No serial no. defined.'
+              serialNo: _serialNoController.text == 'No serial no. defined.'
+                  ? null
                   : _serialNoController.text,
-              specification: _specificationController.text == ''
-                  ? 'No specification defined.'
-                  : _specificationController.text,
+              specification:
+                  _specificationController.text == 'No specification defined.'
+                      ? null
+                      : _specificationController.text,
               assetClassification: _selectedAssetClassification.value,
               assetSubClass: _selectedAssetSubClassification.value,
               unit: _selectedUnit.value,
