@@ -190,6 +190,7 @@ abstract interface class IssuanceRemoteDataSource {
     required String officerId,
     DateTime? startDate,
     DateTime? endDate,
+    String? searchQuery,
   });
 
   Future<bool> resolveIssuanceItem({

@@ -2996,6 +2996,7 @@ class IssuanceRepository {
     required String officerId,
     DateTime? startDate,
     DateTime? endDate,
+    String? searchQuery,
   }) async {
     final now = DateTime.now();
 
@@ -3012,6 +3013,18 @@ class IssuanceRepository {
       whereClauses.add('iss.issued_date BETWEEN @start_date AND @end_date');
       parameters['start_date'] = startDate.toIso8601String();
       parameters['end_date'] = (endDate ?? now).toIso8601String();
+    }
+
+    if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      whereClauses.add('('
+          'ics.id ILIKE @search_query OR '
+          'par.id ILIKE @search_query OR '
+          'issi.item_id ILIKE @search_query OR '
+          'pn.name ILIKE @search_query OR '
+          'pd.description ILIKE @search_query OR '
+          'inv.serial_no ILIKE @search_query'
+          ')');
+      parameters['search_query'] = '%${searchQuery.trim()}%';
     }
 
     final whereClause = whereClauses.join(' AND ');

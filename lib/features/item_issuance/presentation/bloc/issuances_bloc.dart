@@ -585,6 +585,7 @@ class IssuancesBloc extends Bloc<IssuancesEvent, IssuancesState> {
         officerId: event.officerId,
         startDate: event.startDate,
         endDate: event.endDate,
+        searchQuery: event.searchQuery,
       ),
     );
 

@@ -351,11 +351,13 @@ final class GetOfficerAccountabilityEvent extends IssuancesEvent {
     required this.officerId,
     this.startDate,
     this.endDate,
+    this.searchQuery,
   });
 
   final String officerId;
   final DateTime? startDate;
   final DateTime? endDate;
+  final String? searchQuery;
 }
 
 final class ResolveIssuanceItemEvent extends IssuancesEvent {

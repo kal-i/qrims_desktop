@@ -783,12 +783,15 @@ class IssuanceRemoteDataSourceImpl implements IssuanceRemoteDataSource {
     required String officerId,
     DateTime? startDate,
     DateTime? endDate,
+    String? searchQuery,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {
         'officer_id': officerId,
         if (startDate != null) 'start_date': startDate.toIso8601String(),
         if (endDate != null) 'end_date': endDate.toIso8601String(),
+        if (searchQuery != null && searchQuery.isNotEmpty)
+          'search_query': searchQuery,
       };
 
       final response = await httpService.get(

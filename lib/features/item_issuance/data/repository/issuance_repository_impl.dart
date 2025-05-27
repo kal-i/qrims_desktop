@@ -498,12 +498,14 @@ class IssuanceRepositoryImpl implements IssuanceRepository {
     required String officerId,
     DateTime? startDate,
     DateTime? endDate,
+    String? searchQuery,
   }) async {
     try {
       final response = await issuanceRemoteDataSource.getOfficerAccountability(
         officerId: officerId,
         startDate: startDate,
         endDate: endDate,
+        searchQuery: searchQuery,
       );
 
       return right(response);

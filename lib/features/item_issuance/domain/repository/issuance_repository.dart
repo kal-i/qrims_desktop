@@ -198,6 +198,7 @@ abstract interface class IssuanceRepository {
     required String officerId,
     DateTime? startDate,
     DateTime? endDate,
+    String? searchQuery,
   });
 
   Future<Either<Failure, bool>> resolveIssuanceItem({

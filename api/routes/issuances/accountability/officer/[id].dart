@@ -30,11 +30,13 @@ Future<Response> _getAccountability(
     final headers = await context.request.headers;
     final startDate = headers['start_date'];
     final endDate = headers['end_date'];
+    final searchQuery = headers['search_query'];
 
     final accountability = await issuanceRepository.getOfficerAccountability(
       officerId: id,
       startDate: startDate != null ? DateTime.parse(startDate) : null,
       endDate: endDate != null ? DateTime.parse(endDate) : null,
+      searchQuery: searchQuery,
     );
 
     return Response.json(

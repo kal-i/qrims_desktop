@@ -21,6 +21,7 @@ class GetOfficerAccountability
       officerId: params.officerId,
       startDate: params.startDate,
       endDate: params.endDate,
+      searchQuery: params.searchQuery,
     );
   }
 }
@@ -30,9 +31,11 @@ class GetOfficerAccountabilityParams {
     required this.officerId,
     this.startDate,
     this.endDate,
+    this.searchQuery,
   });
 
   final String officerId;
   final DateTime? startDate;
   final DateTime? endDate;
+  final String? searchQuery;
 }
