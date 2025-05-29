@@ -190,7 +190,7 @@ class IssuanceRepository {
       final sequence = await ctx.execute(
         Sql.named('''
         INSERT INTO ics_id_sequences (year, last_value)
-        VALUES (@year, 0)
+        VALUES (@year, 1)
         ON CONFLICT (year) DO UPDATE SET last_value = ics_id_sequences.last_value + 1
         RETURNING last_value
       '''),
@@ -219,10 +219,11 @@ class IssuanceRepository {
     });
   }
 
-  Future<String> _generateUniqueParId() async {
-    final now = DateTime.now();
-    final year = now.year.toString();
-    final month = now.month.toString().padLeft(2, '0');
+  Future<String> _generateUniqueParId({
+    required DateTime issuedDate,
+  }) async {
+    final year = issuedDate.year;
+    final month = issuedDate.month.toString().padLeft(2, '0');
 
     // Get the highest existing PAR number for this year
     final result = await _conn.execute(
@@ -275,10 +276,11 @@ class IssuanceRepository {
   //   return uniqueId;
   // }
 
-  Future<String> _generateUniqueRisId() async {
-    final now = DateTime.now();
-    final year = now.year.toString();
-    final month = now.month.toString().padLeft(2, '0');
+  Future<String> _generateUniqueRisId({
+    required DateTime issuedDate,
+  }) async {
+    final year = issuedDate.year;
+    final month = issuedDate.month.toString().padLeft(2, '0');
 
     // Get the highest existing RIS number for this year
     final result = await _conn.execute(
@@ -393,52 +395,52 @@ class IssuanceRepository {
     for (final row in issuanceItemsResult) {
       Map<String, dynamic> item = {};
 
-      if (row[20] != null) {
+      if (row[21] != null) {
         final supplyMap = {
-          'supply_id': row[20],
-          'base_item_id': row[7],
-          'product_name_id': row[8],
-          'product_description_id': row[9],
-          'specification': row[10],
-          'unit': row[11],
-          'quantity': row[12],
-          'unit_cost': row[15],
-          'encrypted_id': row[13],
-          'qr_code_image_data': row[14],
-          'acquired_date': row[16],
-          'fund_cluster': row[17],
-          'product_name': row[18],
-          'product_description': row[19],
-          'stock_no': row[34],
+          'supply_id': row[21],
+          'base_item_id': row[8],
+          'product_name_id': row[9],
+          'product_description_id': row[1],
+          'specification': row[11],
+          'unit': row[12],
+          'quantity': row[13],
+          'unit_cost': row[16],
+          'encrypted_id': row[14],
+          'qr_code_image_data': row[15],
+          'acquired_date': row[17],
+          'fund_cluster': row[18],
+          'product_name': row[19],
+          'product_description': row[20],
+          'stock_no': row[35],
         };
         item = Supply.fromJson(supplyMap).toJson();
-      } else if (row[21] != null) {
+      } else if (row[22] != null) {
         final inventoryMap = {
-          'inventory_id': row[21],
-          'base_item_id': row[7],
-          'product_name_id': row[8],
-          'product_description_id': row[9],
-          'specification': row[10],
-          'unit': row[11],
-          'quantity': row[12],
-          'unit_cost': row[15],
-          'encrypted_id': row[13],
-          'qr_code_image_data': row[14],
-          'acquired_date': row[16],
-          'fund_cluster': row[17],
-          'product_name': row[18],
-          'product_description': row[19],
-          'manufacturer_id': row[22],
-          'brand_id': row[23],
-          'model_id': row[24],
-          'serial_no': row[25],
-          'asset_classification': row[26],
-          'asset_sub_class': row[27],
-          'estimated_useful_life': row[28],
-          'manufacturer_name': row[29],
-          'brand_name': row[30],
-          'model_name': row[31],
-          'stock_no': row[34],
+          'inventory_id': row[22],
+          'base_item_id': row[8],
+          'product_name_id': row[9],
+          'product_description_id': row[10],
+          'specification': row[11],
+          'unit': row[12],
+          'quantity': row[13],
+          'unit_cost': row[16],
+          'encrypted_id': row[14],
+          'qr_code_image_data': row[15],
+          'acquired_date': row[17],
+          'fund_cluster': row[18],
+          'product_name': row[19],
+          'product_description': row[20],
+          'manufacturer_id': row[23],
+          'brand_id': row[24],
+          'model_id': row[25],
+          'serial_no': row[26],
+          'asset_classification': row[27],
+          'asset_sub_class': row[28],
+          'estimated_useful_life': row[29],
+          'manufacturer_name': row[30],
+          'brand_name': row[31],
+          'model_name': row[32],
+          'stock_no': row[35],
         };
         item = InventoryItem.fromJson(inventoryMap).toJson();
       }
@@ -452,10 +454,11 @@ class IssuanceRepository {
             'item': item,
             'issued_quantity': row[2],
             'status': row[3],
-            'issued_date': row[32],
-            'received_date': row[33],
+            'issued_date': row[33],
+            'received_date': row[34],
             'returned_date': row[4],
             'lost_date': row[5],
+            'disposed_date': row[7],
             'remarks': row[6],
           },
         ),
@@ -2016,7 +2019,9 @@ class IssuanceRepository {
     String? issuingOfficerId,
     DateTime? receivedDate,
   }) async {
-    final parId = await _generateUniqueParId();
+    final parId = await _generateUniqueParId(
+      issuedDate: issuedDate,
+    );
 
     final concreteIssuanceEntityQuery = '''
     INSERT INTO PropertyAcknowledgementReceipts (
@@ -2089,7 +2094,9 @@ class IssuanceRepository {
     DateTime? approvedDate,
     DateTime? requestDate,
   }) async {
-    final risId = await _generateUniqueRisId();
+    final risId = await _generateUniqueRisId(
+      issuedDate: issuedDate,
+    );
 
     print('Generated RIS id: $risId');
 
@@ -2998,8 +3005,6 @@ class IssuanceRepository {
     DateTime? endDate,
     String? searchQuery,
   }) async {
-    final now = DateTime.now();
-
     // We'll build the WHERE clause dynamically
     final whereClauses = <String>[
       'roff.id = @officer_id',
@@ -3009,10 +3014,10 @@ class IssuanceRepository {
     };
 
     // If startDate is provided, add date filtering
-    if (startDate != null) {
+    if (startDate != null && endDate != null) {
       whereClauses.add('iss.issued_date BETWEEN @start_date AND @end_date');
       parameters['start_date'] = startDate.toIso8601String();
-      parameters['end_date'] = (endDate ?? now).toIso8601String();
+      parameters['end_date'] = endDate.toIso8601String();
     }
 
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
@@ -3347,6 +3352,7 @@ class IssuanceRepository {
           SET status = @status,
               ${status == IssuanceItemStatus.returned ? 'returned_date = @date,' : ''}
               ${status == IssuanceItemStatus.lost ? 'lost_date = @date,' : ''}
+              ${status == IssuanceItemStatus.disposed ? 'disposed_date = @date,' : ''}
               remarks = @remarks
           WHERE 
               item_id = @item_id;

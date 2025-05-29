@@ -11,6 +11,7 @@ class IssuanceItemEntity {
     this.receivedDate,
     this.returnedDate,
     this.lostDate,
+    this.disposedDate,
     this.remarks,
   });
 
@@ -22,5 +23,7 @@ class IssuanceItemEntity {
   final DateTime? receivedDate;
   final DateTime? returnedDate;
   final DateTime? lostDate;
+  final DateTime? disposedDate;
+
   final String? remarks;
 }

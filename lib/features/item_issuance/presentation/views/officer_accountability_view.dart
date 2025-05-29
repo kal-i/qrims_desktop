@@ -82,6 +82,25 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
     );
   }
 
+  void _fetchOfficerAccountability() {
+    if (_accountableOfficerId.value == null ||
+        _accountableOfficerId.value!.isEmpty) {
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: Icons.error_outline,
+        title: 'Search Failed',
+        subtitle: 'Please search for an officer first.',
+      );
+      return;
+    }
+
+    _issuancesBloc.add(
+      GetOfficerAccountabilityEvent(
+        officerId: _accountableOfficerId.value!,
+      ),
+    );
+  }
+
   void _exportToExcel() async {
     if (_accountabilityList.value.isEmpty) {
       DelightfulToastUtils.showDelightfulToast(
@@ -156,22 +175,7 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
         listener: (context, state) {
           if (state is FetchedAccountableOfficerId) {
             _accountableOfficerId.value = state.officerId;
-
-            if (_accountableOfficerId.value != null &&
-                _accountableOfficerId.value!.isNotEmpty) {
-              _issuancesBloc.add(
-                GetOfficerAccountabilityEvent(
-                  officerId: _accountableOfficerId.value!,
-                ),
-              );
-            } else {
-              DelightfulToastUtils.showDelightfulToast(
-                context: context,
-                icon: Icons.error_outline,
-                title: 'Search Failed',
-                subtitle: 'Officer not found.',
-              );
-            }
+            _fetchOfficerAccountability();
           }
 
           if (state is FetchedOfficerAccountability) {
@@ -194,14 +198,6 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
                 title: 'Status Update Successful',
                 subtitle: 'Issuance item status updated successfully.',
               );
-              if (_accountableOfficerId.value != null &&
-                  _accountableOfficerId.value!.isNotEmpty) {
-                _issuancesBloc.add(
-                  GetOfficerAccountabilityEvent(
-                    officerId: _accountableOfficerId.value!,
-                  ),
-                );
-              }
             } else {
               DelightfulToastUtils.showDelightfulToast(
                 context: context,
@@ -340,6 +336,7 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
               ],
             ),
             Row(
+              spacing: 10.0,
               children: [
                 CustomFilledButton(
                   onTap: _exportToExcel,
@@ -400,7 +397,12 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
                                 : accountabilities[index]['lost_date'] != null
                                     ? DateTime.parse(
                                         accountabilities[index]['lost_date'])
-                                    : null,
+                                    : accountabilities[index]
+                                                ['disposed_date'] !=
+                                            null
+                                        ? DateTime.parse(accountabilities[index]
+                                            ['disposed_date'])
+                                        : null,
                             remarks: accountabilities[index]['remarks'],
                           ),
                         ),

@@ -15,6 +15,7 @@ class IssuanceItemModel extends IssuanceItemEntity {
     super.receivedDate,
     super.returnedDate,
     super.lostDate,
+    super.disposedDate,
     super.remarks,
   });
 
@@ -49,6 +50,11 @@ class IssuanceItemModel extends IssuanceItemEntity {
               ? DateTime.parse(json['lost_date'] as String)
               : json['lost_date'] as DateTime
           : null,
+      disposedDate: json['disposed_date'] != null
+          ? json['disposed_date'] is String
+              ? DateTime.parse(json['disposed_date'] as String)
+              : json['disposed_date'] as DateTime
+          : null,
       remarks: json['remarks'] as String?,
     );
   }
@@ -65,6 +71,7 @@ class IssuanceItemModel extends IssuanceItemEntity {
       'received_date': receivedDate?.toIso8601String(),
       'returned_date': returnedDate?.toIso8601String(),
       'lost_date': lostDate?.toIso8601String(),
+      'disposed_date': disposedDate?.toIso8601String(),
       'remarks': remarks,
     };
   }

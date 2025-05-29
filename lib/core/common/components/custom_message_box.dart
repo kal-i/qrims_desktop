@@ -82,10 +82,10 @@ class CustomMessageBox extends StatelessWidget {
                 Text(
                   titleText,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: textColor,
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        color: textColor,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                      ),
                 )
               ],
             ),
@@ -95,10 +95,11 @@ class CustomMessageBox extends StatelessWidget {
             Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 13.0,
-                height: 1.5,
-                fontWeight: FontWeight.w500,
-              ),
+                    fontSize: 13.0,
+                    height: 1.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

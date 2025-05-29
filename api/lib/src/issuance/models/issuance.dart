@@ -74,6 +74,7 @@ class IssuanceItem {
     this.receivedDate,
     this.returnedDate,
     this.lostDate,
+    this.disposedDate,
     this.remarks,
   });
 
@@ -85,6 +86,8 @@ class IssuanceItem {
   final DateTime? receivedDate;
   final DateTime? returnedDate;
   final DateTime? lostDate;
+  final DateTime? disposedDate;
+
   final String? remarks;
 
   factory IssuanceItem.fromJson(Map<String, dynamic> json) {
@@ -212,6 +215,11 @@ class IssuanceItem {
                 ? DateTime.parse(json['lost_date'] as String)
                 : json['lost_date'] as DateTime
             : null,
+        disposedDate: json['disposed_date'] != null
+            ? json['disposed_date'] is String
+                ? DateTime.parse(json['disposed_date'] as String)
+                : json['disposed_date'] as DateTime
+            : null,
         remarks: json['remarks'] as String?,
       );
     } catch (e) {
@@ -232,6 +240,7 @@ class IssuanceItem {
       'received_date': receivedDate?.toIso8601String(),
       'returned_date': returnedDate?.toIso8601String(),
       'lost_date': lostDate?.toIso8601String(),
+      'disposed_date': disposedDate?.toIso8601String(),
       'remarks': remarks,
     };
   }
@@ -432,6 +441,7 @@ class InventoryCustodianSlip extends Issuance {
         'received_date': itemJson['received_date'],
         'returned_date': itemJson['returned_date'],
         'lost_date': itemJson['lost_date'],
+        'disposed_date': itemJson['disposed_date'],
         'remarks': itemJson['remarks'],
       });
 
@@ -790,6 +800,7 @@ class PropertyAcknowledgementReceipt extends Issuance {
         'received_date': itemJson['received_date'],
         'returned_date': itemJson['returned_date'],
         'lost_date': itemJson['lost_date'],
+        'disposed_date': itemJson['disposed_date'],
         'remarks': itemJson['remarks'],
       });
 
@@ -1129,6 +1140,7 @@ class RequisitionAndIssueSlip extends Issuance {
         'received_date': itemJson['received_date'],
         'returned_date': itemJson['returned_date'],
         'lost_date': itemJson['lost_date'],
+        'disposed_date': itemJson['disposed_date'],
         'remarks': itemJson['remarks'],
       });
 
