@@ -599,7 +599,6 @@ class _ReusableInventoryItemViewState extends State<ReusableInventoryItemView> {
           placeholderText: 'Enter item\'s specification',
           maxLines: 4,
           controller: _specificationController,
-          isReadOnly: !_isViewOnlyMode(),
           fillColor: (context.watch<ThemeBloc>().state == AppTheme.light
               ? AppColor.lightCustomTextBox
               : AppColor.darkCustomTextBox),

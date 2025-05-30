@@ -400,7 +400,7 @@ class IssuanceRepository {
           'supply_id': row[21],
           'base_item_id': row[8],
           'product_name_id': row[9],
-          'product_description_id': row[1],
+          'product_description_id': row[10],
           'specification': row[11],
           'unit': row[12],
           'quantity': row[13],
