@@ -198,6 +198,7 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
                 title: 'Status Update Successful',
                 subtitle: 'Issuance item status updated successfully.',
               );
+              _fetchOfficerAccountability();
             } else {
               DelightfulToastUtils.showDelightfulToast(
                 context: context,

@@ -3058,6 +3058,7 @@ class IssuanceRepository {
         iss.received_date,
         issi.returned_date,
         issi.lost_date,
+        issi.disposed_date,
         roff.name AS accountable_officer,
         rpos.position_name AS accountable_officer_position,
         rofc.name AS accountable_officer_office
@@ -3131,6 +3132,7 @@ class IssuanceRepository {
                 'received_date': (row[16] as DateTime?)?.toIso8601String(),
                 'returned_date': (row[17] as DateTime?)?.toIso8601String(),
                 'lost_date': (row[18] as DateTime?)?.toIso8601String(),
+                'disposed_date': (row[19] as DateTime?)?.toIso8601String(),
               })
           .toList(),
     };

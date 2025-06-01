@@ -41,7 +41,8 @@ class _AccountabilityStatusModalState extends State<AccountabilityStatusModal> {
 
   bool _isViewOnlyMode() =>
       widget.status == IssuanceItemStatus.returned ||
-      widget.status == IssuanceItemStatus.lost;
+      widget.status == IssuanceItemStatus.lost ||
+      widget.status == IssuanceItemStatus.disposed;
 
   @override
   void initState() {

@@ -77,6 +77,7 @@ class EntityRepository {
     if (result.isEmpty) {
       print('registered new entity');
       return await registerEntity(
+        ctx: ctx,
         entityName: entityName,
       );
     } else {

@@ -33,7 +33,8 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
     sheet.setColumnWidth(15, 35);
     sheet.setColumnWidth(16, 20);
     sheet.setColumnWidth(17, 30);
-    sheet.setColumnWidth(18, 5);
+    sheet.setColumnWidth(18, 30);
+    sheet.setColumnWidth(19, 5);
 
     final officer = data['officer'];
     final accountabilities =
@@ -87,7 +88,7 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
       rowIndex: 0,
     );
     final endHeaderRightCell = CellIndex.indexByColumnRow(
-      columnIndex: 17,
+      columnIndex: 18,
       rowIndex: 4,
     );
     for (int row = startHeaderRightCell.rowIndex;
@@ -95,7 +96,7 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
         row++) {
       final cell = sheet.cell(
         CellIndex.indexByColumnRow(
-          columnIndex: 17,
+          columnIndex: 18,
           rowIndex: row,
         ),
       );
@@ -174,6 +175,7 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
       'Received Date',
       'Returned Date',
       'Lost Date',
+      'Dispoesed Date',
     ];
 
     final headerStyle = CellStyle(
@@ -242,6 +244,7 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
         acc['received_date']?.toString()?.split('T')?.first ?? '',
         acc['returned_date']?.toString()?.split('T')?.first ?? '',
         acc['lost_date']?.toString()?.split('T')?.first ?? '',
+        acc['disposed_date']?.toString()?.split('T')?.first ?? '',
       ];
 
       for (int col = 0; col < values.length; col++) {
