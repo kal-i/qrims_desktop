@@ -367,7 +367,7 @@ class _GenerateInventoryReportModalState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Approving Entity or Authoried Representative',
+          'Approving Entity or Authorized Representative',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w700,

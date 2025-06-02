@@ -123,7 +123,9 @@ class _NavigationViewState extends State<NavigationView> {
                         builder: (context, isVisible, child) {
                           return SlidableContainer(
                             width: 500.0,
-                            content: isVisible ? const NotificationWindow() : const SizedBox.shrink(),
+                            content: isVisible
+                                ? const NotificationWindow()
+                                : const SizedBox.shrink(),
                             isVisible: isVisible,
                             onClose: () {
                               _isNotificationTabVisible.value = false;
@@ -163,24 +165,24 @@ class _NavigationViewState extends State<NavigationView> {
             ),
             Row(
               children: [
-                badges.Badge(
-                  position: badges.BadgePosition.topEnd(top: 8, end: 0),
-                  child: IconButton(
-                    onPressed: () {
-                      Future.microtask(() {
-                        _isNotificationTabVisible.value =
-                            !_isNotificationTabVisible.value;
-                      });
-                    },
-                    icon: const Icon(
-                      HugeIcons.strokeRoundedNotification03,
-                      size: 20.0,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 10.0,
-                ),
+                // badges.Badge(
+                //   position: badges.BadgePosition.topEnd(top: 8, end: 0),
+                //   child: IconButton(
+                //     onPressed: () {
+                //       Future.microtask(() {
+                //         _isNotificationTabVisible.value =
+                //             !_isNotificationTabVisible.value;
+                //       });
+                //     },
+                //     icon: const Icon(
+                //       HugeIcons.strokeRoundedNotification03,
+                //       size: 20.0,
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(
+                //   width: 10.0,
+                // ),
                 const WindowButtons(),
               ],
             ),

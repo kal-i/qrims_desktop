@@ -489,7 +489,7 @@ class RISExcelDocument {
           itemEntity.shareableItemInformationEntity;
 
       final descriptionColumn = [
-        productDescriptionEntity?.description ?? 'No description defined'
+        '${capitalizeWord(productNameEntity.name)}, ${productDescriptionEntity?.description}',
       ];
 
       final specification = shareableItemInformationEntity.specification;
