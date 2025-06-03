@@ -271,6 +271,39 @@ class OfficerAccountabilityDocument extends BaseExcelDocument {
       }
     }
 
+    final startFooterCell = CellIndex.indexByColumnRow(
+      columnIndex: 0,
+      rowIndex: startRow + accountabilities.length + 1,
+    );
+    final endFooterCell = CellIndex.indexByColumnRow(
+      columnIndex: 18,
+      rowIndex: startRow + accountabilities.length + 1,
+    );
+    for (int col = startFooterCell.columnIndex;
+        col <= endFooterCell.columnIndex;
+        col++) {
+      final cell = sheet.cell(
+        CellIndex.indexByColumnRow(
+          columnIndex: col,
+          rowIndex: startRow + accountabilities.length + 1,
+        ),
+      );
+      cell.cellStyle = cellStyle.copyWith(
+        rightBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        bottomBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+        leftBorderVal: Border(
+          borderStyle: BorderStyle.Medium,
+          borderColorHex: ExcelColor.white,
+        ),
+      );
+    }
+
     return excel;
   }
 }
