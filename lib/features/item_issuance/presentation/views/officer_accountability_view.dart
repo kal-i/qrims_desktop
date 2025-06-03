@@ -359,61 +359,71 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
         ValueListenableBuilder(
           valueListenable: _accountabilityList,
           builder: (context, accountabilities, child) {
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: IntrinsicWidth(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(accountabilities.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 250.0,
-                        child: ItemCard(
-                          data: accountabilities[index],
-                          isAccountability: true,
-                          onEdit: () => showDialog(
-                            context: context,
-                            builder: (context) => AccountabilityStatusModal(
-                              baseItemId: accountabilities[index]
-                                  ['base_item_id'],
-                              status: accountabilities[index]['status'] !=
-                                          IssuanceItemStatus.issued
-                                              .toString()
-                                              .split('.')
-                                              .last &&
-                                      accountabilities[index]['status'] !=
-                                          IssuanceItemStatus.received
-                                              .toString()
-                                              .split('.')
-                                              .last
-                                  ? IssuanceItemStatus.values.firstWhere(
-                                      (e) =>
-                                          e.toString().split('.').last ==
-                                          accountabilities[index]['status'],
-                                    )
-                                  : null,
-                              date: accountabilities[index]['returned_date'] !=
-                                      null
-                                  ? DateTime.parse(
-                                      accountabilities[index]['returned_date'])
-                                  : accountabilities[index]['lost_date'] != null
-                                      ? DateTime.parse(
-                                          accountabilities[index]['lost_date'])
-                                      : accountabilities[index]
-                                                  ['disposed_date'] !=
-                                              null
-                                          ? DateTime.parse(
-                                              accountabilities[index]
-                                                  ['disposed_date'])
-                                          : null,
-                              remarks: accountabilities[index]['remarks'],
+            final ScrollController scrollController = ScrollController();
+            return Scrollbar(
+              controller: scrollController,
+              thumbVisibility: true,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    bottom: 8.0), // Padding between scrollbar and cards
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: List.generate(accountabilities.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          width: 250.0,
+                          child: ItemCard(
+                            data: accountabilities[index],
+                            isAccountability: true,
+                            onEdit: () => showDialog(
+                              context: context,
+                              builder: (context) => AccountabilityStatusModal(
+                                baseItemId: accountabilities[index]
+                                    ['base_item_id'],
+                                status: accountabilities[index]['status'] !=
+                                            IssuanceItemStatus.issued
+                                                .toString()
+                                                .split('.')
+                                                .last &&
+                                        accountabilities[index]['status'] !=
+                                            IssuanceItemStatus.received
+                                                .toString()
+                                                .split('.')
+                                                .last
+                                    ? IssuanceItemStatus.values.firstWhere(
+                                        (e) =>
+                                            e.toString().split('.').last ==
+                                            accountabilities[index]['status'],
+                                      )
+                                    : null,
+                                date: accountabilities[index]
+                                            ['returned_date'] !=
+                                        null
+                                    ? DateTime.parse(accountabilities[index]
+                                        ['returned_date'])
+                                    : accountabilities[index]['lost_date'] !=
+                                            null
+                                        ? DateTime.parse(accountabilities[index]
+                                            ['lost_date'])
+                                        : accountabilities[index]
+                                                    ['disposed_date'] !=
+                                                null
+                                            ? DateTime.parse(
+                                                accountabilities[index]
+                                                    ['disposed_date'])
+                                            : null,
+                                remarks: accountabilities[index]['remarks'],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
               ),
             );

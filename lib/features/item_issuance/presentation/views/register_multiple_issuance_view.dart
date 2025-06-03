@@ -613,48 +613,59 @@ class _RegisterMultipleIssuanceViewState
         ValueListenableBuilder<List<Map<String, dynamic>>>(
           valueListenable: _officers,
           builder: (context, value, _) {
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(value.length, (index) {
-                  return DragTarget<int>(
-                    onAccept: (fromIndex) => _reorderOfficers(fromIndex, index),
-                    builder: (context, candidateData, rejectedData) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Draggable<int>(
-                          data: index,
-                          feedback: SizedBox(
-                            width: 250.0,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: AccountableOfficerCard(
-                                officer: value[index],
-                                isDragging: true,
-                                onRemoveItem:
-                                    null, // No remove in drag feedback
+            final ScrollController scrollController = ScrollController();
+
+            return Scrollbar(
+              controller: scrollController,
+              thumbVisibility: true,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: List.generate(value.length, (index) {
+                      return DragTarget<int>(
+                        onAccept: (fromIndex) =>
+                            _reorderOfficers(fromIndex, index),
+                        builder: (context, candidateData, rejectedData) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Draggable<int>(
+                              data: index,
+                              feedback: SizedBox(
+                                width: 250.0,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: AccountableOfficerCard(
+                                    officer: value[index],
+                                    isDragging: true,
+                                    onRemoveItem:
+                                        null, // No remove in drag feedback
+                                  ),
+                                ),
+                              ),
+                              childWhenDragging: const SizedBox(
+                                width: 250.0,
+                              ),
+                              child: SizedBox(
+                                width: 250.0,
+                                child: AccountableOfficerCard(
+                                  officer: value[index],
+                                  onRemove: () => _removeOfficer(index),
+                                  onAddItem: () => _showAddItemModal(index),
+                                  onRemoveItem: (itemIdx) =>
+                                      _removeOfficerItem(index, itemIdx),
+                                ),
                               ),
                             ),
-                          ),
-                          childWhenDragging: const SizedBox(
-                            width: 250.0,
-                          ),
-                          child: SizedBox(
-                            width: 250.0,
-                            child: AccountableOfficerCard(
-                              officer: value[index],
-                              onRemove: () => _removeOfficer(index),
-                              onAddItem: () => _showAddItemModal(index),
-                              onRemoveItem: (itemIdx) =>
-                                  _removeOfficerItem(index, itemIdx),
-                            ),
-                          ),
-                        ),
+                          );
+                        },
                       );
-                    },
-                  );
-                }),
+                    }),
+                  ),
+                ),
               ),
             );
           },
