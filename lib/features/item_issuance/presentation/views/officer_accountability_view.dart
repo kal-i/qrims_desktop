@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -12,7 +13,9 @@ import '../../../../config/themes/app_theme.dart';
 import '../../../../config/themes/bloc/theme_bloc.dart';
 import '../../../../core/common/components/custom_filled_button.dart';
 import '../../../../core/common/components/custom_outline_button.dart';
+import '../../../../core/common/components/reusable_custom_refresh_outline_button.dart';
 import '../../../../core/common/components/reusable_linear_progress_indicator.dart';
+import '../../../../core/common/components/search_button/expandable_search_button.dart';
 import '../../../../core/enums/document_type.dart';
 import '../../../../core/enums/issuance_item_status.dart';
 import '../../../../core/services/excel_document_service/excel_document_service.dart';
@@ -50,12 +53,17 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
   final ValueNotifier<List<Map<String, dynamic>>> _accountabilityList =
       ValueNotifier([]);
 
+  final _searchController = TextEditingController();
+  final _searchDelay = const Duration(milliseconds: 500);
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
     _issuancesBloc = context.read<IssuancesBloc>();
     _officerSuggestionsService = serviceLocator<OfficerSuggestionsService>();
     _excelDocumentService = serviceLocator<ExcelDocumentService>();
+    _searchController.addListener(_onSearchChanged);
   }
 
   void _onGetAccountableOfficerId() {
@@ -97,8 +105,32 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
     _issuancesBloc.add(
       GetOfficerAccountabilityEvent(
         officerId: _accountableOfficerId.value!,
+        searchQuery: _searchController.text.trim(),
       ),
     );
+  }
+
+  void _onRefreshAccountabilityList() {
+    if (_accountableOfficerId.value == null ||
+        _accountableOfficerId.value!.isEmpty) {
+      DelightfulToastUtils.showDelightfulToast(
+        context: context,
+        icon: Icons.error_outline,
+        title: 'Refresh Failed',
+        subtitle: 'Please search for an officer first.',
+      );
+      return;
+    }
+    _searchController.clear();
+    _accountabilityList.value = [];
+    _fetchOfficerAccountability();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(_searchDelay, () {
+      _fetchOfficerAccountability();
+    });
   }
 
   void _exportToExcel() async {
@@ -339,6 +371,9 @@ class _OfficerAccountabilityViewState extends State<OfficerAccountabilityView> {
             Row(
               spacing: 10.0,
               children: [
+                ExpandableSearchButton(controller: _searchController),
+                ReusableCustomRefreshOutlineButton(
+                    onTap: _onRefreshAccountabilityList),
                 CustomFilledButton(
                   onTap: _exportToExcel,
                   height: 40.0,

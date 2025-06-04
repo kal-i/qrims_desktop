@@ -3021,6 +3021,7 @@ class IssuanceRepository {
     }
 
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      print('searchQuery: $searchQuery');
       whereClauses.add('('
           'ics.id ILIKE @search_query OR '
           'par.id ILIKE @search_query OR '

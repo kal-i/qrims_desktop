@@ -27,10 +27,12 @@ Future<Response> _getAccountability(
   String id,
 ) async {
   try {
-    final headers = await context.request.headers;
-    final startDate = headers['start_date'];
-    final endDate = headers['end_date'];
-    final searchQuery = headers['search_query'];
+    final queryParams = await context.request.uri.queryParameters;
+    final startDate = queryParams['start_date'];
+    final endDate = queryParams['end_date'];
+    final searchQuery = queryParams['search_query'];
+
+    print('searchQuery: $searchQuery');
 
     final accountability = await issuanceRepository.getOfficerAccountability(
       officerId: id,

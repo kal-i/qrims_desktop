@@ -516,22 +516,28 @@ class _ItemIssuanceViewState extends State<ItemIssuanceView> {
           _errorMessage = null;
         }
 
-        if (state is MatchedItemWithPr || state is IssuanceLoaded) {
+        if (state is MatchedItemWithPr ||
+            state is IssuanceLoaded ||
+            state is FetchedInventoryReport ||
+            state is FetchedAccountableOfficerId ||
+            state is FetchedOfficerAccountability ||
+            state is ResolvedIssuanceItem) {
           _isLoading = false;
           _errorMessage = null;
         }
 
         if (state is ICSRegistered ||
-            state is MultipleICSRegistered ||
-            state is PARRegistered ||
-            state is MultiplePARRegistered ||
-            state is RISRegistered ||
-            state is FetchedInventoryReport ||
-            state is GeneratedSemiExpendablePropertyCardData ||
-            state is ReceivedIssuance ||
-            state is FetchedAccountableOfficerId ||
-            state is FetchedOfficerAccountability ||
-            state is ResolvedIssuanceItem) {
+                state is MultipleICSRegistered ||
+                state is PARRegistered ||
+                state is MultiplePARRegistered ||
+                state is RISRegistered ||
+                state is FetchedInventoryReport ||
+                // state is GeneratedSemiExpendablePropertyCardData ||
+                state is ReceivedIssuance //||
+            // state is FetchedAccountableOfficerId ||
+            // state is FetchedOfficerAccountability ||
+            // state is ResolvedIssuanceItem
+            ) {
           _isLoading = false;
           _errorMessage = null;
           _refreshIssuanceList();
