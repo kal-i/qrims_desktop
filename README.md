@@ -103,7 +103,7 @@ A step-by-step instructions to set up and run the desktop project:
 ---
 
 ## Screenshots  
-![Desktop Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard.png)
+![Desktop Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
 ![Mobile Home View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/home.jpg) 
 
 ## How to Use  
