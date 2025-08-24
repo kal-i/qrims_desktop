@@ -184,13 +184,30 @@ You can package the desktop app as a Windows `.exe` using [Inno Setup](https://j
 
 ---
 
-## Screenshots  
-![Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
-![Inventory Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/inventory.png)
-![Purchase Request Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/pr.png)
-![Item Issuance View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/issuances.png)
-![Officers Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/officers.png)
+Yes, adding a bit of context is a good idea—it helps readers understand **what they’re looking at** and why some data is blurred. Here’s a clean way to do it:
 
+---
+
+## Screenshots
+
+> Note: I had to blur/distort some of the sensitive data such as name for confidentiality.
+
+* **Dashboard View** – Overview of inventory and request data.
+  ![Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
+
+* **Inventory Management View** – Inteface for managing inventory items and supplies.
+  ![Inventory Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/inventory.png)
+
+* **Purchase Request Management View** – Interface for viewing and handling purchase requests.
+  ![Purchase Request Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/pr.png)
+
+* **Item Issuance View** – Interface for tracking and managing item issuances.
+  ![Item Issuance View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/issuances.png)
+
+* **Officers Management View** – Inteface for managing officer records.
+  ![Officers Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/officers.png)
+
+---
 
 ## 📦 This project is part of the **QR Code Inventory Management and Item Tracking System**  
 - [QRIMS Mobile](https://github.com/kal-i/qrims_mobile)
