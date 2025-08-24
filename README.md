@@ -1,39 +1,32 @@
-# QR-Based Inventory Management System (QRIMS)
+# QR Code Inventory Management and Item Tracking System - Desktop Application
 
-## **Description**
+## **Overview**
 
-The QR-Based Inventory Management System is comprised of two systems: **desktop** and **mobile applications**. The primary objective of these systems is to address inefficiencies in tracking stocks and generating reports, as well as ensuring the security of records faced by the **DepEd Legazpi Division Supply Office**.
+The `desktop app` serves as the central system for managing inventory, purchase requests, and issuances, while also generating reports for the supply office. 
 
 ---
 
 ## **Features**
 
-### **Desktop Application**
+- **Dashboard**: Overview of inventory and requests summary.  
+- **Inventory Management**: Register `supply` (consumables) and `inventory` (often issued or tracked manually, containing different properties e.g., serial no. for simplified tracking and management) items, generate QR codes, update item details, and view records.  
+- **Purchase Request Management**: Track officers' requests, validate issuance by comparing items to be issued with the requested item, and streamline report generation by extracting information from purchase requests.  
+- **Item Issuance Management**: View and initiate item issuances, and generate issuance reports like `ICS` (Inventory Custodian Slip (items below Php 50,000.00)), `PAR` (Property Acknowledgement Receipt (items above Php 50,000.00)), `RIS` (supply items or consumables), stickers to be attached to the items, and inventory document reports: `Report on the Physical Count of Inventories`, `Report on the Physical Count of Semi-Expendable Property`, and `Report on the Physical Count of Property, Plant, and Equipment`.  
+- **Officer Management**: Manage officer records associated with purchase requests or item issuances.  
+- **User Management**: Admin-specific tab that allows viewing desktop and mobile users, revoking user access, updating archive statuses, and approving pending mobile user requests.  
+- **Archive Management**: Admin-specific tab to store and manage archived data securely.  
 
-- [x] **Dashboard**: Overview of inventory and requests summary.
-- [x] **Inventory Management**: Generate QR codes for each item to simplify tracking.
-- [x] **Purchase Request Management**: Track requests from officers and streamline report generation by extracting information from purchase requests. 
-- [x] **Item Issuance Management**: View and initiate item issuances, and generate issuance reports like **ICS**, **PAR**, **RIS**, and stickers to be attached to the items.
-- [x] **Officer Management**: Manage officer records associated with purchase requests or item issuances.
-- [x] **User Management**: Admin-specific tab that allows viewing desktop and mobile users, revoking user access, updating archive statuses, and approving pending mobile user requests.
-- [x] **Archive Management**: Admin-specific tab to store and manage archived data securely.
-
-### **Mobile Application**
-
-- [x] **Purchase Request Overview**: View summary information of purchase requests, including ongoing and historical records.
-- [x] **Notifications**: Receive notifications when the supply custodian registers, issues, or cancels a user's request.
-- [x] **QR Code Scanning for Issuance**: Scan QR codes attached to issuance documents to view and receive items. This action notifies the supply custodian and updates the issuance's received status.
-- [x] **QR Code Scanning for Items**: Scan QR codes attached to items to view detailed information about the item.
 
 ---
 
 ## **Technologies Used**  
 Tools, language, and frameworks used in the project:  
-- **Framework**: Flutter / Dart Frog 
+- **Frameworks**: Flutter, Dart Frog 
 - **Language**: Dart  
 - **Database**: PostgreSQL  
-- **Version Control**: Git  
+- **Version Control**: Git & GitHub
 - **State Management**: BLoC
+- **IDE**: Android Studio / VS Code
 
 ---
 
@@ -105,6 +98,9 @@ A step-by-step instructions to set up and run the desktop project:
 ## Screenshots  
 ![Desktop Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
 ![Mobile Home View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/home.jpg) 
+
+📦 This project is part of the **QR Code Inventory Management and Item Tracking System**  
+- [QRIMS Mobile](https://github.com/kal-i/qrims_mobile)
 
 ## How to Use  
 [Download User Manual (PDF)](https://github.com/kal-i/qrims_desktop/raw/main/UserManual.pdf)
