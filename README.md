@@ -52,13 +52,17 @@ A step-by-step instructions to set up and run the desktop project:
 2. Get Flutter dependencies:  
    ```bash
    flutter pub get
-   ```  
-3. Navigate to the api directory and get Dart dependencies:  
+   ```
+3. Create `.env` file for Flutter (root project)
+   ```bash
+   API_BASE_URL = "http://localhost:8080" # or your server address
+   ```
+4. Navigate to the api directory and get Dart dependencies:  
    ```bash
    cd api
    dart pub get
    ```
-4. Create a `.env` file inside the `api` directory and fill in the following:
+5. Create a `.env` file inside the `api` directory and fill in the following:
    ```bash
    HOST = ""
    DATABASE_NAME = ""
@@ -75,7 +79,7 @@ A step-by-step instructions to set up and run the desktop project:
    >
    >   * `SENDER_EMAIL` is the Gmail/SMTP sender address.
    >   * `APP_PASSWORD` is a generated app password (not your actual email password).
-5. Start the Dart Frog server:  
+6. Start the Dart Frog server:  
    * For development (auto-reload on changes):
 
      ```bash
@@ -87,7 +91,7 @@ A step-by-step instructions to set up and run the desktop project:
      dart_frog build
      dart run build/bin/server.dart
      ```
-6. Navigate back to the Flutter root project and run the application:  
+7. Navigate back to the Flutter root project and run the application:  
    ```bash
    cd ..
    flutter run
