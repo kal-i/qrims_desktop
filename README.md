@@ -4,6 +4,9 @@
 
 The `desktop app` serves as the central system for managing inventory, purchase requests, and issuances, while also generating reports for the supply office. 
 
+> ⚠️ Note: This project is built and tested for **Windows desktop only**.  
+> Cross-platform support (Linux/macOS) is not included in this version.
+
 ---
 
 ## **Features**
@@ -60,7 +63,7 @@ A step-by-step instructions to set up and run the desktop project:
    HOST = ""
    DATABASE_NAME = ""
    USERNAME = ""
-   PASSWOR = ""
+   PASSWORD = ""
 
    SENDER_EMAIL = ""
    APP_PASSWORD = ""
@@ -140,6 +143,40 @@ A step-by-step instructions to set up and run the desktop project:
    ```
 
    You should see tables like `users`, `sessions`, etc.
+
+---
+
+### **Optional: Create a Windows Installer**
+
+You can package the desktop app as a Windows `.exe` using [Inno Setup](https://jrsoftware.org/isinfo.php):
+
+1. **Install Inno Setup**
+   Download and install the latest version from the [official website](https://jrsoftware.org/isinfo.php).
+
+2. **Build the Windows Release**
+   In your Flutter project root, run:
+
+   ```bash
+   flutter build windows
+   ```
+
+   This will generate the release files in:
+
+   ```
+   build\windows\runner\Release\
+   ```
+
+3. **Create the Installer**
+
+   * Open Inno Setup and choose **Create a new script using the Script Wizard**.
+   * Select the **Application Folder** as the `Release` folder from step 2.
+   * Fill in the application name, version, publisher, etc.
+   * Follow the wizard to generate the installer `.exe`.
+
+4. **Distribute or Install**
+   The generated `.exe` can now be shared or installed on any Windows machine.
+
+> ⚠️ Note: Make sure the PostgreSQL server and API are accessible if the app depends on a running backend.
 
 ---
 
