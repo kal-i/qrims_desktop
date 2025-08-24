@@ -185,7 +185,12 @@ You can package the desktop app as a Windows `.exe` using [Inno Setup](https://j
 ---
 
 ## Screenshots  
-![Desktop Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
+![Dashboard View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/dashboard-ui.png)
+![Inventory Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/inventory.png)
+![Purchase Request Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/pr.png)
+![Item Issuance View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/issuances.png)
+![Officers Management View](https://raw.githubusercontent.com/kal-i/qrims_desktop/main/assets/images/officers.png)
+
 
 ## 📦 This project is part of the **QR Code Inventory Management and Item Tracking System**  
 - [QRIMS Mobile](https://github.com/kal-i/qrims_mobile)
