@@ -13,7 +13,7 @@ The `desktop app` serves as the central system for managing inventory, purchase 
 
 - **Dashboard**: Overview of inventory and requests summary.  
 - **Inventory Management**: Register `supply` (consumables) and `inventory` (often issued or tracked manually, containing different properties e.g., serial no. for simplified tracking and management) items, generate QR codes, update item details, and view records.  
-- **Purchase Request Management**: Track officers' requests, validate issuance by comparing items to be issued with the requested item, and streamline report generation by extracting information from purchase requests.  
+- **Purchase Request Management**: Track officers' requests, validate issuance by comparing items to be issued with the requested item, and simplify report generation by extracting information from purchase requests.  
 - **Item Issuance Management**: View and initiate item issuances, and generate issuance reports like `ICS` (Inventory Custodian Slip (items below Php 50,000.00)), `PAR` (Property Acknowledgement Receipt (items above Php 50,000.00)), `RIS` (supply items or consumables), stickers to be attached to the items, and inventory document reports: `Report on the Physical Count of Inventories`, `Report on the Physical Count of Semi-Expendable Property`, and `Report on the Physical Count of Property, Plant, and Equipment`.  
 - **Officer Management**: Manage officer records associated with purchase requests or item issuances.  
 - **User Management**: Admin-specific tab that allows viewing desktop and mobile users, revoking user access, updating archive statuses, and approving pending mobile user requests.  
